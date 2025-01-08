@@ -28,15 +28,11 @@ payload = json_encode({
     "dgstalg": "SHA256", 
     "content": [
         {
-            "dom": [ "www.cmbc.com.cn", "*.baidu.com" ],
+            "dom": [ "*.baidu.com" ],
             "cadom": [ "globalsign.com", "! letsencrypt.org" ]
             }, 
         {
-            "dom": [ "www.psbc.com", "www.hxb.com.cn", "www.cebbank.com" ],
-            "cadom": [ "cfca.com.cn", "! letsencrypt.org" ]
-            }, 
-        {
-            "dom": [ "www.spdb.com.cn", "www.icbc.com.cn", "www.citicbank.com", "www.cib.com.cn", "www.cgbchina.com.cn", "www.ccb.com", "www.boc.cn", "www.bankcomm.com", "www.abchina.com", "cmbchina.com", "bank.pingan.com", "*.alipay.com" ],
+            "dom": [ "*.alipay.com" ],
             "cadom": [ "digicert.cn", "digicert.com", "digicert-cn.com", "! letsencrypt.org" ]
             }, 
         { "dom" : [ "www.alipay.com" ],

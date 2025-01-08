@@ -4,21 +4,9 @@ use warnings;
 
 my $dir ="."; 
 
-my @doms = qw/www.ccb.com 
-cmbchina.com
-www.icbc.com.cn
-www.boc.cn
-www.abchina.com
-www.hxb.com.cn
-www.psbc.com
-www.citicbank.com
-www.cebbank.com
-www.spdb.com.cn
-www.bankcomm.com
-www.cib.com.cn
-www.cgbchina.com.cn
-bank.pingan.com
-www.cmbc.com.cn
+my @doms = qw/
+www.baidu.com
+www.alipay.com
 /;
 
 
