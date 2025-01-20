@@ -4,6 +4,8 @@ import sys
 from jwcrypto import jwk,jws
 from jwcrypto.common import json_encode
 
+domf = sys.argv[1]
+
 cert = "attester/t.crt"
 with open(cert, "r") as f:
    cert_pem = f.read()
@@ -22,24 +24,11 @@ f.closed
 priv_key = jwk.JWK.from_pem(priv_pem, None)
 #print(priv_key)
 
-payload = json_encode({
-    "attid": "example",  
-    "time": "2024-07-25 15:00:00",
-    "dgstalg": "SHA256", 
-    "content": [
-        {
-            "dom": [ "*.baidu.com" ],
-            "cadom": [ "globalsign.com", "! letsencrypt.org" ]
-            }, 
-        {
-            "dom": [ "*.alipay.com" ],
-            "cadom": [ "digicert.cn", "digicert.com", "digicert-cn.com", "! letsencrypt.org" ]
-            }, 
-        { "dom" : [ "www.alipay.com" ],
-         "pkdgst": [ "51f3f3f9cbaf62fadadd2593833daf09540f805488ae3ffd1f73505c7a6ca1f9" ]
-         }
-        ]
-        })
+
+with open(domf, "rb") as f:
+   payload = f.read()
+f.closed
+
 jwstoken = jws.JWS(payload)
 
 jwstoken.add_signature(priv_key, 
@@ -50,6 +39,7 @@ jwstoken.add_signature(priv_key,
 sig = jwstoken.serialize()
 #print(sig)
 
-f = open("crtatt/example.json", "w")
+sigf = (domf+".sig")
+f = open(sigf, "w")
 f.write(sig)
 f.close()

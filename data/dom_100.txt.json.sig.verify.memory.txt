@@ -1,0 +1,33 @@
+Filename: verify_crtatt.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+    16   61.043 MiB   61.043 MiB           1   @profile
+    17                                         def verify(crtatt_js):
+    18   61.043 MiB    0.000 MiB           1       trust_anchor = "301ebf87f32521272334d4bba965d48fccd0d3d999fd9f08c7bf21e7e5c28f54"
+    19                                         
+    20   61.043 MiB    0.000 MiB           1       crtatt = json_decode(crtatt_js)
+    21                                             #print(crtatt)
+    22   61.418 MiB    0.375 MiB           1       crt = load_certificate(FILETYPE_PEM, crtatt["header"]["x5c"])
+    23                                         
+    24   61.418 MiB    0.000 MiB           1       subject_pubkey_der = dump_publickey(FILETYPE_ASN1, crt.get_pubkey())
+    25   61.418 MiB    0.000 MiB           1       h = SHA256.new()
+    26   61.418 MiB    0.000 MiB           1       h.update(subject_pubkey_der)
+    27   61.418 MiB    0.000 MiB           1       dgst_spk = h.hexdigest()
+    28                                         
+    29   61.418 MiB    0.000 MiB           1       if(dgst_spk==trust_anchor):
+    30   61.418 MiB    0.000 MiB           1           subject_pubkey_pem = dump_publickey(FILETYPE_PEM, crt.get_pubkey())
+    31   61.605 MiB    0.188 MiB           1           pub_key = jwk.JWK.from_pem(subject_pubkey_pem, None)
+    32                                         
+    33   61.605 MiB    0.000 MiB           1           jwstoken_v = jws.JWS()
+    34   61.605 MiB    0.000 MiB           1           jwstoken_v.deserialize(crtatt_js)
+    35                                         
+    36   61.793 MiB    0.188 MiB           1           res=jwstoken_v.verify(pub_key)
+    37                                         
+    38   61.793 MiB    0.000 MiB           1           if(res==None):
+    39   61.793 MiB    0.000 MiB           1               payload_v = jwstoken_v.payload
+    40   61.793 MiB    0.000 MiB           1               return payload_v
+    41                                              
+    42                                             return 
+
+

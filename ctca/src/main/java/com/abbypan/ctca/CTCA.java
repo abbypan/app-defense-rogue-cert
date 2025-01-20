@@ -32,15 +32,6 @@ import java.security.NoSuchAlgorithmException;
 import org.json.JSONArray;
 //import org.apache.directory.shared.asn1.der.ASN1InputStream;
 import org.json.JSONObject;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.Measurement;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.Threads;
-import org.openjdk.jmh.annotations.Warmup;
 
 import com.google.common.net.InternetDomainName;
 
@@ -57,54 +48,74 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Threads;
+import org.openjdk.jmh.annotations.Warmup;
 
 
-@State(Scope.Benchmark)
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
-@BenchmarkMode(Mode.All)
+//@State(Scope.Benchmark)
+//@OutputTimeUnit(TimeUnit.MILLISECONDS)
+//@BenchmarkMode(Mode.All)
 public class CTCA {
 	
-
+//@Setup(Level.Iteration)
  public static void main(String[] args) throws Exception
- {   
-	 CTCA ctca = new CTCA(); 
+{   
 
-     String para[] = Arrays.copyOfRange(args, 0, 2); 
-     if(args.length==2) {
-    	 File cache_file = new File(args[2]);
-    	 String ctca_cache_f =	 cache_file.getAbsolutePath();
-    	 String ctca_content = new String(Files.readAllBytes(Paths.get(ctca_cache_f)));
-    	 para[2] = ctca_content;
-     }
+    //String trustStorePath = System.getProperty("java.home") + "/lib/security/cacerts";
+	//System.out.println("trustStorePath: " + trustStorePath);
 
-	 HttpsURLConnection con = ctca.create_main_conn(para);
-	 String res = ctca.get_content(con);
-	 System.out.println(res+"\n");
- }   
+	CTCA ctca = new CTCA(); 
 
-	@Benchmark
-	@Threads(value = 3)
-    @Warmup(iterations = 3, time = 3, timeUnit = TimeUnit.SECONDS)
-    @Fork(value = 1)
-    @Measurement(iterations = 1000, time = 3 , timeUnit = TimeUnit.SECONDS)
-	public static void benchmarkCTCA() throws Exception {
+	//String[] para = Arrays.copyOfRange(args, 0, 2); 
+	String[] para = Arrays.copyOf(args, args.length); 
+	if(args.length==3) {
+		File cache_file = new File(args[2]);
+		String ctca_cache_f =	 cache_file.getAbsolutePath();
+		String ctca_content = new String(Files.readAllBytes(Paths.get(ctca_cache_f)));
+		para[2] = ctca_content;
+	}
+
+	long startTime = System.nanoTime();
+
+	HttpsURLConnection con = ctca.create_main_conn(para);
+	String res = ctca.get_content(con);
+
+	long endTime = System.nanoTime();
+	System.out.println(para[0] + "," + para[1] + "," + (endTime - startTime) / 1_000_000.0 );
+
+	//System.out.println(res+"\n");
+}   
+
+//	@Benchmark
+//	@Threads(value = 3)
+//    @Warmup(iterations = 3, time = 3, timeUnit = TimeUnit.SECONDS)
+//    @Fork(value = 1)
+//    @Measurement(iterations = 1000, time = 3 , timeUnit = TimeUnit.SECONDS)
+	public static void benchmarkTestCTCA() throws Exception {
 		  String[] para = { "https://www.boc.cn", "ctca", "{\"attid\":\"example\",\"content\":[{\"cadom\":[\"globalsign.com\",\"! letsencrypt.org\"],\"dom\":[\"www.cmbc.com.cn\",\"*.baidu.com\"]},{\"cadom\":[\"cfca.com.cn\",\"! letsencrypt.org\"],\"dom\":[\"www.psbc.com\",\"www.hxb.com.cn\",\"www.cebbank.com\"]},{\"cadom\":[\"digicert.cn\",\"digicert.com\",\"digicert-cn.com\",\"! letsencrypt.org\"],\"dom\":[\"www.spdb.com.cn\",\"www.icbc.com.cn\",\"www.citicbank.com\",\"www.cib.com.cn\",\"www.cgbchina.com.cn\",\"www.ccb.com\",\"www.boc.cn\",\"www.bankcomm.com\",\"www.abchina.com\",\"cmbchina.com\",\"bank.pingan.com\",\"*.alipay.com\"]},{\"dom\":[\"www.alipay.com\"],\"pkdgst\":[\"51f3f3f9cbaf62fadadd2593833daf09540f805488ae3ffd1f73505c7a6ca1f9\"]}],\"dgstalg\":\"SHA256\",\"time\":\"2024-07-25 15:00:00\"}"};
 		  HttpsURLConnection con = create_main_conn(para);
 		  String res = get_content(con);
 	} 
 
-	@Benchmark
-	@Threads(value = 3)
-    @Warmup(iterations = 3, time = 3, timeUnit = TimeUnit.SECONDS)
-    @Fork(value = 1)
-    @Measurement(iterations = 1000, time = 3 , timeUnit = TimeUnit.SECONDS)
-	public static void benchmarkDefault() throws Exception {
+//	@Benchmark
+//	@Threads(value = 3)
+//    @Warmup(iterations = 3, time = 3, timeUnit = TimeUnit.SECONDS)
+//    @Fork(value = 1)
+//    @Measurement(iterations = 1000, time = 3 , timeUnit = TimeUnit.SECONDS)
+	public static void benchmarkTestDefault() throws Exception {
 		  String[] para = { "https://www.boc.cn", "default", "{\"attid\":\"example\",\"content\":[{\"cadom\":[\"globalsign.com\",\"! letsencrypt.org\"],\"dom\":[\"www.cmbc.com.cn\",\"*.baidu.com\"]},{\"cadom\":[\"cfca.com.cn\",\"! letsencrypt.org\"],\"dom\":[\"www.psbc.com\",\"www.hxb.com.cn\",\"www.cebbank.com\"]},{\"cadom\":[\"digicert.cn\",\"digicert.com\",\"digicert-cn.com\",\"! letsencrypt.org\"],\"dom\":[\"www.spdb.com.cn\",\"www.icbc.com.cn\",\"www.citicbank.com\",\"www.cib.com.cn\",\"www.cgbchina.com.cn\",\"www.ccb.com\",\"www.boc.cn\",\"www.bankcomm.com\",\"www.abchina.com\",\"cmbchina.com\",\"bank.pingan.com\",\"*.alipay.com\"]},{\"dom\":[\"www.alipay.com\"],\"pkdgst\":[\"51f3f3f9cbaf62fadadd2593833daf09540f805488ae3ffd1f73505c7a6ca1f9\"]}],\"dgstalg\":\"SHA256\",\"time\":\"2024-07-25 15:00:00\"}"}; 
 		  HttpsURLConnection con = create_main_conn(para);
 		  String res = get_content(con);
 	} 
  
- public static HttpsURLConnection create_main_conn(String[] para) throws Exception {
+public static HttpsURLConnection create_main_conn(String[] para) throws Exception {
 	 HttpsURLConnection con=null;
 
 	 if(para[1].equals("default")) {
@@ -129,8 +140,12 @@ public class CTCA {
      String host = u.getHost().toLowerCase();
      //System.out.println(">>> host : " + host );
 
+     //long startTime = System.nanoTime();
      SSLSocketFactory sslSocketFactory = createCTCASslSocketFactory(host, ctca_cache);
      con.setSSLSocketFactory(sslSocketFactory);
+     //long endTime = System.nanoTime();
+     //System.out.println("createCTCASslSocketFactoryTime," + (endTime - startTime) / 1_000_000.0 + ",ms");
+
 
      return con;
 
@@ -210,12 +225,12 @@ public class CTCA {
 			for(int j=0;j<cadom.length();j++) {
 				String caj =  ((String) cadom.get(j)).toLowerCase();
 				if(caj.equals(sca)) {
-					//System.out.println(">>> ctca match sca: " + caj);
+					//System.out.println(">>> ctca match sca success: " + caj);
 					return "success";
 				}else if(caj.startsWith("!")) {
 					String caje = caj.replaceFirst("^\\!\\s*", "");
 					if(caje.equals(sca)) {
-						//System.out.println(">>> ctca should not match sca: " + caj);
+						//System.out.println(">>> ctca should not match sca fail: " + caj);
 						return "fail";
 					}
 				}
@@ -228,12 +243,12 @@ public class CTCA {
 			for(int j=0;j<pkdgst.length();j++) {
 				String pkj =  ((String) pkdgst.get(j)).toLowerCase();
 				if(pkj.equals(spk)) {
-					//System.out.println(">>> ctca match pkdgst: " + pkj);
+					//System.out.println(">>> ctca match pkdgst success: " + pkj);
 					return "success";
 				}else if(pkj.startsWith("!")) {
 					String pkje = pkj.replaceFirst("^\\!\\s*", "");
 					if(pkje.equals(spk)) {
-						//System.out.println(">>> ctca should not match pkdgst: " + pkj);
+						//System.out.println(">>> ctca should not match pkdgst fail: " + pkj);
 						return "fail";
 					}
 				}
@@ -241,6 +256,7 @@ public class CTCA {
 		}
 	}
 
+	//System.out.println(">>> ctca : unknown");
 	return "unknown";
  }
 
@@ -341,6 +357,7 @@ public class CTCA {
 	 return s;
  }
 
+//@Benchmark
  private static  SSLSocketFactory createCTCASslSocketFactory(String host, JSONObject ctca_cache) throws Exception {
 	 X509TrustManager default_tm = get_default_trust_manager();
 
@@ -357,6 +374,7 @@ public class CTCA {
 
 			 try {
 				 String res = CTCA.checkCrtAtt(host, ee, ctca_cache);
+				 System.out.println(host + ",ctca!," + res);
 				 if(res.equals("fail")) {
 					 throw new Exception("CTCA check: fail!");
 				 }
@@ -453,6 +471,26 @@ public class CTCA {
 	 //System.out.println("\n");
 	 
 	 return res;
+ }
+
+ private void print_content(HttpsURLConnection con) throws Exception {
+
+	 //System.out.println("****** Content of the URL ********"); 
+	 BufferedReader br =
+			 new BufferedReader(
+					 new InputStreamReader(con.getInputStream()));
+
+	 String input;
+	 //String res = "";
+	 while ((input = br.readLine()) != null){
+		 //res = res + input;      
+		 System.out.println(input);
+	 }
+	 br.close();
+
+	 System.out.println("\n");
+	 
+	 //return res;
  }
 
 }

@@ -1,0 +1,26 @@
+# [v3_req]
+
+subjectKeyIdentifier=hash
+
+authorityKeyIdentifier = keyid,issuer
+
+basicConstraints=CA:FALSE
+
+keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+
+extendedKeyUsage = TLS Web Server Authentication, TLS Web Client Authentication, codeSigning
+
+crlDistributionPoints = URI:http://xxx.example.com/cert.crl
+
+
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = www.example.com
+DNS.2 = bbb.example.com
+DNS.3 = ccc.example.com
+DNS.4 = *.example.com
+DNS.5 = mwnwybmalhbwjpzyewypeu.com
+DNS.6 = mm9jt.com
+DNS.7 = cuuq2.com
+DNS.8 = pxne950omdpznp.com

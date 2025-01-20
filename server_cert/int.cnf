@@ -1,0 +1,10 @@
+[req]
+prompt = no
+default_md = sha256
+distinguished_name = dn
+
+
+[dn]
+CN = CTCA Intermediate CA
+
+
