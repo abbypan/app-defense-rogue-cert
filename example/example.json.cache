@@ -1,0 +1,1 @@
+{"attdom":"www.someatt.com","content":[{"appid":"com.baidu.xxx","data":[{"cadom":["globalsign.com","! letsencrypt.org"],"dom":["*.baidu.com"]}]},{"appid":"com.alipay.xxx","data":[{"cadom":["digicert.cn","digicert.com","digicert-cn.com","! letsencrypt.org"],"dom":["*.alipay.com"]}]}],"expire":"2025-04-25 15:00:00","refresh":259200,"version":"v20250325150000"}

@@ -23,23 +23,27 @@ priv_key = jwk.JWK.from_pem(priv_pem, None)
 #print(priv_key)
 
 payload = json_encode({
-    "attid": "example",  
-    "time": "2024-07-25 15:00:00",
-    "dgstalg": "SHA256", 
+    'attdom': 'www.someatt.com',
+    'version': 'v20250325150000',
+    'expire': '2025-04-25 15:00:00',
+    'refresh': 259200,
     "content": [
         {
-            "dom": [ "*.baidu.com" ],
-            "cadom": [ "globalsign.com", "! letsencrypt.org" ]
-            }, 
+            "appid": "com.baidu.xxx", 
+            "data" : [ {
+                "dom": [ "*.baidu.com" ],
+                "cadom": [ "globalsign.com", "! letsencrypt.org" ]
+                } ] 
+            },
         {
-            "dom": [ "*.alipay.com" ],
-            "cadom": [ "digicert.cn", "digicert.com", "digicert-cn.com", "! letsencrypt.org" ]
+            "appid": "com.alipay.xxx", 
+            "data" : [{
+                "dom": [ "*.alipay.com" ],
+                "cadom": [ "digicert.cn", "digicert.com", "digicert-cn.com", "! letsencrypt.org" ]
+                }]
             }, 
-        { "dom" : [ "www.alipay.com" ],
-         "pkdgst": [ "51f3f3f9cbaf62fadadd2593833daf09540f805488ae3ffd1f73505c7a6ca1f9" ]
-         }
         ]
-        })
+    })
 jwstoken = jws.JWS(payload)
 
 jwstoken.add_signature(priv_key, 

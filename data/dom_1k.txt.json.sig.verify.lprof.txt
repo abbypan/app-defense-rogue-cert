@@ -1,38 +1,36 @@
 Timer unit: 1e-06 s
 
-Total time: 0.00562232 s
+Total time: 0.0402409 s
 File: verify_crtatt.py
 Function: verify at line 16
 
 Line #      Hits         Time  Per Hit   % Time  Line Contents
 ==============================================================
-    [1;36m16[0m                                           [92;49m@profile[0m                                                                             
-    [1;36m17[0m                                           [96;49mdef[0m[97;49m [0m[92;49mverify[0m[97;49m([0m[97;49mcrtatt_js[0m[97;49m)[0m[97;49m:[0m                                                               
-    [1;36m18[0m         [1;36m1[0m          [1;36m0.9[0m      [1;36m0.9[0m      [1;36m0.0[0m  [97;49m    [0m[97;49mtrust_anchor[0m[97;49m [0m[91;49m=[0m[97;49m [0m[93;49m"[0m[93;49m301ebf87f32521272334d4bba965d48fccd0d3d999fd9f08c7bf21e7e5c28f54[0m[93;49m"[0m
-    [1;36m19[0m                                                                                                                                
-    [1;36m20[0m         [1;36m1[0m         [1;36m45.2[0m     [1;36m45.2[0m      [1;36m0.8[0m  [97;49m    [0m[97;49mcrtatt[0m[97;49m [0m[91;49m=[0m[97;49m [0m[97;49mjson_decode[0m[97;49m([0m[97;49mcrtatt_js[0m[97;49m)[0m                                                  
-    [1;36m21[0m                                           [97;49m    [0m[37;49m#print(crtatt)[0m                                                                   
-    [1;36m22[0m         [1;36m1[0m        [1;36m246.0[0m    [1;36m246.0[0m      [1;36m4.4[0m  [97;49m    [0m[97;49mcrt[0m[97;49m [0m[91;49m=[0m[97;49m [0m[97;49mload_certificate[0m[97;49m([0m[97;49mFILETYPE_PEM[0m[97;49m,[0m[97;49m [0m[97;49mcrtatt[0m[97;49m[[0m[93;49m"[0m[93;49mheader[0m[93;49m"[0m[97;49m][0m[97;49m[[0m[93;49m"[0m[93;49mx5c[0m[93;49m"[0m[97;49m][0m[97;49m)[0m                    
-    [1;36m23[0m                                                                                                                                
-    [1;36m24[0m         [1;36m1[0m        [1;36m183.4[0m    [1;36m183.4[0m      [1;36m3.3[0m  [97;49m    [0m[97;49msubject_pubkey_der[0m[97;49m [0m[91;49m=[0m[97;49m [0m[97;49mdump_publickey[0m[97;49m([0m[97;49mFILETYPE_ASN1[0m[97;49m,[0m[97;49m [0m[97;49mcrt[0m[91;49m.[0m[97;49mget_pubkey[0m[97;49m([0m[97;49m)[0m[97;49m)[0m             
-    [1;36m25[0m         [1;36m1[0m       [1;36m1162.7[0m   [1;36m1162.7[0m     [1;36m20.7[0m  [97;49m    [0m[97;49mh[0m[97;49m [0m[91;49m=[0m[97;49m [0m[97;49mSHA256[0m[91;49m.[0m[97;49mnew[0m[97;49m([0m[97;49m)[0m                                                                 
-    [1;36m26[0m         [1;36m1[0m         [1;36m62.3[0m     [1;36m62.3[0m      [1;36m1.1[0m  [97;49m    [0m[97;49mh[0m[91;49m.[0m[97;49mupdate[0m[97;49m([0m[97;49msubject_pubkey_der[0m[97;49m)[0m                                                     
-    [1;36m27[0m         [1;36m1[0m        [1;36m867.4[0m    [1;36m867.4[0m     [1;36m15.4[0m  [97;49m    [0m[97;49mdgst_spk[0m[97;49m [0m[91;49m=[0m[97;49m [0m[97;49mh[0m[91;49m.[0m[97;49mhexdigest[0m[97;49m([0m[97;49m)[0m                                                         
-    [1;36m28[0m                                                                                                                                
-    [1;36m29[0m         [1;36m1[0m          [1;36m0.4[0m      [1;36m0.4[0m      [1;36m0.0[0m  [97;49m    [0m[96;49mif[0m[97;49m([0m[97;49mdgst_spk[0m[91;49m==[0m[97;49mtrust_anchor[0m[97;49m)[0m[97;49m:[0m                                                      
-    [1;36m30[0m         [1;36m1[0m         [1;36m34.0[0m     [1;36m34.0[0m      [1;36m0.6[0m  [97;49m        [0m[97;49msubject_pubkey_pem[0m[97;49m [0m[91;49m=[0m[97;49m [0m[97;49mdump_publickey[0m[97;49m([0m[97;49mFILETYPE_PEM[0m[97;49m,[0m[97;49m [0m[97;49mcrt[0m[91;49m.[0m[97;49mget_pubkey[0m[97;49m([0m[97;49m)[0m[97;49m)[0m          
-    [1;36m31[0m         [1;36m1[0m       [1;36m2347.7[0m   [1;36m2347.7[0m     [1;36m41.8[0m  [97;49m        [0m[97;49mpub_key[0m[97;49m [0m[91;49m=[0m[97;49m [0m[97;49mjwk[0m[91;49m.[0m[97;49mJWK[0m[91;49m.[0m[97;49mfrom_pem[0m[97;49m([0m[97;49msubject_pubkey_pem[0m[97;49m,[0m[97;49m [0m[96;49mNone[0m[97;49m)[0m                         
-    [1;36m32[0m                                                                                                                                
-    [1;36m33[0m         [1;36m1[0m        [1;36m232.1[0m    [1;36m232.1[0m      [1;36m4.1[0m  [97;49m        [0m[97;49mjwstoken_v[0m[97;49m [0m[91;49m=[0m[97;49m [0m[97;49mjws[0m[91;49m.[0m[97;49mJWS[0m[97;49m([0m[97;49m)[0m                                                       
-    [1;36m34[0m         [1;36m1[0m        [1;36m119.3[0m    [1;36m119.3[0m      [1;36m2.1[0m  [97;49m        [0m[97;49mjwstoken_v[0m[91;49m.[0m[97;49mdeserialize[0m[97;49m([0m[97;49mcrtatt_js[0m[97;49m)[0m                                            
-    [1;36m35[0m                                                                                                                                
-    [1;36m36[0m         [1;36m1[0m        [1;36m317.2[0m    [1;36m317.2[0m      [1;36m5.6[0m  [97;49m        [0m[97;49mres[0m[91;49m=[0m[97;49mjwstoken_v[0m[91;49m.[0m[97;49mverify[0m[97;49m([0m[97;49mpub_key[0m[97;49m)[0m                                               
-    [1;36m37[0m                                                                                                                                
-    [1;36m38[0m         [1;36m1[0m          [1;36m0.4[0m      [1;36m0.4[0m      [1;36m0.0[0m  [97;49m        [0m[96;49mif[0m[97;49m([0m[97;49mres[0m[91;49m==[0m[96;49mNone[0m[97;49m)[0m[97;49m:[0m                                                               
-    [1;36m39[0m         [1;36m1[0m          [1;36m2.7[0m      [1;36m2.7[0m      [1;36m0.0[0m  [97;49m            [0m[97;49mpayload_v[0m[97;49m [0m[91;49m=[0m[97;49m [0m[97;49mjwstoken_v[0m[91;49m.[0m[97;49mpayload[0m                                           
-    [1;36m40[0m         [1;36m1[0m          [1;36m0.7[0m      [1;36m0.7[0m      [1;36m0.0[0m  [97;49m            [0m[96;49mreturn[0m[97;49m [0m[97;49mpayload_v[0m                                                         
-    [1;36m41[0m                                           [97;49m     [0m                                                                                
-    [1;36m42[0m                                           [97;49m    [0m[96;49mreturn[0m[97;49m [0m                                                                          
+    16                                           @profile
+    17                                           def verify(crtatt_js):
+    18         1          5.9      5.9      0.0      trust_anchor = "301ebf87f32521272334d4bba965d48fccd0d3d999fd9f08c7bf21e7e5c28f54"
+    19                                           
+    20         1       1233.2   1233.2      3.1      crtatt = json_decode(crtatt_js)
+    21                                               #print(crtatt)
+    22         1       3733.7   3733.7      9.3      crt = load_certificate(FILETYPE_PEM, crtatt["header"]["x5c"])
+    23                                           
+    24         1       4669.4   4669.4     11.6      subject_pubkey_der = dump_publickey(FILETYPE_ASN1, crt.get_pubkey())
+    25         1        390.1    390.1      1.0      h = SHA256.new()
+    26         1        104.8    104.8      0.3      h.update(subject_pubkey_der)
+    27         1        517.1    517.1      1.3      dgst_spk = h.hexdigest()
+    28                                           
+    29         1          3.6      3.6      0.0      if(dgst_spk==trust_anchor):
+    30         1       1158.4   1158.4      2.9          subject_pubkey_pem = dump_publickey(FILETYPE_PEM, crt.get_pubkey())
+    31         1      13165.1  13165.1     32.7          pub_key = jwk.JWK.from_pem(subject_pubkey_pem, None)
+    32                                           
+    33         1       1985.3   1985.3      4.9          jwstoken_v = jws.JWS()
+    34         1       6149.9   6149.9     15.3          jwstoken_v.deserialize(crtatt_js)
+    35                                           
+    36         1       7105.2   7105.2     17.7          res=jwstoken_v.verify(pub_key)
+    37                                           
+    38         1          3.5      3.5      0.0          if(res==None):
+    39         1         15.0     15.0      0.0              payload_v = jwstoken_v.payload
+    40         1          0.7      0.7      0.0              return payload_v
+    41                                                
+    42                                               return 
 
-
-  0.01 seconds - verify_crtatt.py:16 - verify

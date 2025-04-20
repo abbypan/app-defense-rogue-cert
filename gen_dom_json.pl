@@ -8,17 +8,29 @@ my ($f) = @ARGV;
 my $c = slurp($f);
 my @cc = split /\n/, $c;
 
+my @crs;
+for my $citem (@cc){
+  my $appid = "appid.$citem";
+
+  my $cr = {
+      'appid' =>  $appid,
+      'data' =>  [ {
+              'dom' =>  [ $citem, '*.'.$citem ],
+              'cadom' =>  [ 'example.com', '! someother.org' ]
+          } ]
+  };
+  push @crs, $cr;
+}
+
+
 my $r = {
-    attid => 'example', 
-    time => '2025-01-10 18:00:00',
-    dgstalg => 'SHA256',
-    content => [
-        {
-            dom => \@cc,
-            cadom => [ "example.com", "! someother.org", "! globalsign.com", "! letsencrypt.org" ]
-        }
-    ]
+        'attdom' =>  'www.someatt.com',
+        'version' =>  'v20250325150000',
+        'expire' =>  '2025-04-25 15:00:00',
+        'refresh' =>  259200,
+        'content' => \@crs, 
 };
+
 my $rc = encode_json $r;
 
 my $dst_f = "$f.json";

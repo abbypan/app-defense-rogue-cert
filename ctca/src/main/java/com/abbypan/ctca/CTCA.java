@@ -64,58 +64,35 @@ import org.openjdk.jmh.annotations.Warmup;
 //@BenchmarkMode(Mode.All)
 public class CTCA {
 	
+	private static JSONObject ctca_cache;
+	
+	public CTCA(String cache_file_name) throws Exception {
+		ctca_cache = read_json_file(cache_file_name);
+	}
+	
 //@Setup(Level.Iteration)
  public static void main(String[] args) throws Exception
-{   
+ {   
 
-    //String trustStorePath = System.getProperty("java.home") + "/lib/security/cacerts";
-	//System.out.println("trustStorePath: " + trustStorePath);
+	 //String trustStorePath = System.getProperty("java.home") + "/lib/security/cacerts";
+	 //System.out.println("trustStorePath: " + trustStorePath);
 
-	CTCA ctca = new CTCA(); 
+	 //args: www.xxx.com, bypass/default/ctca, cache_file_name, appid
 
-	//String[] para = Arrays.copyOfRange(args, 0, 2); 
-	String[] para = Arrays.copyOf(args, args.length); 
-	if(args.length==3) {
-		File cache_file = new File(args[2]);
-		String ctca_cache_f =	 cache_file.getAbsolutePath();
-		String ctca_content = new String(Files.readAllBytes(Paths.get(ctca_cache_f)));
-		para[2] = ctca_content;
-	}
+	 CTCA ctca = new CTCA(args[2]); 
 
-	long startTime = System.nanoTime();
+	 long startTime = System.nanoTime();
 
-	HttpsURLConnection con = ctca.create_main_conn(para);
-	String res = ctca.get_content(con);
+	 HttpsURLConnection con = ctca.create_main_conn(args);
+	 String res = ctca.get_content(con);
 
-	long endTime = System.nanoTime();
-	System.out.println(para[0] + "," + para[1] + "," + (endTime - startTime) / 1_000_000.0 );
+	 long endTime = System.nanoTime();
+	 System.out.println(args[0] + "," + args[1] + "," + (endTime - startTime) / 1_000_000.0 );
 
-	//System.out.println(res+"\n");
-}   
+	 //System.out.println(res+"\n");
+ }   
 
-//	@Benchmark
-//	@Threads(value = 3)
-//    @Warmup(iterations = 3, time = 3, timeUnit = TimeUnit.SECONDS)
-//    @Fork(value = 1)
-//    @Measurement(iterations = 1000, time = 3 , timeUnit = TimeUnit.SECONDS)
-	public static void benchmarkTestCTCA() throws Exception {
-		  String[] para = { "https://www.boc.cn", "ctca", "{\"attid\":\"example\",\"content\":[{\"cadom\":[\"globalsign.com\",\"! letsencrypt.org\"],\"dom\":[\"www.cmbc.com.cn\",\"*.baidu.com\"]},{\"cadom\":[\"cfca.com.cn\",\"! letsencrypt.org\"],\"dom\":[\"www.psbc.com\",\"www.hxb.com.cn\",\"www.cebbank.com\"]},{\"cadom\":[\"digicert.cn\",\"digicert.com\",\"digicert-cn.com\",\"! letsencrypt.org\"],\"dom\":[\"www.spdb.com.cn\",\"www.icbc.com.cn\",\"www.citicbank.com\",\"www.cib.com.cn\",\"www.cgbchina.com.cn\",\"www.ccb.com\",\"www.boc.cn\",\"www.bankcomm.com\",\"www.abchina.com\",\"cmbchina.com\",\"bank.pingan.com\",\"*.alipay.com\"]},{\"dom\":[\"www.alipay.com\"],\"pkdgst\":[\"51f3f3f9cbaf62fadadd2593833daf09540f805488ae3ffd1f73505c7a6ca1f9\"]}],\"dgstalg\":\"SHA256\",\"time\":\"2024-07-25 15:00:00\"}"};
-		  HttpsURLConnection con = create_main_conn(para);
-		  String res = get_content(con);
-	} 
-
-//	@Benchmark
-//	@Threads(value = 3)
-//    @Warmup(iterations = 3, time = 3, timeUnit = TimeUnit.SECONDS)
-//    @Fork(value = 1)
-//    @Measurement(iterations = 1000, time = 3 , timeUnit = TimeUnit.SECONDS)
-	public static void benchmarkTestDefault() throws Exception {
-		  String[] para = { "https://www.boc.cn", "default", "{\"attid\":\"example\",\"content\":[{\"cadom\":[\"globalsign.com\",\"! letsencrypt.org\"],\"dom\":[\"www.cmbc.com.cn\",\"*.baidu.com\"]},{\"cadom\":[\"cfca.com.cn\",\"! letsencrypt.org\"],\"dom\":[\"www.psbc.com\",\"www.hxb.com.cn\",\"www.cebbank.com\"]},{\"cadom\":[\"digicert.cn\",\"digicert.com\",\"digicert-cn.com\",\"! letsencrypt.org\"],\"dom\":[\"www.spdb.com.cn\",\"www.icbc.com.cn\",\"www.citicbank.com\",\"www.cib.com.cn\",\"www.cgbchina.com.cn\",\"www.ccb.com\",\"www.boc.cn\",\"www.bankcomm.com\",\"www.abchina.com\",\"cmbchina.com\",\"bank.pingan.com\",\"*.alipay.com\"]},{\"dom\":[\"www.alipay.com\"],\"pkdgst\":[\"51f3f3f9cbaf62fadadd2593833daf09540f805488ae3ffd1f73505c7a6ca1f9\"]}],\"dgstalg\":\"SHA256\",\"time\":\"2024-07-25 15:00:00\"}"}; 
-		  HttpsURLConnection con = create_main_conn(para);
-		  String res = get_content(con);
-	} 
- 
-public static HttpsURLConnection create_main_conn(String[] para) throws Exception {
+ public static HttpsURLConnection create_main_conn(String[] para) throws Exception {
 	 HttpsURLConnection con=null;
 
 	 if(para[1].equals("default")) {
@@ -123,15 +100,15 @@ public static HttpsURLConnection create_main_conn(String[] para) throws Exceptio
 	 }else if(para[1].equals("bypass")) {
 		 con = create_bypass_conn(para[0]);
 	 }else if(para[1].equals("ctca")) {
-		 con = create_ctca_conn(para[0], para[2]);
+		 con = create_ctca_conn(para[0], para[3]);
 	 }
 	 return con;
  }
 
- private static HttpsURLConnection create_ctca_conn(String https_url, String ctca_cache_content) throws Exception {
+ private static HttpsURLConnection create_ctca_conn(String https_url, String appid) throws Exception {
 	 //System.out.println("****** ctca ********"); 
 
-	 JSONObject ctca_cache = new JSONObject(ctca_cache_content);
+	 //JSONObject ctca_cache = new JSONObject(ctca_cache_content);
 	 //System.out.println(ctca_cache);
 	 
      HttpsURLConnection con = create_conn(https_url);
@@ -141,14 +118,12 @@ public static HttpsURLConnection create_main_conn(String[] para) throws Exceptio
      //System.out.println(">>> host : " + host );
 
      //long startTime = System.nanoTime();
-     SSLSocketFactory sslSocketFactory = createCTCASslSocketFactory(host, ctca_cache);
+     SSLSocketFactory sslSocketFactory = createCTCASslSocketFactory(host, appid);
      con.setSSLSocketFactory(sslSocketFactory);
      //long endTime = System.nanoTime();
      //System.out.println("createCTCASslSocketFactoryTime," + (endTime - startTime) / 1_000_000.0 + ",ms");
 
-
      return con;
-
  }
  
  private static HttpsURLConnection create_bypass_conn(String https_url) throws Exception {
@@ -179,319 +154,331 @@ public static HttpsURLConnection create_main_conn(String[] para) throws Exceptio
      return default_tm;
  }
 
- public static String checkCrtAtt(String h, X509Certificate ee, JSONObject crtatt) throws Exception {
+ @SuppressWarnings("null")
+public static String checkCrtAtt(String h, X509Certificate ee, String appid) throws Exception {
 	//System.out.println(">>> visit host : " + h);
 
 	String sca = read_ca_dom(ee);
 	//System.out.println(">>> TLS server cert CA dom : " + sca);
 
-	String dgstAlg = crtatt.getString("dgstalg");
+	//String dgstAlg = crtatt.getString("dgstalg");
 	//System.out.println(">>> ctca dgst alg : " + dgstAlg);
 
-	String spk = calc_subject_pk_dgst(dgstAlg, ee);
+	//String spk = calc_subject_pk_dgst(dgstAlg, ee);
 	//System.out.println(">>> TLS server cert dgst spk : " + spk);
 		 
-	JSONArray ct = crtatt.getJSONArray("content");
+	JSONArray ct = ctca_cache.getJSONArray("content");
 
-	JSONArray mcts = new JSONArray();
-	JSONArray wcts = new JSONArray();
-		 
+	JSONObject ci, dj;
+	String appid_read;
+	JSONArray dom;
+	JSONArray mcts =new JSONArray();
+	JSONArray wcts =new JSONArray();
+
 	for (int i = 0; i < ct.length(); i++) {
-		JSONObject ci = (JSONObject) ct.get(i);
+		ci = (JSONObject) ct.get(i);
+		appid_read = (String) ci.get("appid");
+		if(appid_read.equals(appid)) {
+			JSONArray data = ci.getJSONArray("data");
 
-		JSONArray dom = ci.getJSONArray("dom");
-		for(int j=0;j<dom.length();j++) {
-			String dj =  ((String) dom.get(j)).toLowerCase();
+			for(int j=0;j<data.length();j++) {
+				dj = (JSONObject) data.get(j);
 
-			if(dj.equals(h)) {
-				mcts.put(ci);
-				//System.out.println(">>> ctca find dom match: " + dj);
-			}else if(dj.startsWith("*")) {
-				String dje = dj.replaceFirst("^\\*", "");
-				if(h.endsWith(dje)) {
-					wcts.put(ci);
-					//System.out.println(">>> ctca find wildcard dom match: " + dj);
+				dom = dj.getJSONArray("dom");
+				for(int k=0; k<dom.length();k++) {
+					String hk =  ((String) dom.get(k)).toLowerCase();
+
+					if(hk.equals(h)) {
+						JSONArray cadom = dj.getJSONArray("cadom");
+						for(int z=0; z<cadom.length(); z++) {
+							mcts.put(cadom.get(z));
+						}
+						//System.out.println(">>> ctca find dom match: " + dj);
+					}else if(hk.startsWith("*")) {
+						String dje = hk.replaceFirst("^\\*", "");
+						if(h.endsWith(dje)) {
+							JSONArray cadom = dj.getJSONArray("cadom");
+							for(int z=0; z<cadom.length(); z++) {
+								wcts.put(cadom.get(z));
+							}
+							//System.out.println(">>> ctca find wildcard dom match: " + dj);
+						}
+					}
 				}
+
+
+			}
+
+			break;
+		}
+
+	}
+
+	for(int j=0; j<mcts.length();j++) {
+		String caj =  ((String) mcts.get(j)).toLowerCase();
+		if(caj.equals(sca)) {
+			//System.out.println(">>> ctca match sca success: " + caj);
+			return "success";
+		}else if(caj.startsWith("!")) {
+			String caje = caj.replaceFirst("^\\!\\s*", "");
+			if(caje.equals(sca)) {
+				//System.out.println(">>> ctca should not match sca fail: " + caj);
+				return "fail";
 			}
 		}
 	}
 
-	mcts.putAll(wcts);
-	for(int i=0; i<mcts.length();i++) {
-		JSONObject ci = (JSONObject) mcts.get(i);
-		if( ! ci.isNull("cadom")) {
-			JSONArray cadom = ci.getJSONArray("cadom");
-
-			for(int j=0;j<cadom.length();j++) {
-				String caj =  ((String) cadom.get(j)).toLowerCase();
-				if(caj.equals(sca)) {
-					//System.out.println(">>> ctca match sca success: " + caj);
-					return "success";
-				}else if(caj.startsWith("!")) {
-					String caje = caj.replaceFirst("^\\!\\s*", "");
-					if(caje.equals(sca)) {
-						//System.out.println(">>> ctca should not match sca fail: " + caj);
-						return "fail";
-					}
-				}
-			}
-		}
-
-		if( ! ci.isNull("pkdgst")) {
-			JSONArray pkdgst = ci.getJSONArray("pkdgst");
-
-			for(int j=0;j<pkdgst.length();j++) {
-				String pkj =  ((String) pkdgst.get(j)).toLowerCase();
-				if(pkj.equals(spk)) {
-					//System.out.println(">>> ctca match pkdgst success: " + pkj);
-					return "success";
-				}else if(pkj.startsWith("!")) {
-					String pkje = pkj.replaceFirst("^\\!\\s*", "");
-					if(pkje.equals(spk)) {
-						//System.out.println(">>> ctca should not match pkdgst fail: " + pkj);
-						return "fail";
-					}
-				}
+	for(int j=0; j<wcts.length();j++) {
+		String caj =  ((String) wcts.get(j)).toLowerCase();
+		if(caj.equals(sca)) {
+			//System.out.println(">>> ctca match sca success: " + caj);
+			return "success";
+		}else if(caj.startsWith("!")) {
+			String caje = caj.replaceFirst("^\\!\\s*", "");
+			if(caje.equals(sca)) {
+				//System.out.println(">>> ctca should not match sca fail: " + caj);
+				return "fail";
 			}
 		}
 	}
 
 	//System.out.println(">>> ctca : unknown");
 	return "unknown";
- }
+}
 
- public static JSONObject read_ctca_cache(String fname) throws Exception {
+public static JSONObject read_json_file(String cache_file_name) throws Exception {
 
-	 String content = new String(Files.readAllBytes(Paths.get(fname)));
-	 JSONObject jo = new JSONObject(content);
+	File cache_file = new File(cache_file_name);
+	String ctca_cache_f =	 cache_file.getAbsolutePath();
+	String ctca_content = new String(Files.readAllBytes(Paths.get(ctca_cache_f)));
+	JSONObject cache = new JSONObject(ctca_content);
 
+	return cache;
+}
 
-	 return jo;
- }
+public static String read_sld(String u) throws Exception {
+	URI uri = new URI(u);
+	String host = uri.getHost();
 
- public static String read_sld(String u) throws Exception {
-	 URI uri = new URI(u);
-	 String host = uri.getHost();
+	InternetDomainName internetDomainName = InternetDomainName.from(host).topPrivateDomain(); 
+	String domain = internetDomainName.toString().toLowerCase(); 
 
-	 InternetDomainName internetDomainName = InternetDomainName.from(host).topPrivateDomain(); 
-	 String domain = internetDomainName.toString().toLowerCase(); 
+	//    System.out.println(">>> url : " + u              );      
+	//   System.out.println(">>> host : " + host              );      
+	//  System.out.println(">>> domain : " + domain              );      
 
-	 //    System.out.println(">>> url : " + u              );      
-	 //   System.out.println(">>> host : " + host              );      
-	 //  System.out.println(">>> domain : " + domain              );      
+	return domain;
+}
 
-	 return domain;
- }
-
- public static String read_crl(X509Certificate ee) throws Exception {
-	 byte[] crl = ee.getExtensionValue("2.5.29.31"); // CRL Distribution Points
-	 //  System.out.println(">>> Cert CRL : " + new BigInteger(1, crl).toString(16)                 );      
-
-
-	 Asn1OctetString octetString = new Asn1OctetString();           
-	 for(int i=0; i<2; i++) {
-		 octetString.decode(crl);
-		 //   Asn1.dump(octetString);
-		 crl = 	octetString.getValue();       
-		 octetString.decode(crl);
-	 }
-	 //  Asn1.dump(octetString);
+public static String read_crl(X509Certificate ee) throws Exception {
+	byte[] crl = ee.getExtensionValue("2.5.29.31"); // CRL Distribution Points
+	//  System.out.println(">>> Cert CRL : " + new BigInteger(1, crl).toString(16)                 );      
 
 
-	 ByteBuffer buffer = ByteBuffer.wrap(octetString.getValue());
-	 Asn1ParseResult res = Asn1Parser.parse(buffer);
-	 byte[] crl_addr = res.readBodyBytes();
-	 String crl_str =         new String(crl_addr , StandardCharsets.UTF_8);
-	 //  System.out.println(">>> Cert CRL : " +        		crl_str        		);
+	Asn1OctetString octetString = new Asn1OctetString();           
+	for(int i=0; i<2; i++) {
+		octetString.decode(crl);
+		//   Asn1.dump(octetString);
+		crl = 	octetString.getValue();       
+		octetString.decode(crl);
+	}
+	//  Asn1.dump(octetString);
+
+
+	ByteBuffer buffer = ByteBuffer.wrap(octetString.getValue());
+	Asn1ParseResult res = Asn1Parser.parse(buffer);
+	byte[] crl_addr = res.readBodyBytes();
+	String crl_str =         new String(crl_addr , StandardCharsets.UTF_8);
+	//  System.out.println(">>> Cert CRL : " +        		crl_str        		);
 
 
 
-	 //   ASN1InputStream  crlis = new ASN1InputStream(crl);
-	 //com.hierynomus.asn1.types.constructed.ASN1Sequence s = crlis.iter;
-	 // byte[] crlr = crlis.readValue(crlis.readLength());
-	 //  ASN1Sequence  crlobj =  crlis.readObject();
-	 //     System.out.println(" >>> crl der size : " + crlis.readObject());
+	//   ASN1InputStream  crlis = new ASN1InputStream(crl);
+	//com.hierynomus.asn1.types.constructed.ASN1Sequence s = crlis.iter;
+	// byte[] crlr = crlis.readValue(crlis.readLength());
+	//  ASN1Sequence  crlobj =  crlis.readObject();
+	//     System.out.println(" >>> crl der size : " + crlis.readObject());
 
-	 //     ArrayList crlarr = (ArrayList) crlis.readObject().getValue();
+	//     ArrayList crlarr = (ArrayList) crlis.readObject().getValue();
 
-	 //   ASN1OctetString  crl_asn1 = new ASN1OctetString(crl);
-	 //    System.out.println(">>> Cert CRL : " +
-	 //       		 new BigInteger(1, crl_asn1.getValueBytes()).toString(16)
+	//   ASN1OctetString  crl_asn1 = new ASN1OctetString(crl);
+	//    System.out.println(">>> Cert CRL : " +
+	//       		 new BigInteger(1, crl_asn1.getValueBytes()).toString(16)
 
-	 // 		 new BigInteger(1, crl_asn1.getValue()).toString(16)
-	 //	                      );   
-	 // InputStream stream = new ByteArrayInputStream(exampleString.getBytes(StandardCharsets.UTF_8));
-	 // InputStream stream = new ByteArrayInputStream(crl);
+	// 		 new BigInteger(1, crl_asn1.getValue()).toString(16)
+	//	                      );   
+	// InputStream stream = new ByteArrayInputStream(exampleString.getBytes(StandardCharsets.UTF_8));
+	// InputStream stream = new ByteArrayInputStream(crl);
 
-	 return crl_str;
- }
+	return crl_str;
+}
 
- public static String read_ca_dom(X509Certificate ee) throws Exception {
-	 return read_sld(read_crl(ee));
- }
+public static String read_ca_dom(X509Certificate ee) throws Exception {
+	return read_sld(read_crl(ee));
+}
 
- public static byte[] read_subject_pk(X509Certificate ee) {
-	 PublicKey pk = ee.getPublicKey();
-	 //System.out.println(">>> Cert Public Key Algorithm : " + pk.getAlgorithm());
+public static byte[] read_subject_pk(X509Certificate ee) {
+	PublicKey pk = ee.getPublicKey();
+	//System.out.println(">>> Cert Public Key Algorithm : " + pk.getAlgorithm());
 
-	 byte[] pk_der = pk.getEncoded();
-	 //System.out.println(">>> Cert Public Key Algorithm : " + HexUtil.bytesToHex(pk_der) );
+	byte[] pk_der = pk.getEncoded();
+	//System.out.println(">>> Cert Public Key Algorithm : " + HexUtil.bytesToHex(pk_der) );
 
-	 return pk_der;
- }
+	return pk_der;
+}
 
- public static byte[] digest( String hashName,  byte[] s) throws NoSuchAlgorithmException {
-	 MessageDigest digest = MessageDigest.getInstance(hashName);
-	 byte[] hash = digest.digest(s);
-	 return hash;
- }
+public static byte[] digest( String hashName,  byte[] s) throws NoSuchAlgorithmException {
+	MessageDigest digest = MessageDigest.getInstance(hashName);
+	byte[] hash = digest.digest(s);
+	return hash;
+}
 
- public static String calc_subject_pk_dgst(String dgstAlg, X509Certificate ee) throws Exception {
-	 byte[] pk_der = read_subject_pk(ee);
-	 //  System.out.println(">>> Cert Public Key DER : " + HexFormat.of().formatHex(pk_der) );
+public static String calc_subject_pk_dgst(String dgstAlg, X509Certificate ee) throws Exception {
+	byte[] pk_der = read_subject_pk(ee);
+	//  System.out.println(">>> Cert Public Key DER : " + HexFormat.of().formatHex(pk_der) );
 
-	 byte[] dgst = digest(dgstAlg, pk_der);
-	 String s =  HexFormat.of().formatHex(dgst);
-	 //  System.out.println(">>> Cert Public Key Digest : " + s );
+	byte[] dgst = digest(dgstAlg, pk_der);
+	String s =  HexFormat.of().formatHex(dgst);
+	//  System.out.println(">>> Cert Public Key Digest : " + s );
 
-	 return s;
- }
+	return s;
+}
 
 //@Benchmark
- private static  SSLSocketFactory createCTCASslSocketFactory(String host, JSONObject ctca_cache) throws Exception {
-	 X509TrustManager default_tm = get_default_trust_manager();
+private static  SSLSocketFactory createCTCASslSocketFactory(String host, String appid) throws Exception {
+	X509TrustManager default_tm = get_default_trust_manager();
 
-	 TrustManager[] ctcaTrustManagers = new TrustManager[] { new X509TrustManager() {
+	TrustManager[] ctcaTrustManagers = new TrustManager[] { new X509TrustManager() {
 
-		 public X509Certificate[] getAcceptedIssuers() {
-			 return default_tm.getAcceptedIssuers();
-		 }
+		public X509Certificate[] getAcceptedIssuers() {
+			return default_tm.getAcceptedIssuers();
+		}
 
-		 public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-			 default_tm.checkServerTrusted(chain, authType);
+		public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+			default_tm.checkServerTrusted(chain, authType);
 
-			 X509Certificate ee = chain[0];
+			X509Certificate ee = chain[0];
 
-			 try {
-				 String res = CTCA.checkCrtAtt(host, ee, ctca_cache);
-				 System.out.println(host + ",ctca!," + res);
-				 if(res.equals("fail")) {
-					 throw new Exception("CTCA check: fail!");
-				 }
-			 } catch (Exception e) {
-				 e.printStackTrace();
-			 }
-		 }
-		 public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-			 default_tm.checkClientTrusted(chain, authType);
-		 }
-	 }
+			try {
+				String res = CTCA.checkCrtAtt(host, ee, appid);
+				System.out.println(host + ",ctca!," + res);
+				if(res.equals("fail")) {
+					//throw new Exception("CTCA check: fail!");
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+			default_tm.checkClientTrusted(chain, authType);
+		}
+	}
 
-	 };
+	};
 
-	 SSLContext sslContext = SSLContext.getInstance("TLS");
-	 sslContext.init(null, ctcaTrustManagers, new SecureRandom());
-	 return sslContext.getSocketFactory();
- }
+	SSLContext sslContext = SSLContext.getInstance("TLS");
+	sslContext.init(null, ctcaTrustManagers, new SecureRandom());
+	return sslContext.getSocketFactory();
+}
 
- private static HostnameVerifier createBypassHostnameVerifier() {
-	 HostnameVerifier hv = new HostnameVerifier() {
-		 public boolean verify(String hostname, SSLSession session) { return true; }
-	 };
-	 return hv;
- }
+private static HostnameVerifier createBypassHostnameVerifier() {
+	HostnameVerifier hv = new HostnameVerifier() {
+		public boolean verify(String hostname, SSLSession session) { return true; }
+	};
+	return hv;
+}
 
- public static SSLSocketFactory createBypassSslSocketFactory() throws Exception {
-	 TrustManager[] byPassTrustManagers = new TrustManager[] { new X509TrustManager() {
-		 public X509Certificate[] getAcceptedIssuers() {
-			 return new X509Certificate[0];
-		 }
-		 public void checkClientTrusted(X509Certificate[] chain, String authType) {
-		 }
-		 public void checkServerTrusted(X509Certificate[] chain, String authType) {
-		 }
-	 } };
+public static SSLSocketFactory createBypassSslSocketFactory() throws Exception {
+	TrustManager[] byPassTrustManagers = new TrustManager[] { new X509TrustManager() {
+		public X509Certificate[] getAcceptedIssuers() {
+			return new X509Certificate[0];
+		}
+		public void checkClientTrusted(X509Certificate[] chain, String authType) {
+		}
+		public void checkServerTrusted(X509Certificate[] chain, String authType) {
+		}
+	} };
 
-	 SSLContext sslContext = SSLContext.getInstance("TLS");
-	 sslContext.init(null, byPassTrustManagers, new SecureRandom());
-	 return sslContext.getSocketFactory();
- }
+	SSLContext sslContext = SSLContext.getInstance("TLS");
+	sslContext.init(null, byPassTrustManagers, new SecureRandom());
+	return sslContext.getSocketFactory();
+}
 
- private static HttpsURLConnection create_conn(String https_url) throws Exception {
+private static HttpsURLConnection create_conn(String https_url) throws Exception {
 
-	 URL url;
-	 url = URI.create(https_url).toURL();
-	 HttpsURLConnection con = (HttpsURLConnection)url.openConnection();
+	URL url;
+	url = URI.create(https_url).toURL();
+	HttpsURLConnection con = (HttpsURLConnection)url.openConnection();
 
-	 return con;
- }
-
-
-
- private void print_https_cert(HttpsURLConnection con) throws Exception {
-
-	 System.out.println("Response Code : " + con.getResponseCode());
-	 System.out.println("Cipher Suite : " + con.getCipherSuite());
-	 System.out.println("\n");
+	return con;
+}
 
 
 
-	 Certificate[] certs = con.getServerCertificates();
-	 for(Certificate cert : certs){
-		 System.out.println("Cert Type : " + cert.getType());
-		 System.out.println("Cert Hash Code : " + cert.hashCode());
-		 System.out.println("Cert Public Key Algorithm : "
-				 + cert.getPublicKey().getAlgorithm());
-		 System.out.println("Cert Public Key Format : "
-				 + cert.getPublicKey().getFormat());
+private void print_https_cert(HttpsURLConnection con) throws Exception {
 
-		 //String issuer = cert.getIssuerX500Principal().toString();
-		 //System.out.println("Cert Issuer Name: " + issuer);
+	System.out.println("Response Code : " + con.getResponseCode());
+	System.out.println("Cipher Suite : " + con.getCipherSuite());
+	System.out.println("\n");
 
-		 System.out.println("\n");
-	 }
 
- }
 
- private static String get_content(HttpsURLConnection con) throws Exception {
+	Certificate[] certs = con.getServerCertificates();
+	for(Certificate cert : certs){
+		System.out.println("Cert Type : " + cert.getType());
+		System.out.println("Cert Hash Code : " + cert.hashCode());
+		System.out.println("Cert Public Key Algorithm : "
+				+ cert.getPublicKey().getAlgorithm());
+		System.out.println("Cert Public Key Format : "
+				+ cert.getPublicKey().getFormat());
 
-	 //System.out.println("****** Content of the URL ********"); 
-	 BufferedReader br =
-			 new BufferedReader(
-					 new InputStreamReader(con.getInputStream()));
+		//String issuer = cert.getIssuerX500Principal().toString();
+		//System.out.println("Cert Issuer Name: " + issuer);
 
-	 String input;
-	 String res = "";
-	 while ((input = br.readLine()) != null){
-		 res = res + input;      
-		 //System.out.println(input);
-	 }
-	 br.close();
+		System.out.println("\n");
+	}
 
-	 //System.out.println("\n");
-	 
-	 return res;
- }
+}
 
- private void print_content(HttpsURLConnection con) throws Exception {
+private static String get_content(HttpsURLConnection con) throws Exception {
 
-	 //System.out.println("****** Content of the URL ********"); 
-	 BufferedReader br =
-			 new BufferedReader(
-					 new InputStreamReader(con.getInputStream()));
+	//System.out.println("****** Content of the URL ********"); 
+	BufferedReader br =
+		new BufferedReader(
+				new InputStreamReader(con.getInputStream()));
 
-	 String input;
-	 //String res = "";
-	 while ((input = br.readLine()) != null){
-		 //res = res + input;      
-		 System.out.println(input);
-	 }
-	 br.close();
+	String input;
+	String res = "";
+	while ((input = br.readLine()) != null){
+		res = res + input;      
+		//System.out.println(input);
+	}
+	br.close();
 
-	 System.out.println("\n");
-	 
-	 //return res;
- }
+	//System.out.println("\n");
+
+	return res;
+}
+
+private void print_content(HttpsURLConnection con) throws Exception {
+
+	//System.out.println("****** Content of the URL ********"); 
+	BufferedReader br =
+		new BufferedReader(
+				new InputStreamReader(con.getInputStream()));
+
+	String input;
+	//String res = "";
+	while ((input = br.readLine()) != null){
+		//res = res + input;      
+		System.out.println(input);
+	}
+	br.close();
+
+	System.out.println("\n");
+
+	//return res;
+}
 
 }
 

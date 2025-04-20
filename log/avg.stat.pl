@@ -1,26 +1,23 @@
 #!/usr/bin/perl
 use File::Slurp qw/slurp write_file/;
 
-my ($f) = @ARGV;
-$f ||= 'avg.all';
 
-#system(q[find succ -name '*-default-*.log' -exec Rscript avg.default.R {} \;]);
-#system(q[find succ -name '*-bypass-*.log' -exec Rscript avg.default.R {} \;]);
-#system(q[find succ -name '*-ctca-*.log' -exec Rscript avg.ctca.R {} \;]);
-
-#system(q[find fail -name '*-default-*.log' -exec Rscript avg.default.R {} \;]);
-#system(q[find fail -name '*-bypass-*.log' -exec Rscript avg.default.R {} \;]);
-#system(q[find fail -name '*-ctca-*.log' -exec Rscript avg.ctca.R {} \;]);
-
-
-my @num = qw/100 1k 1w 5w/;
-my @all = (join(",", qw/num type avg median/)."\n");
+my @num = qw/10 100 1k/;
 for my $n (@num){
-    system(qq[cat */*-$n-*.stat > $f.$n]);
-    system(qq[Rscript avg.all.R $f.$n]);
-    my $c = slurp("$f.$n.csv"); 
-    my @data = map { "$n,$_\n" } (split /\n/, $c);
-    push @all, @data;
+    for my $t (qw/default bypass/){
+        system(qq[find . -name '*-$n-$t-*.log' | xargs cat > stat/$t-$n.merge]);
+        system(qq[Rscript avg.url.type.R stat/$t-$n.merge]);
+        system(qq[Rscript avg.type.R stat/$t-$n.merge]);
+    }
 }
 
-write_file("$f.csv", @all);
+my @num = qw/10 100 1k/;
+for my $n (@num){
+    my $t = 'ctca';
+    for my $res (qw/succ fail unknown/){
+        system(qq[cat $res/*-$n-$t-*.log | grep ',ctca,' > stat/$t-$n.$res.merge]);
+        system(qq[Rscript avg.url.type.R stat/$t-$n.$res.merge]);
+        system(qq[Rscript avg.type.R stat/$t-$n.$res.merge]);
+    }
+}
+
