@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private Button GetAndVerifyClaimButton;
     private Button JWTSCCSKBenchmarkButton;
     private Button JWTSCCBenchmarkButton;
-    private Button httpsConnectionBenchmarkButton;
+    private Button httpsDefaultConnectionBenchmarkButton;
     private Button httpsBypassConnectionBenchmarkButton;
     private Button httpsOurConnectionBenchmarkButton;
     private Button httpsCreateConnBenchmarkButton;
@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
         GetAndVerifyClaimButton = findViewById(R.id.GetAndVerifyClaimButton);
         JWTSCCSKBenchmarkButton = findViewById(R.id.JWTSCCSKBenchmarkButton);
         JWTSCCBenchmarkButton = findViewById(R.id.JWTSCCBenchmarkButton);
-        httpsConnectionBenchmarkButton = findViewById(R.id.httpsConnectionBenchmarkButton);
+        httpsDefaultConnectionBenchmarkButton = findViewById(R.id.httpsDefaultConnectionBenchmarkButton);
         httpsBypassConnectionBenchmarkButton = findViewById(R.id.httpsBypassConnectionBenchmarkButton);
         httpsOurConnectionBenchmarkButton = findViewById(R.id.httpsOurConnectionBenchmarkButton);
         httpsCreateConnBenchmarkButton = findViewById(R.id.httpsCreateConnBenchmarkButton);
@@ -97,8 +97,8 @@ public class MainActivity extends AppCompatActivity {
             runVerifyJWTCertClaimBenchmark();
         });
         
-        httpsConnectionBenchmarkButton.setOnClickListener(v -> {
-            runHttpsConnectionBenchmark();
+        httpsDefaultConnectionBenchmarkButton.setOnClickListener(v -> {
+            runHttpsDefaultConnectionBenchmark();
         });
         
         httpsBypassConnectionBenchmarkButton.setOnClickListener(v -> {
@@ -345,7 +345,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
     
-    public void runHttpsConnectionBenchmark() {
+    public void runHttpsDefaultConnectionBenchmark() {
         // Show loading message
         int maxAttempts = getCurrentMaxBenchmarkAttempts();
         mainHandler.post(() -> {
@@ -359,7 +359,7 @@ public class MainActivity extends AppCompatActivity {
                 String host = getCurrentHost();
                 
                 // Run benchmark with dynamic iterations
-                String benchmarkResults = JwtBenchmark.runHttpsConnectionBenchmark(host, maxAttempts);
+                String benchmarkResults = JwtBenchmark.runHttpsDefaultConnectionBenchmark(host, maxAttempts);
                 
                 // Update the response text view with benchmark results on main thread
                 mainHandler.post(() -> {

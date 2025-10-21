@@ -582,7 +582,7 @@ public class JwtBenchmark {
     /**
      * Run multiple HTTPS connection benchmark iterations and return statistics
      */
-    public static String runHttpsConnectionBenchmark(String host, int iterations) {
+    public static String runHttpsDefaultConnectionBenchmark(String host, int iterations) {
         List<JwtBenchmark> results = new ArrayList<>();
         
         // Run benchmark iterations
