@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:fitsSystemWindows="true">
+
+    <!-- App Title -->
+    <TextView
+        android:id="@+id/appTitleTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="24dp"
+        android:gravity="center"
+        android:text="App Certificate &amp; HTTPS Demo"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:background="#e1f5fe"
+        android:padding="16dp"
+        android:elevation="4dp" />
+
+    <!-- Max Benchmark Attempt Number Input -->
+    <EditText
+        android:id="@+id/maxBenchmarkAttemptNumber"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:gravity="center"
+        android:text="1000"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:background="#f3e5f5"
+        android:padding="8dp"
+        android:hint="Enter number of benchmark iterations (default: 1000)"
+        android:inputType="number"
+        android:selectAllOnFocus="true" />
+
+    <EditText
+        android:id="@+id/hostTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+              android:textSize="16sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:background="#e3f2fd"
+        android:padding="8dp"
+        android:layout_marginBottom="8dp"
+        android:hint="Enter server hostname (e.g., appservercert.run.place)"
+        android:inputType="textUri"
+        android:selectAllOnFocus="true" />
+
+    <EditText
+        android:id="@+id/expIssuerTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:background="#fff3e0"
+        android:padding="8dp"
+        android:layout_marginBottom="16dp"
+        android:hint="Enter expected issuer"
+        android:inputType="text"
+        android:selectAllOnFocus="true" />
+
+    <!-- Action Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <Button
+            android:id="@+id/GetHTTPContentButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Get HTTP Content"
+            android:textSize="14sp"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/GetAndVerifyClaimButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Get And Verify Claim"
+            android:textSize="14sp"
+            android:layout_marginStart="4dp" />
+
+    </LinearLayout>
+
+    <!-- JWT Benchmark Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <Button
+            android:id="@+id/JWTSCCSKBenchmarkButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="JWT Signing Key Benchmark"
+            android:textSize="12sp"
+            android:layout_marginEnd="4dp"
+            android:background="#4CAF50"
+            android:textColor="@android:color/white" />
+
+        <Button
+            android:id="@+id/JWTSCCBenchmarkButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="JWT Server Cert Claim Benchmark"
+            android:textSize="12sp"
+            android:layout_marginStart="4dp"
+            android:background="#FF9800"
+            android:textColor="@android:color/white" />
+
+    </LinearLayout>
+
+    <!-- HTTPS Connection Benchmark Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <Button
+            android:id="@+id/httpsConnectionBenchmarkButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="HTTPS Connection Benchmark"
+            android:textSize="12sp"
+            android:layout_marginEnd="4dp"
+            android:background="#2196F3"
+            android:textColor="@android:color/white" />
+
+        <Button
+            android:id="@+id/httpsBypassConnectionBenchmarkButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="HTTPS Bypass Connection Benchmark"
+            android:textSize="12sp"
+            android:layout_marginStart="4dp"
+            android:background="#9C27B0"
+            android:textColor="@android:color/white" />
+
+    </LinearLayout>
+
+    <!-- HTTPS Our Connection Benchmark Button -->
+    <Button
+        android:id="@+id/httpsOurConnectionBenchmarkButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="HTTPS Our Connection Benchmark"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp"
+        android:background="#FF5722"
+        android:textColor="@android:color/white" />
+
+    <!-- HTTPS Create Conn Benchmark Button -->
+    <Button
+        android:id="@+id/httpsCreateConnBenchmarkButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Get Signing Key JWT Benchmark"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp"
+        android:background="#9C27B0"
+        android:textColor="@android:color/white" />
+
+    <!-- Get Cert Claim JWT Benchmark Button -->
+    <Button
+        android:id="@+id/getCertClaimJWTBenchmarkButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Get Cert Claim JWT Benchmark"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp"
+        android:background="#607D8B"
+        android:textColor="@android:color/white" />
+
+    <!-- Combined Response View -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <TextView
+            android:id="@+id/responseTextView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#f5f5f5"
+            android:fontFamily="monospace"
+            android:lines="20"
+            android:padding="12dp"
+            android:text="Click a button above to make HTTPS request or show app information"
+            android:textIsSelectable="true"
+            android:textSize="14sp" />
+
+    </ScrollView>
+
+</LinearLayout>
