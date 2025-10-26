@@ -10,9 +10,9 @@ import javax.net.ssl.HttpsURLConnection;
  */
 public class JwtBenchmark {
     private String operation;
-    private long totalTimeMs;
-    private long parseTimeMs;
-    private long verificationTimeMs;
+    private long totalTimeUs;
+    private long parseTimeUs;
+    private long verificationTimeUs;
     private boolean success;
     private String errorMessage;
     private Date timestamp;
@@ -31,16 +31,16 @@ public class JwtBenchmark {
         return operation;
     }
 
-    public long getTotalTimeMs() {
-        return totalTimeMs;
+    public long getTotalTimeUs() {
+        return totalTimeUs;
     }
 
-    public long getParseTimeMs() {
-        return parseTimeMs;
+    public long getParseTimeUs() {
+        return parseTimeUs;
     }
 
-    public long getVerificationTimeMs() {
-        return verificationTimeMs;
+    public long getVerificationTimeUs() {
+        return verificationTimeUs;
     }
 
     public boolean isSuccess() {
@@ -76,16 +76,16 @@ public class JwtBenchmark {
         this.operation = operation;
     }
 
-    public void setTotalTimeMs(long totalTimeMs) {
-        this.totalTimeMs = totalTimeMs;
+    public void setTotalTimeUs(long totalTimeUs) {
+        this.totalTimeUs = totalTimeUs;
     }
 
-    public void setParseTimeMs(long parseTimeMs) {
-        this.parseTimeMs = parseTimeMs;
+    public void setParseTimeUs(long parseTimeUs) {
+        this.parseTimeUs = parseTimeUs;
     }
 
-    public void setVerificationTimeMs(long verificationTimeMs) {
-        this.verificationTimeMs = verificationTimeMs;
+    public void setVerificationTimeUs(long verificationTimeUs) {
+        this.verificationTimeUs = verificationTimeUs;
     }
 
     public void setSuccess(boolean success) {
@@ -120,21 +120,21 @@ public class JwtBenchmark {
      * Get total time in seconds
      */
     public double getTotalTimeSeconds() {
-        return totalTimeMs / 1000.0;
+        return totalTimeUs / 1_000_000.0;
     }
 
     /**
      * Get parse time in seconds
      */
     public double getParseTimeSeconds() {
-        return parseTimeMs / 1000.0;
+        return parseTimeUs / 1_000_000.0;
     }
 
     /**
      * Get verification time in seconds
      */
     public double getVerificationTimeSeconds() {
-        return verificationTimeMs / 1000.0;
+        return verificationTimeUs / 1_000_000.0;
     }
 
     /**
@@ -160,10 +160,10 @@ public class JwtBenchmark {
         sb.append("Token Size: ").append(String.format("%.2f", getTokenSizeKB())).append(" KB\n");
         
         if (success) {
-            sb.append("Total Time: ").append(totalTimeMs).append("ms\n");
+            sb.append("Total Time: ").append(totalTimeUs).append("μs\n");
             sb.append("\nTiming Breakdown:\n");
-            sb.append("  Parse Time: ").append(parseTimeMs).append("ms\n");
-            sb.append("  Verification Time: ").append(verificationTimeMs).append("ms\n");
+            sb.append("  Parse Time: ").append(parseTimeUs).append("μs\n");
+            sb.append("  Verification Time: ").append(verificationTimeUs).append("μs\n");
         } else {
             sb.append("Error: ").append(errorMessage).append("\n");
         }
@@ -197,20 +197,20 @@ public class JwtBenchmark {
             HttpsRequestHelper.get_content(con);
 
             connectionEndTime = System.nanoTime();
-            result.setParseTimeMs((connectionEndTime - connectionStartTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setParseTimeUs((connectionEndTime - connectionStartTime) / 1_000); // Convert nanoseconds to microseconds
             
             // Set verification time to 0 for connection benchmark
-            result.setVerificationTimeMs(0);
+            result.setVerificationTimeUs(0);
             
             // Set success
             result.setSuccess(true);
-            result.setTotalTimeMs((System.nanoTime() - startTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000); // Convert nanoseconds to microseconds
             result.setAlgorithm("HTTPS-Our");
             
         } catch (Exception e) {
             result.setSuccess(false);
             result.setErrorMessage(e.getMessage());
-            result.setTotalTimeMs((System.nanoTime() - startTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000); // Convert nanoseconds to microseconds
         }
         
         return result;
@@ -235,20 +235,20 @@ public class JwtBenchmark {
             HttpsURLConnection con = HttpsRequestHelper.create_main_conn(new    String [] {host, "bypass"});
             HttpsRequestHelper.get_content(con);
             connectionEndTime = System.nanoTime();
-            result.setParseTimeMs((connectionEndTime - connectionStartTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setParseTimeUs((connectionEndTime - connectionStartTime) / 1_000); // Convert nanoseconds to microseconds
             
             // Set verification time to 0 for connection benchmark
-            result.setVerificationTimeMs(0);
+            result.setVerificationTimeUs(0);
             
             // Set success
             result.setSuccess(true);
-            result.setTotalTimeMs((System.nanoTime() - startTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000); // Convert nanoseconds to microseconds
             result.setAlgorithm("HTTPS-Bypass");
             
         } catch (Exception e) {
             result.setSuccess(false);
             result.setErrorMessage(e.getMessage());
-            result.setTotalTimeMs((System.nanoTime() - startTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000); // Convert nanoseconds to microseconds
         }
         
         return result;
@@ -273,20 +273,20 @@ public class JwtBenchmark {
             HttpsURLConnection con = HttpsRequestHelper.create_main_conn(new    String [] { host, "default"});
             HttpsRequestHelper.get_content(con);
             connectionEndTime = System.nanoTime();
-            result.setParseTimeMs((connectionEndTime - connectionStartTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setParseTimeUs((connectionEndTime - connectionStartTime) / 1_000); // Convert nanoseconds to microseconds
             
             // Set verification time to 0 for connection benchmark
-            result.setVerificationTimeMs(0);
+            result.setVerificationTimeUs(0);
             
             // Set success
             result.setSuccess(true);
-            result.setTotalTimeMs((System.nanoTime() - startTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000); // Convert nanoseconds to microseconds
             result.setAlgorithm("HTTPS");
             
         } catch (Exception e) {
             result.setSuccess(false);
             result.setErrorMessage(e.getMessage());
-            result.setTotalTimeMs((System.nanoTime() - startTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000); // Convert nanoseconds to microseconds
         }
         
         return result;
@@ -311,20 +311,20 @@ public class JwtBenchmark {
             HttpsURLConnection con = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/serverCertClaim.jwt");
             String info = HttpsRequestHelper.get_content(con);
             connectionEndTime = System.nanoTime();
-            result.setParseTimeMs((connectionEndTime - connectionStartTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setParseTimeUs((connectionEndTime - connectionStartTime) / 1_000); // Convert nanoseconds to microseconds
             
             // Set verification time to 0 for connection benchmark
-            result.setVerificationTimeMs(0);
+            result.setVerificationTimeUs(0);
             
             // Set success
             result.setSuccess(true);
-            result.setTotalTimeMs((System.nanoTime() - startTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000); // Convert nanoseconds to microseconds
             result.setAlgorithm("HTTPS");
             
         } catch (Exception e) {
             result.setSuccess(false);
             result.setErrorMessage(e.getMessage());
-            result.setTotalTimeMs((System.nanoTime() - startTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000); // Convert nanoseconds to microseconds
         }
         
         return result;
@@ -350,20 +350,20 @@ public class JwtBenchmark {
             String info = HttpsRequestHelper.get_content(con);
 
             connectionEndTime = System.nanoTime();
-            result.setParseTimeMs((connectionEndTime - connectionStartTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setParseTimeUs((connectionEndTime - connectionStartTime) / 1_000); // Convert nanoseconds to microseconds
             
             // Set verification time to 0 for connection benchmark
-            result.setVerificationTimeMs(0);
+            result.setVerificationTimeUs(0);
             
             // Set success
             result.setSuccess(true);
-            result.setTotalTimeMs((System.nanoTime() - startTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000); // Convert nanoseconds to microseconds
             result.setAlgorithm("HTTPS");
             
         } catch (Exception e) {
             result.setSuccess(false);
             result.setErrorMessage(e.getMessage());
-            result.setTotalTimeMs((System.nanoTime() - startTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000); // Convert nanoseconds to microseconds
         }
         
         return result;
@@ -388,17 +388,17 @@ public class JwtBenchmark {
             // JWK parsing is part of the parsing phase
             JwkToPublicKeyConverter.convertJwkToPublicKey(jwkJson);
             parseEndTime = System.nanoTime();
-            result.setParseTimeMs((parseEndTime - parseStartTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setParseTimeUs((parseEndTime - parseStartTime) / 1_000); // Convert nanoseconds to microseconds
             
             // Measure verification time
             verificationStartTime = System.nanoTime();
             String payload = JwtVerifier.verifyJwtWithJwk(token, jwkJson);
             verificationEndTime = System.nanoTime();
-            result.setVerificationTimeMs((verificationEndTime - verificationStartTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setVerificationTimeUs((verificationEndTime - verificationStartTime) / 1_000); // Convert nanoseconds to microseconds
             
             // Set success
             result.setSuccess(true);
-            result.setTotalTimeMs((System.nanoTime() - startTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000); // Convert nanoseconds to microseconds
             
             // Try to extract algorithm from token (simplified)
             if (token.contains("ES256")) {
@@ -420,7 +420,7 @@ public class JwtBenchmark {
         } catch (Exception e) {
             result.setSuccess(false);
             result.setErrorMessage(e.getMessage());
-            result.setTotalTimeMs((System.nanoTime() - startTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000); // Convert nanoseconds to microseconds
         }
         
         return result;
@@ -445,17 +445,17 @@ public class JwtBenchmark {
             // Parse certificate (this is part of the parsing phase)
             PemUtils.parseX509Certificate(cert);
             parseEndTime = System.nanoTime();
-            result.setParseTimeMs((parseEndTime - parseStartTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setParseTimeUs((parseEndTime - parseStartTime) / 1_000); // Convert nanoseconds to microseconds
             
             // Measure verification time
             verificationStartTime = System.nanoTime();
             String payload = JwtVerifier.verifyJwtWithCert(token, cert);
             verificationEndTime = System.nanoTime();
-            result.setVerificationTimeMs((verificationEndTime - verificationStartTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setVerificationTimeUs((verificationEndTime - verificationStartTime) / 1_000); // Convert nanoseconds to microseconds
             
             // Set success
             result.setSuccess(true);
-            result.setTotalTimeMs((System.nanoTime() - startTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000); // Convert nanoseconds to microseconds
             
             // Try to extract algorithm from token (simplified)
             if (token.contains("ES256")) {
@@ -477,7 +477,7 @@ public class JwtBenchmark {
         } catch (Exception e) {
             result.setSuccess(false);
             result.setErrorMessage(e.getMessage());
-            result.setTotalTimeMs((System.nanoTime() - startTime) / 1_000_000); // Convert nanoseconds to milliseconds
+            result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000); // Convert nanoseconds to microseconds
         }
         
         return result;
@@ -679,11 +679,11 @@ public class JwtBenchmark {
         long maxTotalTime = 0;
         
         for (JwtBenchmark result : successfulResults) {
-            totalTimeSum += result.getTotalTimeMs();
-            parseTimeSum += result.getParseTimeMs();
-            verificationTimeSum += result.getVerificationTimeMs();
-            minTotalTime = Math.min(minTotalTime, result.getTotalTimeMs());
-            maxTotalTime = Math.max(maxTotalTime, result.getTotalTimeMs());
+            totalTimeSum += result.getTotalTimeUs();
+            parseTimeSum += result.getParseTimeUs();
+            verificationTimeSum += result.getVerificationTimeUs();
+            minTotalTime = Math.min(minTotalTime, result.getTotalTimeUs());
+            maxTotalTime = Math.max(maxTotalTime, result.getTotalTimeUs());
         }
         
         double avgTotalTime = (double) totalTimeSum / successfulResults.size();
@@ -701,20 +701,20 @@ public class JwtBenchmark {
         
         if (!successfulResults.isEmpty()) {
             sb.append("Performance Statistics:\n");
-            sb.append("  Average Total Time: ").append(String.format("%.1f", avgTotalTime)).append("ms\n");
-            sb.append("  Average Parse Time: ").append(String.format("%.1f", avgParseTime)).append("ms\n");
-            sb.append("  Average Verification Time: ").append(String.format("%.1f", avgVerificationTime)).append("ms\n");
-            sb.append("  Min Total Time: ").append(minTotalTime).append("ms\n");
-            sb.append("  Max Total Time: ").append(maxTotalTime).append("ms\n");
+            sb.append("  Average Total Time: ").append(String.format("%.1f", avgTotalTime)).append("μs\n");
+            sb.append("  Average Parse Time: ").append(String.format("%.1f", avgParseTime)).append("μs\n");
+            sb.append("  Average Verification Time: ").append(String.format("%.1f", avgVerificationTime)).append("μs\n");
+            sb.append("  Min Total Time: ").append(minTotalTime).append("μs\n");
+            sb.append("  Max Total Time: ").append(maxTotalTime).append("μs\n");
             
             // Show individual results
             sb.append("\nIndividual Results:\n");
             for (int i = 0; i < Math.min(successfulResults.size(), 5); i++) {
                 JwtBenchmark result = successfulResults.get(i);
                 sb.append("  Attempt ").append(result.getAttemptNumber()).append(": ")
-                  .append(result.getTotalTimeMs()).append("ms")
-                  .append(" (Parse: ").append(result.getParseTimeMs()).append("ms, ")
-                  .append("Verify: ").append(result.getVerificationTimeMs()).append("ms)\n");
+                  .append(result.getTotalTimeUs()).append("μs")
+                  .append(" (Parse: ").append(result.getParseTimeUs()).append("μs, ")
+                  .append("Verify: ").append(result.getVerificationTimeUs()).append("μs)\n");
             }
             
             if (successfulResults.size() > 5) {

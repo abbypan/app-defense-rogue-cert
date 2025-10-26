@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
+    android:fillViewport="true"
+    android:scrollbars="vertical"
+    android:scrollbarStyle="outsideOverlay"
+    android:scrollbarSize="12dp"
     android:fitsSystemWindows="true">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
 
     <!-- App Title -->
     <TextView
@@ -191,7 +199,11 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:scrollbars="vertical"
+        android:scrollbarStyle="outsideOverlay"
+        android:scrollbarSize="10dp"
+        android:fadeScrollbars="false">
 
         <TextView
             android:id="@+id/responseTextView"
@@ -208,3 +220,5 @@
     </ScrollView>
 
 </LinearLayout>
+
+</ScrollView>
