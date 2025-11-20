@@ -60,3 +60,23 @@ If you like Certbot, please consider supporting our work by:
  * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
  * Donating to EFF:                    https://eff.org/donate-le
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Inconsistent domain requests:
+From the CSR: appservercert.run.place
+From command line/config: appservercert2.run.place, appservercert.run.place
+Ask for help or search for solutions at https://community.letsencrypt.org. See the logfile /tmp/certbot-log-if15_v9f/log or re-run Certbot with -v for more details.
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for appservercert2.run.place
+
+Successfully received certificate.
+Certificate is saved at:            /root/cert/appservercert2.run.place-es256/0000_cert.pem
+Intermediate CA chain is saved at:  /root/cert/appservercert2.run.place-es256/0000_chain.pem
+Full certificate chain is saved at: /root/cert/appservercert2.run.place-es256/0001_chain.pem
+This certificate expires on 2026-02-17.
+NEXT STEPS:
+- Certificates created using --csr will not be renewed automatically by Certbot. You will need to renew the certificate before it expires, by running the same Certbot command again.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

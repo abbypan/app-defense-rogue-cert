@@ -1,0 +1,126 @@
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for apptrustsc.run.place
+
+Certbot failed to authenticate some domains (authenticator: webroot). The Certificate Authority reported these problems:
+  Domain: apptrustsc.run.place
+  Type:   unauthorized
+  Detail: 31.220.14.145: Invalid response from http://apptrustsc.run.place/.well-known/acme-challenge/8MFuASvLe47lHJZ9mJvjUYx7Chu_YbmUVXwZ0Y6LcVk: 404
+
+Hint: The Certificate Authority failed to download the temporary challenge files created by Certbot. Ensure that the listed domains serve their content from the provided --webroot-path/-w and that files created there can be downloaded from the internet.
+
+Some challenges have failed.
+Ask for help or search for solutions at https://community.letsencrypt.org. See the logfile /var/log/letsencrypt/letsencrypt.log or re-run Certbot with -v for more details.
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for apptrustsc.run.place
+
+Certbot failed to authenticate some domains (authenticator: webroot). The Certificate Authority reported these problems:
+  Domain: apptrustsc.run.place
+  Type:   unauthorized
+  Detail: 31.220.14.145: Invalid response from http://apptrustsc.run.place/.well-known/acme-challenge/GwZAEyjcpiQ57eqNTS1ljCtPXckTiSrZ_c-g43KP8c8: 404
+
+Hint: The Certificate Authority failed to download the temporary challenge files created by Certbot. Ensure that the listed domains serve their content from the provided --webroot-path/-w and that files created there can be downloaded from the internet.
+
+Some challenges have failed.
+Ask for help or search for solutions at https://community.letsencrypt.org. See the logfile /var/log/letsencrypt/letsencrypt.log or re-run Certbot with -v for more details.
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for apptrustsc.run.place
+
+Certbot failed to authenticate some domains (authenticator: webroot). The Certificate Authority reported these problems:
+  Domain: apptrustsc.run.place
+  Type:   unauthorized
+  Detail: 31.220.14.145: Invalid response from http://apptrustsc.run.place/.well-known/acme-challenge/OcdqmhEP3nAek1hVIH4K821o99LNyZn0Fk_9mxxNPfo: 404
+
+Hint: The Certificate Authority failed to download the temporary challenge files created by Certbot. Ensure that the listed domains serve their content from the provided --webroot-path/-w and that files created there can be downloaded from the internet.
+
+Some challenges have failed.
+Ask for help or search for solutions at https://community.letsencrypt.org. See the logfile /var/log/letsencrypt/letsencrypt.log or re-run Certbot with -v for more details.
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for apptrustsc.run.place
+An unexpected error occurred:
+AttributeError: can't set attribute
+Ask for help or search for solutions at https://community.letsencrypt.org. See the logfile /var/log/letsencrypt/letsencrypt.log or re-run Certbot with -v for more details.
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for appservercert.run.place
+An unexpected error occurred:
+AttributeError: can't set attribute
+Ask for help or search for solutions at https://community.letsencrypt.org. See the logfile /var/log/letsencrypt/letsencrypt.log or re-run Certbot with -v for more details.
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for appservercert.run.place
+
+Successfully received certificate.
+Certificate is saved at:            /etc/cert/appservercert.run.place/0000_cert.pem
+Intermediate CA chain is saved at:  /etc/cert/appservercert.run.place/0000_chain.pem
+Full certificate chain is saved at: /etc/cert/appservercert.run.place/0001_chain.pem
+This certificate expires on 2026-01-15.
+NEXT STEPS:
+- Certificates created using --csr will not be renewed automatically by Certbot. You will need to renew the certificate before it expires, by running the same Certbot command again.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Inconsistent domain requests:
+From the CSR: appservercert.run.place
+From command line/config: appservercert2.run.place, appservercert.run.place
+Ask for help or search for solutions at https://community.letsencrypt.org. See the logfile /tmp/certbot-log-if15_v9f/log or re-run Certbot with -v for more details.
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for appservercert2.run.place
+
+Successfully received certificate.
+Certificate is saved at:            /root/cert/appservercert2.run.place-es256/0000_cert.pem
+Intermediate CA chain is saved at:  /root/cert/appservercert2.run.place-es256/0000_chain.pem
+Full certificate chain is saved at: /root/cert/appservercert2.run.place-es256/0001_chain.pem
+This certificate expires on 2026-02-17.
+NEXT STEPS:
+- Certificates created using --csr will not be renewed automatically by Certbot. You will need to renew the certificate before it expires, by running the same Certbot command again.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for appservercert3.run.place
+
+Successfully received certificate.
+Certificate is saved at:            /root/cert/appservercert3.run.place-rsa3072/0000_cert.pem
+Intermediate CA chain is saved at:  /root/cert/appservercert3.run.place-rsa3072/0000_chain.pem
+Full certificate chain is saved at: /root/cert/appservercert3.run.place-rsa3072/0001_chain.pem
+This certificate expires on 2026-02-17.
+NEXT STEPS:
+- Certificates created using --csr will not be renewed automatically by Certbot. You will need to renew the certificate before it expires, by running the same Certbot command again.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for appservercert4.run.place
+
+Certbot failed to authenticate some domains (authenticator: webroot). The Certificate Authority reported these problems:
+  Domain: appservercert4.run.place
+  Type:   dns
+  Detail: DNS problem: SERVFAIL looking up A for appservercert4.run.place - the domain's nameservers may be malfunctioning; DNS problem: SERVFAIL looking up AAAA for appservercert4.run.place - the domain's nameservers may be malfunctioning
+
+Hint: The Certificate Authority failed to download the temporary challenge files created by Certbot. Ensure that the listed domains serve their content from the provided --webroot-path/-w and that files created there can be downloaded from the internet.
+
+Some challenges have failed.
+Ask for help or search for solutions at https://community.letsencrypt.org. See the logfile /var/log/letsencrypt/letsencrypt.log or re-run Certbot with -v for more details.
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for appservercert4.run.place
+
+Successfully received certificate.
+Certificate is saved at:            /root/cert/appservercert4.run.place-rsa4096/0000_cert.pem
+Intermediate CA chain is saved at:  /root/cert/appservercert4.run.place-rsa4096/0000_chain.pem
+Full certificate chain is saved at: /root/cert/appservercert4.run.place-rsa4096/0001_chain.pem
+This certificate expires on 2026-02-18.
+NEXT STEPS:
+- Certificates created using --csr will not be renewed automatically by Certbot. You will need to renew the certificate before it expires, by running the same Certbot command again.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
