@@ -31,11 +31,19 @@ public class JwtVerifierTest {
 
     @Test
     public void main() throws Exception {
-        String appcert = JsonUtils.read_file("src/main/resources/my-app-cert.pem");
-        String cscert = JsonUtils.read_file("src/main/resources/my-cs-cert.pem");
+        String alg = "es384";
+      //  String alg = "es256";
+       // String alg = "rsa4096";
+      //  String alg = "rsa3072";
 
-        String csjson = JsonUtils.read_file("src/main/resources/serverCertClaimSigningKey.jwt");
+        String appcert = JsonUtils.read_file("src/main/resources/"+ alg + "/my-app-cert.pem");
+        //String cscert = JsonUtils.read_file("src/main/resources/my-cs-cert.pem");
+
+        String csjson = JsonUtils.read_file("src/main/resources/"+ alg + "/serverCertClaimSigningKey.jwt");
         //System.out.println(csjson);
+
+        String certclaim = JsonUtils.read_file("src/main/resources/"+ alg + "/serverCertClaim.jwt");
+        //System.out.println(certclaim);
 
         //X509Certificate certificate = PemUtils.parseX509Certificate(appcert);
         
@@ -44,8 +52,6 @@ public class JwtVerifierTest {
         System.out.println("verify csjson -> appcert: " + csverifyres);
         String cs_jwk = new JSONObject(csverifyres).getString("cs_jwk");
 
-        String certclaim = JsonUtils.read_file("src/main/resources/serverCertClaim.jwt");
-        //System.out.println(certclaim);
 
         //PublicKey publicKey = JwkToPublicKeyConverter.convertJwkToPublicKey(csverifyres);
         String claimres = JwtVerifier.verifyJwtWithJwk(certclaim, cs_jwk);

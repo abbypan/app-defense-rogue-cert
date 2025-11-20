@@ -24,7 +24,12 @@ public class HttpsRequestHelperTest {
     public static void ourConn(String host, String type, String exp_issuer) {
         // Benchmark code to be measured
         String[] para = { host, type, exp_issuer };
-        HttpsRequestHelper our = new HttpsRequestHelper();
+        HttpsRequestHelper our = null;
+        try {
+            our = new HttpsRequestHelper();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         HttpsURLConnection con = null;
         try {
             con = our.create_main_conn(para);
