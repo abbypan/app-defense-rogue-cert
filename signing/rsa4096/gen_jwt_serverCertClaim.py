@@ -13,7 +13,7 @@ f.closed
 
 
 pro_header = json_encode({
-        "alg": "PS256", 
+        "alg": "PS384", 
         "x5c": [ cert_pem ]
         })
 

@@ -11,7 +11,7 @@ with open(cert, "r") as f:
 f.closed
 
 pro_header = json_encode({
-        "alg": "PS384", 
+        "alg": "PS256", 
         "x5c": [ cert_pem ]
         })
 
