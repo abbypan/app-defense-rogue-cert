@@ -59,6 +59,9 @@ public class HttpsRequestHelper {
     private static TrustManager[] defaultTrustManagers = null;
     private static TrustManager[] ourTrustManagers = null;
     
+    // Pre-allocated empty array for bypass trust manager to avoid allocation overhead
+    private static final X509Certificate[] EMPTY_CERT_ARRAY = new X509Certificate[0];
+    
     // Cached SSLContext instances for performance
     private static SSLSocketFactory defaultSslSocketFactory = null;
     private static SSLSocketFactory bypassSslSocketFactory = null;
@@ -79,42 +82,54 @@ public class HttpsRequestHelper {
         }
         return default_tm;
     }
-    private static synchronized  TrustManager[]  getBypassTrustManagers() throws Exception {
+    private static TrustManager[] getBypassTrustManagers() throws Exception {
+        // Double-check locking pattern for better performance - avoids synchronization on every call
         if (bypassTrustManagers == null) {
-            bypassTrustManagers = new TrustManager[]{
-                new X509TrustManager() {
-                    public X509Certificate[] getAcceptedIssuers() {
-                        return new X509Certificate[0];
-                    }
-                    public void checkClientTrusted(X509Certificate[] chain, String authType) {
-                    }
-                    public void checkServerTrusted(X509Certificate[] chain, String authType) {
-                    }
+            synchronized (HttpsRequestHelper.class) {
+                if (bypassTrustManagers == null) {
+                    bypassTrustManagers = new TrustManager[]{
+                        new X509TrustManager() {
+                            public X509Certificate[] getAcceptedIssuers() {
+                                return EMPTY_CERT_ARRAY;
+                            }
+                            public void checkClientTrusted(X509Certificate[] chain, String authType) {
+                                // No-op: bypass all client certificate checks
+                            }
+                            public void checkServerTrusted(X509Certificate[] chain, String authType) {
+                                // No-op: bypass all server certificate checks
+                            }
+                        }
+                    };
                 }
-            };
+            }
         }
         return bypassTrustManagers;
     }
 
-    private static synchronized  TrustManager[]  getDefaultTrustManagers() throws Exception {
+    private static TrustManager[] getDefaultTrustManagers() throws Exception {
+        // Double-check locking pattern for better performance - avoids synchronization on every call
         if (defaultTrustManagers == null) {
-            default_tm = getDefaultTrustManager();
-            defaultTrustManagers = new TrustManager[] { new X509TrustManager() {
+            synchronized (HttpsRequestHelper.class) {
+                if (defaultTrustManagers == null) {
+                    default_tm = getDefaultTrustManager();
+                    defaultTrustManagers = new TrustManager[] { new X509TrustManager() {
 
-                public X509Certificate[] getAcceptedIssuers() {
-                    return default_tm.getAcceptedIssuers();
-                }
+                        public X509Certificate[] getAcceptedIssuers() {
+                            return default_tm.getAcceptedIssuers();
+                        }
 
-                public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                    default_tm.checkServerTrusted(chain, authType);
+                        public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                            default_tm.checkServerTrusted(chain, authType);
 
-                }
-                public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                    default_tm.checkClientTrusted(chain, authType);
+                        }
+                        public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                            default_tm.checkClientTrusted(chain, authType);
+                        }
+                    }
+
+                    };
                 }
             }
-
-            };
         }
         return defaultTrustManagers;
     }
@@ -230,27 +245,37 @@ public class HttpsRequestHelper {
         return false;
     }
 
-    private static synchronized SSLSocketFactory createDefaultSslSocketFactory() throws Exception {
+    private static SSLSocketFactory createDefaultSslSocketFactory() throws Exception {
+        // Double-check locking pattern for better performance - avoids synchronization on every call
         if (defaultSslSocketFactory == null) {
-            TrustManager[] defaultTrustManagers = getDefaultTrustManagers();
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, defaultTrustManagers, new SecureRandom());
-            defaultSslSocketFactory = sslContext.getSocketFactory();
+            synchronized (HttpsRequestHelper.class) {
+                if (defaultSslSocketFactory == null) {
+                    TrustManager[] defaultTrustManagers = getDefaultTrustManagers();
+                    SSLContext sslContext = SSLContext.getInstance("TLS");
+                    sslContext.init(null, defaultTrustManagers, new SecureRandom());
+                    defaultSslSocketFactory = sslContext.getSocketFactory();
+                }
+            }
         }
         return defaultSslSocketFactory;
     }
 
 
-    private static synchronized SSLSocketFactory createOurSslSocketFactory(String host, String exp_issuer) throws Exception {
+    private static SSLSocketFactory createOurSslSocketFactory(String host, String exp_issuer) throws Exception {
         // For our connection, we need to create a new SSLContext each time due to exp_issuer parameter
         // But we can optimize by reusing the trust managers if they're already created
-      if(ourSslSocketFactory == null) {
-        ourTrustManagers = getOurTrustManagers(exp_issuer);
-        
-        SSLContext sslContext = SSLContext.getInstance("TLS");
-        sslContext.init(null, ourTrustManagers, new SecureRandom());
-        ourSslSocketFactory = sslContext.getSocketFactory();
-      }
+        // Double-check locking pattern for better performance - avoids synchronization on every call
+        if(ourSslSocketFactory == null) {
+            synchronized (HttpsRequestHelper.class) {
+                if(ourSslSocketFactory == null) {
+                    ourTrustManagers = getOurTrustManagers(exp_issuer);
+                    
+                    SSLContext sslContext = SSLContext.getInstance("TLS");
+                    sslContext.init(null, ourTrustManagers, new SecureRandom());
+                    ourSslSocketFactory = sslContext.getSocketFactory();
+                }
+            }
+        }
         return ourSslSocketFactory;
     }
 
@@ -261,12 +286,17 @@ public class HttpsRequestHelper {
         return hv;
     }
 
-    public static synchronized SSLSocketFactory createBypassSslSocketFactory() throws Exception {
+    public static SSLSocketFactory createBypassSslSocketFactory() throws Exception {
+        // Double-check locking pattern for better performance - avoids synchronization on every call
         if (bypassSslSocketFactory == null) {
-            TrustManager[] bypassTrustManagers = getBypassTrustManagers();
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, bypassTrustManagers, new SecureRandom());
-            bypassSslSocketFactory = sslContext.getSocketFactory();
+            synchronized (HttpsRequestHelper.class) {
+                if (bypassSslSocketFactory == null) {
+                    TrustManager[] bypassTrustManagers = getBypassTrustManagers();
+                    SSLContext sslContext = SSLContext.getInstance("TLS");
+                    sslContext.init(null, bypassTrustManagers, new SecureRandom());
+                    bypassSslSocketFactory = sslContext.getSocketFactory();
+                }
+            }
         }
         return bypassSslSocketFactory;
     }
