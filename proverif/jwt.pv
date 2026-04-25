@@ -1,0 +1,91 @@
+(* jwt_asymmetric_exp.pv *)
+
+type skey.
+type pkey.
+type timestamp.
+
+const jwt_header: bitstring.   (* e.g. {"alg":"RS256","typ":"JWT"} *)
+const zero: timestamp.
+const curr: timestamp.
+
+free c: channel.
+
+(* Asymmetric signature primitives *)
+fun pk(skey): pkey.
+fun sign(bitstring, skey): bitstring.
+reduc forall m: bitstring, sk: skey;
+      checksign(sign(m, sk), pk(sk)) = m.
+
+(* pkey to bitstring *)
+fun pk2s(pkey): bitstring.
+
+(* Timestamp definitions *)
+fun succ(timestamp): timestamp.
+
+(*
+fun prev(timestamp): timestamp.
+reduc forall t: timestamp; ts_geq(prev(t)， t) = false.
+*)
+
+(* JWT structure *)
+fun jwt_payload(bitstring, timestamp): bitstring [data]. (* content, exp *)
+reduc forall content: bitstring, exp: timestamp;
+      get_content(jwt_payload(content, exp)) = content.
+reduc forall content: bitstring, exp: timestamp;
+      get_exp(jwt_payload(content, exp)) = exp.
+(* jwt *)
+fun jwt(bitstring, bitstring, bitstring): bitstring [data].  (* header, payload, signature *)
+fun jwt_tosign(bitstring, bitstring): bitstring.             (* header, payload *)
+
+(* Build a JWT token from header/content/exp and signing key *)
+reduc forall header: bitstring, content: bitstring, exp: timestamp, privkey: skey;
+      jwt_create(header, content, exp, privkey) =
+      jwt(header,
+          jwt_payload(content, exp),
+          sign(jwt_tosign(header, jwt_payload(content, exp)), privkey)).
+
+
+(* jwt_verify checks: valid signature + exp >= now *)
+reduc forall header: bitstring, content: bitstring, sk: skey, now: timestamp;
+      jwt_verify(jwt(header,
+                     jwt_payload(content, now),
+                     sign(jwt_tosign(header, jwt_payload(content, now)), sk)),
+                 pk(sk), now) = true;
+      forall header2: bitstring, content2: bitstring, sk2: skey, now2: timestamp;
+      jwt_verify(jwt(header2,
+                     jwt_payload(content2, succ(now2)),
+                     sign(jwt_tosign(header2, jwt_payload(content2, succ(now2))), sk2)),
+                 pk(sk2), now2) = true.
+
+
+(* app signing key *)
+free sk_app_signing: skey [private].
+free sk_claim_signing: skey [private].
+
+(* events *)
+event jwt_claim_signing_key_create(bitstring, bitstring, timestamp).
+event jwt_claim_signing_key_verify(bitstring, bitstring, timestamp).
+event jwt_server_cert_claim_create(bitstring, timestamp).
+event jwt_server_cert_claim_verify(bitstring, timestamp).
+
+let AppServer =
+  let header = pk2s(pk(sk_app_signing)) in
+  let good_exp = succ(curr) in
+  let content = pk2s(pk(sk_claim_signing)) in
+  let token = jwt_create(header, content, good_exp, sk_app_signing) in
+  event jwt_claim_signing_key_create(header, content, good_exp);
+  out(c, token).
+
+let LegitimateApp =
+  in(c, jwt(h: bitstring, plr: bitstring, sr: bitstring));
+  let pk_app_signing = pk(sk_app_signing) in
+  let content = get_content(plr) in
+  let exp = get_exp(plr) in
+  if jwt_verify(jwt(h, plr, sr), pk_app_signing, curr) = true then
+    event jwt_claim_signing_key_verify(h, content, exp).
+
+query header: bitstring, content: bitstring, exp: timestamp;
+  event(jwt_claim_signing_key_verify(header, content, exp)) ==> event(jwt_claim_signing_key_create(header, content, exp)).
+
+process
+  (!AppServer) | (!LegitimateApp)
