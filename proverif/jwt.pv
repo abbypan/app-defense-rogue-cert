@@ -1,60 +1,113 @@
-(* jwt_asymmetric_exp.pv *)
-
+(* type *)
 type skey.
 type pkey.
 type timestamp.
+type ip.
+type mechine.
 
-const jwt_header: bitstring.   (* e.g. {"alg":"RS256","typ":"JWT"} *)
-const zero: timestamp.
+(* const *)
+const system_ca_list: bitstring.
+
+const server_hostname: bitstring.
+const server_cert_subject: bitstring.
+const server_cert_san: bitstring.
+const server_cert_issuer: bitstring.
+const server_cert_spk: pkey.
+const server_cert_sig: bitstring.
+const server_ip: ip.
+const server_mechine: mechine.
+
+const rogue_cert_issuer: bitstring.
+const rogue_cert_spk: pkey.
+const rogue_cert_sig: bitstring.
+const rogue_mechine: mechine.
+const rogue_ip: ip.
+
 const curr: timestamp.
 
+(* channel *)
 free c: channel.
 
 (* Asymmetric signature primitives *)
 fun pk(skey): pkey.
-fun sign(bitstring, skey): bitstring.
+fun sig_sign(bitstring, skey): bitstring.
 reduc forall m: bitstring, sk: skey;
-      checksign(sign(m, sk), pk(sk)) = m.
+      sig_verify(m, sig_sign(m, sk), pk(sk)) = true.
 
-(* pkey to bitstring *)
+(* pkey <-> bitstring *)
 fun pk2s(pkey): bitstring.
+reduc forall pk: pkey;
+      s2pk(pk2s(pk)) = pk.
 
 (* Timestamp definitions *)
-fun succ(timestamp): timestamp.
+fun succ_t(timestamp): timestamp.
+fun prev_t(timestamp): timestamp.
 
-(*
-fun prev(timestamp): timestamp.
-reduc forall t: timestamp; ts_geq(prev(t)， t) = false.
-*)
+reduc forall t: timestamp;
+      ts_geq(prev_t(t), t) = false;
+      forall t2: timestamp;
+      ts_geq(succ_t(t2), t2) = true;
+      forall t3: timestamp;
+      ts_geq(t3, t3) = true.
 
-(* JWT structure *)
+
+(* cert claim *)
+fun cert_claim(bitstring, bitstring, bitstring): bitstring [data]. (* subject, subject alt names, issuer *)
+reduc forall subject: bitstring, san: bitstring, issuer: bitstring;
+      get_subject(cert_claim(subject,san,issuer)) = subject.
+reduc forall subject: bitstring, san: bitstring, issuer: bitstring;
+      get_san(cert_claim(subject,san,issuer)) = san.
+reduc forall subject: bitstring, san: bitstring, issuer: bitstring;
+      get_issuer(cert_claim(subject,san,issuer)) = issuer.
+
+
+
+(* cert *)
+fun cert(bitstring, bitstring, bitstring, pkey, bitstring): bitstring [data]. (* subject, subject alt names, issuer, subject public key, signature *)
+reduc forall subject: bitstring, san: bitstring, issuer: bitstring, spk: pkey, sig: bitstring;
+      get_cert_claim(cert(subject,san,issuer,spk, sig)) = cert_claim(subject, san, issuer).
+reduc forall subject: bitstring, san: bitstring, issuer: bitstring, spk: pkey, sig: bitstring;
+      get_cert_spk(cert(subject,san,issuer,spk, sig)) = spk.
+reduc forall subject: bitstring, san: bitstring, issuer: bitstring, spk: pkey, sig: bitstring;
+      get_cert_sig(cert(subject,san,issuer,spk, sig)) = sig.
+
+
+(* jwt *)
 fun jwt_payload(bitstring, timestamp): bitstring [data]. (* content, exp *)
 reduc forall content: bitstring, exp: timestamp;
       get_content(jwt_payload(content, exp)) = content.
 reduc forall content: bitstring, exp: timestamp;
       get_exp(jwt_payload(content, exp)) = exp.
-(* jwt *)
+
 fun jwt(bitstring, bitstring, bitstring): bitstring [data].  (* header, payload, signature *)
 fun jwt_tosign(bitstring, bitstring): bitstring.             (* header, payload *)
 
-(* Build a JWT token from header/content/exp and signing key *)
+reduc forall header: bitstring, payload: bitstring, signature: bitstring;
+      get_jwt_header(jwt(header, payload, signature)) = header.
+
+reduc forall header: bitstring, payload: bitstring, signature: bitstring;
+      get_jwt_payload(jwt(header, payload, signature)) = payload.
+
+reduc forall header: bitstring, payload: bitstring, signature: bitstring;
+      get_jwt_sig(jwt(header, payload, signature)) = signature.
+
 reduc forall header: bitstring, content: bitstring, exp: timestamp, privkey: skey;
-      jwt_create(header, content, exp, privkey) =
+      jwt_sign(header, content, exp, privkey) =
       jwt(header,
           jwt_payload(content, exp),
-          sign(jwt_tosign(header, jwt_payload(content, exp)), privkey)).
+          sig_sign(jwt_tosign(header, jwt_payload(content, exp)), privkey)).
 
 
-(* jwt_verify checks: valid signature + exp >= now *)
-reduc forall header: bitstring, content: bitstring, sk: skey, now: timestamp;
-      jwt_verify(jwt(header,
+(* jwt_verify checks: valid signature and token not expired *)
+reduc forall content: bitstring, sk: skey, now: timestamp;
+      jwt_verify(jwt(pk2s(pk(sk)),
                      jwt_payload(content, now),
-                     sign(jwt_tosign(header, jwt_payload(content, now)), sk)),
+                     sig_sign(jwt_tosign(pk2s(pk(sk)), jwt_payload(content, now)), sk)),
                  pk(sk), now) = true;
-      forall header2: bitstring, content2: bitstring, sk2: skey, now2: timestamp;
-      jwt_verify(jwt(header2,
-                     jwt_payload(content2, succ(now2)),
-                     sign(jwt_tosign(header2, jwt_payload(content2, succ(now2))), sk2)),
+      forall content2: bitstring, sk2: skey, now2: timestamp;
+      jwt_verify(jwt(pk2s(pk(sk2)),
+                     jwt_payload(content2, succ_t(now2)),
+                     sig_sign(jwt_tosign(pk2s(pk(sk2)), jwt_payload(content2, succ_t(now2))), sk2)),
                  pk(sk2), now2) = true.
 
 
@@ -63,29 +116,51 @@ free sk_app_signing: skey [private].
 free sk_claim_signing: skey [private].
 
 (* events *)
-event jwt_claim_signing_key_create(bitstring, bitstring, timestamp).
-event jwt_claim_signing_key_verify(bitstring, bitstring, timestamp).
-event jwt_server_cert_claim_create(bitstring, timestamp).
-event jwt_server_cert_claim_verify(bitstring, timestamp).
+event jwt_claim_signing_key_create(pkey, pkey, timestamp).
+event jwt_claim_signing_key_verify(pkey, pkey, timestamp).
+event jwt_server_cert_claim_create(pkey, bitstring, bitstring, bitstring, timestamp).
+event jwt_server_cert_claim_verify(pkey, bitstring, bitstring, bitstring, timestamp).
+
+
+
 
 let AppServer =
   let header = pk2s(pk(sk_app_signing)) in
-  let good_exp = succ(curr) in
+  let good_exp = succ_t(curr) in
   let content = pk2s(pk(sk_claim_signing)) in
-  let token = jwt_create(header, content, good_exp, sk_app_signing) in
-  event jwt_claim_signing_key_create(header, content, good_exp);
-  out(c, token).
+  let token = jwt_sign(header, content, good_exp, sk_app_signing) in
+  event jwt_claim_signing_key_create(pk(sk_app_signing), pk(sk_claim_signing), good_exp);
+  out(c, token);
+  let header2 = pk2s(pk(sk_claim_signing)) in
+  let good_exp2 = succ_t(curr) in
+  let content2 = cert_claim(server_cert_subject, server_cert_san, server_cert_issuer) in
+  let token2 = jwt_sign(header2, content2, good_exp2, sk_claim_signing) in
+  event jwt_server_cert_claim_create(pk(sk_claim_signing), server_cert_subject,server_cert_san, server_cert_issuer, good_exp2);
+  out(c, token2).
 
 let LegitimateApp =
   in(c, jwt(h: bitstring, plr: bitstring, sr: bitstring));
   let pk_app_signing = pk(sk_app_signing) in
   let content = get_content(plr) in
-  let exp = get_exp(plr) in
+  let pk1_recv = s2pk(content) in 
+  let exp_recv = get_exp(plr) in
   if jwt_verify(jwt(h, plr, sr), pk_app_signing, curr) = true then
-    event jwt_claim_signing_key_verify(h, content, exp).
+      event jwt_claim_signing_key_verify(pk(sk_app_signing), pk1_recv, exp_recv);
+       
+  in(c, jwt(h2: bitstring, plr2: bitstring, sr2: bitstring)); 
+  let content2 = get_content(plr2) in
+  let subject2 = get_subject(content2) in
+  let san2 = get_san(content2) in
+  let issuer2 = get_issuer(content2) in
+  let exp2 = get_exp(plr2) in
+  if jwt_verify(jwt(h2, plr2, sr2), pk1_recv, curr) = true then
+      event jwt_server_cert_claim_verify(pk1_recv, subject2, san2, issuer2, exp2).
+ 
+query app_pk: pkey, claim_pk: pkey, exp: timestamp;
+  event(jwt_claim_signing_key_verify(app_pk, claim_pk, exp)) ==> event(jwt_claim_signing_key_create(app_pk, claim_pk, exp)).
 
-query header: bitstring, content: bitstring, exp: timestamp;
-  event(jwt_claim_signing_key_verify(header, content, exp)) ==> event(jwt_claim_signing_key_create(header, content, exp)).
+query claim_pk: pkey, subject: bitstring, san: bitstring, issuer: bitstring, exp: timestamp;
+  event(jwt_server_cert_claim_verify(claim_pk, subject, san, issuer, exp)) ==> event(jwt_server_cert_claim_create(claim_pk, subject, san, issuer, exp)).
 
 process
   (!AppServer) | (!LegitimateApp)
