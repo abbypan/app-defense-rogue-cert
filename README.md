@@ -17,3 +17,8 @@
 	./gen_jwt_serverCertClaimSigningKey.py 
 
 	./gen_jwt_serverCertClaim.py appservercert.run.place "CN=E7, O=Let's Encrypt, C=US"
+
+
+# proverif
+
+    proverif -lib asproc.pvl legitimate.pv

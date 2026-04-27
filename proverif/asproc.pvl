@@ -1,0 +1,128 @@
+(* type *)
+type skey [private].
+type pkey.
+type timestamp.
+type ip.
+type mechine.
+
+
+
+(* const *)
+const system_ca_list: bitstring.
+
+const server_hostname: bitstring.
+const server_cert_subject_and_san: bitstring.
+const server_cert_issuer: bitstring.
+const server_cert_spk: pkey.
+const server_cert_sig: bitstring.
+const server_ip: ip.
+const server_mechine: mechine.
+
+const rogue_cert_issuer: bitstring.
+const rogue_cert_spk: pkey.
+const rogue_cert_sig: bitstring.
+const rogue_mechine: mechine.
+const rogue_ip: ip.
+
+const sensitive_data: bitstring [private].
+
+const curr: timestamp.
+
+(* app signing key *)
+free sk_app_signing: skey [private].
+free sk_claim_signing: skey [private].
+
+(* channel *)
+free c: channel.
+
+(* tls *)
+fun tls_server(bitstring, ip, mechine, bitstring, bitstring, bitstring) : bitstring [data].
+reduc forall hostname: bitstring, host_ip: ip, host_mechine: mechine,
+subj_and_san : bitstring, iss: bitstring, data: bitstring;
+      tls_client(hostname, subj_and_san, tls_server(hostname, host_ip, host_mechine, subj_and_san, iss, data)) = data.
+
+
+const host_true: bitstring.
+reduc check_host(server_hostname, server_cert_subject_and_san) = host_true.
+
+
+
+(* Asymmetric signature primitives *)
+fun pk(skey): pkey.
+fun sig_sign(bitstring, skey): bitstring.
+reduc forall m: bitstring, sk: skey;
+      sig_verify(m, sig_sign(m, sk), pk(sk)) = true.
+
+(* pkey <-> bitstring *)
+fun pk2s(pkey): bitstring.
+reduc forall pkv: pkey;
+      s2pk(pk2s(pkv)) = pkv.
+
+(* Timestamp definitions *)
+fun succ_t(timestamp): timestamp.
+fun prev_t(timestamp): timestamp.
+
+reduc forall t: timestamp;
+      ts_geq(prev_t(t), t) = false;
+      forall t2: timestamp;
+      ts_geq(succ_t(t2), t2) = true;
+      forall t3: timestamp;
+      ts_geq(t3, t3) = true.
+
+
+(* cert claim *)
+fun cert_claim(bitstring, bitstring): bitstring [data]. (* subject_and_san, issuer *)
+reduc forall subject_and_san: bitstring, issuer: bitstring;
+      get_subject_and_san(cert_claim(subject_and_san,issuer)) = subject_and_san.
+reduc forall subject_and_san: bitstring, issuer: bitstring;
+      get_issuer(cert_claim(subject_and_san,issuer)) = issuer.
+
+
+
+(* cert *)
+fun cert(bitstring, bitstring, pkey, bitstring): bitstring [data]. (* subject_and_sans, issuer, subject public key, signature *)
+reduc forall subject_and_san: bitstring, issuer: bitstring, spk: pkey, sig: bitstring;
+      get_cert_claim(cert(subject_and_san,issuer,spk, sig)) = cert_claim(subject_and_san, issuer).
+reduc forall subject_and_san: bitstring, issuer: bitstring, spk: pkey, sig: bitstring;
+      get_cert_spk(cert(subject_and_san,issuer,spk, sig)) = spk.
+reduc forall subject_and_san: bitstring, issuer: bitstring, spk: pkey, sig: bitstring;
+      get_cert_sig(cert(subject_and_san,issuer,spk, sig)) = sig.
+
+
+(* jwt *)
+fun jwt_payload(bitstring, timestamp): bitstring [data]. (* content, exp *)
+reduc forall content: bitstring, exp: timestamp;
+      get_content(jwt_payload(content, exp)) = content.
+reduc forall content: bitstring, exp: timestamp;
+      get_exp(jwt_payload(content, exp)) = exp.
+
+fun jwt(bitstring, bitstring, bitstring): bitstring [data].  (* header, payload, signature *)
+fun jwt_tosign(bitstring, bitstring): bitstring.             (* header, payload *)
+
+reduc forall header: bitstring, payload: bitstring, signature: bitstring;
+      get_jwt_header(jwt(header, payload, signature)) = header.
+
+reduc forall header: bitstring, payload: bitstring, signature: bitstring;
+      get_jwt_payload(jwt(header, payload, signature)) = payload.
+
+reduc forall header: bitstring, payload: bitstring, signature: bitstring;
+      get_jwt_sig(jwt(header, payload, signature)) = signature.
+
+reduc forall header: bitstring, content: bitstring, exp: timestamp, privkey: skey;
+      jwt_sign(header, content, exp, privkey) =
+      jwt(header,
+          jwt_payload(content, exp),
+          sig_sign(jwt_tosign(header, jwt_payload(content, exp)), privkey)).
+
+
+(* jwt_verify checks: valid signature and token not expired *)
+reduc forall content: bitstring, sk: skey, now: timestamp;
+      jwt_verify(jwt(pk2s(pk(sk)),
+                     jwt_payload(content, now),
+                     sig_sign(jwt_tosign(pk2s(pk(sk)), jwt_payload(content, now)), sk)),
+                 pk(sk), now) = true;
+      forall content2: bitstring, sk2: skey, now2: timestamp;
+      jwt_verify(jwt(pk2s(pk(sk2)),
+                     jwt_payload(content2, succ_t(now2)),
+                     sig_sign(jwt_tosign(pk2s(pk(sk2)), jwt_payload(content2, succ_t(now2))), sk2)),
+                 pk(sk2), now2) = true.
