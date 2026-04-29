@@ -14,17 +14,16 @@ const server_hostname: bitstring.
 const server_cert_subject_and_san: bitstring.
 const server_cert_issuer: bitstring.
 const server_cert_spk: pkey.
-const server_cert_sig: bitstring.
 const server_ip: ip.
 const server_mechine: mechine.
 
 const rogue_cert_issuer: bitstring.
 const rogue_cert_spk: pkey.
-const rogue_cert_sig: bitstring.
 const rogue_mechine: mechine.
 const rogue_ip: ip.
 
 const sensitive_data: bitstring [private].
+const rogue_sensitive_data: bitstring.
 
 const curr: timestamp.
 
@@ -32,23 +31,63 @@ const curr: timestamp.
 free sk_app_signing: skey [private].
 free sk_claim_signing: skey [private].
 
+const sk_real_server_temp: skey [private].
+const sk_rogue_server_temp: skey [private].
+const sk_app_temp: skey [private].
+
 (* channel *)
 free c: channel.
 
+fun pk(skey): pkey.
+fun shared_secret(skey,pkey): bitstring.
+equation forall sk: skey, peer_sk: skey;
+    shared_secret(sk, pk(peer_sk)) = shared_secret(peer_sk, pk(sk)).
+
 (* tls *)
-fun tls_server(bitstring, ip, mechine, bitstring, bitstring, bitstring) : bitstring [data].
-reduc forall hostname: bitstring, host_ip: ip, host_mechine: mechine,
-subj_and_san : bitstring, iss: bitstring, data: bitstring;
-      tls_client(hostname, subj_and_san, tls_server(hostname, host_ip, host_mechine, subj_and_san, iss, data)) = data.
+fun enc_data(bitstring, bitstring) : bitstring.
+reduc forall k: bitstring, d: bitstring;
+      dec_data(k, enc_data(k, d)) = d.
+      
+fun tls_server(bitstring, ip, mechine, bitstring, bitstring, pkey) : bitstring [data].
 
 
 const host_true: bitstring.
 reduc check_host(server_hostname, server_cert_subject_and_san) = host_true.
 
+const issuer_true: bitstring.
+reduc
+  check_issuer(server_cert_issuer, system_ca_list) = issuer_true;
+  check_issuer(rogue_cert_issuer, system_ca_list) = issuer_true
+  .
+
+(* Preserve issuer equality helper in token style. *)
+const same_issuer_true: bitstring.
+const same_issuer_false: bitstring.
+reduc forall iss: bitstring;
+      is_same_issuer(iss, iss) = same_issuer_true;
+      is_same_issuer(server_cert_issuer, rogue_cert_issuer) = same_issuer_false;
+      is_same_issuer(rogue_cert_issuer, server_cert_issuer) = same_issuer_false.
+
+
+(* Preserve ip equality helper in token style. *)
+const same_ip_true: bitstring.
+const same_ip_false: bitstring.
+reduc forall ipx: ip;
+      is_same_ip(ipx, ipx) = same_ip_true;
+      is_same_ip(server_ip, rogue_ip) = same_ip_false;
+      is_same_ip(rogue_ip, server_ip) = same_ip_false.
+
+
+(* Preserve mechine equality helper in token style. *)
+const same_mechine_true: bitstring.
+const same_mechine_false: bitstring.
+reduc forall mechx: mechine;
+      is_same_mechine(mechx, mechx) = same_mechine_true;
+      is_same_mechine(server_mechine, rogue_mechine) = same_mechine_false;
+      is_same_mechine(rogue_mechine, server_mechine) = same_mechine_false.
 
 
 (* Asymmetric signature primitives *)
-fun pk(skey): pkey.
 fun sig_sign(bitstring, skey): bitstring.
 reduc forall m: bitstring, sk: skey;
       sig_verify(m, sig_sign(m, sk), pk(sk)) = true.
@@ -78,15 +117,12 @@ reduc forall subject_and_san: bitstring, issuer: bitstring;
       get_issuer(cert_claim(subject_and_san,issuer)) = issuer.
 
 
-
 (* cert *)
 fun cert(bitstring, bitstring, pkey, bitstring): bitstring [data]. (* subject_and_sans, issuer, subject public key, signature *)
 reduc forall subject_and_san: bitstring, issuer: bitstring, spk: pkey, sig: bitstring;
       get_cert_claim(cert(subject_and_san,issuer,spk, sig)) = cert_claim(subject_and_san, issuer).
 reduc forall subject_and_san: bitstring, issuer: bitstring, spk: pkey, sig: bitstring;
       get_cert_spk(cert(subject_and_san,issuer,spk, sig)) = spk.
-reduc forall subject_and_san: bitstring, issuer: bitstring, spk: pkey, sig: bitstring;
-      get_cert_sig(cert(subject_and_san,issuer,spk, sig)) = sig.
 
 
 (* jwt *)
