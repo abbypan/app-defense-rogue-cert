@@ -1,17 +1,9 @@
 set attacker = active.
 (*set attacker = passive.*)
 
-event jwt_claim_signing_key_create(pkey, pkey, timestamp).
-event jwt_claim_signing_key_verify(pkey, pkey, timestamp).
-event jwt_server_cert_claim_create(pkey, bitstring, bitstring, timestamp).
-event jwt_server_cert_claim_verify(pkey, bitstring, bitstring, timestamp).
 
-event app_server_tls(bitstring, bitstring, bitstring, bitstring).
-event app_client_tls(bitstring, bitstring, bitstring, bitstring).
-event app_reject_rogue_tls(bitstring, bitstring, bitstring, bitstring).
-event dns_rogue_server_received(bitstring, bitstring, bitstring, bitstring).
 
-let AppServer =
+let RealServer =
   let header = pk2s(pk(sk_app_signing)) in
   let good_exp = succ_t(curr) in
   let content = pk2s(pk(sk_claim_signing)) in
@@ -28,22 +20,23 @@ let AppServer =
   
   in(c, pk_c: pkey);
   
-  out(c, tls_server(server_hostname, server_ip, server_mechine, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_temp)));
+  out(c, server_hello(server_hostname, server_ip, server_mechine, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_cert), pk(sk_real_server_cert)));
+  event real_server_sent(server_hostname, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_cert));
   
   in(c, sens_cipher: bitstring);
   let ss = shared_secret(sk_real_server_temp, pk_c) in
   let sens_d = dec_data(ss, sens_cipher) in
-  event app_server_tls(server_hostname, server_cert_subject_and_san, server_cert_issuer, sens_d).
+  event real_server_recv(sens_d).
 
 let DNSHijackingRogueServer =
   in(c, pk_c: pkey);
   
-  out(c, tls_server(server_hostname, rogue_ip, rogue_mechine, server_cert_subject_and_san, rogue_cert_issuer, pk(sk_rogue_server_temp)));
-  
+  out(c, server_hello(server_hostname, rogue_ip, rogue_mechine, server_cert_subject_and_san, rogue_cert_issuer, pk(sk_rogue_server_temp), pk(sk_rogue_server_cert)));
+   event rogue_server_sent(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, pk(sk_rogue_server_temp));
   in(c, sens_cipher: bitstring);
   let ss = shared_secret(sk_rogue_server_temp, pk_c) in
   let sens_d = dec_data(ss, sens_cipher) in
-  event dns_rogue_server_received(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sens_d).
+  event rogue_server_recv(sens_d).
 
 let LegitimateApp =
   in(c, jwt(h: bitstring, plr: bitstring, sr: bitstring));
@@ -64,33 +57,62 @@ let LegitimateApp =
  
   out(c, pk(sk_app_temp));
  
-  in(c, tls_server(hostn, sip, smech, subj_and_san_recv, iss, pk_recv));
+  in(c, server_hello(hostn, sip, smech, subj_and_san_recv, iss, pk_recv, cert_pk_recv));
  
-  if (check_host(hostn, subject_and_san2) = host_true) &&
-     (check_host(hostn, subj_and_san_recv) = host_true) &&
-     (check_issuer(iss, system_ca_list) = issuer_true) then
-     (
-  let ss = shared_secret(sk_app_temp, pk_recv) in
+ if  (check_host(hostn, subj_and_san_recv) = host_true) &&
+     (check_issuer(iss, system_ca_list) = issuer_true) &&
+     (check_cert_pk(iss, cert_pk_recv) = cert_pk_true) &&
+     (check_temp_pk(cert_pk_recv, pk_recv) = temp_pk_true)  &&
+     (check_host(hostn, subject_and_san2) = host_true) &&
+     (is_same_issuer(issuer2, iss) = same_issuer_true)
+      then
+    (
+       let ss = shared_secret(sk_app_temp, pk_recv) in
   let sens_cipher = enc_data(ss, sensitive_data) in
-    if is_same_issuer(issuer2, iss) = same_issuer_true then
       out(c, sens_cipher);
-      event app_client_tls(hostn, subj_and_san_recv, iss, sensitive_data)
+      event app_accepted(hostn, subj_and_san_recv, iss, sensitive_data);
+       if iss = rogue_cert_issuer then
+      event app_tricked(hostn, subj_and_san_recv, iss, sensitive_data)
+    )
     else
-      event app_reject_rogue_tls(hostn, subj_and_san_recv, iss, sensitive_data)
-      ).
+      event app_terminated_rogue(hostn, subj_and_san_recv, iss).
 
+(* Query: JWT key-chain authenticity.
+   True  = every verification event has a matching creation event by RealServer.
+   False = some verified claim-signing key has no matching creation event. *)
 query app_pk: pkey, claim_pk: pkey, exp: timestamp;
   event(jwt_claim_signing_key_verify(app_pk, claim_pk, exp)) ==> event(jwt_claim_signing_key_create(app_pk, claim_pk, exp)).
+
+(* Query: JWT server-cert-claim authenticity.
+   True  = every verified cert claim has a matching creation event.
+   False = a cert claim can be verified without being legitimately created. *)
 query claim_pk: pkey, subject_and_san: bitstring, issuer: bitstring, exp: timestamp;
   event(jwt_server_cert_claim_verify(claim_pk, subject_and_san, issuer, exp)) ==> event(jwt_server_cert_claim_create(claim_pk, subject_and_san, issuer, exp)).
+
+(* Query: Secrecy of application payload.
+   True  = attacker can derive sensitive_data (secrecy broken).
+   False = attacker cannot derive sensitive_data (secrecy preserved). *)
 query attacker(sensitive_data).
-query event(app_client_tls(server_hostname, server_cert_subject_and_san, server_cert_issuer, sensitive_data)).
-query event(app_client_tls(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sensitive_data)).
-query event(app_reject_rogue_tls(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sensitive_data)).
-query event(app_client_tls(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sensitive_data)) ==>
-      event(dns_rogue_server_received(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sensitive_data)).
-query event(app_client_tls(server_hostname, server_cert_subject_and_san, server_cert_issuer, sensitive_data)) ==>
-      event(app_server_tls(server_hostname, server_cert_subject_and_san, server_cert_issuer, sensitive_data)).
+
+
+
+(* Query: Client-side rejection of rogue TLS session.
+   True  = client can reject mismatched issuer/session.
+   False = rejection event never occurs in this model. *)
+query event(app_terminated_rogue(server_hostname, server_cert_subject_and_san, rogue_cert_issuer)).
+
+(* Query: Rogue server decryption of sensitive data.
+   True  = there exists an execution where the rogue server receives and decrypts the client's sensitive_data.
+   False = the modeled BGP-hijack/rogue server cannot obtain sensitive_data. *)
+query event(rogue_server_recv(sensitive_data)).
+
+(* Query: Intended legitimate TLS acceptance.
+   True  = there exists a trace where client accepts legitimate server issuer/payload.
+   False = intended legitimate acceptance trace is unreachable. *)
+query event(real_server_recv(sensitive_data)) ==> event(app_accepted(server_hostname, server_cert_subject_and_san, server_cert_issuer, sensitive_data)).
+
+
+
 
 process
-  (!AppServer) | (!DNSHijackingRogueServer) | (!LegitimateApp)
+  (!RealServer) | (!DNSHijackingRogueServer) | (!LegitimateApp)

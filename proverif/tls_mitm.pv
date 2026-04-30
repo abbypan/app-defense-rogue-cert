@@ -6,48 +6,42 @@ set attacker = active.
 free c_client: channel [private].
 free c_server: channel [private].
 
-event tls_real_server_sent(bitstring, bitstring, bitstring).
-event tls_real_server_recv(bitstring).
-event tls_mitm_monitors_client(pkey).
-event tls_mitm_monitors_server(bitstring, bitstring, bitstring, pkey).
-event tls_mitm_replaced_response(bitstring, bitstring, bitstring, pkey).
-event tls_client_accepted(bitstring, bitstring, bitstring, bitstring).
-event tls_mitm_intercepted(bitstring, bitstring, bitstring, bitstring).
-
 let RealServer =
   in(c_server, pk_c: pkey);
-  out(c_server, tls_server(
+  out(c_server, server_hello(
       server_hostname,
       server_ip,
       server_mechine,
       server_cert_subject_and_san,
       server_cert_issuer,
-      pk(sk_real_server_temp)
+      pk(sk_real_server_cert),
+      pk(sk_real_server_cert)
   ));
-  event tls_real_server_sent(server_hostname, server_cert_subject_and_san, server_cert_issuer);
+  event real_server_sent(server_hostname, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_cert));
   in(c_server, sens_cipher: bitstring);
   let ss = shared_secret(sk_real_server_temp, pk_c) in
   let sens_d = dec_data(ss, sens_cipher) in
-  event tls_real_server_recv(sens_d).
+  event real_server_recv(sens_d).
 
 (* In-path MITM adversary:
    monitors client->server and server->client traffic,
    then substitutes the legitimate server response with a rogue-cert response. *)
 let MitmServer =
   in(c_client, pk_c: pkey);
-  event tls_mitm_monitors_client(pk_c);
+  event mitm_monitors_client(pk_c);
   out(c_server, pk(sk_rogue_server_temp));
-  in(c_server, tls_server(hostn_s, sip_s, smech_s, san_s, iss_s, pk_srv));
-  event tls_mitm_monitors_server(hostn_s, san_s, iss_s, pk_srv);
-  let rogue_msg = tls_server(
+  in(c_server, server_hello(hostn_s, sip_s, smech_s, san_s, iss_s, pk_srv, cert_pk_srv));
+  event mitm_monitors_server(hostn_s, san_s, iss_s, pk_srv);
+  let rogue_msg = server_hello(
       hostn_s,
       rogue_ip,
       rogue_mechine,
       san_s,
       rogue_cert_issuer,
-      pk(sk_rogue_server_temp)
+      pk(sk_rogue_server_temp),
+      pk(sk_rogue_server_cert)
   ) in
-  event tls_mitm_replaced_response(hostn_s, san_s, rogue_cert_issuer, pk(sk_rogue_server_temp));
+  event mitm_replaced_response(hostn_s, san_s, rogue_cert_issuer, pk(sk_rogue_server_temp));
   out(c_client, rogue_msg);
   in(c_client, sens_cipher: bitstring);
   let ss_mitm = shared_secret(sk_rogue_server_temp, pk_c) in
@@ -55,33 +49,38 @@ let MitmServer =
   let ss_mitm_s = shared_secret(sk_rogue_server_temp, pk_srv) in
   let sens_cipher_s = enc_data(ss_mitm_s, sens_d) in
   out(c_server, sens_cipher_s);
-  event tls_mitm_intercepted(hostn_s, san_s, rogue_cert_issuer, sens_d).
+  event mitm_intercepted(hostn_s, san_s, rogue_cert_issuer, sens_d).
 
-let VulnerableClient =
+let LegitimateApp =
   out(c_client, pk(sk_app_temp));
-  in(c_client, tls_server(hostn, sip, smech, subj_and_san_recv, iss, pk_s));
+  in(c_client, server_hello(hostn, sip, smech, subj_and_san_recv, iss, pk_s, cert_pk_s));
   let ss = shared_secret(sk_app_temp, pk_s) in
   let sens_cipher = enc_data(ss, sensitive_data) in
   if (check_host(hostn, subj_and_san_recv) = host_true) &&
-     (check_issuer(iss, system_ca_list) = issuer_true) then
+     (check_issuer(iss, system_ca_list) = issuer_true) &&
+     (check_cert_pk(iss, cert_pk_s) = cert_pk_true) &&
+     (check_temp_pk(cert_pk_s, pk_s) = temp_pk_true) 
+      then
     out(c_client, sens_cipher);
-    event tls_client_accepted(hostn, subj_and_san_recv, iss, sensitive_data).
+    event app_accepted(hostn, subj_and_san_recv, iss, sensitive_data);
+    if iss = rogue_cert_issuer then
+      event app_tricked(hostn, subj_and_san_recv, iss, sensitive_data)
+.
+
+
+query attacker(sensitive_data).
 
 (* Query 1: MITM attack reachability with rogue cert.
    True  = there exists an execution where MITM decrypts client sensitive data.
    False = this modeled MITM interception path is not reachable. *)
-query event(tls_mitm_intercepted(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sensitive_data)).
+query event(mitm_intercepted(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sensitive_data)).
 
-(* Query 2: Monitoring sanity for client->server direction.
-   True  = whenever interception occurs, MITM has observed the client key-share.
-   False = interception event can happen without the expected monitor event (model inconsistency). *)
-query event(tls_mitm_intercepted(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sensitive_data)) ==>
-      event(tls_mitm_monitors_client(pk(sk_app_temp))).
 
-(* Query 3: Correspondence against real server decrypt result.
-   True  = every intercepted sensitive payload is also decrypted as sensitive_data by real server.
-   False = real server does not decrypt to sensitive_data (MITM key substitution breaks end-to-end authenticity). *)
-query event(tls_mitm_intercepted(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sensitive_data)).
+(* Query 2: MITM attack acceptance with rogue cert.
+   True  = there exists an execution where the client accepts a server response signed with the rogue_cert_issuer and sends sensitive_data to the MITM endpoint.
+   False = the modeled MITM attacker cannot trigger the client to accept a rogue certificate and send sensitive data in this path. *)
+query event(app_tricked(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sensitive_data)).
+
 
 process
-  (!RealServer) | (!MitmServer) | (!VulnerableClient)
+  (!RealServer) | (!MitmServer) | (!LegitimateApp)

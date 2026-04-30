@@ -3,66 +3,60 @@ set attacker = active.
 
 (* This model is intended to be checked together with base.pvl. *)
 
-event tls_real_server_sent(bitstring, bitstring, bitstring).
-event tls_real_server_recv(bitstring).
-event tls_rogue_server_sent(bitstring, bitstring, bitstring).
-event tls_rogue_server_recv(bitstring).
-event tls_client_accepted(bitstring, bitstring, bitstring, bitstring).
-event tls_client_hijacked(bitstring, bitstring, bitstring, bitstring).
+
 
 let RealServer =
   in(c, pk_c: pkey);
-
-  out(c, tls_server(
-      server_hostname, server_ip, server_mechine, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_temp)
+  out(c, server_hello(
+      server_hostname, server_ip, server_mechine, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_cert), pk(sk_real_server_cert)
   ));
-  event tls_real_server_sent(server_hostname, server_cert_subject_and_san, server_cert_issuer);
-
+  event real_server_sent(server_hostname, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_cert));
   in(c, sens_cipher: bitstring);
   let ss = shared_secret(sk_real_server_temp, pk_c) in
   let sens_d = dec_data(ss, sens_cipher) in
-  event tls_real_server_recv(sens_d).
+  event real_server_recv(sens_d).
 
 (* BGP hijack model: same destination IP, but traffic reaches rogue machine. *)
 let BGPHijackingRogueServer =
   in(c, pk_c: pkey);
-  out(c, tls_server(
-      server_hostname, server_ip, rogue_mechine, server_cert_subject_and_san, rogue_cert_issuer, pk(sk_rogue_server_temp)
+  out(c, server_hello(
+      server_hostname, server_ip, rogue_mechine, server_cert_subject_and_san, rogue_cert_issuer, pk(sk_rogue_server_temp), pk(sk_rogue_server_cert)
   ));
-  event tls_rogue_server_sent(server_hostname, server_cert_subject_and_san, rogue_cert_issuer);
+  event rogue_server_sent(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, pk(sk_rogue_server_temp));
   in(c, sens_cipher: bitstring);
   let ss = shared_secret(sk_rogue_server_temp, pk_c) in
   let sens_d = dec_data(ss, sens_cipher) in
-  event tls_rogue_server_recv(sens_d).
+  event rogue_server_recv(sens_d).
 
-let VulnerableClient =
+let LegitimateApp =
   out(c, pk(sk_app_temp));
-  in(c, tls_server(hostn, sip, smech, subj_and_san_recv, iss, pk_s));
-
-  (* Vulnerability: no hostname/SAN match check, only CA/issuer check. *)
+  in(c, server_hello(hostn, sip, smech, subj_and_san_recv, iss, pk_s, cert_pk_s));
   if (check_host(hostn, subj_and_san_recv) = host_true) &&
-     (check_issuer(iss, system_ca_list) = issuer_true) then
-      (
+     (check_issuer(iss, system_ca_list) = issuer_true) &&
+     (check_cert_pk(iss, cert_pk_s) = cert_pk_true) &&
+     (check_temp_pk(cert_pk_s, pk_s) = temp_pk_true) 
+     then
     let ss = shared_secret(sk_app_temp, pk_s) in
     let sens_cipher = enc_data(ss, sensitive_data) in
     out(c, sens_cipher);
-    event tls_client_accepted(hostn, subj_and_san_recv, iss, sensitive_data);
+    event app_accepted(hostn, subj_and_san_recv, iss, sensitive_data);
     if iss = rogue_cert_issuer then
-      event tls_client_hijacked(hostn, subj_and_san_recv, iss, sensitive_data)
-      ).
+      event app_tricked(hostn, subj_and_san_recv, iss, sensitive_data)
+.
+
+
+
+query attacker(sensitive_data).
+
+query event(rogue_server_recv(sensitive_data)).
+
+
 
 (* Query 1: Attack reachability.
    True  = the client can accept a rogue certificate path
            and send sensitive data to the rogue endpoint.
    False = this BGP-hijack rogue-cert path is not reachable. *)
-query event(tls_client_hijacked(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sensitive_data)).
-
-(* Query 2: Authentication/correspondence sanity check.
-   True  = every hijacked client acceptance corresponds to rogue endpoint decrypting the sensitive data.
-   False = client hijack event occurs without rogue endpoint decrypting the expected payload. *)
-query hostn: bitstring, subj_and_san: bitstring;
-  event(tls_client_hijacked(hostn, subj_and_san, rogue_cert_issuer, sensitive_data)) ==>
-  event(tls_rogue_server_recv(sensitive_data)).
+query event(app_tricked(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sensitive_data)).
 
 process
-  (!RealServer) | (!BGPHijackingRogueServer) | (!VulnerableClient)
+  (!RealServer) | (!BGPHijackingRogueServer) | (!LegitimateApp)

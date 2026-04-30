@@ -1,3 +1,6 @@
+set traceDisplay = long.
+
+
 (* type *)
 type skey [private].
 type pkey.
@@ -12,18 +15,18 @@ const system_ca_list: bitstring.
 
 const server_hostname: bitstring.
 const server_cert_subject_and_san: bitstring.
+
+
 const server_cert_issuer: bitstring.
-const server_cert_spk: pkey.
+const rogue_cert_issuer: bitstring.
+
 const server_ip: ip.
 const server_mechine: mechine.
 
-const rogue_cert_issuer: bitstring.
-const rogue_cert_spk: pkey.
-const rogue_mechine: mechine.
 const rogue_ip: ip.
+const rogue_mechine: mechine.
 
 const sensitive_data: bitstring [private].
-const rogue_sensitive_data: bitstring.
 
 const curr: timestamp.
 
@@ -31,15 +34,39 @@ const curr: timestamp.
 free sk_app_signing: skey [private].
 free sk_claim_signing: skey [private].
 
+const sk_real_server_cert: skey [private].
 const sk_real_server_temp: skey [private].
+const sk_rogue_server_cert: skey [private].
 const sk_rogue_server_temp: skey [private].
 const sk_app_temp: skey [private].
+
+
 
 (* channel *)
 free c: channel.
 
 fun pk(skey): pkey.
-fun shared_secret(skey,pkey): bitstring.
+
+const temp_pk_true: bitstring.
+const temp_pk_false: bitstring.
+reduc 
+      check_temp_pk(pk(sk_real_server_cert), pk(sk_real_server_temp)) = temp_pk_true;
+     check_temp_pk(pk(sk_rogue_server_cert), pk(sk_rogue_server_temp)) = temp_pk_true;
+      check_temp_pk(pk(sk_real_server_cert), pk(sk_rogue_server_temp)) = temp_pk_false;
+      check_temp_pk(pk(sk_rogue_server_cert), pk(sk_real_server_temp)) = temp_pk_false.
+
+
+const cert_pk_true: bitstring.
+const cert_pk_false: bitstring.
+reduc 
+      check_cert_pk(server_cert_issuer, pk(sk_real_server_cert)) = cert_pk_true;
+     check_cert_pk(rogue_cert_issuer, pk(sk_rogue_server_cert)) = cert_pk_true;
+      check_cert_pk(server_cert_issuer, pk(sk_rogue_server_cert)) = cert_pk_false;
+      check_cert_pk(rogue_cert_issuer, pk(sk_real_server_cert)) = cert_pk_false.
+
+
+
+fun shared_secret(skey,pkey): bitstring [private].
 equation forall sk: skey, peer_sk: skey;
     shared_secret(sk, pk(peer_sk)) = shared_secret(peer_sk, pk(sk)).
 
@@ -48,7 +75,7 @@ fun enc_data(bitstring, bitstring) : bitstring.
 reduc forall k: bitstring, d: bitstring;
       dec_data(k, enc_data(k, d)) = d.
       
-fun tls_server(bitstring, ip, mechine, bitstring, bitstring, pkey) : bitstring [data].
+fun server_hello(bitstring, ip, mechine, bitstring, bitstring, pkey, pkey) : bitstring [data].
 
 
 const host_true: bitstring.
@@ -120,9 +147,9 @@ reduc forall subject_and_san: bitstring, issuer: bitstring;
 (* cert *)
 fun cert(bitstring, bitstring, pkey, bitstring): bitstring [data]. (* subject_and_sans, issuer, subject public key, signature *)
 reduc forall subject_and_san: bitstring, issuer: bitstring, spk: pkey, sig: bitstring;
-      get_cert_claim(cert(subject_and_san,issuer,spk, sig)) = cert_claim(subject_and_san, issuer).
+      get_cert_claim(cert(subject_and_san, issuer, spk, sig)) = cert_claim(subject_and_san, issuer).
 reduc forall subject_and_san: bitstring, issuer: bitstring, spk: pkey, sig: bitstring;
-      get_cert_spk(cert(subject_and_san,issuer,spk, sig)) = spk.
+      get_cert_spk(cert(subject_and_san, issuer, spk, sig)) = spk.
 
 
 (* jwt *)
@@ -162,3 +189,26 @@ reduc forall content: bitstring, sk: skey, now: timestamp;
                      jwt_payload(content2, succ_t(now2)),
                      sig_sign(jwt_tosign(pk2s(pk(sk2)), jwt_payload(content2, succ_t(now2))), sk2)),
                  pk(sk2), now2) = true.
+
+
+
+event jwt_claim_signing_key_create(pkey, pkey, timestamp).
+event jwt_claim_signing_key_verify(pkey, pkey, timestamp).
+event jwt_server_cert_claim_create(pkey, bitstring, bitstring, timestamp).
+event jwt_server_cert_claim_verify(pkey, bitstring, bitstring, timestamp).
+
+event real_server_sent(bitstring, bitstring, bitstring, pkey).
+event real_server_recv(bitstring).
+
+event rogue_server_sent(bitstring, bitstring, bitstring, pkey).
+event rogue_server_recv(bitstring).
+
+event app_accepted(bitstring, bitstring, bitstring, bitstring).
+event app_tricked(bitstring, bitstring, bitstring, bitstring).
+event app_terminated_rogue(bitstring, bitstring, bitstring).
+
+
+event mitm_monitors_client(pkey).
+event mitm_monitors_server(bitstring, bitstring, bitstring, pkey).
+event mitm_replaced_response(bitstring, bitstring, bitstring, pkey).
+event mitm_intercepted(bitstring, bitstring, bitstring, bitstring).
