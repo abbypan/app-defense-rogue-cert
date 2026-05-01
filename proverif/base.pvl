@@ -198,12 +198,12 @@ event jwt_server_cert_claim_create(pkey, bitstring, bitstring, timestamp).
 event jwt_server_cert_claim_verify(pkey, bitstring, bitstring, timestamp).
 
 event real_server_sent(bitstring, bitstring, bitstring, pkey).
-event real_server_recv(bitstring).
+event real_server_recv(bitstring, pkey).
 
 event rogue_server_sent(bitstring, bitstring, bitstring, pkey).
 event rogue_server_recv(bitstring).
 
-event app_accepted(bitstring, bitstring, bitstring, bitstring).
+event app_accepted(bitstring, bitstring, bitstring, bitstring, pkey).
 event app_tricked(bitstring, bitstring, bitstring, bitstring).
 event app_terminated_rogue(bitstring, bitstring, bitstring).
 

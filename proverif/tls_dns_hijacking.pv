@@ -8,13 +8,13 @@ set attacker = active.
 let RealServer =
   in(c, pk_c: pkey);
   out(c, server_hello(
-      server_hostname, server_ip, server_mechine, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_cert), pk(sk_real_server_cert)
+      server_hostname, server_ip, server_mechine, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_temp), pk(sk_real_server_cert)
   ));
-  event real_server_sent(server_hostname, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_cert));
+  event real_server_sent(server_hostname, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_temp));
   in(c, sens_cipher: bitstring);
   let ss = shared_secret(sk_real_server_temp, pk_c) in
   let sens_d = dec_data(ss, sens_cipher) in
-  event real_server_recv(sens_d).
+  event real_server_recv(sens_d, pk_c).
 
 (* DNS hijack adversary endpoint:
    after name resolution is poisoned, the client is redirected here.
@@ -42,7 +42,7 @@ let LegitimateApp =
      (check_temp_pk(cert_pk_s, pk_s) = temp_pk_true)  
      then
     out(c, sens_cipher);
-    event app_accepted(hostn, subj_and_san_recv, iss, sensitive_data);
+    event app_accepted(hostn, subj_and_san_recv, iss, sensitive_data, pk_s);
     if iss = rogue_cert_issuer then
       event app_tricked(hostn, subj_and_san_recv, iss, sensitive_data).
 
