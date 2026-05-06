@@ -1,45 +1,47 @@
-set attacker = active.
-(* set attacker = passive. *)
-
 (* This file is intended to be checked with declarations in base.pvl. *)
 
 free c_client: channel [private].
 free c_server: channel [private].
 
 let RealServer =
-  in(c_server, pk_c: pkey);
-  out(c_server, server_hello(
+  new sk_real_server_temp: skey;
+  new random_real_server: bitstring;
+  in(c_server, client_hello(rand_c, pk_c));
+  let real_s_hello = server_hello(random_real_server, pk(sk_real_server_temp)) in
+  let real_s_cert = cert_content(server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_cert)) in
+  let trans = transcript_hash(client_hello(rand_c, pk_c), real_s_hello, real_s_cert) in
+  let s_handshake_sig = sig_sign(trans, sk_real_server_cert) in
+  event real_server_sent(server_hostname, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_temp));
+  out(c_server, server_hello_handshake(
       server_hostname,
       server_ip,
       server_mechine,
-      server_cert_subject_and_san,
-      server_cert_issuer,
-      pk(sk_real_server_temp),
-      pk(sk_real_server_cert)
+      real_s_hello,
+      real_s_cert,
+      s_handshake_sig
   ));
-  event real_server_sent(server_hostname, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_temp));
   in(c_server, sens_cipher: bitstring);
-  let ss = shared_secret(sk_real_server_temp, pk_c) in
+  let ss = session_key(shared_secret(sk_real_server_temp, pk_c), client_hello(rand_c, pk_c), real_s_hello) in
   let sens_d = dec_data(ss, sens_cipher) in
-  event real_server_recv(sens_d, pk_c).
+  event real_server_accepted(server_hostname, trans, sens_d).
 
 (* In-path MITM adversary:
    monitors client->server and server->client traffic,
    then substitutes the legitimate server response with a rogue-cert response. *)
 let MitmServer =
-  in(c_client, pk_c: pkey);
+  new sk_rogue_server_temp: skey;
+  in(c_client, client_hello(rand_c, pk_c));
   event mitm_monitors_client(pk_c);
-  out(c_server, pk(sk_rogue_server_temp));
-  in(c_server, server_hello(hostn_s, sip_s, smech_s, san_s, iss_s, pk_srv, cert_pk_srv));
+  out(c_server, client_hello(rand_c, pk(sk_rogue_server_temp)));
+  in(c_server, server_hello_handshake(hostn_s, sip_s, smech_s, server_hello(rand_s, pk_srv), cert_content(san_s, iss_s, cert_pk_srv), s_handshake_sig_s));
   event mitm_monitors_server(hostn_s, san_s, iss_s, pk_srv);
-  let rogue_msg = server_hello(
+  let rogue_msg = server_hello_handshake(
       hostn_s,
       rogue_ip,
       rogue_mechine,
-      san_s,
-      rogue_cert_issuer,
-      pk(sk_rogue_server_temp),
-      pk(sk_rogue_server_cert)
+      server_hello(rand_s, pk(sk_rogue_server_temp)),
+      cert_content(san_s, rogue_cert_issuer, pk(sk_rogue_server_cert)),
+      s_handshake_sig_s
   ) in
   event mitm_replaced_response(hostn_s, san_s, rogue_cert_issuer, pk(sk_rogue_server_temp));
   out(c_client, rogue_msg);
@@ -52,34 +54,43 @@ let MitmServer =
   event mitm_intercepted(hostn_s, san_s, rogue_cert_issuer, sens_d).
 
 let LegitimateApp =
-  out(c_client, pk(sk_app_temp));
-  in(c_client, server_hello(hostn, sip, smech, subj_and_san_recv, iss, pk_s, cert_pk_s));
-  let ss = shared_secret(sk_app_temp, pk_s) in
-  let sens_cipher = enc_data(ss, sensitive_data) in
+  new sk_app_temp: skey;
+  new random_app: bitstring;
+  out(c_client, client_hello(random_app, pk(sk_app_temp)));
+  in(c_client, server_hello_handshake(hostn, sip, smech, server_hello(rand_s, pk_s), cert_content(subj_and_san_recv, iss, cert_pk_s), s_handshake_sig));
+  let trans = transcript_hash(client_hello(random_app, pk(sk_app_temp)), server_hello(rand_s, pk_s), cert_content(subj_and_san_recv, iss, cert_pk_s)) in
   if (check_host(hostn, subj_and_san_recv) = host_true) &&
      (check_issuer(iss, system_ca_list) = issuer_true) &&
      (check_cert_pk(iss, cert_pk_s) = cert_pk_true) &&
-     (check_temp_pk(cert_pk_s, pk_s) = temp_pk_true) 
+     (check_temp_pk(cert_pk_s, pk_s) = temp_pk_true)
       then
-    out(c_client, sens_cipher);
-    event app_accepted(hostn, subj_and_san_recv, iss, sensitive_data, pk_s);
-    if iss = rogue_cert_issuer then
+    (
+      new sensitive_data: bitstring;
+      let ss = session_key(shared_secret(sk_app_temp, pk_s), client_hello(random_app, pk(sk_app_temp)), server_hello(rand_s, pk_s)) in
+      let sens_cipher = enc_data(ss, sensitive_data) in
+      event app_accepted(hostn, trans, sensitive_data);
+      out(c_client, sens_cipher);
+      if iss = rogue_cert_issuer then
       event app_tricked(hostn, subj_and_san_recv, iss, sensitive_data)
-.
+    )
+    .
 
 
-query attacker(sensitive_data).
+query hostn: bitstring, trans: bitstring, sens_d: bitstring;
+  event(app_accepted(hostn, trans, sens_d)) ==> attacker(sens_d).
 
 (* Query 1: MITM attack reachability with rogue cert.
    True  = there exists an execution where MITM decrypts client sensitive data.
    False = this modeled MITM interception path is not reachable. *)
-query event(mitm_intercepted(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sensitive_data)).
+query sens_d: bitstring;
+  event(mitm_intercepted(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sens_d)).
 
 
 (* Query 2: MITM attack acceptance with rogue cert.
    True  = there exists an execution where the client accepts a server response signed with the rogue_cert_issuer and sends sensitive_data to the MITM endpoint.
    False = the modeled MITM attacker cannot trigger the client to accept a rogue certificate and send sensitive data in this path. *)
-query event(app_tricked(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sensitive_data)).
+query sens_d: bitstring;
+  event(app_tricked(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sens_d)).
 
 
 process

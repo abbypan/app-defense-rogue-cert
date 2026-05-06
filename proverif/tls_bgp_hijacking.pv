@@ -1,54 +1,75 @@
-set attacker = active.
-(* set attacker = passive. *)
-
 (* This model is intended to be checked together with base.pvl. *)
 
 
 
 let RealServer =
-  in(c, pk_c: pkey);
-  out(c, server_hello(
-      server_hostname, server_ip, server_mechine, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_temp), pk(sk_real_server_cert)
+  new sk_real_server_temp: skey;
+  new random_real_server: bitstring;
+  in(c, client_hello(rand_c, pk_c));
+  let real_s_hello = server_hello(random_real_server, pk(sk_real_server_temp)) in
+  let real_s_cert = cert_content(server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_cert)) in
+  let trans = transcript_hash(client_hello(rand_c, pk_c), real_s_hello, real_s_cert) in
+  let s_handshake_sig = sig_sign(trans, sk_real_server_cert) in
+  event real_server_sent(server_hostname, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_cert));
+  out(c, server_hello_handshake(
+      server_hostname, server_ip, server_mechine, real_s_hello, real_s_cert, s_handshake_sig
   ));
-  event real_server_sent(server_hostname, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_temp));
   in(c, sens_cipher: bitstring);
-  let ss = shared_secret(sk_real_server_temp, pk_c) in
+  let ss = session_key(shared_secret(sk_real_server_temp, pk_c), client_hello(rand_c, pk_c), real_s_hello) in
   let sens_d = dec_data(ss, sens_cipher) in
-  event real_server_recv(sens_d, pk_c).
+  event real_server_accepted(server_hostname, trans, sens_d).
 
 (* BGP hijack model: same destination IP, but traffic reaches rogue machine. *)
 let BGPHijackingRogueServer =
-  in(c, pk_c: pkey);
-  out(c, server_hello(
-      server_hostname, server_ip, rogue_mechine, server_cert_subject_and_san, rogue_cert_issuer, pk(sk_rogue_server_temp), pk(sk_rogue_server_cert)
-  ));
+  new sk_rogue_server_temp: skey;
+  new random_rogue_server: bitstring;
+  in(c, client_hello(rand_c, pk_c));
+  let rogue_s_hello = server_hello(random_rogue_server, pk(sk_rogue_server_temp)) in
+  let rogue_s_cert = cert_content(server_cert_subject_and_san, rogue_cert_issuer, pk(sk_rogue_server_cert)) in
+  let rogue_trans = transcript_hash(client_hello(rand_c, pk_c), rogue_s_hello, rogue_s_cert) in
+  let rogue_s_handshake_sig = sig_sign(rogue_trans, sk_rogue_server_cert) in
   event rogue_server_sent(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, pk(sk_rogue_server_temp));
+  out(c, server_hello_handshake(server_hostname, server_ip, rogue_mechine, rogue_s_hello, rogue_s_cert, rogue_s_handshake_sig));
   in(c, sens_cipher: bitstring);
-  let ss = shared_secret(sk_rogue_server_temp, pk_c) in
+  let ss = session_key(shared_secret(sk_rogue_server_temp, pk_c),
+  client_hello(rand_c, pk_c), rogue_s_hello
+  ) in
   let sens_d = dec_data(ss, sens_cipher) in
-  event rogue_server_recv(sens_d).
+  event rogue_server_recv(sens_d);
+  out(c, sens_d)
+  .
 
 let LegitimateApp =
-  out(c, pk(sk_app_temp));
-  in(c, server_hello(hostn, sip, smech, subj_and_san_recv, iss, pk_s, cert_pk_s));
-  if (check_host(hostn, subj_and_san_recv) = host_true) &&
+  new sk_app_temp: skey;
+  new random_app: bitstring;
+  out(c, client_hello(random_app, pk(sk_app_temp)));
+  in(c, server_hello_handshake(hostn, sip, smech, server_hello(rand_s, pk_s), cert_content(subj_and_san_recv, iss, cert_pk_s), s_handshake_sig));
+  let trans = transcript_hash(client_hello(random_app, pk(sk_app_temp)), server_hello(rand_s, pk_s), cert_content(subj_and_san_recv, iss, cert_pk_s)) in
+ if  (check_host(hostn, subj_and_san_recv) = host_true) &&
      (check_issuer(iss, system_ca_list) = issuer_true) &&
      (check_cert_pk(iss, cert_pk_s) = cert_pk_true) &&
-     (check_temp_pk(cert_pk_s, pk_s) = temp_pk_true) 
-     then
-    let ss = shared_secret(sk_app_temp, pk_s) in
-    let sens_cipher = enc_data(ss, sensitive_data) in
-    out(c, sens_cipher);
-    event app_accepted(hostn, subj_and_san_recv, iss, sensitive_data, pk_s);
-    if iss = rogue_cert_issuer then
+    (sig_verify(trans, s_handshake_sig, cert_pk_s) = true)
+      then
+    (
+      new sensitive_data: bitstring;
+      let ss = session_key(shared_secret(sk_app_temp, pk_s), client_hello(random_app, pk(sk_app_temp)), server_hello(rand_s, pk_s)) in
+  let sens_cipher = enc_data(ss, sensitive_data) in
+      event app_accepted(hostn, trans, sensitive_data);
+       out(c, sens_cipher);
+      if iss = rogue_cert_issuer then
       event app_tricked(hostn, subj_and_san_recv, iss, sensitive_data)
-.
+    )
+    else
+      event app_terminated_rogue(hostn, subj_and_san_recv, iss)
+      .
 
 
 
-query attacker(sensitive_data).
+query hostn: bitstring, trans: bitstring, sens_d: bitstring;
+  event(app_accepted(hostn, trans, sens_d)) ==> attacker(sens_d).
 
-query event(rogue_server_recv(sensitive_data)).
+query sens_d: bitstring;
+  event(rogue_server_recv(sens_d)).
 
 
 
@@ -56,7 +77,8 @@ query event(rogue_server_recv(sensitive_data)).
    True  = the client can accept a rogue certificate path
            and send sensitive data to the rogue endpoint.
    False = this BGP-hijack rogue-cert path is not reachable. *)
-query event(app_tricked(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sensitive_data)).
+query sens_d: bitstring;
+  event(app_tricked(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sens_d)).
 
 process
   (!RealServer) | (!BGPHijackingRogueServer) | (!LegitimateApp)

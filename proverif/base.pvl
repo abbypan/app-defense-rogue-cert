@@ -1,4 +1,5 @@
 set traceDisplay = long.
+set attacker = active.
 
 
 (* type *)
@@ -10,7 +11,7 @@ type mechine.
 
 
 
-(* const *)
+(* free *)
 const system_ca_list: bitstring.
 
 const server_hostname: bitstring.
@@ -26,19 +27,14 @@ const server_mechine: mechine.
 const rogue_ip: ip.
 const rogue_mechine: mechine.
 
-const sensitive_data: bitstring [private].
-
-const curr: timestamp.
+free curr: timestamp.
 
 (* app signing key *)
-free sk_app_signing: skey [private].
-free sk_claim_signing: skey [private].
+const app_signing: bitstring.
+const claim_signing: bitstring.
 
-const sk_real_server_cert: skey [private].
-const sk_real_server_temp: skey [private].
-const sk_rogue_server_cert: skey [private].
-const sk_rogue_server_temp: skey [private].
-const sk_app_temp: skey [private].
+const real_server: bitstring.
+const rogue_server: bitstring.
 
 
 
@@ -47,15 +43,28 @@ free c: channel.
 
 fun pk(skey): pkey.
 
-const temp_pk_true: bitstring.
-const temp_pk_false: bitstring.
-reduc 
-      check_temp_pk(pk(sk_real_server_cert), pk(sk_real_server_temp)) = temp_pk_true;
-     check_temp_pk(pk(sk_rogue_server_cert), pk(sk_rogue_server_temp)) = temp_pk_true;
-      check_temp_pk(pk(sk_real_server_cert), pk(sk_rogue_server_temp)) = temp_pk_false;
-      check_temp_pk(pk(sk_rogue_server_cert), pk(sk_real_server_temp)) = temp_pk_false.
+fun gen_sk_for_id(bitstring) : skey [private].
+fun gen_cert(pkey, bitstring, bitstring, bitstring) : bitstring [data].
+
+reduc forall spk: pkey, h_and_sans: bitstring, iss: bitstring, calist: bitstring;
+      get_cert_pk(gen_cert(spk, h_and_sans, iss, calist)) = spk.
+  reduc forall spk: pkey, h_and_sans: bitstring, iss: bitstring, calist: bitstring;    
+      get_cert_issuer(gen_cert(spk, h_and_sans, iss, calist)) = iss
+      .
+
+reduc forall spk: pkey, h_and_sans: bitstring, iss: bitstring, calist: bitstring;
+      check_cert_match_issuer(gen_cert(spk, h_and_sans, iss, calist), iss) = true.
+reduc forall spk: pkey, h_and_sans: bitstring, iss: bitstring, calist: bitstring; 
+       check_cert_match_calist(gen_cert(spk, h_and_sans, iss, calist), calist) = true.
 
 
+
+
+
+
+
+
+(*
 const cert_pk_true: bitstring.
 const cert_pk_false: bitstring.
 reduc 
@@ -64,28 +73,42 @@ reduc
       check_cert_pk(server_cert_issuer, pk(sk_rogue_server_cert)) = cert_pk_false;
       check_cert_pk(rogue_cert_issuer, pk(sk_real_server_cert)) = cert_pk_false.
 
+      const issuer_true: bitstring.
+reduc
+  check_issuer(server_cert_issuer, system_ca_list) = issuer_true;
+  check_issuer(rogue_cert_issuer, system_ca_list) = issuer_true
+  .
+*)
+
+
+const host_true: bitstring.
+reduc check_host(server_hostname, server_cert_subject_and_san) = host_true.
+
+
+
 
 
 fun shared_secret(skey,pkey): bitstring [private].
 equation forall sk: skey, peer_sk: skey;
     shared_secret(sk, pk(peer_sk)) = shared_secret(peer_sk, pk(sk)).
 
+fun session_key(bitstring, bitstring, bitstring): bitstring [private].
+
+
 (* tls *)
 fun enc_data(bitstring, bitstring) : bitstring.
 reduc forall k: bitstring, d: bitstring;
       dec_data(k, enc_data(k, d)) = d.
-      
-fun server_hello(bitstring, ip, mechine, bitstring, bitstring, pkey, pkey) : bitstring [data].
+
+fun client_hello(bitstring, pkey) : bitstring [data].
+fun server_hello(bitstring, pkey) : bitstring [data].
+fun transcript_hash(bitstring, bitstring, bitstring): bitstring [data].
+
+fun server_hello_handshake(bitstring, ip, mechine, bitstring, bitstring, bitstring) : bitstring [data].
 
 
-const host_true: bitstring.
-reduc check_host(server_hostname, server_cert_subject_and_san) = host_true.
 
-const issuer_true: bitstring.
-reduc
-  check_issuer(server_cert_issuer, system_ca_list) = issuer_true;
-  check_issuer(rogue_cert_issuer, system_ca_list) = issuer_true
-  .
+
 
 (* Preserve issuer equality helper in token style. *)
 const same_issuer_true: bitstring.
@@ -138,6 +161,9 @@ reduc forall t: timestamp;
 
 (* cert claim *)
 fun cert_claim(bitstring, bitstring): bitstring [data]. (* subject_and_san, issuer *)
+fun cert_content(bitstring, bitstring, pkey): bitstring [data]. (*
+subj_and_san, issuer, subject pkey
+*)
 reduc forall subject_and_san: bitstring, issuer: bitstring;
       get_subject_and_san(cert_claim(subject_and_san,issuer)) = subject_and_san.
 reduc forall subject_and_san: bitstring, issuer: bitstring;
@@ -198,12 +224,13 @@ event jwt_server_cert_claim_create(pkey, bitstring, bitstring, timestamp).
 event jwt_server_cert_claim_verify(pkey, bitstring, bitstring, timestamp).
 
 event real_server_sent(bitstring, bitstring, bitstring, pkey).
-event real_server_recv(bitstring, pkey).
+event real_server_accepted(bitstring, bitstring, bitstring).
+
 
 event rogue_server_sent(bitstring, bitstring, bitstring, pkey).
 event rogue_server_recv(bitstring).
 
-event app_accepted(bitstring, bitstring, bitstring, bitstring, pkey).
+event app_accepted(bitstring, bitstring, bitstring).
 event app_tricked(bitstring, bitstring, bitstring, bitstring).
 event app_terminated_rogue(bitstring, bitstring, bitstring).
 
