@@ -21,4 +21,4 @@
 
 # proverif
 
-    proverif -lib asproc.pvl legitimate.pv
+    proverif -lib base.pvl asproc.pv
