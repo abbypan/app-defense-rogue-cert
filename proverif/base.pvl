@@ -43,48 +43,36 @@ free c: channel.
 
 fun pk(skey): pkey.
 
+(* Asymmetric signature primitives *)
+fun sig_sign(bitstring, skey): bitstring.
+reduc forall m: bitstring, sk: skey;
+      sig_verify(m, sig_sign(m, sk), pk(sk)) = true.
+
 fun gen_sk_for_id(bitstring) : skey [private].
 fun gen_cert(pkey, bitstring, bitstring, bitstring) : bitstring [data].
+fun cert_content(pkey, bitstring, bitstring): bitstring [data]. (*
+subject pkey, subj_and_san, issuer
+*)
 
-reduc forall spk: pkey, h_and_sans: bitstring, iss: bitstring, calist: bitstring;
-      get_cert_pk(gen_cert(spk, h_and_sans, iss, calist)) = spk.
-  reduc forall spk: pkey, h_and_sans: bitstring, iss: bitstring, calist: bitstring;    
-      get_cert_issuer(gen_cert(spk, h_and_sans, iss, calist)) = iss
+reduc forall spk: pkey, h_and_sans: bitstring, iss: bitstring, sig: bitstring;
+      get_cert_pk(gen_cert(spk, h_and_sans, iss, sig)) = spk.
+  reduc forall spk: pkey, h_and_sans: bitstring, iss: bitstring, sig: bitstring;    
+      get_cert_issuer(gen_cert(spk, h_and_sans, iss, sig)) = iss
       .
 
-reduc forall spk: pkey, h_and_sans: bitstring, iss: bitstring, calist: bitstring;
-      check_cert_match_issuer(gen_cert(spk, h_and_sans, iss, calist), iss) = true.
-reduc forall spk: pkey, h_and_sans: bitstring, iss: bitstring, calist: bitstring; 
-       check_cert_match_calist(gen_cert(spk, h_and_sans, iss, calist), calist) = true.
+reduc forall spk: pkey, h_and_sans: bitstring, iss: bitstring, sig: bitstring;
+      check_cert_match_issuer(gen_cert(spk, h_and_sans, iss, sig), iss) = true.
+reduc forall spk: pkey, h_and_sans: bitstring, iss: bitstring, sig: bitstring; 
+       check_cert_match_spk(gen_cert(spk, h_and_sans, iss, sig), spk) = true.
 
-
-
-
-
-
-
-
-(*
-const cert_pk_true: bitstring.
-const cert_pk_false: bitstring.
-reduc 
-      check_cert_pk(server_cert_issuer, pk(sk_real_server_cert)) = cert_pk_true;
-     check_cert_pk(rogue_cert_issuer, pk(sk_rogue_server_cert)) = cert_pk_true;
-      check_cert_pk(server_cert_issuer, pk(sk_rogue_server_cert)) = cert_pk_false;
-      check_cert_pk(rogue_cert_issuer, pk(sk_real_server_cert)) = cert_pk_false.
-
-      const issuer_true: bitstring.
-reduc
-  check_issuer(server_cert_issuer, system_ca_list) = issuer_true;
-  check_issuer(rogue_cert_issuer, system_ca_list) = issuer_true
-  .
-*)
 
 
 const host_true: bitstring.
 reduc check_host(server_hostname, server_cert_subject_and_san) = host_true.
 
-
+const issuer_true: bitstring.
+reduc check_issuer(server_cert_issuer, system_ca_list) = issuer_true;
+check_issuer(rogue_cert_issuer, system_ca_list) = issuer_true.
 
 
 
@@ -99,6 +87,8 @@ fun session_key(bitstring, bitstring, bitstring): bitstring [private].
 fun enc_data(bitstring, bitstring) : bitstring.
 reduc forall k: bitstring, d: bitstring;
       dec_data(k, enc_data(k, d)) = d.
+reduc forall k: bitstring, d:bitstring;
+      check_authtag(k, enc_data(k, d)) = true.
 
 fun client_hello(bitstring, pkey) : bitstring [data].
 fun server_hello(bitstring, pkey) : bitstring [data].
@@ -137,10 +127,7 @@ reduc forall mechx: mechine;
       is_same_mechine(rogue_mechine, server_mechine) = same_mechine_false.
 
 
-(* Asymmetric signature primitives *)
-fun sig_sign(bitstring, skey): bitstring.
-reduc forall m: bitstring, sk: skey;
-      sig_verify(m, sig_sign(m, sk), pk(sk)) = true.
+
 
 (* pkey <-> bitstring *)
 fun pk2s(pkey): bitstring.
@@ -161,9 +148,7 @@ reduc forall t: timestamp;
 
 (* cert claim *)
 fun cert_claim(bitstring, bitstring): bitstring [data]. (* subject_and_san, issuer *)
-fun cert_content(bitstring, bitstring, pkey): bitstring [data]. (*
-subj_and_san, issuer, subject pkey
-*)
+
 reduc forall subject_and_san: bitstring, issuer: bitstring;
       get_subject_and_san(cert_claim(subject_and_san,issuer)) = subject_and_san.
 reduc forall subject_and_san: bitstring, issuer: bitstring;
@@ -224,13 +209,13 @@ event jwt_server_cert_claim_create(pkey, bitstring, bitstring, timestamp).
 event jwt_server_cert_claim_verify(pkey, bitstring, bitstring, timestamp).
 
 event real_server_sent(bitstring, bitstring, bitstring, pkey).
-event real_server_accepted(bitstring, bitstring, bitstring).
+event real_server_accepted(bitstring, bitstring, bitstring, bitstring).
 
 
 event rogue_server_sent(bitstring, bitstring, bitstring, pkey).
-event rogue_server_recv(bitstring).
+event rogue_server_accepted(bitstring, bitstring, bitstring, bitstring).
 
-event app_accepted(bitstring, bitstring, bitstring).
+event app_accepted(bitstring, bitstring, bitstring, bitstring).
 event app_tricked(bitstring, bitstring, bitstring, bitstring).
 event app_terminated_rogue(bitstring, bitstring, bitstring).
 

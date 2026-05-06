@@ -23,7 +23,7 @@ let RealServer =
   in(c_server, sens_cipher: bitstring);
   let ss = session_key(shared_secret(sk_real_server_temp, pk_c), client_hello(rand_c, pk_c), real_s_hello) in
   let sens_d = dec_data(ss, sens_cipher) in
-  event real_server_accepted(server_hostname, trans, sens_d).
+  event real_server_accepted(server_hostname, trans, sens_d, server_cert_issuer).
 
 (* In-path MITM adversary:
    monitors client->server and server->client traffic,
@@ -68,7 +68,7 @@ let LegitimateApp =
       new sensitive_data: bitstring;
       let ss = session_key(shared_secret(sk_app_temp, pk_s), client_hello(random_app, pk(sk_app_temp)), server_hello(rand_s, pk_s)) in
       let sens_cipher = enc_data(ss, sensitive_data) in
-      event app_accepted(hostn, trans, sensitive_data);
+      event app_accepted(hostn, trans, sensitive_data, iss);
       out(c_client, sens_cipher);
       if iss = rogue_cert_issuer then
       event app_tricked(hostn, subj_and_san_recv, iss, sensitive_data)
@@ -76,8 +76,8 @@ let LegitimateApp =
     .
 
 
-query hostn: bitstring, trans: bitstring, sens_d: bitstring;
-  event(app_accepted(hostn, trans, sens_d)) ==> attacker(sens_d).
+query hostn: bitstring, trans: bitstring, sens_d: bitstring, issuer: bitstring;
+  event(app_accepted(hostn, trans, sens_d, issuer)) ==> attacker(sens_d).
 
 (* Query 1: MITM attack reachability with rogue cert.
    True  = there exists an execution where MITM decrypts client sensitive data.

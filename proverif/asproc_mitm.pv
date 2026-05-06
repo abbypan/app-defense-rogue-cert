@@ -30,7 +30,7 @@ let RealServer =
   in(c, sens_cipher: bitstring);
   let ss = session_key(shared_secret(sk_real_server_temp, pk_c), client_hello(rand_c, pk_c), real_s_hello) in
   let sens_d = dec_data(ss, sens_cipher) in
-  event real_server_accepted(server_hostname, trans, sens_d).
+  event real_server_accepted(server_hostname, trans, sens_d, server_cert_issuer).
 
 (* In-path MITM adversary:
    forwards client key-share to server, replaces server hello with rogue issuer/key,
@@ -105,7 +105,7 @@ if  (check_host(hostn, subj_and_san_recv) = host_true) &&
       new sensitive_data: bitstring;
       let ss = session_key(shared_secret(sk_app_temp, pk_recv), client_hello(random_app, pk(sk_app_temp)), server_hello(rand_s, pk_recv)) in
       let sens_cipher = enc_data(ss, sensitive_data) in
-      event app_accepted(hostn, trans, sensitive_data);
+      event app_accepted(hostn, trans, sensitive_data, iss);
       out(c, sens_cipher);
       if iss = rogue_cert_issuer then
       event app_tricked(hostn, subj_and_san_recv, iss, sensitive_data)
@@ -129,14 +129,14 @@ query claim_pk: pkey, subject_and_san: bitstring, issuer: bitstring, exp: timest
 (* Query: Secrecy of application payload.
    True  = attacker can derive sensitive_data (secrecy broken).
    False = attacker cannot derive sensitive_data (secrecy preserved). *)
-query hostn: bitstring, trans: bitstring, sens_d: bitstring;
-  event(app_accepted(hostn, trans, sens_d)) ==> attacker(sens_d).
+query hostn: bitstring, trans: bitstring, sens_d: bitstring, issuer: bitstring;
+  event(app_accepted(hostn, trans, sens_d, issuer)) ==> attacker(sens_d).
 
 (* Query: Intended legitimate TLS acceptance.
    True  = there exists a trace where client accepts legitimate server issuer/payload.
    False = intended legitimate acceptance trace is unreachable. *)
-query sens_d: bitstring;
-  event(rogue_server_recv(sens_d)).
+query trans: bitstring, sens_d: bitstring, issuer: bitstring;
+  event(rogue_server_accepted(server_hostname, trans, sens_d, issuer)).
 
 (* Query: MITM interception reachability.
    True  = MITM decrypts sensitive_data after replacing server issuer/key.
