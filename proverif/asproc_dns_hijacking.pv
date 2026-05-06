@@ -26,7 +26,7 @@ let RealServer =
   in(c, sens_cipher: bitstring);
   let ss = shared_secret(sk_real_server_temp, pk_c) in
   let sens_d = dec_data(ss, sens_cipher) in
-  event real_server_recv(sens_d).
+  event real_server_recv(sens_d, pk_c).
 
 let DNSHijackingRogueServer =
   in(c, pk_c: pkey);
@@ -70,7 +70,7 @@ let LegitimateApp =
        let ss = shared_secret(sk_app_temp, pk_recv) in
   let sens_cipher = enc_data(ss, sensitive_data) in
       out(c, sens_cipher);
-      event app_accepted(hostn, subj_and_san_recv, iss, sensitive_data);
+      event app_accepted(hostn, subj_and_san_recv, iss, sensitive_data, pk_recv);
        if iss = rogue_cert_issuer then
       event app_tricked(hostn, subj_and_san_recv, iss, sensitive_data)
     )
@@ -106,11 +106,18 @@ query event(app_terminated_rogue(server_hostname, server_cert_subject_and_san, r
    False = the modeled BGP-hijack/rogue server cannot obtain sensitive_data. *)
 query event(rogue_server_recv(sensitive_data)).
 
+query event(real_server_recv(sensitive_data, pk(sk_app_temp))).
+
+query event(app_accepted(server_hostname, server_cert_subject_and_san, server_cert_issuer, sensitive_data, pk(sk_real_server_temp))).
+
 (* Query: Intended legitimate TLS acceptance.
    True  = there exists a trace where client accepts legitimate server issuer/payload.
    False = intended legitimate acceptance trace is unreachable. *)
-query event(real_server_recv(sensitive_data)) ==> event(app_accepted(server_hostname, server_cert_subject_and_san, server_cert_issuer, sensitive_data)).
+query event(real_server_recv(sensitive_data, pk(sk_app_temp))) ==> event(app_accepted(server_hostname, server_cert_subject_and_san, server_cert_issuer, sensitive_data, pk(sk_real_server_temp))).
 
+
+
+query  event(app_accepted(server_hostname, server_cert_subject_and_san, server_cert_issuer, sensitive_data, pk(sk_real_server_temp))) ==> event(real_server_recv(sensitive_data, pk(sk_app_temp))) .
 
 
 
