@@ -20,7 +20,7 @@ let RealServer =
   
   in(c, pk_c: pkey);
   
-  out(c, server_hello(server_hostname, server_ip, server_mechine, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_cert), pk(sk_real_server_cert)));
+  out(c, server_hello(server_hostname, server_ip, server_mechine, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_temp), pk(sk_real_server_cert)));
   event real_server_sent(server_hostname, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_cert));
   
   in(c, sens_cipher: bitstring);

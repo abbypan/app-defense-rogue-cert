@@ -1,9 +1,31 @@
-set attacker = active.
-(*
-set attacker = active.
 set attacker = passive.
-*)
 
+
+
+(*
+const g_hostname : bitstring.
+const g_ip: ip.
+const g_mechine: mechine.
+const g_sbj_san: bitstring.
+const g_issuer: bitstring.
+const sk_g_cert: skey [private].
+const sk_g_temp: skey [private].
+event guest_server_sent(bitstring,  bitstring, bitstring).
+event guest_server_recv(bitstring).
+
+free d: channel.
+let GuestServer =
+  in(d, pk_d: pkey);
+  out(d, server_hello(
+   g_hostname, g_ip, g_mechine, g_sbj_san, g_issuer, 
+   pk(sk_g_temp), pk(sk_g_cert)));
+  event guest_server_sent(g_hostname,  g_sbj_san, g_issuer);
+  in(d, sens_cipher: bitstring);
+  let ss = shared_secret(sk_g_temp, pk_d) in
+  let sens_d = dec_data(ss, sens_cipher) in
+  event guest_server_recv(sens_d)
+  .
+*)
 
 
 let RealServer =
@@ -22,7 +44,7 @@ let RealServer =
   out(c, token2);
   
   in(c, pk_c: pkey);
-  out(c, server_hello(server_hostname, server_ip, server_mechine, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_cert), pk(sk_real_server_cert)));
+  out(c, server_hello(server_hostname, server_ip, server_mechine, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_temp), pk(sk_real_server_cert)));
   event real_server_sent(server_hostname, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_cert));
 
   in(c, sens_cipher: bitstring);
@@ -111,10 +133,20 @@ query event(app_terminated_rogue(server_hostname, server_cert_subject_and_san, r
    False = the modeled BGP-hijack/rogue server cannot obtain sensitive_data. *)
 query event(rogue_server_recv(sensitive_data)).
 
-(* Query: Intended legitimate TLS acceptance.
-   True  = there exists a trace where client accepts legitimate server issuer/payload.
-   False = intended legitimate acceptance trace is unreachable. *)
+
+query event(app_accepted(server_hostname, server_cert_subject_and_san, server_cert_issuer, sensitive_data)).
+
+(* Query: If app can visit real_server, then real_server gets sensitive_data.
+   True  = every successful legitimate app acceptance reaches real server with sensitive_data.
+   False = app can accept real server without real server receiving sensitive_data. *)
+query event(app_accepted(server_hostname, server_cert_subject_and_san, server_cert_issuer, sensitive_data)) ==> event(real_server_recv(sensitive_data)).
+
 query event(real_server_recv(sensitive_data)) ==> event(app_accepted(server_hostname, server_cert_subject_and_san, server_cert_issuer, sensitive_data)).
 
+query event(real_server_recv(sensitive_data)).
+
+
+
+
 process
-  (!RealServer) | (!BGPHijackingRogueServer) | (!LegitimateApp)
+  (!RealServer) | (!BGPHijackingRogueServer) | (!LegitimateApp) 
