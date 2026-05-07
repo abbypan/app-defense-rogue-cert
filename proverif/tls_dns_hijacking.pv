@@ -1,81 +1,191 @@
-(* This model is intended to be checked together with base.pvl. *)
-
-
-
 let RealServer =
+  in(c, client_hello(rand_c, pk_c));
+  let c_hello = client_hello(rand_c, pk_c) in
+  let sk_real_server_cert = gen_sk_for_id(real_server) in
+  let sk_real_issuer = gen_sk_for_id(real_cert_issuer) in
+  let real_s_cert_sig = sig_sign(cert_content(pk(sk_real_server_cert), server_cert_subject_and_san, real_cert_issuer), 
+  sk_real_issuer) in
+  let real_s_cert = gen_cert(pk(sk_real_server_cert),
+  server_cert_subject_and_san,
+  real_cert_issuer,
+  real_s_cert_sig
+   ) in
+
   new sk_real_server_temp: skey;
   new random_real_server: bitstring;
-  in(c, client_hello(rand_c, pk_c));
-  let real_s_hello = server_hello(random_real_server, pk(sk_real_server_temp)) in
-  let real_s_cert = cert_content(server_cert_subject_and_san, real_cert_issuer, pk(sk_real_server_cert)) in
-  let trans = transcript_hash(client_hello(rand_c, pk_c), real_s_hello, real_s_cert) in
+   let real_s_hello = server_hello(random_real_server, pk(sk_real_server_temp)) in
+  let trans = transcript_hash(c_hello, real_s_hello, real_s_cert) in
   let s_handshake_sig = sig_sign(trans, sk_real_server_cert) in
   event real_server_sent(server_hostname, server_cert_subject_and_san, real_cert_issuer, pk(sk_real_server_cert));
-  out(c, server_hello_handshake(
-      server_hostname, server_ip, server_mechine, real_s_hello, real_s_cert, s_handshake_sig
-  ));
-  in(c, sens_cipher: bitstring);
-  let ss = session_key(shared_secret(sk_real_server_temp, pk_c), trans) in
-  let sens_d = dec_data(ss, sens_cipher) in
-  event real_server_accepted(server_hostname, trans, sens_d, real_cert_issuer).
+  out(c, server_hello_handshake(server_hostname, server_ip, server_mechine, real_s_hello, real_s_cert, s_handshake_sig));
 
-(* DNS hijack adversary endpoint:
-   after name resolution is poisoned, the client is redirected here.
-   It serves a rogue certificate chain and attacker-controlled TLS payload. *)
+  let ss = session_key(shared_secret(sk_real_server_temp, pk_c), trans) in
+ 
+  in(c, sens_cipher: bitstring);
+  if check_authtag(ss, sens_cipher) = true
+  then (
+  event real_server_accepted(server_hostname, trans, dec_data(ss, sens_cipher), real_s_cert)
+  )
+  .
+
 let DNSHijackingRogueServer =
   new sk_rogue_server_temp: skey;
   new random_rogue_server: bitstring;
   in(c, client_hello(rand_c, pk_c));
+  let sk_rogue_server_cert = gen_sk_for_id(rogue_server) in
+   let sk_rogue_issuer = gen_sk_for_id(rogue_cert_issuer) in
+  let rogue_s_cert_sig = sig_sign(cert_content(pk(sk_rogue_server_cert), server_cert_subject_and_san, rogue_cert_issuer), 
+  sk_rogue_issuer) in
+  let rogue_s_cert =   gen_cert(pk(sk_rogue_server_cert), server_cert_subject_and_san, rogue_cert_issuer, rogue_s_cert_sig) in
   let rogue_s_hello = server_hello(random_rogue_server, pk(sk_rogue_server_temp)) in
-  let rogue_s_cert = cert_content(server_cert_subject_and_san, rogue_cert_issuer, pk(sk_rogue_server_cert)) in
   let rogue_trans = transcript_hash(client_hello(rand_c, pk_c), rogue_s_hello, rogue_s_cert) in
   let rogue_s_handshake_sig = sig_sign(rogue_trans, sk_rogue_server_cert) in
   event rogue_server_sent(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, pk(sk_rogue_server_temp));
   out(c, server_hello_handshake(server_hostname, rogue_ip, rogue_mechine, rogue_s_hello, rogue_s_cert, rogue_s_handshake_sig));
+ let ss_rogue = session_key(shared_secret(sk_rogue_server_temp, pk_c), rogue_trans) in
   in(c, sens_cipher: bitstring);
-  let ss = session_key(shared_secret(sk_rogue_server_temp, pk_c), rogue_trans) in
-  let sens_d = dec_data(ss, sens_cipher) in
-  event rogue_server_accepted(server_hostname, rogue_trans, sens_d, rogue_cert_issuer);
-  out(c, sens_d).
+  if check_authtag(ss_rogue, sens_cipher) = true
+  then (
+  let sens_d = dec_data(ss_rogue, sens_cipher) in
+  event rogue_server_accepted(server_hostname, rogue_trans, sens_d, rogue_s_cert);
+  out(c, sens_d)
+  )
+  .
 
 let LegitimateApp =
   new sk_app_temp: skey;
   new random_app: bitstring;
-  out(c, client_hello(random_app, pk(sk_app_temp)));
-  in(c, server_hello_handshake(hostn, sip, smech, server_hello(rand_s, pk_s), cert_content(subj_and_san_recv, iss, cert_pk_s), s_handshake_sig));
-  let trans = transcript_hash(client_hello(random_app, pk(sk_app_temp)), server_hello(rand_s, pk_s), cert_content(subj_and_san_recv, iss, cert_pk_s)) in
+  new sensitive_data: bitstring;
+  let c_hello = client_hello(random_app, pk(sk_app_temp)) in
+  out(c, c_hello);
+ 
+  in(c, 
+  server_hello_handshake(hostn, sip, smech, server_hello(rand_s, pk_recv), 
+  gen_cert(cert_pk_recv, subj_and_san_recv, iss, cert_sig_recv),
+  s_handshake_sig)
+  );
+  let s_hello = server_hello(rand_s, pk_recv) in
+  let s_cert = gen_cert(cert_pk_recv, subj_and_san_recv, iss, cert_sig_recv) in
+  let trans = transcript_hash(client_hello(random_app, pk(sk_app_temp)), 
+  server_hello(rand_s, pk_recv),
+  s_cert)
+   in
+
+  
+    
+
  if  (check_host(hostn, subj_and_san_recv) = host_true) &&
+     (sig_verify(cert_content(cert_pk_recv, subj_and_san_recv, iss), cert_sig_recv, pk(gen_sk_for_id(iss))) = true) &&
      (check_issuer(iss, system_ca_list) = issuer_true) &&
-     (check_cert_pk(iss, cert_pk_s) = cert_pk_true) &&
-    (sig_verify(trans, s_handshake_sig, cert_pk_s) = true)
+     (sig_verify(trans, s_handshake_sig, cert_pk_recv) = true)
       then
     (
-      new sensitive_data: bitstring;
-      let ss = session_key(shared_secret(sk_app_temp, pk_s), trans) in
-  let sens_cipher = enc_data(ss, sensitive_data) in
-      event app_accepted(hostn, trans, sensitive_data, iss);
-       out(c, sens_cipher);
+      let ss = session_key(shared_secret(sk_app_temp, pk_recv), trans) in
+
+     event test_c(hostn, sensitive_data, real_cert_issuer);
+
+      event app_accepted(hostn, trans, sensitive_data, s_cert);
+      out(c, enc_data(ss, sensitive_data));
       if iss = rogue_cert_issuer then
       event app_tricked(hostn, subj_and_san_recv, iss, sensitive_data)
     )
     else
       event app_terminated_rogue(hostn, subj_and_san_recv, iss)
       .
+(* Query: Real server receive path reachability.
+   True  = there exists a trace where the legitimate server accepts and decrypts data.
+   False = the modeled legitimate endpoint is never reached. *)
+query  sens_d: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
+  event(real_server_accepted(server_hostname, 
+  transcript_hash(
+  client_hello(rc, pkc), 
+  server_hello(rs, pks),
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))
+  ),
+  sens_d, 
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer))))).
 
-query hostn: bitstring, trans: bitstring, sens_d: bitstring, issuer: bitstring;
-  event(app_accepted(hostn, trans, sens_d, issuer)) ==> attacker(sens_d).
+(* Query: Client accepted-path reachability with legitimate cert tuple.
+   True  = there exists a trace where the client accepts and sends protected data.
+   False = no accepting client trace exists for the modeled legitimate flow. *)
+query  sens_d: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
+  event(app_accepted(server_hostname, 
+  transcript_hash(
+  client_hello(rc, pkc), 
+  server_hello(rs, pks),
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))
+  ),
+  sens_d, 
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer))))).
 
-query trans: bitstring, sens_d: bitstring, issuer: bitstring;
-  event(rogue_server_accepted(server_hostname, trans, sens_d, issuer)).
+(* Query: Agreement from server acceptance to client acceptance.
+   True  = whenever the legitimate server accepts this TLS transcript, the client also accepts it.
+   False = there is a trace where server acceptance occurs without matching client acceptance. *)
+query  sens_d: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
+  event(real_server_accepted(server_hostname, 
+  transcript_hash(
+  client_hello(rc, pkc), 
+  server_hello(rs, pks),
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))
+  ),
+  sens_d, 
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))))
+  ==>
+  event(app_accepted(server_hostname, 
+  transcript_hash(
+  client_hello(rc, pkc), 
+  server_hello(rs, pks),
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))
+  ),
+  sens_d, 
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))))
+  .
+
+(* Query: Client-side rejection of rogue TLS session.
+   True  = client can reject mismatched issuer/session.
+   False = rejection event never occurs in this model. *)
+query event(app_terminated_rogue(server_hostname, server_cert_subject_and_san, rogue_cert_issuer)).
+
+(* Query: Rogue server receive path reachability.
+   True  = there exists a trace where the rogue endpoint decrypts client data.
+   False = the DNS-hijack rogue endpoint cannot complete/decrypt this flow. *)
+query  sens_d: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
+  event(rogue_server_accepted(server_hostname, 
+  transcript_hash(
+  client_hello(rc, pkc), 
+  server_hello(rs, pks),
+  gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_cert_issuer)))
+  ),
+  sens_d, 
+  gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_cert_issuer))))).
+
+(* Query: Client tricked by rogue certificate path.
+   True  = there exists a trace where the client accepts rogue issuer credentials and sends sensitive data.
+   False = the modeled rogue-certificate acceptance path is unreachable. *)
+query  sens_d: bitstring;
+event(app_tricked(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sens_d)).
 
 
-
-(* Query 1: Attack reachability.
-   True  = the client can accept a rogue certificate path
-           and send sensitive data to the rogue endpoint.
-   False = this BGP-hijack rogue-cert path is not reachable. *)
-query sens_d: bitstring;
-  event(app_tricked(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sens_d)).
+(* Query: Rogue acceptance implies client tricked.
+   True  = every rogue-server accepted payload corresponds to an app_tricked event.
+   False = rogue acceptance can happen without the app being marked as tricked. *)
+query trans: bitstring, sens_d: bitstring;
+event(rogue_server_accepted(
+  server_hostname,
+  trans,
+  sens_d,
+  gen_cert(
+    pk(gen_sk_for_id(rogue_server)),
+    server_cert_subject_and_san,
+    rogue_cert_issuer,
+    sig_sign(
+      cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer),
+      gen_sk_for_id(rogue_server)
+    )
+  )
+))
+  ==>
+event(app_tricked(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sens_d)).
 
 process
-  (!RealServer) | (!DNSHijackingRogueServer) | (!LegitimateApp)
+  (!RealServer) | (!DNSHijackingRogueServer) | (!LegitimateApp) 
