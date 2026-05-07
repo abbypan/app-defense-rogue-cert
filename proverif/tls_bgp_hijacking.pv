@@ -45,8 +45,7 @@ let BGPHijackingRogueServer =
   if check_authtag(ss_rogue, sens_cipher) = true
   then (
   let sens_d = dec_data(ss_rogue, sens_cipher) in
-  event rogue_server_accept(server_hostname, rogue_trans, sens_d, rogue_s_cert);
-  out(c, sens_d)
+  event rogue_server_accept(server_hostname, rogue_trans, sens_d, rogue_s_cert)
   )
   .
 

@@ -64,8 +64,7 @@ let BGPHijackingRogueServer =
   if check_authtag(ss_rogue, sens_cipher) = true
   then (
   let sens_d = dec_data(ss_rogue, sens_cipher) in
-  event rogue_server_accept(server_hostname, rogue_trans, sens_d, rogue_s_cert);
-  out(c, sens_d)
+  event rogue_server_accept(server_hostname, rogue_trans, sens_d, rogue_s_cert)
   )
   .
 
@@ -130,17 +129,38 @@ let LegitimateApp =
    - True  = the stated property holds in all executions of this model.
    - False = ProVerif found a counterexample/attack trace. *)
 
+(* Query: JWT claim-signing-key verification reachability.
+   True  = the app can verify the claim-signing key token from app_signing.
+   False = this JWT verification path is unreachable. *)
+query exp_recv: timestamp;
+  event(jwt_claim_signing_key_verify(pk(gen_sk_for_id(app_signing)), pk(gen_sk_for_id(claim_signing)), exp_recv)).
+
+query exp_recv: timestamp;
+  event(jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)), pk(gen_sk_for_id(claim_signing)), exp_recv)).
+
 (* Query: JWT key-chain authenticity.
    True  = every verification event has a matching creation event by RealServer.
    False = some verified claim-signing key has no matching creation event. *)
 query app_pk: pkey, claim_pk: pkey, exp: timestamp;
   event(jwt_claim_signing_key_verify(app_pk, claim_pk, exp)) ==> event(jwt_claim_signing_key_create(app_pk, claim_pk, exp)).
 
+(* Query: JWT server-cert-claim verification reachability.
+   True  = the app can verify the real server certificate claim from claim_signing.
+   False = this JWT server-cert-claim verification path is unreachable. *)
+query exp2: timestamp;
+  event(jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)), server_cert_subject_and_san, real_cert_issuer, exp2)).
+
+  query exp2: timestamp;
+  event(jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)), server_cert_subject_and_san, real_cert_issuer, exp2)).
+
+
 (* Query: JWT server-cert-claim authenticity.
    True  = every verified cert claim has a matching creation event.
    False = a cert claim can be verified without being legitimately created. *)
 query claim_pk: pkey, subject_and_san: bitstring, issuer: bitstring, exp: timestamp;
   event(jwt_server_cert_claim_verify(claim_pk, subject_and_san, issuer, exp)) ==> event(jwt_server_cert_claim_create(claim_pk, subject_and_san, issuer, exp)).
+
+
 
 
 (* Query: Real-server receive path reachability.

@@ -9,16 +9,16 @@ let RealServer =
   let content = pk2s(pk(sk_claim_signing)) in
   let token = jwt_sign(header, content, good_exp, sk_app_signing) in
   event jwt_claim_signing_key_create(pk(sk_app_signing), pk(sk_claim_signing), good_exp);
-  out(c, token);
+  out(cs, token);
 
   let header2 = pk2s(pk(sk_claim_signing)) in
   let good_exp2 = succ_t(curr) in
   let content2 = cert_claim(server_cert_subject_and_san, real_cert_issuer) in
   let token2 = jwt_sign(header2, content2, good_exp2, sk_claim_signing) in
   event jwt_server_cert_claim_create(pk(sk_claim_signing), server_cert_subject_and_san, real_cert_issuer, good_exp2);
-  out(c, token2);
+  out(cs, token2);
   
-  in(c, client_hello(rand_c, pk_c));
+  in(cs, client_hello(rand_c, pk_c));
   let c_hello = client_hello(rand_c, pk_c) in
   let sk_real_server_cert = gen_sk_for_id(real_server) in
   let sk_real_issuer = gen_sk_for_id(real_cert_issuer) in
@@ -35,11 +35,11 @@ let RealServer =
    let real_s_hello = server_hello(random_real_server, pk(sk_real_server_temp)) in
   let trans = transcript_hash(c_hello, real_s_hello, real_s_cert) in
   let s_handshake_sig = sig_sign(trans, sk_real_server_cert) in
-  out(c, server_hello_handshake(server_hostname, server_ip, server_mechine, real_s_hello, real_s_cert, s_handshake_sig));
+  out(cs, server_hello_handshake(server_hostname, server_ip, server_mechine, real_s_hello, real_s_cert, s_handshake_sig));
 
   let ss = session_key(shared_secret(sk_real_server_temp, pk_c), trans) in
  
-  in(c, sens_cipher: bitstring);
+  in(cs, sens_cipher: bitstring);
   if check_authtag(ss, sens_cipher) = true
   then (
   event real_server_accept(server_hostname, trans, dec_data(ss, sens_cipher), real_s_cert)
@@ -48,16 +48,16 @@ let RealServer =
 
 let MitmServer =
   new sk_rogue_server_temp: skey;
-  in(c, jwt(hm1: bitstring, plrm1: bitstring, srm1: bitstring));
-  out(c, jwt(hm1, plrm1, srm1));
-  in(c, jwt(hm2: bitstring, plrm2: bitstring, srm2: bitstring));
-  out(c, jwt(hm2, plrm2, srm2));
+  in(cs, jwt(hm1: bitstring, plrm1: bitstring, srm1: bitstring));
+  out(cc, jwt(hm1, plrm1, srm1));
+  in(cs, jwt(hm2: bitstring, plrm2: bitstring, srm2: bitstring));
+  out(cc, jwt(hm2, plrm2, srm2));
 
-  in(c, client_hello(rand_c, pk_c));
+  in(cc, client_hello(rand_c, pk_c));
   
   let rogue_c_hello = client_hello(rand_c, pk(sk_rogue_server_temp)) in
-  out(c, rogue_c_hello);
-  in(c, server_hello_handshake(hostn_s, sip_s, smech_s, server_hello(rand_s, pk_srv), gen_cert(cert_pk_srv, san_s, iss_s, cert_sig_srv), s_handshake_sig_s));
+  out(cs, rogue_c_hello);
+  in(cs, server_hello_handshake(hostn_s, sip_s, smech_s, server_hello(rand_s, pk_srv), gen_cert(cert_pk_srv, san_s, iss_s, cert_sig_srv), s_handshake_sig_s));
   let real_s_hello = server_hello(rand_s, pk_srv) in
   let real_s_cert = gen_cert(cert_pk_srv, san_s, iss_s, cert_sig_srv) in
   
@@ -67,9 +67,9 @@ let MitmServer =
   let rogue_s_hello = server_hello(rand_s, pk(sk_rogue_server_temp)) in
   let trans_mitm_c = transcript_hash(client_hello(rand_c, pk_c), rogue_s_hello, rogue_s_cert) in
   let rogue_s_handshake_sig = sig_sign(trans_mitm_c, gen_sk_for_id(rogue_server)) in
-  out(c, server_hello_handshake(hostn_s, rogue_ip, rogue_mechine, rogue_s_hello, rogue_s_cert, rogue_s_handshake_sig));
+  out(cc, server_hello_handshake(hostn_s, rogue_ip, rogue_mechine, rogue_s_hello, rogue_s_cert, rogue_s_handshake_sig));
 
-  in(c, sens_cipher: bitstring);
+  in(cc, sens_cipher: bitstring);
   let ss_mitm_c = session_key(shared_secret(sk_rogue_server_temp, pk_c), trans_mitm_c) in
   if check_authtag(ss_mitm_c, sens_cipher) = true
   then (
@@ -83,7 +83,7 @@ let MitmServer =
     ) in
     let ss_mitm_s = session_key(shared_secret(sk_rogue_server_temp, pk_srv), trans_mitm_s) in
     let sens_cipher2 = enc_data(ss_mitm_s, sens_d) in
-    out(c, sens_cipher2);
+    out(cs, sens_cipher2);
     event mitm_server(hostn_s, trans_mitm_s, sens_d, real_s_cert)
   )
   .
@@ -92,7 +92,7 @@ let LegitimateApp =
   new sk_app_temp: skey;
   new random_app: bitstring;
   new sensitive_data: bitstring;
-  in(c, jwt(h: bitstring, plr: bitstring, sr: bitstring));
+  in(cc, jwt(h: bitstring, plr: bitstring, sr: bitstring));
   let pk_app_signing = pk(gen_sk_for_id(app_signing)) in
   let content = get_content(plr) in
   let pk1_recv = s2pk(content) in
@@ -100,7 +100,7 @@ let LegitimateApp =
   if jwt_verify(jwt(h, plr, sr), pk_app_signing, curr) = true then
       event jwt_claim_signing_key_verify(pk_app_signing, pk1_recv, exp_recv);
  
-  in(c, jwt(h2: bitstring, plr2: bitstring, sr2: bitstring));
+  in(cc, jwt(h2: bitstring, plr2: bitstring, sr2: bitstring));
   let content2 = get_content(plr2) in
   let subject_and_san2 = get_subject_and_san(content2) in
   let issuer2 = get_issuer(content2) in
@@ -109,9 +109,9 @@ let LegitimateApp =
       event jwt_server_cert_claim_verify(pk1_recv, subject_and_san2, issuer2, exp2);
   
   let c_hello = client_hello(random_app, pk(sk_app_temp)) in
-  out(c, c_hello);
+  out(cc, c_hello);
  
-  in(c, 
+  in(cc, 
   server_hello_handshake(hostn, sip, smech, server_hello(rand_s, pk_recv), 
   gen_cert(cert_pk_recv, subj_and_san_recv, iss, cert_sig_recv),
   s_handshake_sig)
@@ -137,7 +137,7 @@ let LegitimateApp =
       let ss = session_key(shared_secret(sk_app_temp, pk_recv), trans) in
 
       event app_accept(hostn, trans, sensitive_data, s_cert);
-      out(c, enc_data(ss, sensitive_data))
+      out(cc, enc_data(ss, sensitive_data))
     )
     else
       event app_reject(hostn, subj_and_san_recv, iss)
@@ -149,11 +149,30 @@ let LegitimateApp =
    - True  = the stated property holds in all executions of this model.
    - False = ProVerif found a counterexample/attack trace. *)
 
+(* Query: JWT claim-signing-key verification reachability.
+   True  = the app can verify the claim-signing key token from app_signing.
+   False = this JWT verification path is unreachable. *)
+query exp_recv: timestamp;
+  event(jwt_claim_signing_key_verify(pk(gen_sk_for_id(app_signing)), pk(gen_sk_for_id(claim_signing)), exp_recv)).
+
+query exp_recv: timestamp;
+  event(jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)), pk(gen_sk_for_id(claim_signing)), exp_recv)).
+
 (* Query: JWT key-chain authenticity.
    True  = every verification event has a matching creation event by RealServer.
    False = some verified claim-signing key has no matching creation event. *)
 query app_pk: pkey, claim_pk: pkey, exp: timestamp;
   event(jwt_claim_signing_key_verify(app_pk, claim_pk, exp)) ==> event(jwt_claim_signing_key_create(app_pk, claim_pk, exp)).
+
+(* Query: JWT server-cert-claim verification reachability.
+   True  = the app can verify the real server certificate claim from claim_signing.
+   False = this JWT server-cert-claim verification path is unreachable. *)
+query exp2: timestamp;
+  event(jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)), server_cert_subject_and_san, real_cert_issuer, exp2)).
+
+  query exp2: timestamp;
+  event(jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)), server_cert_subject_and_san, real_cert_issuer, exp2)).
+
 
 (* Query: JWT server-cert-claim authenticity.
    True  = every verified cert claim has a matching creation event.
@@ -267,15 +286,17 @@ event(mitm_client(server_hostname,
   gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_cert_issuer))))).
 
 query  sens_d: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-event(mitm_server(server_hostname,
+
+  event(real_server_accept(server_hostname,
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
   gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))
   ),
   sens_d, 
-  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer))))) ==>
-  event(real_server_accept(server_hostname,
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))))
+   ==>
+  event(mitm_server(server_hostname,
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
