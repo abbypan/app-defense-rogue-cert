@@ -52,9 +52,7 @@ reduc forall m: bitstring, sk: skey;
 
 fun gen_sk_for_id(bitstring) : skey [private].
 fun gen_cert(pkey, bitstring, bitstring, bitstring) : bitstring [data].
-fun cert_content(pkey, bitstring, bitstring): bitstring [data]. (*
-subject pkey, subj_and_san, issuer
-*)
+fun cert_content(pkey, bitstring, bitstring): bitstring [data]. 
 
 reduc forall spk: pkey, h_and_sans: bitstring, iss: bitstring, sig: bitstring;
       get_cert_pk(gen_cert(spk, h_and_sans, iss, sig)) = spk.
@@ -78,9 +76,9 @@ check_issuer(rogue_cert_issuer, system_ca_list) = issuer_true.
 
 
 
-fun shared_secret(skey,pkey): bitstring [private].
-equation forall sk: skey, peer_sk: skey;
-    shared_secret(sk, pk(peer_sk)) = shared_secret(peer_sk, pk(sk)).
+fun client_shared_secret(skey, pkey): bitstring [private].
+reduc forall csk: skey, ssk: skey;
+      server_shared_secret(ssk, pk(csk)) = client_shared_secret(csk, pk(ssk)).
 
 fun session_key(bitstring, bitstring): bitstring [private].
 
@@ -210,18 +208,13 @@ event jwt_claim_signing_key_verify(pkey, pkey, timestamp).
 event jwt_server_cert_claim_create(pkey, bitstring, bitstring, timestamp).
 event jwt_server_cert_claim_verify(pkey, bitstring, bitstring, timestamp).
 
-event real_server_accept(bitstring, bitstring, bitstring, bitstring).
-event real_server_conn(bitstring, bitstring, bitstring, bitstring).
-event rogue_server_accept(bitstring, bitstring, bitstring, bitstring).
-event rogue_server_conn(bitstring, bitstring, bitstring, bitstring).
 
-event app_accept(bitstring, bitstring, bitstring, bitstring).
-event app_conn(bitstring, bitstring, bitstring, bitstring).
+event real_server_conn(bitstring, bitstring, bitstring, bitstring, bitstring).
+event rogue_server_conn(bitstring, bitstring, bitstring, bitstring, bitstring).
+
+event app_conn(bitstring, bitstring, bitstring, bitstring, bitstring).
 event app_reject(bitstring, bitstring, bitstring).
 
 
-event mitm_client(bitstring, bitstring, bitstring, bitstring).
-event mitm_trick_server(bitstring, bitstring, bitstring, bitstring).
-event mitm_trick_client(bitstring, bitstring, bitstring, bitstring).
-event fake_client(bitstring, bitstring, bitstring, bitstring).
-event mitm_server(bitstring, bitstring, bitstring, bitstring).
+event mitm_fake_server(bitstring, bitstring, bitstring, bitstring, bitstring).
+event mitm_fake_client(bitstring, bitstring, bitstring, bitstring, bitstring).
