@@ -211,12 +211,17 @@ event jwt_server_cert_claim_create(pkey, bitstring, bitstring, timestamp).
 event jwt_server_cert_claim_verify(pkey, bitstring, bitstring, timestamp).
 
 event real_server_accept(bitstring, bitstring, bitstring, bitstring).
+event real_server_conn(bitstring, bitstring, bitstring, bitstring).
 event rogue_server_accept(bitstring, bitstring, bitstring, bitstring).
+event rogue_server_conn(bitstring, bitstring, bitstring, bitstring).
 
 event app_accept(bitstring, bitstring, bitstring, bitstring).
+event app_conn(bitstring, bitstring, bitstring, bitstring).
 event app_reject(bitstring, bitstring, bitstring).
 
 
 event mitm_client(bitstring, bitstring, bitstring, bitstring).
+event mitm_trick_server(bitstring, bitstring, bitstring, bitstring).
+event mitm_trick_client(bitstring, bitstring, bitstring, bitstring).
+event fake_client(bitstring, bitstring, bitstring, bitstring).
 event mitm_server(bitstring, bitstring, bitstring, bitstring).
-
