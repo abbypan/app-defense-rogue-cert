@@ -40,6 +40,8 @@ const rogue_server: bitstring.
 
 (* channel *)
 free c: channel.
+free cc: channel.
+free cs: channel.
 
 fun pk(skey): pkey.
 
@@ -208,23 +210,13 @@ event jwt_claim_signing_key_verify(pkey, pkey, timestamp).
 event jwt_server_cert_claim_create(pkey, bitstring, bitstring, timestamp).
 event jwt_server_cert_claim_verify(pkey, bitstring, bitstring, timestamp).
 
-event real_server_sent(bitstring, bitstring, bitstring, pkey).
-event real_server_accepted(bitstring, bitstring, bitstring, bitstring).
+event real_server_accept(bitstring, bitstring, bitstring, bitstring).
+event rogue_server_accept(bitstring, bitstring, bitstring, bitstring).
+
+event app_accept(bitstring, bitstring, bitstring, bitstring).
+event app_reject(bitstring, bitstring, bitstring).
 
 
-event rogue_server_sent(bitstring, bitstring, bitstring, pkey).
-event rogue_server_accepted(bitstring, bitstring, bitstring, bitstring).
+event mitm_client(bitstring, bitstring, bitstring, bitstring).
+event mitm_server(bitstring, bitstring, bitstring, bitstring).
 
-event app_accepted(bitstring, bitstring, bitstring, bitstring).
-event app_tricked(bitstring, bitstring, bitstring, bitstring).
-event app_terminated_rogue(bitstring, bitstring, bitstring).
-
-
-event mitm_monitors_client(pkey).
-event mitm_monitors_server(bitstring, bitstring, bitstring, pkey).
-event mitm_replaced_response(bitstring, bitstring, bitstring, pkey).
-event mitm_intercepted(bitstring, bitstring, bitstring, bitstring).
-
-
-event test_s(bitstring, bitstring, bitstring).
-event test_c(bitstring, bitstring, bitstring).
