@@ -13,32 +13,32 @@ let RealServer =
 
   let header2 = pk2s(pk(sk_claim_signing)) in
   let good_exp2 = succ_t(curr) in
-  let content2 = cert_claim(server_cert_subject_and_san, server_cert_issuer) in
+  let content2 = cert_claim(server_cert_subject_and_san, real_cert_issuer) in
   let token2 = jwt_sign(header2, content2, good_exp2, sk_claim_signing) in
-  event jwt_server_cert_claim_create(pk(sk_claim_signing), server_cert_subject_and_san, server_cert_issuer, good_exp2);
+  event jwt_server_cert_claim_create(pk(sk_claim_signing), server_cert_subject_and_san, real_cert_issuer, good_exp2);
   out(c, token2);
   
   in(c, client_hello(rand_c, pk_c));
-
- new sk_real_server_temp: skey;
-  new random_real_server: bitstring;
+  let c_hello = client_hello(rand_c, pk_c) in
   let sk_real_server_cert = gen_sk_for_id(real_server) in
-  let sk_real_issuer = gen_sk_for_id(server_cert_issuer) in
-  let real_s_cert_sig = sig_sign(cert_content(pk(sk_real_server_cert), server_cert_subject_and_san, server_cert_issuer), 
+  let sk_real_issuer = gen_sk_for_id(real_cert_issuer) in
+  let real_s_cert_sig = sig_sign(cert_content(pk(sk_real_server_cert), server_cert_subject_and_san, real_cert_issuer), 
   sk_real_issuer) in
   let real_s_cert = gen_cert(pk(sk_real_server_cert),
   server_cert_subject_and_san,
-  server_cert_issuer,
+  real_cert_issuer,
   real_s_cert_sig
    ) in
-  
-  let real_s_hello = server_hello(random_real_server, pk(sk_real_server_temp)) in
-  let trans = transcript_hash(client_hello(rand_c, pk_c), real_s_hello, real_s_cert) in
+
+  new sk_real_server_temp: skey;
+  new random_real_server: bitstring;
+   let real_s_hello = server_hello(random_real_server, pk(sk_real_server_temp)) in
+  let trans = transcript_hash(c_hello, real_s_hello, real_s_cert) in
   let s_handshake_sig = sig_sign(trans, sk_real_server_cert) in
-  event real_server_sent(server_hostname, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_cert));
+  event real_server_sent(server_hostname, server_cert_subject_and_san, real_cert_issuer, pk(sk_real_server_cert));
   out(c, server_hello_handshake(server_hostname, server_ip, server_mechine, real_s_hello, real_s_cert, s_handshake_sig));
 
-  let ss = session_key(shared_secret(sk_real_server_temp, pk_c), client_hello(rand_c, pk_c), real_s_hello) in
+  let ss = session_key(shared_secret(sk_real_server_temp, pk_c), trans) in
  
   in(c, sens_cipher: bitstring);
   if check_authtag(ss, sens_cipher) = true
@@ -61,9 +61,7 @@ let BGPHijackingRogueServer =
   let rogue_s_handshake_sig = sig_sign(rogue_trans, sk_rogue_server_cert) in
   event rogue_server_sent(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, pk(sk_rogue_server_temp));
   out(c, server_hello_handshake(server_hostname, server_ip, rogue_mechine, rogue_s_hello, rogue_s_cert, rogue_s_handshake_sig));
- let ss_rogue = session_key(shared_secret(sk_rogue_server_temp, pk_c),
-  client_hello(rand_c, pk_c), rogue_s_hello
-  ) in
+ let ss_rogue = session_key(shared_secret(sk_rogue_server_temp, pk_c), rogue_trans) in
   in(c, sens_cipher: bitstring);
   if check_authtag(ss_rogue, sens_cipher) = true
   then (
@@ -108,6 +106,9 @@ let LegitimateApp =
   s_cert)
    in
 
+  
+    
+
  if  (check_host(hostn, subj_and_san_recv) = host_true) &&
      (sig_verify(cert_content(cert_pk_recv, subj_and_san_recv, iss), cert_sig_recv, pk(gen_sk_for_id(iss))) = true) &&
      (check_issuer(iss, system_ca_list) = issuer_true) &&
@@ -116,8 +117,10 @@ let LegitimateApp =
      (issuer2 = iss)
       then
     (
-      let ss = session_key(shared_secret(sk_app_temp, pk_recv), c_hello, s_hello) in
-    
+      let ss = session_key(shared_secret(sk_app_temp, pk_recv), trans) in
+
+     event test_c(hostn, sensitive_data, real_cert_issuer);
+
       event app_accepted(hostn, trans, sensitive_data, s_cert);
       out(c, enc_data(ss, sensitive_data));
       if iss = rogue_cert_issuer then
@@ -144,55 +147,62 @@ query claim_pk: pkey, subject_and_san: bitstring, issuer: bitstring, exp: timest
    False = rejection event never occurs in this model. *)
 query event(app_terminated_rogue(server_hostname, server_cert_subject_and_san, rogue_cert_issuer)).
 
+
+query event(real_server_sent(server_hostname, server_cert_subject_and_san, real_cert_issuer, pk(gen_sk_for_id(real_server)))).
+
+query sens_d: bitstring;
+ event(test_c(server_hostname, sens_d, real_cert_issuer)).
+
 query  sens_d: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
   event(real_server_accepted(server_hostname, 
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
-  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, server_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, server_cert_issuer), gen_sk_for_id(real_server)))
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))
   ),
   sens_d, 
-  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, server_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, server_cert_issuer), gen_sk_for_id(real_server))))).
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer))))).
 
 query  sens_d: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
   event(app_accepted(server_hostname, 
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
-  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, server_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, server_cert_issuer), gen_sk_for_id(real_server)))
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))
   ),
   sens_d, 
-  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, server_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, server_cert_issuer), gen_sk_for_id(real_server))))).
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer))))).
 
 query  sens_d: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
   event(rogue_server_accepted(server_hostname, 
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
-  gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_server)))
+  gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_cert_issuer)))
   ),
   sens_d, 
-  gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_server))))).
+  gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_cert_issuer))))).
 
 query  sens_d: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
   event(real_server_accepted(server_hostname, 
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
-  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, server_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, server_cert_issuer), gen_sk_for_id(real_server)))
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))
   ),
   sens_d, 
-  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, server_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, server_cert_issuer), gen_sk_for_id(real_server)))))
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))))
   ==>
   event(app_accepted(server_hostname, 
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
-  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, server_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, server_cert_issuer), gen_sk_for_id(real_server)))
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))
   ),
   sens_d, 
-  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, server_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, server_cert_issuer), gen_sk_for_id(real_server)))))
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))))
   .
+  
 query  sens_d: bitstring;
 event(app_tricked(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, sens_d)).
 

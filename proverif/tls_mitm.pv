@@ -8,10 +8,10 @@ let RealServer =
   new random_real_server: bitstring;
   in(c_server, client_hello(rand_c, pk_c));
   let real_s_hello = server_hello(random_real_server, pk(sk_real_server_temp)) in
-  let real_s_cert = cert_content(server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_cert)) in
+  let real_s_cert = cert_content(server_cert_subject_and_san, real_cert_issuer, pk(sk_real_server_cert)) in
   let trans = transcript_hash(client_hello(rand_c, pk_c), real_s_hello, real_s_cert) in
   let s_handshake_sig = sig_sign(trans, sk_real_server_cert) in
-  event real_server_sent(server_hostname, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_temp));
+  event real_server_sent(server_hostname, server_cert_subject_and_san, real_cert_issuer, pk(sk_real_server_temp));
   out(c_server, server_hello_handshake(
       server_hostname,
       server_ip,
@@ -21,9 +21,9 @@ let RealServer =
       s_handshake_sig
   ));
   in(c_server, sens_cipher: bitstring);
-  let ss = session_key(shared_secret(sk_real_server_temp, pk_c), client_hello(rand_c, pk_c), real_s_hello) in
+  let ss = session_key(shared_secret(sk_real_server_temp, pk_c), trans) in
   let sens_d = dec_data(ss, sens_cipher) in
-  event real_server_accepted(server_hostname, trans, sens_d, server_cert_issuer).
+  event real_server_accepted(server_hostname, trans, sens_d, real_cert_issuer).
 
 (* In-path MITM adversary:
    monitors client->server and server->client traffic,
@@ -66,7 +66,7 @@ let LegitimateApp =
       then
     (
       new sensitive_data: bitstring;
-      let ss = session_key(shared_secret(sk_app_temp, pk_s), client_hello(random_app, pk(sk_app_temp)), server_hello(rand_s, pk_s)) in
+      let ss = session_key(shared_secret(sk_app_temp, pk_s), trans) in
       let sens_cipher = enc_data(ss, sensitive_data) in
       event app_accepted(hostn, trans, sensitive_data, iss);
       out(c_client, sens_cipher);

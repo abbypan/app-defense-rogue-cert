@@ -7,17 +7,17 @@ let RealServer =
   new random_real_server: bitstring;
   in(c, client_hello(rand_c, pk_c));
   let real_s_hello = server_hello(random_real_server, pk(sk_real_server_temp)) in
-  let real_s_cert = cert_content(server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_cert)) in
+  let real_s_cert = cert_content(server_cert_subject_and_san, real_cert_issuer, pk(sk_real_server_cert)) in
   let trans = transcript_hash(client_hello(rand_c, pk_c), real_s_hello, real_s_cert) in
   let s_handshake_sig = sig_sign(trans, sk_real_server_cert) in
-  event real_server_sent(server_hostname, server_cert_subject_and_san, server_cert_issuer, pk(sk_real_server_cert));
+  event real_server_sent(server_hostname, server_cert_subject_and_san, real_cert_issuer, pk(sk_real_server_cert));
   out(c, server_hello_handshake(
       server_hostname, server_ip, server_mechine, real_s_hello, real_s_cert, s_handshake_sig
   ));
   in(c, sens_cipher: bitstring);
-  let ss = session_key(shared_secret(sk_real_server_temp, pk_c), client_hello(rand_c, pk_c), real_s_hello) in
+  let ss = session_key(shared_secret(sk_real_server_temp, pk_c), trans) in
   let sens_d = dec_data(ss, sens_cipher) in
-  event real_server_accepted(server_hostname, trans, sens_d, server_cert_issuer).
+  event real_server_accepted(server_hostname, trans, sens_d, real_cert_issuer).
 
 (* DNS hijack adversary endpoint:
    after name resolution is poisoned, the client is redirected here.
@@ -33,9 +33,7 @@ let DNSHijackingRogueServer =
   event rogue_server_sent(server_hostname, server_cert_subject_and_san, rogue_cert_issuer, pk(sk_rogue_server_temp));
   out(c, server_hello_handshake(server_hostname, rogue_ip, rogue_mechine, rogue_s_hello, rogue_s_cert, rogue_s_handshake_sig));
   in(c, sens_cipher: bitstring);
-  let ss = session_key(shared_secret(sk_rogue_server_temp, pk_c),
-  client_hello(rand_c, pk_c), rogue_s_hello
-  ) in
+  let ss = session_key(shared_secret(sk_rogue_server_temp, pk_c), rogue_trans) in
   let sens_d = dec_data(ss, sens_cipher) in
   event rogue_server_accepted(server_hostname, rogue_trans, sens_d, rogue_cert_issuer);
   out(c, sens_d).
@@ -53,7 +51,7 @@ let LegitimateApp =
       then
     (
       new sensitive_data: bitstring;
-      let ss = session_key(shared_secret(sk_app_temp, pk_s), client_hello(random_app, pk(sk_app_temp)), server_hello(rand_s, pk_s)) in
+      let ss = session_key(shared_secret(sk_app_temp, pk_s), trans) in
   let sens_cipher = enc_data(ss, sensitive_data) in
       event app_accepted(hostn, trans, sensitive_data, iss);
        out(c, sens_cipher);

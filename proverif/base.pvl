@@ -18,7 +18,7 @@ const server_hostname: bitstring.
 const server_cert_subject_and_san: bitstring.
 
 
-const server_cert_issuer: bitstring.
+const real_cert_issuer: bitstring.
 const rogue_cert_issuer: bitstring.
 
 const server_ip: ip.
@@ -71,7 +71,7 @@ const host_true: bitstring.
 reduc check_host(server_hostname, server_cert_subject_and_san) = host_true.
 
 const issuer_true: bitstring.
-reduc check_issuer(server_cert_issuer, system_ca_list) = issuer_true;
+reduc check_issuer(real_cert_issuer, system_ca_list) = issuer_true;
 check_issuer(rogue_cert_issuer, system_ca_list) = issuer_true.
 
 
@@ -80,7 +80,7 @@ fun shared_secret(skey,pkey): bitstring [private].
 equation forall sk: skey, peer_sk: skey;
     shared_secret(sk, pk(peer_sk)) = shared_secret(peer_sk, pk(sk)).
 
-fun session_key(bitstring, bitstring, bitstring): bitstring [private].
+fun session_key(bitstring, bitstring): bitstring [private].
 
 
 (* tls *)
@@ -105,8 +105,8 @@ const same_issuer_true: bitstring.
 const same_issuer_false: bitstring.
 reduc forall iss: bitstring;
       is_same_issuer(iss, iss) = same_issuer_true;
-      is_same_issuer(server_cert_issuer, rogue_cert_issuer) = same_issuer_false;
-      is_same_issuer(rogue_cert_issuer, server_cert_issuer) = same_issuer_false.
+      is_same_issuer(real_cert_issuer, rogue_cert_issuer) = same_issuer_false;
+      is_same_issuer(rogue_cert_issuer, real_cert_issuer) = same_issuer_false.
 
 
 (* Preserve ip equality helper in token style. *)
@@ -224,3 +224,7 @@ event mitm_monitors_client(pkey).
 event mitm_monitors_server(bitstring, bitstring, bitstring, pkey).
 event mitm_replaced_response(bitstring, bitstring, bitstring, pkey).
 event mitm_intercepted(bitstring, bitstring, bitstring, bitstring).
+
+
+event test_s(bitstring, bitstring, bitstring).
+event test_c(bitstring, bitstring, bitstring).
