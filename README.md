@@ -21,4 +21,9 @@
 
 # proverif
 
-    proverif -lib base.pvl asproc.pv
+    proverif -lib base.pvl asproc_bgp_hijacking.pv
+    proverif -lib base.pvl asproc_dns_hijacking.pv
+    proverif -lib base.pvl asproc_mitm.pv
+    proverif -lib base.pvl tls_bgp_hijacking.pv
+    proverif -lib base.pvl tls_dns_hijacking.pv
+    proverif -lib base.pvl tls_mitm.pv

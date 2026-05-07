@@ -66,7 +66,7 @@ let BGPHijackingRogueServer =
   let sens_d = dec_data(ss_rogue, sens_cipher) in
   event rogue_server_accept(server_hostname, rogue_trans, sens_d, rogue_s_cert)
   )
-  .
+   .
 
 let LegitimateApp =
   new sk_app_temp: skey;
@@ -218,6 +218,7 @@ query  sens_d: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
    True  = client can reject mismatched issuer/session.
    False = rejection event never occurs in this model. *)
 query event(app_reject(server_hostname, server_cert_subject_and_san, rogue_cert_issuer)).
+
 
 (* Query: Rogue-server acceptance reachability.
    True  = there exists a trace where the rogue server accepts/decrypts data under the modeled rogue transcript.
