@@ -21,9 +21,11 @@ let RealServer =
   let ss = session_key(server_shared_secret(sk_real_server_temp, pk_c), trans) in
  
   in(cs, sens_cipher: bitstring);
+  if check_authtag(ss, sens_cipher) = true
+  then (
   let sens_d = dec_data(ss, sens_cipher) in
- 
   event real_server_conn(server_hostname, trans, sens_d, real_s_cert, sens_cipher)
+   )
   .
 
 let MitmServer =
@@ -43,6 +45,9 @@ let MitmServer =
   out(cc, server_hello_handshake(hostn_s, rogue_ip, rogue_mechine, rogue_s_hello, rogue_s_cert, rogue_s_handshake_sig));
   in(cc, sens_cipher: bitstring);
   let ss_mitm_c = session_key(server_shared_secret(sk_rogue_server_temp, pk_c), trans_mitm_c) in
+ 
+  if check_authtag(ss_mitm_c, sens_cipher) = true
+  then (
   let sens_d = dec_data(ss_mitm_c, sens_cipher) in
   event mitm_fake_server(hostn_s, trans_mitm_c, sens_d, rogue_s_cert, sens_cipher);
   let trans_mitm_s = transcript_hash(
@@ -55,6 +60,7 @@ let MitmServer =
  
   event mitm_fake_client(hostn_s, trans_mitm_s, sens_d, real_s_cert, sens_cipher2);
   out(cs, sens_cipher2)
+  )
   .
 
 let LegitimateApp =
