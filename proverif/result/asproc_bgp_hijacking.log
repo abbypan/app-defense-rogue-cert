@@ -7,13 +7,13 @@ Process 0 (that is, the initial process):
     {5}let good_exp: timestamp = succ_t(curr) in
     {6}let content: bitstring = pk2s(pk(sk_claim_signing)) in
     {7}let token: bitstring = jwt_sign(header,content,good_exp,sk_app_signing) in
-    {8}event jwt_claim_signing_key_create(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
+    {8}event ClaimKeySign(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
     {9}out(c, token);
     {10}let header2: bitstring = pk2s(pk(sk_claim_signing)) in
     {11}let good_exp2: timestamp = succ_t(curr) in
     {12}let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
     {13}let token2: bitstring = jwt_sign(header2,content2,good_exp2,sk_claim_signing) in
-    {14}event jwt_server_cert_claim_create(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+    {14}event CertClaimSign(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
     {15}out(c, token2);
     {16}in(c, client_hello(rand_c: bitstring,pk_c: pkey));
     {17}let c_hello: bitstring = client_hello(rand_c,pk_c) in
@@ -60,14 +60,14 @@ Process 0 (that is, the initial process):
     {56}let pk1_recv: pkey = s2pk(content_1) in
     {57}let exp_recv: timestamp = get_exp(plr) in
     {58}if (jwt_verify(jwt(h,plr,sr),pk_app_signing,curr) = true) then
-    {59}event jwt_claim_signing_key_verify(pk_app_signing,pk1_recv,exp_recv);
+    {59}event ClaimKeyVerify(pk_app_signing,pk1_recv,exp_recv);
     {60}in(c, jwt(h2: bitstring,plr2: bitstring,sr2: bitstring));
     {61}let content2_1: bitstring = get_content(plr2) in
     {62}let subject_and_san2: bitstring = get_subject_and_san(content2_1) in
     {63}let issuer2: bitstring = get_issuer(content2_1) in
     {64}let exp2: timestamp = get_exp(plr2) in
     {65}if (jwt_verify(jwt(h2,plr2,sr2),pk1_recv,curr) = true) then
-    {66}event jwt_server_cert_claim_verify(pk1_recv,subject_and_san2,issuer2,exp2);
+    {66}event CertClaimVerify(pk1_recv,subject_and_san2,issuer2,exp2);
     {67}let c_hello_1: bitstring = client_hello(random_app,pk(sk_app_temp)) in
     {68}out(c, c_hello_1);
     {69}in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -77,11 +77,16 @@ Process 0 (that is, the initial process):
     {73}if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
     (
         {74}let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),trans_1) in
-        {75}event app_conn(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
-        {76}out(c, enc_data(ss_1,sensitive_data))
+        {75}if (iss = real_cert_issuer) then
+            {76}event app_conn_real(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+            {77}out(c, enc_data(ss_1,sensitive_data))
+        else
+            {78}if (iss = rogue_cert_issuer) then
+            {79}event app_conn_rogue(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+            {80}out(c, enc_data(ss_1,sensitive_data))
     )
     else
-        {77}event app_reject(hostn,subj_and_san_recv,iss)
+        {81}event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --  Process 1 (that is, process 0, with let moved downwards):
@@ -90,13 +95,13 @@ Process 0 (that is, the initial process):
     {5}let good_exp: timestamp = succ_t(curr) in
     {3}let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
     {2}let sk_app_signing: skey = gen_sk_for_id(app_signing) in
-    {8}event jwt_claim_signing_key_create(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
+    {8}event ClaimKeySign(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
     {6}let content: bitstring = pk2s(pk(sk_claim_signing)) in
     {4}let header: bitstring = pk2s(pk(sk_app_signing)) in
     {7}let token: bitstring = jwt_sign(header,content,good_exp,sk_app_signing) in
     {9}out(c, token);
     {11}let good_exp2: timestamp = succ_t(curr) in
-    {14}event jwt_server_cert_claim_create(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+    {14}event CertClaimSign(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
     {12}let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
     {10}let header2: bitstring = pk2s(pk(sk_claim_signing)) in
     {13}let token2: bitstring = jwt_sign(header2,content2,good_exp2,sk_claim_signing) in
@@ -146,14 +151,14 @@ Process 0 (that is, the initial process):
     {57}let exp_recv: timestamp = get_exp(plr) in
     {54}let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
     {58}if (jwt_verify(jwt(h,plr,sr),pk_app_signing,curr) = true) then
-    {59}event jwt_claim_signing_key_verify(pk_app_signing,pk1_recv,exp_recv);
+    {59}event ClaimKeyVerify(pk_app_signing,pk1_recv,exp_recv);
     {60}in(c, jwt(h2: bitstring,plr2: bitstring,sr2: bitstring));
     {61}let content2_1: bitstring = get_content(plr2) in
     {62}let subject_and_san2: bitstring = get_subject_and_san(content2_1) in
     {63}let issuer2: bitstring = get_issuer(content2_1) in
     {64}let exp2: timestamp = get_exp(plr2) in
     {65}if (jwt_verify(jwt(h2,plr2,sr2),pk1_recv,curr) = true) then
-    {66}event jwt_server_cert_claim_verify(pk1_recv,subject_and_san2,issuer2,exp2);
+    {66}event CertClaimVerify(pk1_recv,subject_and_san2,issuer2,exp2);
     {67}let c_hello_1: bitstring = client_hello(random_app,pk(sk_app_temp)) in
     {68}out(c, c_hello_1);
     {69}in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -162,19 +167,24 @@ Process 0 (that is, the initial process):
     {73}if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
     (
         {74}let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),trans_1) in
-        {75}event app_conn(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
-        {76}out(c, enc_data(ss_1,sensitive_data))
+        {75}if (iss = real_cert_issuer) then
+            {76}event app_conn_real(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+            {77}out(c, enc_data(ss_1,sensitive_data))
+        else
+            {78}if (iss = rogue_cert_issuer) then
+            {79}event app_conn_rogue(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+            {80}out(c, enc_data(ss_1,sensitive_data))
     )
     else
-        {77}event app_reject(hostn,subj_and_san_recv,iss)
+        {81}event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
--- Query not event(jwt_claim_signing_key_verify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) in process 1.
+-- Query not event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 158 rules (78 with conclusion selected). Queue: 16 rules.
-Starting query not event(jwt_claim_signing_key_verify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1))
-goal reachable: event(jwt_claim_signing_key_verify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[])))
+200 rules inserted. Base: 153 rules (73 with conclusion selected). Queue: 14 rules.
+Starting query not event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1))
+goal reachable: event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[])))
 
 Derivation:
 
@@ -216,12 +226,12 @@ Using the function jwt the attacker may obtain jwt(pk2s(pk(gen_sk_for_id(app_sig
 attacker(jwt(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr[])),sig_sign(jwt_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr[]))),gen_sk_for_id(app_signing)))).
 
 10. The message jwt(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr[])),sig_sign(jwt_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr[]))),gen_sk_for_id(app_signing))) that the attacker may have by 9 may be received at input {53}.
-So event jwt_claim_signing_key_verify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[])) may be executed at {59}.
-event(jwt_claim_signing_key_verify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))).
+So event ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[])) may be executed at {59}.
+event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))).
 
-11. By 10, event(jwt_claim_signing_key_verify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))).
+11. By 10, event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))).
 The goal is reached, represented in the following fact:
-event(jwt_claim_signing_key_verify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))).
+event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))).
 
 
 Initial state
@@ -239,13 +249,13 @@ New processes:
         let good_exp: timestamp = succ_t(curr) in
         let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
         let sk_app_signing: skey = gen_sk_for_id(app_signing) in
-        event jwt_claim_signing_key_create(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
+        event ClaimKeySign(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
         let content: bitstring = pk2s(pk(sk_claim_signing)) in
         let header: bitstring = pk2s(pk(sk_app_signing)) in
         let token: bitstring = jwt_sign(header,content,good_exp,sk_app_signing) in
         out(c, token);
         let good_exp2: timestamp = succ_t(curr) in
-        event jwt_server_cert_claim_create(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+        event CertClaimSign(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
         let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
         let header2: bitstring = pk2s(pk(sk_claim_signing)) in
         let token2: bitstring = jwt_sign(header2,content2,good_exp2,sk_claim_signing) in
@@ -295,14 +305,14 @@ New processes:
         let exp_recv: timestamp = get_exp(plr) in
         let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
         if (jwt_verify(jwt(h,plr,sr),pk_app_signing,curr) = true) then
-        event jwt_claim_signing_key_verify(pk_app_signing,pk1_recv,exp_recv);
+        event ClaimKeyVerify(pk_app_signing,pk1_recv,exp_recv);
         in(c, jwt(h2: bitstring,plr2: bitstring,sr2: bitstring));
         let content2_1: bitstring = get_content(plr2) in
         let subject_and_san2: bitstring = get_subject_and_san(content2_1) in
         let issuer2: bitstring = get_issuer(content2_1) in
         let exp2: timestamp = get_exp(plr2) in
         if (jwt_verify(jwt(h2,plr2,sr2),pk1_recv,curr) = true) then
-        event jwt_server_cert_claim_verify(pk1_recv,subject_and_san2,issuer2,exp2);
+        event CertClaimVerify(pk1_recv,subject_and_san2,issuer2,exp2);
         let c_hello_1: bitstring = client_hello(random_app,pk(sk_app_temp)) in
         out(c, c_hello_1);
         in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -311,11 +321,16 @@ New processes:
         if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
         (
             let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),trans_1) in
-            event app_conn(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
-            out(c, enc_data(ss_1,sensitive_data))
+            if (iss = real_cert_issuer) then
+                event app_conn_real(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+                out(c, enc_data(ss_1,sensitive_data))
+            else
+                if (iss = rogue_cert_issuer) then
+                event app_conn_rogue(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+                out(c, enc_data(ss_1,sensitive_data))
         )
         else
-            event app_reject(hostn,subj_and_san_recv,iss)
+            event app_reject_conn(hostn,subj_and_san_recv,iss)
     )
 
 --------------------------------------------------------------
@@ -345,7 +360,7 @@ New processes:
 
 1st process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-1st process: event jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+1st process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 1st process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -362,7 +377,7 @@ Additional knowledge of the attacker:
 --------------------------------------------------------------
 1st process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-1st process: event jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+1st process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 1st process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -402,14 +417,14 @@ New processes:
     let exp_recv: timestamp = get_exp(plr) in
     let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
     if (jwt_verify(jwt(h,plr,sr),pk_app_signing,curr) = true) then
-    event jwt_claim_signing_key_verify(pk_app_signing,pk1_recv,exp_recv);
+    event ClaimKeyVerify(pk_app_signing,pk1_recv,exp_recv);
     in(c, jwt(h2: bitstring,plr2: bitstring,sr2: bitstring));
     let content2_1: bitstring = get_content(plr2) in
     let subject_and_san2: bitstring = get_subject_and_san(content2_1) in
     let issuer2: bitstring = get_issuer(content2_1) in
     let exp2: timestamp = get_exp(plr2) in
     if (jwt_verify(jwt(h2,plr2,sr2),pk1_recv,curr) = true) then
-    event jwt_server_cert_claim_verify(pk1_recv,subject_and_san2,issuer2,exp2);
+    event CertClaimVerify(pk1_recv,subject_and_san2,issuer2,exp2);
     let c_hello_1: bitstring = client_hello(random_app_1,pk(sk_app_temp_1)) in
     out(c, c_hello_1);
     in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -418,11 +433,16 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_1,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
-        out(c, enc_data(ss_1,sensitive_data_1))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
@@ -438,7 +458,7 @@ New processes:
 
 2nd process: if (jwt_verify(jwt(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr)),sig_sign(jwt_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr))),gen_sk_for_id(app_signing))),pk(gen_sk_for_id(app_signing)),curr) = true) succeeds
 
-2nd process: event jwt_claim_signing_key_verify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed; it is a goal
+2nd process: event ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed; it is a goal
 
 New processes:
 (
@@ -465,7 +485,7 @@ New processes:
     let issuer2: bitstring = get_issuer(content2_1) in
     let exp2: timestamp = get_exp(plr2) in
     if (jwt_verify(jwt(h2,plr2,sr2),pk(gen_sk_for_id(claim_signing)),curr) = true) then
-    event jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),subject_and_san2,issuer2,exp2);
+    event CertClaimVerify(pk(gen_sk_for_id(claim_signing)),subject_and_san2,issuer2,exp2);
     let c_hello_1: bitstring = client_hello(random_app_1,pk(sk_app_temp_1)) in
     out(c, c_hello_1);
     in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -474,32 +494,37 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_1,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
-        out(c, enc_data(ss_1,sensitive_data_1))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
-The event jwt_claim_signing_key_verify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) is executed at {59} in copy a.
+The event ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) is executed at {59} in copy a.
 A trace has been found.
-RESULT not event(jwt_claim_signing_key_verify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) is false.
--- Query not event(jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) in process 1.
+RESULT not event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) is false.
+-- Query not event(ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 160 rules (80 with conclusion selected). Queue: 14 rules.
-Starting query not event(jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1))
-goal reachable: event(jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[])))
+200 rules inserted. Base: 153 rules (74 with conclusion selected). Queue: 12 rules.
+Starting query not event(ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1))
+goal reachable: event(ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[])))
 
 Derivation:
 
-1. Event jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[])) may be executed at {8}.
-event(jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))).
+1. Event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[])) may be executed at {8}.
+event(ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))).
 
-2. By 1, event(jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))).
+2. By 1, event(ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))).
 The goal is reached, represented in the following fact:
-event(jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))).
+event(ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))).
 
 
 Initial state
@@ -516,13 +541,13 @@ New processes:
         let good_exp: timestamp = succ_t(curr) in
         let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
         let sk_app_signing: skey = gen_sk_for_id(app_signing) in
-        event jwt_claim_signing_key_create(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
+        event ClaimKeySign(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
         let content: bitstring = pk2s(pk(sk_claim_signing)) in
         let header: bitstring = pk2s(pk(sk_app_signing)) in
         let token: bitstring = jwt_sign(header,content,good_exp,sk_app_signing) in
         out(c, token);
         let good_exp2: timestamp = succ_t(curr) in
-        event jwt_server_cert_claim_create(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+        event CertClaimSign(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
         let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
         let header2: bitstring = pk2s(pk(sk_claim_signing)) in
         let token2: bitstring = jwt_sign(header2,content2,good_exp2,sk_claim_signing) in
@@ -572,14 +597,14 @@ New processes:
         let exp_recv: timestamp = get_exp(plr) in
         let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
         if (jwt_verify(jwt(h,plr,sr),pk_app_signing,curr) = true) then
-        event jwt_claim_signing_key_verify(pk_app_signing,pk1_recv,exp_recv);
+        event ClaimKeyVerify(pk_app_signing,pk1_recv,exp_recv);
         in(c, jwt(h2: bitstring,plr2: bitstring,sr2: bitstring));
         let content2_1: bitstring = get_content(plr2) in
         let subject_and_san2: bitstring = get_subject_and_san(content2_1) in
         let issuer2: bitstring = get_issuer(content2_1) in
         let exp2: timestamp = get_exp(plr2) in
         if (jwt_verify(jwt(h2,plr2,sr2),pk1_recv,curr) = true) then
-        event jwt_server_cert_claim_verify(pk1_recv,subject_and_san2,issuer2,exp2);
+        event CertClaimVerify(pk1_recv,subject_and_san2,issuer2,exp2);
         let c_hello_1: bitstring = client_hello(random_app,pk(sk_app_temp)) in
         out(c, c_hello_1);
         in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -588,11 +613,16 @@ New processes:
         if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
         (
             let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),trans_1) in
-            event app_conn(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
-            out(c, enc_data(ss_1,sensitive_data))
+            if (iss = real_cert_issuer) then
+                event app_conn_real(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+                out(c, enc_data(ss_1,sensitive_data))
+            else
+                if (iss = rogue_cert_issuer) then
+                event app_conn_rogue(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+                out(c, enc_data(ss_1,sensitive_data))
         )
         else
-            event app_reject(hostn,subj_and_san_recv,iss)
+            event app_reject_conn(hostn,subj_and_san_recv,iss)
     )
 
 --------------------------------------------------------------
@@ -614,7 +644,7 @@ New processes:
 
 1st process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-1st process: event jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed; it is a goal
+1st process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed; it is a goal
 
 New processes:
     let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) in
@@ -622,7 +652,7 @@ New processes:
     let token: bitstring = jwt_sign(header,content,succ_t(curr),gen_sk_for_id(app_signing)) in
     out(c, token);
     let good_exp2: timestamp = succ_t(curr) in
-    event jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+    event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,good_exp2);
     let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
     let header2: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) in
     let token2: bitstring = jwt_sign(header2,content2,good_exp2,gen_sk_for_id(claim_signing)) in
@@ -645,22 +675,22 @@ New processes:
     event real_server_conn(server_hostname,trans,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
 
 --------------------------------------------------------------
-The event jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) is executed at {8} in copy a.
+The event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) is executed at {8} in copy a.
 A trace has been found.
-RESULT not event(jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) is false.
--- Query event(jwt_claim_signing_key_verify(app_pk,claim_pk,exp)) ==> event(jwt_claim_signing_key_create(app_pk,claim_pk,exp)) in process 1.
+RESULT not event(ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) is false.
+-- Query event(ClaimKeyVerify(app_pk,claim_pk,exp)) ==> event(ClaimKeySign(app_pk,claim_pk,exp)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 170 rules (78 with conclusion selected). Queue: 22 rules.
-Starting query event(jwt_claim_signing_key_verify(app_pk,claim_pk,exp)) ==> event(jwt_claim_signing_key_create(app_pk,claim_pk,exp))
-goal reachable: b-event(jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))) -> event(jwt_claim_signing_key_verify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[])))
-RESULT event(jwt_claim_signing_key_verify(app_pk,claim_pk,exp)) ==> event(jwt_claim_signing_key_create(app_pk,claim_pk,exp)) is true.
--- Query not event(jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1)) in process 1.
+200 rules inserted. Base: 161 rules (71 with conclusion selected). Queue: 19 rules.
+Starting query event(ClaimKeyVerify(app_pk,claim_pk,exp)) ==> event(ClaimKeySign(app_pk,claim_pk,exp))
+goal reachable: b-event(ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))) -> event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[])))
+RESULT event(ClaimKeyVerify(app_pk,claim_pk,exp)) ==> event(ClaimKeySign(app_pk,claim_pk,exp)) is true.
+-- Query not event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 162 rules (77 with conclusion selected). Queue: 25 rules.
-Starting query not event(jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1))
-goal reachable: event(jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[])))
+200 rules inserted. Base: 152 rules (70 with conclusion selected). Queue: 20 rules.
+Starting query not event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1))
+goal reachable: event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[])))
 
 Derivation:
 
@@ -732,12 +762,12 @@ attacker(jwt(pk2s(pk(gen_sk_for_id(claim_signing))),jwt_payload(cert_claim(serve
 
 17. The message jwt(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr[])),sig_sign(jwt_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr[]))),gen_sk_for_id(app_signing))) that the attacker may have by 9 may be received at input {53}.
 The message jwt(pk2s(pk(gen_sk_for_id(claim_signing))),jwt_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),succ_t(curr[])),sig_sign(jwt_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jwt_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),succ_t(curr[]))),gen_sk_for_id(claim_signing))) that the attacker may have by 16 may be received at input {60}.
-So event jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[])) may be executed at {66}.
-event(jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))).
+So event CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[])) may be executed at {66}.
+event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))).
 
-18. By 17, event(jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))).
+18. By 17, event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))).
 The goal is reached, represented in the following fact:
-event(jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))).
+event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))).
 
 
 Initial state
@@ -757,13 +787,13 @@ New processes:
         let good_exp: timestamp = succ_t(curr) in
         let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
         let sk_app_signing: skey = gen_sk_for_id(app_signing) in
-        event jwt_claim_signing_key_create(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
+        event ClaimKeySign(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
         let content: bitstring = pk2s(pk(sk_claim_signing)) in
         let header: bitstring = pk2s(pk(sk_app_signing)) in
         let token: bitstring = jwt_sign(header,content,good_exp,sk_app_signing) in
         out(c, token);
         let good_exp2: timestamp = succ_t(curr) in
-        event jwt_server_cert_claim_create(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+        event CertClaimSign(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
         let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
         let header2: bitstring = pk2s(pk(sk_claim_signing)) in
         let token2: bitstring = jwt_sign(header2,content2,good_exp2,sk_claim_signing) in
@@ -813,14 +843,14 @@ New processes:
         let exp_recv: timestamp = get_exp(plr) in
         let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
         if (jwt_verify(jwt(h,plr,sr),pk_app_signing,curr) = true) then
-        event jwt_claim_signing_key_verify(pk_app_signing,pk1_recv,exp_recv);
+        event ClaimKeyVerify(pk_app_signing,pk1_recv,exp_recv);
         in(c, jwt(h2: bitstring,plr2: bitstring,sr2: bitstring));
         let content2_1: bitstring = get_content(plr2) in
         let subject_and_san2: bitstring = get_subject_and_san(content2_1) in
         let issuer2: bitstring = get_issuer(content2_1) in
         let exp2: timestamp = get_exp(plr2) in
         if (jwt_verify(jwt(h2,plr2,sr2),pk1_recv,curr) = true) then
-        event jwt_server_cert_claim_verify(pk1_recv,subject_and_san2,issuer2,exp2);
+        event CertClaimVerify(pk1_recv,subject_and_san2,issuer2,exp2);
         let c_hello_1: bitstring = client_hello(random_app,pk(sk_app_temp)) in
         out(c, c_hello_1);
         in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -829,11 +859,16 @@ New processes:
         if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
         (
             let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),trans_1) in
-            event app_conn(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
-            out(c, enc_data(ss_1,sensitive_data))
+            if (iss = real_cert_issuer) then
+                event app_conn_real(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+                out(c, enc_data(ss_1,sensitive_data))
+            else
+                if (iss = rogue_cert_issuer) then
+                event app_conn_rogue(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+                out(c, enc_data(ss_1,sensitive_data))
         )
         else
-            event app_reject(hostn,subj_and_san_recv,iss)
+            event app_reject_conn(hostn,subj_and_san_recv,iss)
     )
 
 --------------------------------------------------------------
@@ -863,7 +898,7 @@ New processes:
 
 2nd process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-2nd process: event jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+2nd process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 2nd process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -880,7 +915,7 @@ Additional knowledge of the attacker:
 --------------------------------------------------------------
 2nd process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-2nd process: event jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+2nd process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 2nd process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -901,7 +936,7 @@ Additional knowledge of the attacker:
 
 1st process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-1st process: event jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+1st process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 1st process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -913,7 +948,7 @@ Additional knowledge of the attacker:
 
 1st process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-1st process: event jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+1st process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 1st process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -965,14 +1000,14 @@ New processes:
     let exp_recv: timestamp = get_exp(plr) in
     let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
     if (jwt_verify(jwt(h,plr,sr),pk_app_signing,curr) = true) then
-    event jwt_claim_signing_key_verify(pk_app_signing,pk1_recv,exp_recv);
+    event ClaimKeyVerify(pk_app_signing,pk1_recv,exp_recv);
     in(c, jwt(h2: bitstring,plr2: bitstring,sr2: bitstring));
     let content2_1: bitstring = get_content(plr2) in
     let subject_and_san2: bitstring = get_subject_and_san(content2_1) in
     let issuer2: bitstring = get_issuer(content2_1) in
     let exp2: timestamp = get_exp(plr2) in
     if (jwt_verify(jwt(h2,plr2,sr2),pk1_recv,curr) = true) then
-    event jwt_server_cert_claim_verify(pk1_recv,subject_and_san2,issuer2,exp2);
+    event CertClaimVerify(pk1_recv,subject_and_san2,issuer2,exp2);
     let c_hello_1: bitstring = client_hello(random_app_1,pk(sk_app_temp_1)) in
     out(c, c_hello_1);
     in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -981,11 +1016,16 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_1,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
-        out(c, enc_data(ss_1,sensitive_data_1))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
@@ -1001,7 +1041,7 @@ New processes:
 
 3rd process: if (jwt_verify(jwt(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr)),sig_sign(jwt_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr))),gen_sk_for_id(app_signing))),pk(gen_sk_for_id(app_signing)),curr) = true) succeeds
 
-3rd process: event jwt_claim_signing_key_verify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+3rd process: event ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 New processes:
 (
@@ -1045,7 +1085,7 @@ New processes:
     let issuer2: bitstring = get_issuer(content2_1) in
     let exp2: timestamp = get_exp(plr2) in
     if (jwt_verify(jwt(h2,plr2,sr2),pk(gen_sk_for_id(claim_signing)),curr) = true) then
-    event jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),subject_and_san2,issuer2,exp2);
+    event CertClaimVerify(pk(gen_sk_for_id(claim_signing)),subject_and_san2,issuer2,exp2);
     let c_hello_1: bitstring = client_hello(random_app_1,pk(sk_app_temp_1)) in
     out(c, c_hello_1);
     in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -1054,11 +1094,16 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_1,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
-        out(c, enc_data(ss_1,sensitive_data_1))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
@@ -1074,7 +1119,7 @@ New processes:
 
 3rd process: if (jwt_verify(jwt(pk2s(pk(gen_sk_for_id(claim_signing))),jwt_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),succ_t(curr)),sig_sign(jwt_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jwt_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),succ_t(curr))),gen_sk_for_id(claim_signing))),pk(gen_sk_for_id(claim_signing)),curr) = true) succeeds
 
-3rd process: event jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed; it is a goal
+3rd process: event CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed; it is a goal
 
 New processes:
 (
@@ -1120,32 +1165,37 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,server_cert_subject_and_san) = host_true) && (real_cert_issuer = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_1,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
-        out(c, enc_data(ss_1,sensitive_data_1))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
-The event jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) is executed at {66} in copy a.
+The event CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) is executed at {66} in copy a.
 A trace has been found.
-RESULT not event(jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1)) is false.
--- Query not event(jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1)) in process 1.
+RESULT not event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1)) is false.
+-- Query not event(CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 160 rules (80 with conclusion selected). Queue: 14 rules.
-Starting query not event(jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1))
-goal reachable: event(jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[])))
+200 rules inserted. Base: 153 rules (74 with conclusion selected). Queue: 12 rules.
+Starting query not event(CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1))
+goal reachable: event(CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[])))
 
 Derivation:
 
-1. Event jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[])) may be executed at {14}.
-event(jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))).
+1. Event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[])) may be executed at {14}.
+event(CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))).
 
-2. By 1, event(jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))).
+2. By 1, event(CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))).
 The goal is reached, represented in the following fact:
-event(jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))).
+event(CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))).
 
 
 Initial state
@@ -1162,13 +1212,13 @@ New processes:
         let good_exp: timestamp = succ_t(curr) in
         let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
         let sk_app_signing: skey = gen_sk_for_id(app_signing) in
-        event jwt_claim_signing_key_create(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
+        event ClaimKeySign(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
         let content: bitstring = pk2s(pk(sk_claim_signing)) in
         let header: bitstring = pk2s(pk(sk_app_signing)) in
         let token: bitstring = jwt_sign(header,content,good_exp,sk_app_signing) in
         out(c, token);
         let good_exp2: timestamp = succ_t(curr) in
-        event jwt_server_cert_claim_create(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+        event CertClaimSign(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
         let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
         let header2: bitstring = pk2s(pk(sk_claim_signing)) in
         let token2: bitstring = jwt_sign(header2,content2,good_exp2,sk_claim_signing) in
@@ -1218,14 +1268,14 @@ New processes:
         let exp_recv: timestamp = get_exp(plr) in
         let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
         if (jwt_verify(jwt(h,plr,sr),pk_app_signing,curr) = true) then
-        event jwt_claim_signing_key_verify(pk_app_signing,pk1_recv,exp_recv);
+        event ClaimKeyVerify(pk_app_signing,pk1_recv,exp_recv);
         in(c, jwt(h2: bitstring,plr2: bitstring,sr2: bitstring));
         let content2_1: bitstring = get_content(plr2) in
         let subject_and_san2: bitstring = get_subject_and_san(content2_1) in
         let issuer2: bitstring = get_issuer(content2_1) in
         let exp2: timestamp = get_exp(plr2) in
         if (jwt_verify(jwt(h2,plr2,sr2),pk1_recv,curr) = true) then
-        event jwt_server_cert_claim_verify(pk1_recv,subject_and_san2,issuer2,exp2);
+        event CertClaimVerify(pk1_recv,subject_and_san2,issuer2,exp2);
         let c_hello_1: bitstring = client_hello(random_app,pk(sk_app_temp)) in
         out(c, c_hello_1);
         in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -1234,11 +1284,16 @@ New processes:
         if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
         (
             let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),trans_1) in
-            event app_conn(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
-            out(c, enc_data(ss_1,sensitive_data))
+            if (iss = real_cert_issuer) then
+                event app_conn_real(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+                out(c, enc_data(ss_1,sensitive_data))
+            else
+                if (iss = rogue_cert_issuer) then
+                event app_conn_rogue(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+                out(c, enc_data(ss_1,sensitive_data))
         )
         else
-            event app_reject(hostn,subj_and_san_recv,iss)
+            event app_reject_conn(hostn,subj_and_san_recv,iss)
     )
 
 --------------------------------------------------------------
@@ -1260,7 +1315,7 @@ New processes:
 
 1st process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-1st process: event jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+1st process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 1st process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -1278,7 +1333,7 @@ Additional knowledge of the attacker:
 --------------------------------------------------------------
 1st process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-1st process: event jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed; it is a goal
+1st process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed; it is a goal
 
 New processes:
     let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
@@ -1303,20 +1358,20 @@ New processes:
     event real_server_conn(server_hostname,trans,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
 
 --------------------------------------------------------------
-The event jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) is executed at {14} in copy a.
+The event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) is executed at {14} in copy a.
 A trace has been found.
-RESULT not event(jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1)) is false.
--- Query event(jwt_server_cert_claim_verify(claim_pk,subject_and_san,issuer,exp)) ==> event(jwt_server_cert_claim_create(claim_pk,subject_and_san,issuer,exp)) in process 1.
+RESULT not event(CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1)) is false.
+-- Query event(CertClaimVerify(claim_pk,subject_and_san,issuer,exp)) ==> event(CertClaimSign(claim_pk,subject_and_san,issuer,exp)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 180 rules (77 with conclusion selected). Queue: 33 rules.
-Starting query event(jwt_server_cert_claim_verify(claim_pk,subject_and_san,issuer,exp)) ==> event(jwt_server_cert_claim_create(claim_pk,subject_and_san,issuer,exp))
-goal reachable: b-event(jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))) -> event(jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[])))
-RESULT event(jwt_server_cert_claim_verify(claim_pk,subject_and_san,issuer,exp)) ==> event(jwt_server_cert_claim_create(claim_pk,subject_and_san,issuer,exp)) is true.
+200 rules inserted. Base: 169 rules (70 with conclusion selected). Queue: 29 rules.
+Starting query event(CertClaimVerify(claim_pk,subject_and_san,issuer,exp)) ==> event(CertClaimSign(claim_pk,subject_and_san,issuer,exp))
+goal reachable: b-event(CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))) -> event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[])))
+RESULT event(CertClaimVerify(claim_pk,subject_and_san,issuer,exp)) ==> event(CertClaimSign(claim_pk,subject_and_san,issuer,exp)) is true.
 -- Query not event(real_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 161 rules (79 with conclusion selected). Queue: 14 rules.
+200 rules inserted. Base: 153 rules (72 with conclusion selected). Queue: 13 rules.
 Starting query not event(real_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2))
 goal reachable: event(real_server_conn(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1)))
 Abbreviations:
@@ -1500,7 +1555,7 @@ attacker(server_hello_handshake(server_hostname,sip_1,smech_1,server_hello(rando
 39. The message jwt(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr[])),sig_sign(jwt_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr[]))),gen_sk_for_id(app_signing))) that the attacker may have by 9 may be received at input {53}.
 The message jwt(pk2s(pk(gen_sk_for_id(claim_signing))),jwt_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),succ_t(curr[])),sig_sign(jwt_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jwt_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),succ_t(curr[]))),gen_sk_for_id(claim_signing))) that the attacker may have by 16 may be received at input {60}.
 The message server_hello_handshake(server_hostname,sip_1,smech_1,server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sig_sign(transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server))) that the attacker may have by 38 may be received at input {69}.
-So the message enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1) may be sent to the attacker at output {76}.
+So the message enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1) may be sent to the attacker at output {77}.
 attacker(enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1)).
 
 40. The message client_hello(random_app_1,pk(sk_app_temp_1)) that the attacker may have by 20 may be received at input {16}.
@@ -1535,13 +1590,13 @@ New processes:
         let good_exp: timestamp = succ_t(curr) in
         let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
         let sk_app_signing: skey = gen_sk_for_id(app_signing) in
-        event jwt_claim_signing_key_create(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
+        event ClaimKeySign(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
         let content: bitstring = pk2s(pk(sk_claim_signing)) in
         let header: bitstring = pk2s(pk(sk_app_signing)) in
         let token: bitstring = jwt_sign(header,content,good_exp,sk_app_signing) in
         out(c, token);
         let good_exp2: timestamp = succ_t(curr) in
-        event jwt_server_cert_claim_create(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+        event CertClaimSign(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
         let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
         let header2: bitstring = pk2s(pk(sk_claim_signing)) in
         let token2: bitstring = jwt_sign(header2,content2,good_exp2,sk_claim_signing) in
@@ -1591,14 +1646,14 @@ New processes:
         let exp_recv: timestamp = get_exp(plr) in
         let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
         if (jwt_verify(jwt(h,plr,sr),pk_app_signing,curr) = true) then
-        event jwt_claim_signing_key_verify(pk_app_signing,pk1_recv,exp_recv);
+        event ClaimKeyVerify(pk_app_signing,pk1_recv,exp_recv);
         in(c, jwt(h2: bitstring,plr2: bitstring,sr2: bitstring));
         let content2_1: bitstring = get_content(plr2) in
         let subject_and_san2: bitstring = get_subject_and_san(content2_1) in
         let issuer2: bitstring = get_issuer(content2_1) in
         let exp2: timestamp = get_exp(plr2) in
         if (jwt_verify(jwt(h2,plr2,sr2),pk1_recv,curr) = true) then
-        event jwt_server_cert_claim_verify(pk1_recv,subject_and_san2,issuer2,exp2);
+        event CertClaimVerify(pk1_recv,subject_and_san2,issuer2,exp2);
         let c_hello_1: bitstring = client_hello(random_app,pk(sk_app_temp)) in
         out(c, c_hello_1);
         in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -1607,11 +1662,16 @@ New processes:
         if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
         (
             let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),trans_1) in
-            event app_conn(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
-            out(c, enc_data(ss_1,sensitive_data))
+            if (iss = real_cert_issuer) then
+                event app_conn_real(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+                out(c, enc_data(ss_1,sensitive_data))
+            else
+                if (iss = rogue_cert_issuer) then
+                event app_conn_rogue(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+                out(c, enc_data(ss_1,sensitive_data))
         )
         else
-            event app_reject(hostn,subj_and_san_recv,iss)
+            event app_reject_conn(hostn,subj_and_san_recv,iss)
     )
 
 --------------------------------------------------------------
@@ -1641,7 +1701,7 @@ New processes:
 
 4th process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-4th process: event jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+4th process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 4th process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -1658,7 +1718,7 @@ Additional knowledge of the attacker:
 --------------------------------------------------------------
 4th process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-4th process: event jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+4th process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 4th process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -1679,7 +1739,7 @@ Additional knowledge of the attacker:
 
 3rd process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-3rd process: event jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+3rd process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 3rd process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -1691,7 +1751,7 @@ Additional knowledge of the attacker:
 
 3rd process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-3rd process: event jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+3rd process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 3rd process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -1709,7 +1769,7 @@ Additional knowledge of the attacker:
 
 2nd process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-2nd process: event jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+2nd process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 2nd process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -1721,7 +1781,7 @@ Additional knowledge of the attacker:
 
 2nd process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-2nd process: event jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+2nd process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 2nd process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -1739,7 +1799,7 @@ Additional knowledge of the attacker:
 
 1st process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-1st process: event jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+1st process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 1st process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -1751,7 +1811,7 @@ Additional knowledge of the attacker:
 
 1st process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-1st process: event jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+1st process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 1st process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -1837,14 +1897,14 @@ New processes:
     let exp_recv: timestamp = get_exp(plr) in
     let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
     if (jwt_verify(jwt(h,plr,sr),pk_app_signing,curr) = true) then
-    event jwt_claim_signing_key_verify(pk_app_signing,pk1_recv,exp_recv);
+    event ClaimKeyVerify(pk_app_signing,pk1_recv,exp_recv);
     in(c, jwt(h2: bitstring,plr2: bitstring,sr2: bitstring));
     let content2_1: bitstring = get_content(plr2) in
     let subject_and_san2: bitstring = get_subject_and_san(content2_1) in
     let issuer2: bitstring = get_issuer(content2_1) in
     let exp2: timestamp = get_exp(plr2) in
     if (jwt_verify(jwt(h2,plr2,sr2),pk1_recv,curr) = true) then
-    event jwt_server_cert_claim_verify(pk1_recv,subject_and_san2,issuer2,exp2);
+    event CertClaimVerify(pk1_recv,subject_and_san2,issuer2,exp2);
     let c_hello_1: bitstring = client_hello(random_app_2,pk(sk_app_temp_2)) in
     out(c, c_hello_1);
     in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -1853,11 +1913,16 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
-        out(c, enc_data(ss_1,sensitive_data_2))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
@@ -1957,14 +2022,14 @@ New processes:
     let exp_recv: timestamp = get_exp(plr) in
     let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
     if (jwt_verify(jwt(h,plr,sr),pk_app_signing,curr) = true) then
-    event jwt_claim_signing_key_verify(pk_app_signing,pk1_recv,exp_recv);
+    event ClaimKeyVerify(pk_app_signing,pk1_recv,exp_recv);
     in(c, jwt(h2: bitstring,plr2: bitstring,sr2: bitstring));
     let content2_1: bitstring = get_content(plr2) in
     let subject_and_san2: bitstring = get_subject_and_san(content2_1) in
     let issuer2: bitstring = get_issuer(content2_1) in
     let exp2: timestamp = get_exp(plr2) in
     if (jwt_verify(jwt(h2,plr2,sr2),pk1_recv,curr) = true) then
-    event jwt_server_cert_claim_verify(pk1_recv,subject_and_san2,issuer2,exp2);
+    event CertClaimVerify(pk1_recv,subject_and_san2,issuer2,exp2);
     let c_hello_1: bitstring = client_hello(random_app_2,pk(sk_app_temp_2)) in
     out(c, c_hello_1);
     in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -1973,11 +2038,16 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
-        out(c, enc_data(ss_1,sensitive_data_2))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
@@ -1993,7 +2063,7 @@ New processes:
 
 4th process: if (jwt_verify(jwt(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr)),sig_sign(jwt_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr))),gen_sk_for_id(app_signing))),pk(gen_sk_for_id(app_signing)),curr) = true) succeeds
 
-4th process: event jwt_claim_signing_key_verify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+4th process: event ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 New processes:
 (
@@ -2054,7 +2124,7 @@ New processes:
     let issuer2: bitstring = get_issuer(content2_1) in
     let exp2: timestamp = get_exp(plr2) in
     if (jwt_verify(jwt(h2,plr2,sr2),pk(gen_sk_for_id(claim_signing)),curr) = true) then
-    event jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),subject_and_san2,issuer2,exp2);
+    event CertClaimVerify(pk(gen_sk_for_id(claim_signing)),subject_and_san2,issuer2,exp2);
     let c_hello_1: bitstring = client_hello(random_app_2,pk(sk_app_temp_2)) in
     out(c, c_hello_1);
     in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -2063,11 +2133,16 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
-        out(c, enc_data(ss_1,sensitive_data_2))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
@@ -2083,7 +2158,7 @@ New processes:
 
 4th process: if (jwt_verify(jwt(pk2s(pk(gen_sk_for_id(claim_signing))),jwt_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),succ_t(curr)),sig_sign(jwt_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jwt_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),succ_t(curr))),gen_sk_for_id(claim_signing))),pk(gen_sk_for_id(claim_signing)),curr) = true) succeeds
 
-4th process: event jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+4th process: event CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 4th process: let c_hello_1: bitstring = client_hello(random_app_2,pk(sk_app_temp_2)) succeeds
 
@@ -2152,11 +2227,16 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,server_cert_subject_and_san) = host_true) && (real_cert_issuer = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
-        out(c, enc_data(ss_1,sensitive_data_2))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
@@ -2237,11 +2317,16 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,server_cert_subject_and_san) = host_true) && (real_cert_issuer = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
-        out(c, enc_data(ss_1,sensitive_data_2))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
@@ -2255,7 +2340,9 @@ New processes:
 
 4th process: let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk(sk_real_server_temp_4)),transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))) succeeds
 
-4th process: event app_conn(server_hostname,transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_2,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_2,pk(sk_real_server_temp_4)),transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_2)) executed
+4th process: if (real_cert_issuer = real_cert_issuer) succeeds
+
+4th process: event app_conn_real(server_hostname,transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_2,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_2,pk(sk_real_server_temp_4)),transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_2)) executed
 
 4th process: out(c, ~M_58) with ~M_58 = enc_data(session_key(client_shared_secret(sk_app_temp_2,pk(sk_real_server_temp_4)),transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_2) done
 
@@ -2355,12 +2442,12 @@ New processes:
 The event real_server_conn(server_hostname,transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_2,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_2,pk(sk_real_server_temp_4)),transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_2)) is executed at {31} in copy a_4.
 A trace has been found.
 RESULT not event(real_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) is false.
--- Query not event(app_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) in process 1.
+-- Query not event(app_conn_real(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 187 rules (77 with conclusion selected). Queue: 51 rules.
-Starting query not event(app_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2))
-goal reachable: event(app_conn(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1)))
+200 rules inserted. Base: 160 rules (70 with conclusion selected). Queue: 24 rules.
+Starting query not event(app_conn_real(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2))
+goal reachable: event(app_conn_real(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1)))
 Abbreviations:
 random_app_1 = random_app[!1 = @sid]
 sk_app_temp_1 = sk_app_temp[!1 = @sid]
@@ -2542,12 +2629,12 @@ attacker(server_hello_handshake(server_hostname,sip_1,smech_1,server_hello(rando
 39. The message jwt(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr[])),sig_sign(jwt_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr[]))),gen_sk_for_id(app_signing))) that the attacker may have by 9 may be received at input {53}.
 The message jwt(pk2s(pk(gen_sk_for_id(claim_signing))),jwt_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),succ_t(curr[])),sig_sign(jwt_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jwt_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),succ_t(curr[]))),gen_sk_for_id(claim_signing))) that the attacker may have by 16 may be received at input {60}.
 The message server_hello_handshake(server_hostname,sip_1,smech_1,server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sig_sign(transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server))) that the attacker may have by 38 may be received at input {69}.
-So event app_conn(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1)) may be executed at {75}.
-event(app_conn(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1))).
+So event app_conn_real(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1)) may be executed at {76}.
+event(app_conn_real(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1))).
 
-40. By 39, event(app_conn(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1))).
+40. By 39, event(app_conn_real(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1))).
 The goal is reached, represented in the following fact:
-event(app_conn(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1))).
+event(app_conn_real(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1))).
 
 
 Initial state
@@ -2572,13 +2659,13 @@ New processes:
         let good_exp: timestamp = succ_t(curr) in
         let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
         let sk_app_signing: skey = gen_sk_for_id(app_signing) in
-        event jwt_claim_signing_key_create(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
+        event ClaimKeySign(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
         let content: bitstring = pk2s(pk(sk_claim_signing)) in
         let header: bitstring = pk2s(pk(sk_app_signing)) in
         let token: bitstring = jwt_sign(header,content,good_exp,sk_app_signing) in
         out(c, token);
         let good_exp2: timestamp = succ_t(curr) in
-        event jwt_server_cert_claim_create(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+        event CertClaimSign(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
         let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
         let header2: bitstring = pk2s(pk(sk_claim_signing)) in
         let token2: bitstring = jwt_sign(header2,content2,good_exp2,sk_claim_signing) in
@@ -2628,14 +2715,14 @@ New processes:
         let exp_recv: timestamp = get_exp(plr) in
         let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
         if (jwt_verify(jwt(h,plr,sr),pk_app_signing,curr) = true) then
-        event jwt_claim_signing_key_verify(pk_app_signing,pk1_recv,exp_recv);
+        event ClaimKeyVerify(pk_app_signing,pk1_recv,exp_recv);
         in(c, jwt(h2: bitstring,plr2: bitstring,sr2: bitstring));
         let content2_1: bitstring = get_content(plr2) in
         let subject_and_san2: bitstring = get_subject_and_san(content2_1) in
         let issuer2: bitstring = get_issuer(content2_1) in
         let exp2: timestamp = get_exp(plr2) in
         if (jwt_verify(jwt(h2,plr2,sr2),pk1_recv,curr) = true) then
-        event jwt_server_cert_claim_verify(pk1_recv,subject_and_san2,issuer2,exp2);
+        event CertClaimVerify(pk1_recv,subject_and_san2,issuer2,exp2);
         let c_hello_1: bitstring = client_hello(random_app,pk(sk_app_temp)) in
         out(c, c_hello_1);
         in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -2644,11 +2731,16 @@ New processes:
         if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
         (
             let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),trans_1) in
-            event app_conn(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
-            out(c, enc_data(ss_1,sensitive_data))
+            if (iss = real_cert_issuer) then
+                event app_conn_real(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+                out(c, enc_data(ss_1,sensitive_data))
+            else
+                if (iss = rogue_cert_issuer) then
+                event app_conn_rogue(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+                out(c, enc_data(ss_1,sensitive_data))
         )
         else
-            event app_reject(hostn,subj_and_san_recv,iss)
+            event app_reject_conn(hostn,subj_and_san_recv,iss)
     )
 
 --------------------------------------------------------------
@@ -2678,7 +2770,7 @@ New processes:
 
 4th process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-4th process: event jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+4th process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 4th process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -2695,7 +2787,7 @@ Additional knowledge of the attacker:
 --------------------------------------------------------------
 4th process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-4th process: event jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+4th process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 4th process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -2716,7 +2808,7 @@ Additional knowledge of the attacker:
 
 3rd process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-3rd process: event jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+3rd process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 3rd process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -2728,7 +2820,7 @@ Additional knowledge of the attacker:
 
 3rd process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-3rd process: event jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+3rd process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 3rd process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -2746,7 +2838,7 @@ Additional knowledge of the attacker:
 
 2nd process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-2nd process: event jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+2nd process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 2nd process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -2758,7 +2850,7 @@ Additional knowledge of the attacker:
 
 2nd process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-2nd process: event jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+2nd process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 2nd process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -2776,7 +2868,7 @@ Additional knowledge of the attacker:
 
 1st process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-1st process: event jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+1st process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 1st process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -2788,7 +2880,7 @@ Additional knowledge of the attacker:
 
 1st process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-1st process: event jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+1st process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 1st process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -2874,14 +2966,14 @@ New processes:
     let exp_recv: timestamp = get_exp(plr) in
     let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
     if (jwt_verify(jwt(h,plr,sr),pk_app_signing,curr) = true) then
-    event jwt_claim_signing_key_verify(pk_app_signing,pk1_recv,exp_recv);
+    event ClaimKeyVerify(pk_app_signing,pk1_recv,exp_recv);
     in(c, jwt(h2: bitstring,plr2: bitstring,sr2: bitstring));
     let content2_1: bitstring = get_content(plr2) in
     let subject_and_san2: bitstring = get_subject_and_san(content2_1) in
     let issuer2: bitstring = get_issuer(content2_1) in
     let exp2: timestamp = get_exp(plr2) in
     if (jwt_verify(jwt(h2,plr2,sr2),pk1_recv,curr) = true) then
-    event jwt_server_cert_claim_verify(pk1_recv,subject_and_san2,issuer2,exp2);
+    event CertClaimVerify(pk1_recv,subject_and_san2,issuer2,exp2);
     let c_hello_1: bitstring = client_hello(random_app_2,pk(sk_app_temp_2)) in
     out(c, c_hello_1);
     in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -2890,11 +2982,16 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
-        out(c, enc_data(ss_1,sensitive_data_2))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
@@ -2994,14 +3091,14 @@ New processes:
     let exp_recv: timestamp = get_exp(plr) in
     let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
     if (jwt_verify(jwt(h,plr,sr),pk_app_signing,curr) = true) then
-    event jwt_claim_signing_key_verify(pk_app_signing,pk1_recv,exp_recv);
+    event ClaimKeyVerify(pk_app_signing,pk1_recv,exp_recv);
     in(c, jwt(h2: bitstring,plr2: bitstring,sr2: bitstring));
     let content2_1: bitstring = get_content(plr2) in
     let subject_and_san2: bitstring = get_subject_and_san(content2_1) in
     let issuer2: bitstring = get_issuer(content2_1) in
     let exp2: timestamp = get_exp(plr2) in
     if (jwt_verify(jwt(h2,plr2,sr2),pk1_recv,curr) = true) then
-    event jwt_server_cert_claim_verify(pk1_recv,subject_and_san2,issuer2,exp2);
+    event CertClaimVerify(pk1_recv,subject_and_san2,issuer2,exp2);
     let c_hello_1: bitstring = client_hello(random_app_2,pk(sk_app_temp_2)) in
     out(c, c_hello_1);
     in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -3010,11 +3107,16 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
-        out(c, enc_data(ss_1,sensitive_data_2))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
@@ -3030,7 +3132,7 @@ New processes:
 
 4th process: if (jwt_verify(jwt(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr)),sig_sign(jwt_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr))),gen_sk_for_id(app_signing))),pk(gen_sk_for_id(app_signing)),curr) = true) succeeds
 
-4th process: event jwt_claim_signing_key_verify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+4th process: event ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 New processes:
 (
@@ -3091,7 +3193,7 @@ New processes:
     let issuer2: bitstring = get_issuer(content2_1) in
     let exp2: timestamp = get_exp(plr2) in
     if (jwt_verify(jwt(h2,plr2,sr2),pk(gen_sk_for_id(claim_signing)),curr) = true) then
-    event jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),subject_and_san2,issuer2,exp2);
+    event CertClaimVerify(pk(gen_sk_for_id(claim_signing)),subject_and_san2,issuer2,exp2);
     let c_hello_1: bitstring = client_hello(random_app_2,pk(sk_app_temp_2)) in
     out(c, c_hello_1);
     in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -3100,11 +3202,16 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
-        out(c, enc_data(ss_1,sensitive_data_2))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
@@ -3120,7 +3227,7 @@ New processes:
 
 4th process: if (jwt_verify(jwt(pk2s(pk(gen_sk_for_id(claim_signing))),jwt_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),succ_t(curr)),sig_sign(jwt_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jwt_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),succ_t(curr))),gen_sk_for_id(claim_signing))),pk(gen_sk_for_id(claim_signing)),curr) = true) succeeds
 
-4th process: event jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+4th process: event CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 4th process: let c_hello_1: bitstring = client_hello(random_app_2,pk(sk_app_temp_2)) succeeds
 
@@ -3189,11 +3296,16 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,server_cert_subject_and_san) = host_true) && (real_cert_issuer = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
-        out(c, enc_data(ss_1,sensitive_data_2))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
@@ -3274,11 +3386,16 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,server_cert_subject_and_san) = host_true) && (real_cert_issuer = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
-        out(c, enc_data(ss_1,sensitive_data_2))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
@@ -3292,7 +3409,9 @@ New processes:
 
 4th process: let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk(sk_real_server_temp_4)),transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))) succeeds
 
-4th process: event app_conn(server_hostname,transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_2,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_2,pk(sk_real_server_temp_4)),transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_2)) executed; it is a goal
+4th process: if (real_cert_issuer = real_cert_issuer) succeeds
+
+4th process: event app_conn_real(server_hostname,transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_2,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_2,pk(sk_real_server_temp_4)),transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_2)) executed; it is a goal
 
 New processes:
 (
@@ -3338,28 +3457,28 @@ New processes:
 )
 
 --------------------------------------------------------------
-The event app_conn(server_hostname,transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_2,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_2,pk(sk_real_server_temp_4)),transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_2)) is executed at {75} in copy a_4.
+The event app_conn_real(server_hostname,transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_2,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_2,pk(sk_real_server_temp_4)),transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_2)) is executed at {76} in copy a_4.
 A trace has been found.
-RESULT not event(app_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) is false.
--- Query event(real_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) ==> event(app_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) in process 1.
+RESULT not event(app_conn_real(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) is false.
+-- Query event(real_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) ==> event(app_conn_real(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 161 rules (79 with conclusion selected). Queue: 14 rules.
-Starting query event(real_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) ==> event(app_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2))
-goal reachable: b-event(app_conn(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1))) -> event(real_server_conn(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1)))
+200 rules inserted. Base: 150 rules (72 with conclusion selected). Queue: 13 rules.
+Starting query event(real_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) ==> event(app_conn_real(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2))
+goal reachable: b-event(app_conn_real(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1))) -> event(real_server_conn(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1)))
 Abbreviations:
 random_app_1 = random_app[!1 = @sid]
 sk_app_temp_1 = sk_app_temp[!1 = @sid]
 random_real_server_1 = random_real_server[pk_c = pk(sk_app_temp_1),rand_c = random_app_1,!1 = @sid_1]
 sk_real_server_temp_1 = sk_real_server_temp[pk_c = pk(sk_app_temp_1),rand_c = random_app_1,!1 = @sid_1]
 sensitive_data_1 = sensitive_data[!1 = @sid]
-RESULT event(real_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) ==> event(app_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) is true.
--- Query not event(app_reject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer)) in process 1.
+RESULT event(real_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) ==> event(app_conn_real(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) is true.
+-- Query not event(app_reject_conn(server_hostname,server_cert_subject_and_san,rogue_cert_issuer)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 183 rules (77 with conclusion selected). Queue: 47 rules.
-Starting query not event(app_reject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer))
-goal reachable: event(app_reject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer))
+200 rules inserted. Base: 178 rules (70 with conclusion selected). Queue: 42 rules.
+Starting query not event(app_reject_conn(server_hostname,server_cert_subject_and_san,rogue_cert_issuer))
+goal reachable: event(app_reject_conn(server_hostname,server_cert_subject_and_san,rogue_cert_issuer))
 
 Derivation:
 Abbreviations:
@@ -3553,18 +3672,18 @@ attacker(server_hello_handshake(server_hostname,sip_1,smech_1,server_hello(rando
 The message jwt(pk2s(pk(gen_sk_for_id(claim_signing))),jwt_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),succ_t(curr[])),sig_sign(jwt_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jwt_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),succ_t(curr[]))),gen_sk_for_id(claim_signing))) that the attacker may have by 16 may be received at input {60}.
 The message server_hello_handshake(server_hostname,sip_1,smech_1,server_hello(random_rogue_server_1,pk(sk_rogue_server_temp_1)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign(transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_rogue_server_1,pk(sk_rogue_server_temp_1)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))) that the attacker may have by 43 may be received at input {69}.
 We have real_cert_issuer ≠ rogue_cert_issuer.
-So event app_reject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer) may be executed at {77}.
-event(app_reject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer)).
+So event app_reject_conn(server_hostname,server_cert_subject_and_san,rogue_cert_issuer) may be executed at {81}.
+event(app_reject_conn(server_hostname,server_cert_subject_and_san,rogue_cert_issuer)).
 
-45. By 44, event(app_reject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer)).
+45. By 44, event(app_reject_conn(server_hostname,server_cert_subject_and_san,rogue_cert_issuer)).
 The goal is reached, represented in the following fact:
-event(app_reject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer)).
+event(app_reject_conn(server_hostname,server_cert_subject_and_san,rogue_cert_issuer)).
 
 
 Unified pk_c_3 with pk(sk_app_temp[!1 = @sid_1])
 Unified rand_c_3 with random_app[!1 = @sid_1]
 The clause after UnifyDerivationPrecise is
-event(app_reject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer))
+event(app_reject_conn(server_hostname,server_cert_subject_and_san,rogue_cert_issuer))
 This clause still contradicts the query.
 Initial state
 
@@ -3589,13 +3708,13 @@ New processes:
         let good_exp: timestamp = succ_t(curr) in
         let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
         let sk_app_signing: skey = gen_sk_for_id(app_signing) in
-        event jwt_claim_signing_key_create(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
+        event ClaimKeySign(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
         let content: bitstring = pk2s(pk(sk_claim_signing)) in
         let header: bitstring = pk2s(pk(sk_app_signing)) in
         let token: bitstring = jwt_sign(header,content,good_exp,sk_app_signing) in
         out(c, token);
         let good_exp2: timestamp = succ_t(curr) in
-        event jwt_server_cert_claim_create(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+        event CertClaimSign(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
         let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
         let header2: bitstring = pk2s(pk(sk_claim_signing)) in
         let token2: bitstring = jwt_sign(header2,content2,good_exp2,sk_claim_signing) in
@@ -3645,14 +3764,14 @@ New processes:
         let exp_recv: timestamp = get_exp(plr) in
         let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
         if (jwt_verify(jwt(h,plr,sr),pk_app_signing,curr) = true) then
-        event jwt_claim_signing_key_verify(pk_app_signing,pk1_recv,exp_recv);
+        event ClaimKeyVerify(pk_app_signing,pk1_recv,exp_recv);
         in(c, jwt(h2: bitstring,plr2: bitstring,sr2: bitstring));
         let content2_1: bitstring = get_content(plr2) in
         let subject_and_san2: bitstring = get_subject_and_san(content2_1) in
         let issuer2: bitstring = get_issuer(content2_1) in
         let exp2: timestamp = get_exp(plr2) in
         if (jwt_verify(jwt(h2,plr2,sr2),pk1_recv,curr) = true) then
-        event jwt_server_cert_claim_verify(pk1_recv,subject_and_san2,issuer2,exp2);
+        event CertClaimVerify(pk1_recv,subject_and_san2,issuer2,exp2);
         let c_hello_1: bitstring = client_hello(random_app,pk(sk_app_temp)) in
         out(c, c_hello_1);
         in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -3661,11 +3780,16 @@ New processes:
         if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
         (
             let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),trans_1) in
-            event app_conn(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
-            out(c, enc_data(ss_1,sensitive_data))
+            if (iss = real_cert_issuer) then
+                event app_conn_real(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+                out(c, enc_data(ss_1,sensitive_data))
+            else
+                if (iss = rogue_cert_issuer) then
+                event app_conn_rogue(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+                out(c, enc_data(ss_1,sensitive_data))
         )
         else
-            event app_reject(hostn,subj_and_san_recv,iss)
+            event app_reject_conn(hostn,subj_and_san_recv,iss)
     )
 
 --------------------------------------------------------------
@@ -3707,7 +3831,7 @@ New processes:
 
 2nd process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-2nd process: event jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+2nd process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 2nd process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -3724,7 +3848,7 @@ Additional knowledge of the attacker:
 --------------------------------------------------------------
 2nd process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-2nd process: event jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+2nd process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 2nd process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -3745,7 +3869,7 @@ Additional knowledge of the attacker:
 
 1st process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-1st process: event jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+1st process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 1st process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -3757,7 +3881,7 @@ Additional knowledge of the attacker:
 
 1st process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-1st process: event jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+1st process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 1st process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -3839,14 +3963,14 @@ New processes:
     let exp_recv: timestamp = get_exp(plr) in
     let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
     if (jwt_verify(jwt(h,plr,sr),pk_app_signing,curr) = true) then
-    event jwt_claim_signing_key_verify(pk_app_signing,pk1_recv,exp_recv);
+    event ClaimKeyVerify(pk_app_signing,pk1_recv,exp_recv);
     in(c, jwt(h2: bitstring,plr2: bitstring,sr2: bitstring));
     let content2_1: bitstring = get_content(plr2) in
     let subject_and_san2: bitstring = get_subject_and_san(content2_1) in
     let issuer2: bitstring = get_issuer(content2_1) in
     let exp2: timestamp = get_exp(plr2) in
     if (jwt_verify(jwt(h2,plr2,sr2),pk1_recv,curr) = true) then
-    event jwt_server_cert_claim_verify(pk1_recv,subject_and_san2,issuer2,exp2);
+    event CertClaimVerify(pk1_recv,subject_and_san2,issuer2,exp2);
     let c_hello_1: bitstring = client_hello(random_app_2,pk(sk_app_temp_2)) in
     out(c, c_hello_1);
     in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -3855,11 +3979,16 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
-        out(c, enc_data(ss_1,sensitive_data_1))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
@@ -3951,14 +4080,14 @@ New processes:
     let exp_recv: timestamp = get_exp(plr) in
     let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
     if (jwt_verify(jwt(h,plr,sr),pk_app_signing,curr) = true) then
-    event jwt_claim_signing_key_verify(pk_app_signing,pk1_recv,exp_recv);
+    event ClaimKeyVerify(pk_app_signing,pk1_recv,exp_recv);
     in(c, jwt(h2: bitstring,plr2: bitstring,sr2: bitstring));
     let content2_1: bitstring = get_content(plr2) in
     let subject_and_san2: bitstring = get_subject_and_san(content2_1) in
     let issuer2: bitstring = get_issuer(content2_1) in
     let exp2: timestamp = get_exp(plr2) in
     if (jwt_verify(jwt(h2,plr2,sr2),pk1_recv,curr) = true) then
-    event jwt_server_cert_claim_verify(pk1_recv,subject_and_san2,issuer2,exp2);
+    event CertClaimVerify(pk1_recv,subject_and_san2,issuer2,exp2);
     let c_hello_1: bitstring = client_hello(random_app_2,pk(sk_app_temp_2)) in
     out(c, c_hello_1);
     in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -3967,11 +4096,16 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
-        out(c, enc_data(ss_1,sensitive_data_1))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
@@ -3987,7 +4121,7 @@ New processes:
 
 4th process: if (jwt_verify(jwt(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr)),sig_sign(jwt_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jwt_payload(pk2s(pk(gen_sk_for_id(claim_signing))),succ_t(curr))),gen_sk_for_id(app_signing))),pk(gen_sk_for_id(app_signing)),curr) = true) succeeds
 
-4th process: event jwt_claim_signing_key_verify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+4th process: event ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 New processes:
 (
@@ -4046,7 +4180,7 @@ New processes:
     let issuer2: bitstring = get_issuer(content2_1) in
     let exp2: timestamp = get_exp(plr2) in
     if (jwt_verify(jwt(h2,plr2,sr2),pk(gen_sk_for_id(claim_signing)),curr) = true) then
-    event jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),subject_and_san2,issuer2,exp2);
+    event CertClaimVerify(pk(gen_sk_for_id(claim_signing)),subject_and_san2,issuer2,exp2);
     let c_hello_1: bitstring = client_hello(random_app_2,pk(sk_app_temp_2)) in
     out(c, c_hello_1);
     in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
@@ -4055,11 +4189,16 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,subject_and_san2) = host_true) && (issuer2 = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
-        out(c, enc_data(ss_1,sensitive_data_1))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
@@ -4075,7 +4214,7 @@ New processes:
 
 4th process: if (jwt_verify(jwt(pk2s(pk(gen_sk_for_id(claim_signing))),jwt_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),succ_t(curr)),sig_sign(jwt_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jwt_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),succ_t(curr))),gen_sk_for_id(claim_signing))),pk(gen_sk_for_id(claim_signing)),curr) = true) succeeds
 
-4th process: event jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+4th process: event CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 4th process: let c_hello_1: bitstring = client_hello(random_app_2,pk(sk_app_temp_2)) succeeds
 
@@ -4142,11 +4281,16 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,server_cert_subject_and_san) = host_true) && (real_cert_issuer = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
-        out(c, enc_data(ss_1,sensitive_data_1))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
@@ -4222,11 +4366,16 @@ New processes:
     if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && ((sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true) && ((check_host(hostn,server_cert_subject_and_san) = host_true) && (real_cert_issuer = iss)))))) then
     (
         let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        event app_conn(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
-        out(c, enc_data(ss_1,sensitive_data_1))
+        if (iss = real_cert_issuer) then
+            event app_conn_real(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
+        else
+            if (iss = rogue_cert_issuer) then
+            event app_conn_rogue(hostn,trans_1,sensitive_data_1,s_cert,enc_data(ss_1,sensitive_data_1));
+            out(c, enc_data(ss_1,sensitive_data_1))
     )
     else
-        event app_reject(hostn,subj_and_san_recv,iss)
+        event app_reject_conn(hostn,subj_and_san_recv,iss)
 )
 
 --------------------------------------------------------------
@@ -4238,7 +4387,7 @@ New processes:
 
 4th process: if ((check_host(server_hostname,server_cert_subject_and_san) = host_true) && ((sig_verify(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)),pk(gen_sk_for_id(rogue_cert_issuer))) = true) && ((check_issuer(rogue_cert_issuer,system_ca_list) = issuer_true) && ((sig_verify(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sig_sign(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)),pk(gen_sk_for_id(rogue_server))) = true) && ((check_host(server_hostname,server_cert_subject_and_san) = host_true) && (real_cert_issuer = rogue_cert_issuer)))))): else branch taken
 
-4th process: event app_reject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer) executed; it is a goal
+4th process: event app_reject_conn(server_hostname,server_cert_subject_and_san,rogue_cert_issuer) executed; it is a goal
 
 New processes:
 (
@@ -4285,56 +4434,56 @@ New processes:
 )
 
 --------------------------------------------------------------
-The event app_reject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer) is executed at {77} in copy a_4.
+The event app_reject_conn(server_hostname,server_cert_subject_and_san,rogue_cert_issuer) is executed at {81} in copy a_4.
 A trace has been found.
-RESULT not event(app_reject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer)) is false.
+RESULT not event(app_reject_conn(server_hostname,server_cert_subject_and_san,rogue_cert_issuer)) is false.
 -- Query not event(rogue_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 161 rules (79 with conclusion selected). Queue: 14 rules.
+200 rules inserted. Base: 153 rules (72 with conclusion selected). Queue: 13 rules.
 Starting query not event(rogue_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2))
 RESULT not event(rogue_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) is true.
--- Query not event(app_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) in process 1.
+-- Query not event(app_conn_rogue(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 187 rules (77 with conclusion selected). Queue: 51 rules.
-Starting query not event(app_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2))
-RESULT not event(app_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) is true.
--- Query event(rogue_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) ==> event(app_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) in process 1.
+200 rules inserted. Base: 163 rules (70 with conclusion selected). Queue: 25 rules.
+Starting query not event(app_conn_rogue(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2))
+RESULT not event(app_conn_rogue(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) is true.
+-- Query event(rogue_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) ==> event(app_conn_rogue(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 161 rules (79 with conclusion selected). Queue: 14 rules.
-Starting query event(rogue_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) ==> event(app_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2))
-RESULT event(rogue_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) ==> event(app_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) is true.
+200 rules inserted. Base: 150 rules (72 with conclusion selected). Queue: 13 rules.
+Starting query event(rogue_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) ==> event(app_conn_rogue(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2))
+RESULT event(rogue_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) ==> event(app_conn_rogue(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) is true.
 
 --------------------------------------------------------------
 Verification summary:
 
-Query not event(jwt_claim_signing_key_verify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) is false.
+Query not event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) is false.
 
-Query not event(jwt_claim_signing_key_create(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) is false.
+Query not event(ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) is false.
 
-Query event(jwt_claim_signing_key_verify(app_pk,claim_pk,exp)) ==> event(jwt_claim_signing_key_create(app_pk,claim_pk,exp)) is true.
+Query event(ClaimKeyVerify(app_pk,claim_pk,exp)) ==> event(ClaimKeySign(app_pk,claim_pk,exp)) is true.
 
-Query not event(jwt_server_cert_claim_verify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1)) is false.
+Query not event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1)) is false.
 
-Query not event(jwt_server_cert_claim_create(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1)) is false.
+Query not event(CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1)) is false.
 
-Query event(jwt_server_cert_claim_verify(claim_pk,subject_and_san,issuer,exp)) ==> event(jwt_server_cert_claim_create(claim_pk,subject_and_san,issuer,exp)) is true.
+Query event(CertClaimVerify(claim_pk,subject_and_san,issuer,exp)) ==> event(CertClaimSign(claim_pk,subject_and_san,issuer,exp)) is true.
 
 Query not event(real_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) is false.
 
-Query not event(app_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) is false.
+Query not event(app_conn_real(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) is false.
 
-Query event(real_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) ==> event(app_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) is true.
+Query event(real_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) ==> event(app_conn_real(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) is true.
 
-Query not event(app_reject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer)) is false.
+Query not event(app_reject_conn(server_hostname,server_cert_subject_and_san,rogue_cert_issuer)) is false.
 
 Query not event(rogue_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) is true.
 
-Query not event(app_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) is true.
+Query not event(app_conn_rogue(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) is true.
 
-Query event(rogue_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) ==> event(app_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) is true.
+Query event(rogue_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) ==> event(app_conn_rogue(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) is true.
 
 --------------------------------------------------------------
 

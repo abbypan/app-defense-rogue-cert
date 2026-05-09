@@ -154,17 +154,19 @@ reduc forall content: bitstring, sk: skey, now: timestamp;
 
 
 
-event jwt_claim_signing_key_create(pkey, pkey, timestamp).
-event jwt_claim_signing_key_verify(pkey, pkey, timestamp).
-event jwt_server_cert_claim_create(pkey, bitstring, bitstring, timestamp).
-event jwt_server_cert_claim_verify(pkey, bitstring, bitstring, timestamp).
+event ClaimKeySign(pkey, pkey, timestamp).
+event ClaimKeyVerify(pkey, pkey, timestamp).
+event CertClaimSign(pkey, bitstring, bitstring, timestamp).
+event CertClaimVerify(pkey, bitstring, bitstring, timestamp).
 
 
 event real_server_conn(bitstring, bitstring, bitstring, bitstring, bitstring).
 event rogue_server_conn(bitstring, bitstring, bitstring, bitstring, bitstring).
 
-event app_conn(bitstring, bitstring, bitstring, bitstring, bitstring).
-event app_reject(bitstring, bitstring, bitstring).
+event app_conn_real(bitstring, bitstring, bitstring, bitstring, bitstring).
+event app_conn_rogue(bitstring, bitstring, bitstring, bitstring, bitstring).
+
+event app_reject_conn(bitstring, bitstring, bitstring).
 
 
 event mitm_fake_server(bitstring, bitstring, bitstring, bitstring, bitstring).
