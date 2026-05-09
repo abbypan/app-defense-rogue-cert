@@ -7,13 +7,13 @@ Process 0 (that is, the initial process):
     {5}let good_exp: timestamp = succ_t(curr) in
     {6}let content: bitstring = pk2s(pk(sk_claim_signing)) in
     {7}let token: bitstring = jwt_sign(header,content,good_exp,sk_app_signing) in
-    {8}event ClaimKeySign(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
+    {8}event ClaimKeySign(sk_app_signing,pk(sk_claim_signing),good_exp);
     {9}out(c, token);
     {10}let header2: bitstring = pk2s(pk(sk_claim_signing)) in
     {11}let good_exp2: timestamp = succ_t(curr) in
     {12}let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
     {13}let token2: bitstring = jwt_sign(header2,content2,good_exp2,sk_claim_signing) in
-    {14}event CertClaimSign(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+    {14}event CertClaimSign(sk_claim_signing,server_cert_subject_and_san,real_cert_issuer,good_exp2);
     {15}out(c, token2);
     {16}in(c, client_hello(rand_c: bitstring,pk_c: pkey));
     {17}let c_hello: bitstring = client_hello(rand_c,pk_c) in
@@ -95,13 +95,13 @@ Process 0 (that is, the initial process):
     {5}let good_exp: timestamp = succ_t(curr) in
     {3}let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
     {2}let sk_app_signing: skey = gen_sk_for_id(app_signing) in
-    {8}event ClaimKeySign(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
+    {8}event ClaimKeySign(sk_app_signing,pk(sk_claim_signing),good_exp);
     {6}let content: bitstring = pk2s(pk(sk_claim_signing)) in
     {4}let header: bitstring = pk2s(pk(sk_app_signing)) in
     {7}let token: bitstring = jwt_sign(header,content,good_exp,sk_app_signing) in
     {9}out(c, token);
     {11}let good_exp2: timestamp = succ_t(curr) in
-    {14}event CertClaimSign(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+    {14}event CertClaimSign(sk_claim_signing,server_cert_subject_and_san,real_cert_issuer,good_exp2);
     {12}let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
     {10}let header2: bitstring = pk2s(pk(sk_claim_signing)) in
     {13}let token2: bitstring = jwt_sign(header2,content2,good_exp2,sk_claim_signing) in
@@ -249,13 +249,13 @@ New processes:
         let good_exp: timestamp = succ_t(curr) in
         let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
         let sk_app_signing: skey = gen_sk_for_id(app_signing) in
-        event ClaimKeySign(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
+        event ClaimKeySign(sk_app_signing,pk(sk_claim_signing),good_exp);
         let content: bitstring = pk2s(pk(sk_claim_signing)) in
         let header: bitstring = pk2s(pk(sk_app_signing)) in
         let token: bitstring = jwt_sign(header,content,good_exp,sk_app_signing) in
         out(c, token);
         let good_exp2: timestamp = succ_t(curr) in
-        event CertClaimSign(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+        event CertClaimSign(sk_claim_signing,server_cert_subject_and_san,real_cert_issuer,good_exp2);
         let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
         let header2: bitstring = pk2s(pk(sk_claim_signing)) in
         let token2: bitstring = jwt_sign(header2,content2,good_exp2,sk_claim_signing) in
@@ -360,7 +360,7 @@ New processes:
 
 1st process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-1st process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+1st process: event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 1st process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -377,7 +377,7 @@ Additional knowledge of the attacker:
 --------------------------------------------------------------
 1st process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-1st process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+1st process: event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 1st process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -510,21 +510,21 @@ New processes:
 The event ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) is executed at {59} in copy a.
 A trace has been found.
 RESULT not event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) is false.
--- Query not event(ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) in process 1.
+-- Query not event(ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) in process 1.
 Translating the process into Horn clauses...
 Completing...
 200 rules inserted. Base: 153 rules (74 with conclusion selected). Queue: 12 rules.
-Starting query not event(ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1))
-goal reachable: event(ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[])))
+Starting query not event(ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),exp_recv_1))
+goal reachable: event(ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr[])))
 
 Derivation:
 
-1. Event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[])) may be executed at {8}.
-event(ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))).
+1. Event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr[])) may be executed at {8}.
+event(ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))).
 
-2. By 1, event(ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))).
+2. By 1, event(ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))).
 The goal is reached, represented in the following fact:
-event(ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))).
+event(ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))).
 
 
 Initial state
@@ -541,13 +541,13 @@ New processes:
         let good_exp: timestamp = succ_t(curr) in
         let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
         let sk_app_signing: skey = gen_sk_for_id(app_signing) in
-        event ClaimKeySign(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
+        event ClaimKeySign(sk_app_signing,pk(sk_claim_signing),good_exp);
         let content: bitstring = pk2s(pk(sk_claim_signing)) in
         let header: bitstring = pk2s(pk(sk_app_signing)) in
         let token: bitstring = jwt_sign(header,content,good_exp,sk_app_signing) in
         out(c, token);
         let good_exp2: timestamp = succ_t(curr) in
-        event CertClaimSign(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+        event CertClaimSign(sk_claim_signing,server_cert_subject_and_san,real_cert_issuer,good_exp2);
         let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
         let header2: bitstring = pk2s(pk(sk_claim_signing)) in
         let token2: bitstring = jwt_sign(header2,content2,good_exp2,sk_claim_signing) in
@@ -644,7 +644,7 @@ New processes:
 
 1st process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-1st process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed; it is a goal
+1st process: event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed; it is a goal
 
 New processes:
     let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) in
@@ -652,7 +652,7 @@ New processes:
     let token: bitstring = jwt_sign(header,content,succ_t(curr),gen_sk_for_id(app_signing)) in
     out(c, token);
     let good_exp2: timestamp = succ_t(curr) in
-    event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+    event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
     let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
     let header2: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) in
     let token2: bitstring = jwt_sign(header2,content2,good_exp2,gen_sk_for_id(claim_signing)) in
@@ -675,16 +675,16 @@ New processes:
     event real_server_conn(server_hostname,trans,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
 
 --------------------------------------------------------------
-The event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) is executed at {8} in copy a.
+The event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) is executed at {8} in copy a.
 A trace has been found.
-RESULT not event(ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) is false.
--- Query event(ClaimKeyVerify(app_pk,claim_pk,exp)) ==> event(ClaimKeySign(app_pk,claim_pk,exp)) in process 1.
+RESULT not event(ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) is false.
+-- Query event(ClaimKeyVerify(pk(app_sk),claim_pk,exp)) ==> event(ClaimKeySign(app_sk,claim_pk,exp)) in process 1.
 Translating the process into Horn clauses...
 Completing...
 200 rules inserted. Base: 161 rules (71 with conclusion selected). Queue: 19 rules.
-Starting query event(ClaimKeyVerify(app_pk,claim_pk,exp)) ==> event(ClaimKeySign(app_pk,claim_pk,exp))
-goal reachable: b-event(ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))) -> event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[])))
-RESULT event(ClaimKeyVerify(app_pk,claim_pk,exp)) ==> event(ClaimKeySign(app_pk,claim_pk,exp)) is true.
+Starting query event(ClaimKeyVerify(pk(app_sk),claim_pk,exp)) ==> event(ClaimKeySign(app_sk,claim_pk,exp))
+goal reachable: b-event(ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr[]))) -> event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr[])))
+RESULT event(ClaimKeyVerify(pk(app_sk),claim_pk,exp)) ==> event(ClaimKeySign(app_sk,claim_pk,exp)) is true.
 -- Query not event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1)) in process 1.
 Translating the process into Horn clauses...
 Completing...
@@ -787,13 +787,13 @@ New processes:
         let good_exp: timestamp = succ_t(curr) in
         let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
         let sk_app_signing: skey = gen_sk_for_id(app_signing) in
-        event ClaimKeySign(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
+        event ClaimKeySign(sk_app_signing,pk(sk_claim_signing),good_exp);
         let content: bitstring = pk2s(pk(sk_claim_signing)) in
         let header: bitstring = pk2s(pk(sk_app_signing)) in
         let token: bitstring = jwt_sign(header,content,good_exp,sk_app_signing) in
         out(c, token);
         let good_exp2: timestamp = succ_t(curr) in
-        event CertClaimSign(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+        event CertClaimSign(sk_claim_signing,server_cert_subject_and_san,real_cert_issuer,good_exp2);
         let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
         let header2: bitstring = pk2s(pk(sk_claim_signing)) in
         let token2: bitstring = jwt_sign(header2,content2,good_exp2,sk_claim_signing) in
@@ -898,7 +898,7 @@ New processes:
 
 2nd process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-2nd process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+2nd process: event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 2nd process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -915,7 +915,7 @@ Additional knowledge of the attacker:
 --------------------------------------------------------------
 2nd process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-2nd process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+2nd process: event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 2nd process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -936,7 +936,7 @@ Additional knowledge of the attacker:
 
 1st process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-1st process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+1st process: event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 1st process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -948,7 +948,7 @@ Additional knowledge of the attacker:
 
 1st process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-1st process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+1st process: event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 1st process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -1181,21 +1181,21 @@ New processes:
 The event CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) is executed at {66} in copy a.
 A trace has been found.
 RESULT not event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1)) is false.
--- Query not event(CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1)) in process 1.
+-- Query not event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,exp2_1)) in process 1.
 Translating the process into Horn clauses...
 Completing...
 200 rules inserted. Base: 153 rules (74 with conclusion selected). Queue: 12 rules.
-Starting query not event(CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1))
-goal reachable: event(CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[])))
+Starting query not event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,exp2_1))
+goal reachable: event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[])))
 
 Derivation:
 
-1. Event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[])) may be executed at {14}.
-event(CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))).
+1. Event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[])) may be executed at {14}.
+event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))).
 
-2. By 1, event(CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))).
+2. By 1, event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))).
 The goal is reached, represented in the following fact:
-event(CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))).
+event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))).
 
 
 Initial state
@@ -1212,13 +1212,13 @@ New processes:
         let good_exp: timestamp = succ_t(curr) in
         let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
         let sk_app_signing: skey = gen_sk_for_id(app_signing) in
-        event ClaimKeySign(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
+        event ClaimKeySign(sk_app_signing,pk(sk_claim_signing),good_exp);
         let content: bitstring = pk2s(pk(sk_claim_signing)) in
         let header: bitstring = pk2s(pk(sk_app_signing)) in
         let token: bitstring = jwt_sign(header,content,good_exp,sk_app_signing) in
         out(c, token);
         let good_exp2: timestamp = succ_t(curr) in
-        event CertClaimSign(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+        event CertClaimSign(sk_claim_signing,server_cert_subject_and_san,real_cert_issuer,good_exp2);
         let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
         let header2: bitstring = pk2s(pk(sk_claim_signing)) in
         let token2: bitstring = jwt_sign(header2,content2,good_exp2,sk_claim_signing) in
@@ -1315,7 +1315,7 @@ New processes:
 
 1st process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-1st process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+1st process: event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 1st process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -1333,7 +1333,7 @@ Additional knowledge of the attacker:
 --------------------------------------------------------------
 1st process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-1st process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed; it is a goal
+1st process: event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed; it is a goal
 
 New processes:
     let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
@@ -1358,16 +1358,16 @@ New processes:
     event real_server_conn(server_hostname,trans,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
 
 --------------------------------------------------------------
-The event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) is executed at {14} in copy a.
+The event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) is executed at {14} in copy a.
 A trace has been found.
-RESULT not event(CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1)) is false.
--- Query event(CertClaimVerify(claim_pk,subject_and_san,issuer,exp)) ==> event(CertClaimSign(claim_pk,subject_and_san,issuer,exp)) in process 1.
+RESULT not event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,exp2_1)) is false.
+-- Query event(CertClaimVerify(pk(claim_sk),subject_and_san,issuer,exp)) ==> event(CertClaimSign(claim_sk,subject_and_san,issuer,exp)) in process 1.
 Translating the process into Horn clauses...
 Completing...
 200 rules inserted. Base: 169 rules (70 with conclusion selected). Queue: 29 rules.
-Starting query event(CertClaimVerify(claim_pk,subject_and_san,issuer,exp)) ==> event(CertClaimSign(claim_pk,subject_and_san,issuer,exp))
-goal reachable: b-event(CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))) -> event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[])))
-RESULT event(CertClaimVerify(claim_pk,subject_and_san,issuer,exp)) ==> event(CertClaimSign(claim_pk,subject_and_san,issuer,exp)) is true.
+Starting query event(CertClaimVerify(pk(claim_sk),subject_and_san,issuer,exp)) ==> event(CertClaimSign(claim_sk,subject_and_san,issuer,exp))
+goal reachable: b-event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[]))) -> event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr[])))
+RESULT event(CertClaimVerify(pk(claim_sk),subject_and_san,issuer,exp)) ==> event(CertClaimSign(claim_sk,subject_and_san,issuer,exp)) is true.
 -- Query not event(real_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) in process 1.
 Translating the process into Horn clauses...
 Completing...
@@ -1590,13 +1590,13 @@ New processes:
         let good_exp: timestamp = succ_t(curr) in
         let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
         let sk_app_signing: skey = gen_sk_for_id(app_signing) in
-        event ClaimKeySign(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
+        event ClaimKeySign(sk_app_signing,pk(sk_claim_signing),good_exp);
         let content: bitstring = pk2s(pk(sk_claim_signing)) in
         let header: bitstring = pk2s(pk(sk_app_signing)) in
         let token: bitstring = jwt_sign(header,content,good_exp,sk_app_signing) in
         out(c, token);
         let good_exp2: timestamp = succ_t(curr) in
-        event CertClaimSign(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+        event CertClaimSign(sk_claim_signing,server_cert_subject_and_san,real_cert_issuer,good_exp2);
         let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
         let header2: bitstring = pk2s(pk(sk_claim_signing)) in
         let token2: bitstring = jwt_sign(header2,content2,good_exp2,sk_claim_signing) in
@@ -1701,7 +1701,7 @@ New processes:
 
 4th process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-4th process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+4th process: event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 4th process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -1718,7 +1718,7 @@ Additional knowledge of the attacker:
 --------------------------------------------------------------
 4th process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-4th process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+4th process: event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 4th process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -1739,7 +1739,7 @@ Additional knowledge of the attacker:
 
 3rd process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-3rd process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+3rd process: event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 3rd process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -1751,7 +1751,7 @@ Additional knowledge of the attacker:
 
 3rd process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-3rd process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+3rd process: event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 3rd process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -1769,7 +1769,7 @@ Additional knowledge of the attacker:
 
 2nd process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-2nd process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+2nd process: event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 2nd process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -1781,7 +1781,7 @@ Additional knowledge of the attacker:
 
 2nd process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-2nd process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+2nd process: event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 2nd process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -1799,7 +1799,7 @@ Additional knowledge of the attacker:
 
 1st process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-1st process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+1st process: event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 1st process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -1811,7 +1811,7 @@ Additional knowledge of the attacker:
 
 1st process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-1st process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+1st process: event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 1st process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -2659,13 +2659,13 @@ New processes:
         let good_exp: timestamp = succ_t(curr) in
         let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
         let sk_app_signing: skey = gen_sk_for_id(app_signing) in
-        event ClaimKeySign(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
+        event ClaimKeySign(sk_app_signing,pk(sk_claim_signing),good_exp);
         let content: bitstring = pk2s(pk(sk_claim_signing)) in
         let header: bitstring = pk2s(pk(sk_app_signing)) in
         let token: bitstring = jwt_sign(header,content,good_exp,sk_app_signing) in
         out(c, token);
         let good_exp2: timestamp = succ_t(curr) in
-        event CertClaimSign(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+        event CertClaimSign(sk_claim_signing,server_cert_subject_and_san,real_cert_issuer,good_exp2);
         let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
         let header2: bitstring = pk2s(pk(sk_claim_signing)) in
         let token2: bitstring = jwt_sign(header2,content2,good_exp2,sk_claim_signing) in
@@ -2770,7 +2770,7 @@ New processes:
 
 4th process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-4th process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+4th process: event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 4th process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -2787,7 +2787,7 @@ Additional knowledge of the attacker:
 --------------------------------------------------------------
 4th process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-4th process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+4th process: event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 4th process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -2808,7 +2808,7 @@ Additional knowledge of the attacker:
 
 3rd process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-3rd process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+3rd process: event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 3rd process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -2820,7 +2820,7 @@ Additional knowledge of the attacker:
 
 3rd process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-3rd process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+3rd process: event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 3rd process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -2838,7 +2838,7 @@ Additional knowledge of the attacker:
 
 2nd process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-2nd process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+2nd process: event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 2nd process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -2850,7 +2850,7 @@ Additional knowledge of the attacker:
 
 2nd process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-2nd process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+2nd process: event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 2nd process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -2868,7 +2868,7 @@ Additional knowledge of the attacker:
 
 1st process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-1st process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+1st process: event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 1st process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -2880,7 +2880,7 @@ Additional knowledge of the attacker:
 
 1st process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-1st process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+1st process: event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 1st process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -3708,13 +3708,13 @@ New processes:
         let good_exp: timestamp = succ_t(curr) in
         let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
         let sk_app_signing: skey = gen_sk_for_id(app_signing) in
-        event ClaimKeySign(pk(sk_app_signing),pk(sk_claim_signing),good_exp);
+        event ClaimKeySign(sk_app_signing,pk(sk_claim_signing),good_exp);
         let content: bitstring = pk2s(pk(sk_claim_signing)) in
         let header: bitstring = pk2s(pk(sk_app_signing)) in
         let token: bitstring = jwt_sign(header,content,good_exp,sk_app_signing) in
         out(c, token);
         let good_exp2: timestamp = succ_t(curr) in
-        event CertClaimSign(pk(sk_claim_signing),server_cert_subject_and_san,real_cert_issuer,good_exp2);
+        event CertClaimSign(sk_claim_signing,server_cert_subject_and_san,real_cert_issuer,good_exp2);
         let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) in
         let header2: bitstring = pk2s(pk(sk_claim_signing)) in
         let token2: bitstring = jwt_sign(header2,content2,good_exp2,sk_claim_signing) in
@@ -3831,7 +3831,7 @@ New processes:
 
 2nd process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-2nd process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+2nd process: event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 2nd process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -3848,7 +3848,7 @@ Additional knowledge of the attacker:
 --------------------------------------------------------------
 2nd process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-2nd process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+2nd process: event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 2nd process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -3869,7 +3869,7 @@ Additional knowledge of the attacker:
 
 1st process: let sk_app_signing: skey = gen_sk_for_id(app_signing) succeeds
 
-1st process: event ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
+1st process: event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),succ_t(curr)) executed
 
 1st process: let content: bitstring = pk2s(pk(gen_sk_for_id(claim_signing))) succeeds
 
@@ -3881,7 +3881,7 @@ Additional knowledge of the attacker:
 
 1st process: let good_exp2: timestamp = succ_t(curr) succeeds
 
-1st process: event CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
+1st process: event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,succ_t(curr)) executed
 
 1st process: let content2: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
 
@@ -4461,15 +4461,15 @@ Verification summary:
 
 Query not event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) is false.
 
-Query not event(ClaimKeySign(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) is false.
+Query not event(ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),exp_recv_1)) is false.
 
-Query event(ClaimKeyVerify(app_pk,claim_pk,exp)) ==> event(ClaimKeySign(app_pk,claim_pk,exp)) is true.
+Query event(ClaimKeyVerify(pk(app_sk),claim_pk,exp)) ==> event(ClaimKeySign(app_sk,claim_pk,exp)) is true.
 
 Query not event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1)) is false.
 
-Query not event(CertClaimSign(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,exp2_1)) is false.
+Query not event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,exp2_1)) is false.
 
-Query event(CertClaimVerify(claim_pk,subject_and_san,issuer,exp)) ==> event(CertClaimSign(claim_pk,subject_and_san,issuer,exp)) is true.
+Query event(CertClaimVerify(pk(claim_sk),subject_and_san,issuer,exp)) ==> event(CertClaimSign(claim_sk,subject_and_san,issuer,exp)) is true.
 
 Query not event(real_server_conn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) is false.
 

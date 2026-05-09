@@ -8,14 +8,14 @@ let RealServer =
   let good_exp = succ_t(curr) in
   let content = pk2s(pk(sk_claim_signing)) in
   let token = jwt_sign(header, content, good_exp, sk_app_signing) in
-  event ClaimKeySign(pk(sk_app_signing), pk(sk_claim_signing), good_exp);
+  event ClaimKeySign(sk_app_signing, pk(sk_claim_signing), good_exp);
   out(c, token);
 
   let header2 = pk2s(pk(sk_claim_signing)) in
   let good_exp2 = succ_t(curr) in
   let content2 = cert_claim(server_cert_subject_and_san, real_cert_issuer) in
   let token2 = jwt_sign(header2, content2, good_exp2, sk_claim_signing) in
-  event CertClaimSign(pk(sk_claim_signing), server_cert_subject_and_san, real_cert_issuer, good_exp2);
+  event CertClaimSign(sk_claim_signing, server_cert_subject_and_san, real_cert_issuer, good_exp2);
   out(c, token2);
   
   in(c, client_hello(rand_c, pk_c));
@@ -141,13 +141,13 @@ query exp_recv: timestamp;
   event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)), pk(gen_sk_for_id(claim_signing)), exp_recv)).
 
 query exp_recv: timestamp;
-  event(ClaimKeySign(pk(gen_sk_for_id(app_signing)), pk(gen_sk_for_id(claim_signing)), exp_recv)).
+  event(ClaimKeySign(gen_sk_for_id(app_signing), pk(gen_sk_for_id(claim_signing)), exp_recv)).
 
 (* Query: JWT key-chain authenticity.
    True  = every verification event has a matching creation event by RealServer.
    False = some verified claim-signing key has no matching creation event. *)
-query app_pk: pkey, claim_pk: pkey, exp: timestamp;
-  event(ClaimKeyVerify(app_pk, claim_pk, exp)) ==> event(ClaimKeySign(app_pk, claim_pk, exp)).
+query app_sk: skey, claim_pk: pkey, exp: timestamp;
+  event(ClaimKeyVerify(pk(app_sk), claim_pk, exp)) ==> event(ClaimKeySign(app_sk, claim_pk, exp)).
 
 (* Query: JWT server-cert-claim verification reachability.
    True  = the app can verify the real server certificate claim from claim_signing.
@@ -156,14 +156,14 @@ query exp2: timestamp;
   event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)), server_cert_subject_and_san, real_cert_issuer, exp2)).
 
   query exp2: timestamp;
-  event(CertClaimSign(pk(gen_sk_for_id(claim_signing)), server_cert_subject_and_san, real_cert_issuer, exp2)).
+  event(CertClaimSign(gen_sk_for_id(claim_signing), server_cert_subject_and_san, real_cert_issuer, exp2)).
 
 
 (* Query: JWT server-cert-claim authenticity.
    True  = every verified cert claim has a matching creation event.
    False = a cert claim can be verified without being legitimately created. *)
-query claim_pk: pkey, subject_and_san: bitstring, issuer: bitstring, exp: timestamp;
-  event(CertClaimVerify(claim_pk, subject_and_san, issuer, exp)) ==> event(CertClaimSign(claim_pk, subject_and_san, issuer, exp)).
+query claim_sk: skey, subject_and_san: bitstring, issuer: bitstring, exp: timestamp;
+  event(CertClaimVerify(pk(claim_sk), subject_and_san, issuer, exp)) ==> event(CertClaimSign(claim_sk, subject_and_san, issuer, exp)).
 
 
 

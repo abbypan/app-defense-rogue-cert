@@ -154,9 +154,9 @@ reduc forall content: bitstring, sk: skey, now: timestamp;
 
 
 
-event ClaimKeySign(pkey, pkey, timestamp).
+event ClaimKeySign(skey, pkey, timestamp).
 event ClaimKeyVerify(pkey, pkey, timestamp).
-event CertClaimSign(pkey, bitstring, bitstring, timestamp).
+event CertClaimSign(skey, bitstring, bitstring, timestamp).
 event CertClaimVerify(pkey, bitstring, bitstring, timestamp).
 
 
