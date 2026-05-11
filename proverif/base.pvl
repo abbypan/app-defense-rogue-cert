@@ -55,12 +55,10 @@ fun gen_cert(pkey, bitstring, bitstring, bitstring) : bitstring [data].
 fun cert_content(pkey, bitstring, bitstring): bitstring [data]. 
 
 
-const host_true: bitstring.
-reduc check_host(server_hostname, server_cert_subject_and_san) = host_true.
+reduc check_host(server_hostname, server_cert_subject_and_san) = true.
 
-const issuer_true: bitstring.
-reduc check_issuer(real_cert_issuer, system_ca_list) = issuer_true;
-check_issuer(rogue_cert_issuer, system_ca_list) = issuer_true.
+reduc check_issuer(real_cert_issuer, system_ca_list) = true;
+check_issuer(rogue_cert_issuer, system_ca_list) = true.
 
 
 

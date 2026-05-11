@@ -7,16 +7,16 @@ let RealServer =
   let header = pk2s(pk(sk_app_signing)) in
   let good_exp = succ_t(curr) in
   let content = pk2s(pk(sk_claim_signing)) in
-  let token = jwt_sign(header, content, good_exp, sk_app_signing) in
+  let token_k = jwt_sign(header, content, good_exp, sk_app_signing) in
   event ClaimKeySign(sk_app_signing, pk(sk_claim_signing), good_exp);
-  out(c, token);
+  out(c, token_k);
 
   let header2 = pk2s(pk(sk_claim_signing)) in
   let good_exp2 = succ_t(curr) in
   let content2 = cert_claim(server_cert_subject_and_san, real_cert_issuer) in
-  let token2 = jwt_sign(header2, content2, good_exp2, sk_claim_signing) in
+  let token_c = jwt_sign(header2, content2, good_exp2, sk_claim_signing) in
   event CertClaimSign(sk_claim_signing, server_cert_subject_and_san, real_cert_issuer, good_exp2);
-  out(c, token2);
+  out(c, token_c);
   
   in(c, client_hello(rand_c, pk_c));
   let c_hello = client_hello(rand_c, pk_c) in
@@ -64,9 +64,9 @@ let DNSHijackingRogueServer =
   if check_authtag(ss_rogue, sens_cipher) = true
   then (
   let sens_d = dec_data(ss_rogue, sens_cipher) in
-  event MSConn(server_hostname, rogue_trans, sens_d, rogue_s_cert, sens_cipher)
+   event MSConn(server_hostname, rogue_trans, sens_d, rogue_s_cert, sens_cipher)
   )
-  .
+   .
 
 let LegitimateApp =
   new sk_app_temp: skey;
@@ -92,7 +92,7 @@ let LegitimateApp =
   out(c, c_hello);
  
   in(c, 
-  server_hello_handshake(hostn, sip, smech, server_hello(rand_s, pk_recv), 
+  server_hello_handshake(hostname, sip, smech, server_hello(rand_s, pk_recv), 
   gen_cert(cert_pk_recv, subj_and_san_recv, issuer_recv, cert_sig_recv),
   s_handshake_sig)
   );
@@ -106,26 +106,27 @@ let LegitimateApp =
   
     
 
- if  (check_host(hostn, subj_and_san_recv) = host_true) &&
+ if  (check_host(hostname, subj_and_san_recv) = true) &&
      (sig_verify(cert_content(cert_pk_recv, subj_and_san_recv, issuer_recv), cert_sig_recv, pk(gen_sk_for_id(issuer_recv))) = true) &&
-     (check_issuer(issuer_recv, system_ca_list) = issuer_true) &&
+     (check_issuer(issuer_recv, system_ca_list) = true) &&
      (sig_verify(th, s_handshake_sig, cert_pk_recv) = true) &&
-     (check_host(hostn, subject_and_san_claim) = host_true) &&
+     (check_host(hostname, subject_and_san_claim) = true) &&
      (issuer_claim = issuer_recv)
       then
     (
       let ss = session_key(client_shared_secret(sk_app_temp, pk_recv), th) in
+      let sensitive_cipher = enc_data(ss, sensitive_data) in
       if issuer_recv = real_cert_issuer then (
-        event AppConnRS(hostn, th, sensitive_data, s_cert, enc_data(ss, sensitive_data));
-        out(c, enc_data(ss, sensitive_data))
+        event AppConnRS(hostname, th, sensitive_data, s_cert, sensitive_cipher);
+        out(c, sensitive_cipher)
       )
       else if issuer_recv = rogue_cert_issuer then (
-        event AppConnMS(hostn, th, sensitive_data, s_cert, enc_data(ss, sensitive_data));
-        out(c, enc_data(ss, sensitive_data))
+        event AppConnMS(hostname, th, sensitive_data, s_cert, sensitive_cipher);
+        out(c, sensitive_cipher)
       )
     )
     else
-      event AppRejectConn(hostn, subj_and_san_recv, issuer_recv)
+      event AppRejectConn(hostname, subj_and_san_recv, issuer_recv)
       .
 
 (* Query introduction:
@@ -135,7 +136,7 @@ let LegitimateApp =
    - False = ProVerif found a counterexample/attack trace. *)
 
 (* Query: JWT claim-signing-key verification reachability.
-   True  = the app can verify the claim-signing key token from app_signing.
+   True  = the app can verify the claim-signing key token_k from app_signing.
    False = this JWT verification path is unreachable. *)
 query exp_recv: timestamp;
   event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)), pk(gen_sk_for_id(claim_signing)), exp_recv)).
@@ -164,6 +165,8 @@ query exp2: timestamp;
    False = a cert claim can be verified without being legitimately created. *)
 query claim_sk: skey, subject_and_san: bitstring, issuer: bitstring, exp: timestamp;
   event(CertClaimVerify(pk(claim_sk), subject_and_san, issuer, exp)) ==> event(CertClaimSign(claim_sk, subject_and_san, issuer, exp)).
+
+
 
 
 (* Query: Real-server receive path reachability.
@@ -222,6 +225,7 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
    False = rejection event never occurs in this model. *)
 query event(AppRejectConn(server_hostname, server_cert_subject_and_san, rogue_cert_issuer)).
 
+
 (* Query: Rogue-server acceptance reachability.
    True  = there exists a trace where the rogue server accepts/decrypts data under the modeled rogue transcript.
    False = rogue acceptance/decryption is unreachable in this model. *)
@@ -234,7 +238,6 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
   ),
   sens_d, 
   gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_cert_issuer))), sens_cipher)).
-
 
 (* Query: Client acceptance path reachability.
    True  = there exists a trace where the app accepts the modeled rogue transcript and sends ciphertext.

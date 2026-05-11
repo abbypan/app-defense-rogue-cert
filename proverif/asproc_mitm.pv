@@ -7,16 +7,16 @@ let RealServer =
   let header = pk2s(pk(sk_app_signing)) in
   let good_exp = succ_t(curr) in
   let content = pk2s(pk(sk_claim_signing)) in
-  let token = jwt_sign(header, content, good_exp, sk_app_signing) in
+  let token_k = jwt_sign(header, content, good_exp, sk_app_signing) in
   event ClaimKeySign(sk_app_signing, pk(sk_claim_signing), good_exp);
-  out(cs, token);
+  out(cs, token_k);
 
   let header2 = pk2s(pk(sk_claim_signing)) in
   let good_exp2 = succ_t(curr) in
   let content2 = cert_claim(server_cert_subject_and_san, real_cert_issuer) in
-  let token2 = jwt_sign(header2, content2, good_exp2, sk_claim_signing) in
+  let token_c = jwt_sign(header2, content2, good_exp2, sk_claim_signing) in
   event CertClaimSign(sk_claim_signing, server_cert_subject_and_san, real_cert_issuer, good_exp2);
-  out(cs, token2);
+  out(cs, token_c);
   
   in(cs, client_hello(rand_c, pk_c));
   let c_hello = client_hello(rand_c, pk_c) in
@@ -76,11 +76,7 @@ let MitmServer =
     let sens_d = dec_data(ss_mitm_c, sens_cipher) in
     event MSFakeServer(hostn_s, trans_mitm_c, sens_d, rogue_s_cert, sens_cipher);
 
-    let trans_mitm_s = transcript_hash(
-      rogue_c_hello,
-      real_s_hello,
-      real_s_cert
-    ) in
+    let trans_mitm_s = transcript_hash(rogue_c_hello, real_s_hello, real_s_cert) in
     let ss_mitm_s = session_key(client_shared_secret(sk_rogue_server_temp, pk_srv), trans_mitm_s) in
     let sens_cipher2 = enc_data(ss_mitm_s, sens_d) in
    
@@ -113,7 +109,7 @@ let LegitimateApp =
   out(cc, c_hello);
  
   in(cc, 
-  server_hello_handshake(hostn, sip, smech, server_hello(rand_s, pk_recv), 
+  server_hello_handshake(hostname, sip, smech, server_hello(rand_s, pk_recv), 
   gen_cert(cert_pk_recv, subj_and_san_recv, issuer_recv, cert_sig_recv),
   s_handshake_sig)
   );
@@ -127,26 +123,27 @@ let LegitimateApp =
   
     
 
- if  (check_host(hostn, subj_and_san_recv) = host_true) &&
+ if  (check_host(hostname, subj_and_san_recv) = true) &&
      (sig_verify(cert_content(cert_pk_recv, subj_and_san_recv, issuer_recv), cert_sig_recv, pk(gen_sk_for_id(issuer_recv))) = true) &&
-     (check_issuer(issuer_recv, system_ca_list) = issuer_true) &&
+     (check_issuer(issuer_recv, system_ca_list) = true) &&
      (sig_verify(th, s_handshake_sig, cert_pk_recv) = true) &&
-     (check_host(hostn, subject_and_san_claim) = host_true) &&
+     (check_host(hostname, subject_and_san_claim) = true) &&
      (issuer_claim = issuer_recv)
       then
     (
       let ss = session_key(client_shared_secret(sk_app_temp, pk_recv), th) in
+      let sensitive_cipher = enc_data(ss, sensitive_data) in
       if issuer_recv = real_cert_issuer then (
-        event AppConnRS(hostn, th, sensitive_data, s_cert, enc_data(ss, sensitive_data));
-        out(cc, enc_data(ss, sensitive_data))
+        event AppConnRS(hostname, th, sensitive_data, s_cert, sensitive_cipher);
+        out(cc, sensitive_cipher)
       )
       else if issuer_recv = rogue_cert_issuer then (
-        event AppConnMS(hostn, th, sensitive_data, s_cert, enc_data(ss, sensitive_data));
-        out(cc, enc_data(ss, sensitive_data))
+        event AppConnMS(hostname, th, sensitive_data, s_cert, sensitive_cipher);
+        out(cc, sensitive_cipher)
       )
     )
     else
-      event AppRejectConn(hostn, subj_and_san_recv, issuer_recv)
+      event AppRejectConn(hostname, subj_and_san_recv, issuer_recv)
       .
 
 (* Query introduction:
@@ -156,7 +153,7 @@ let LegitimateApp =
    - False = ProVerif found a counterexample/attack trace. *)
 
 (* Query: JWT claim-signing-key verification reachability.
-   True  = the app can verify the claim-signing key token from app_signing.
+   True  = the app can verify the claim-signing key token_k from app_signing.
    False = this JWT verification path is unreachable. *)
 query exp_recv: timestamp;
   event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)), pk(gen_sk_for_id(claim_signing)), exp_recv)).
