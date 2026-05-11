@@ -10,13 +10,13 @@ Process 0 (that is, the initial process):
     {8}new sk_real_server_temp: skey;
     {9}new random_real_server: bitstring;
     {10}let real_s_hello: bitstring = server_hello(random_real_server,pk(sk_real_server_temp)) in
-    {11}let trans: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
-    {12}let s_handshake_sig: bitstring = sig_sign(trans,sk_real_server_cert) in
+    {11}let th: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
+    {12}let s_handshake_sig: bitstring = sig_sign(th,sk_real_server_cert) in
     {13}out(c, server_hello_handshake(server_hostname,server_ip,server_mechine,real_s_hello,real_s_cert,s_handshake_sig));
-    {14}let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),trans) in
+    {14}let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),th) in
     {15}in(c, sens_cipher: bitstring);
     {16}if (check_authtag(ss,sens_cipher) = true) then
-    {17}event RSConn(server_hostname,trans,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
+    {17}event RSConn(server_hostname,th,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
 ) | (
     {18}!
     {19}new sk_rogue_server_temp: skey;
@@ -42,23 +42,23 @@ Process 0 (that is, the initial process):
     {38}new sensitive_data: bitstring;
     {39}let c_hello_1: bitstring = client_hello(random_app,pk(sk_app_temp)) in
     {40}out(c, c_hello_1);
-    {41}in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
+    {41}in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
     {42}let s_hello: bitstring = server_hello(rand_s,pk_recv) in
-    {43}let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,iss,cert_sig_recv) in
-    {44}let trans_1: bitstring = transcript_hash(client_hello(random_app,pk(sk_app_temp)),server_hello(rand_s,pk_recv),s_cert) in
-    {45}if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && (sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
+    {43}let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,issuer_recv,cert_sig_recv) in
+    {44}let th_1: bitstring = transcript_hash(client_hello(random_app,pk(sk_app_temp)),server_hello(rand_s,pk_recv),s_cert) in
+    {45}if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,issuer_recv),cert_sig_recv,pk(gen_sk_for_id(issuer_recv))) = true) && ((check_issuer(issuer_recv,system_ca_list) = issuer_true) && (sig_verify(th_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
     (
-        {46}let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),trans_1) in
-        {47}if (iss = real_cert_issuer) then
-            {48}event AppConnRS(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+        {46}let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),th_1) in
+        {47}if (issuer_recv = real_cert_issuer) then
+            {48}event AppConnRS(hostn,th_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
             {49}out(c, enc_data(ss_1,sensitive_data))
         else
-            {50}if (iss = rogue_cert_issuer) then
-            {51}event AppConnMS(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+            {50}if (issuer_recv = rogue_cert_issuer) then
+            {51}event AppConnMS(hostn,th_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
             {52}out(c, enc_data(ss_1,sensitive_data))
     )
     else
-        {53}event AppRejectConn(hostn,subj_and_san_recv,iss)
+        {53}event AppRejectConn(hostn,subj_and_san_recv,issuer_recv)
 )
 
 --  Process 1 (that is, process 0, with let moved downwards):
@@ -73,13 +73,13 @@ Process 0 (that is, the initial process):
     {6}let real_s_cert_sig: bitstring = sig_sign(cert_content(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer),sk_real_issuer) in
     {7}let real_s_cert: bitstring = gen_cert(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer,real_s_cert_sig) in
     {3}let c_hello: bitstring = client_hello(rand_c,pk_c) in
-    {11}let trans: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
-    {12}let s_handshake_sig: bitstring = sig_sign(trans,sk_real_server_cert) in
+    {11}let th: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
+    {12}let s_handshake_sig: bitstring = sig_sign(th,sk_real_server_cert) in
     {13}out(c, server_hello_handshake(server_hostname,server_ip,server_mechine,real_s_hello,real_s_cert,s_handshake_sig));
-    {14}let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),trans) in
+    {14}let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),th) in
     {15}in(c, sens_cipher: bitstring);
     {16}if (check_authtag(ss,sens_cipher) = true) then
-    {17}event RSConn(server_hostname,trans,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
+    {17}event RSConn(server_hostname,th,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
 ) | (
     {18}!
     {19}new sk_rogue_server_temp: skey;
@@ -105,22 +105,22 @@ Process 0 (that is, the initial process):
     {38}new sensitive_data: bitstring;
     {39}let c_hello_1: bitstring = client_hello(random_app,pk(sk_app_temp)) in
     {40}out(c, c_hello_1);
-    {41}in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
-    {43}let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,iss,cert_sig_recv) in
-    {44}let trans_1: bitstring = transcript_hash(client_hello(random_app,pk(sk_app_temp)),server_hello(rand_s,pk_recv),s_cert) in
-    {45}if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && (sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
+    {41}in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
+    {43}let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,issuer_recv,cert_sig_recv) in
+    {44}let th_1: bitstring = transcript_hash(client_hello(random_app,pk(sk_app_temp)),server_hello(rand_s,pk_recv),s_cert) in
+    {45}if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,issuer_recv),cert_sig_recv,pk(gen_sk_for_id(issuer_recv))) = true) && ((check_issuer(issuer_recv,system_ca_list) = issuer_true) && (sig_verify(th_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
     (
-        {46}let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),trans_1) in
-        {47}if (iss = real_cert_issuer) then
-            {48}event AppConnRS(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+        {46}let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),th_1) in
+        {47}if (issuer_recv = real_cert_issuer) then
+            {48}event AppConnRS(hostn,th_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
             {49}out(c, enc_data(ss_1,sensitive_data))
         else
-            {50}if (iss = rogue_cert_issuer) then
-            {51}event AppConnMS(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+            {50}if (issuer_recv = rogue_cert_issuer) then
+            {51}event AppConnMS(hostn,th_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
             {52}out(c, enc_data(ss_1,sensitive_data))
     )
     else
-        {53}event AppRejectConn(hostn,subj_and_san_recv,iss)
+        {53}event AppRejectConn(hostn,subj_and_san_recv,issuer_recv)
 )
 
 -- Query not event(RSConn(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) in process 1.
@@ -285,13 +285,13 @@ New processes:
         let real_s_cert_sig: bitstring = sig_sign(cert_content(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer),sk_real_issuer) in
         let real_s_cert: bitstring = gen_cert(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer,real_s_cert_sig) in
         let c_hello: bitstring = client_hello(rand_c,pk_c) in
-        let trans: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
-        let s_handshake_sig: bitstring = sig_sign(trans,sk_real_server_cert) in
+        let th: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
+        let s_handshake_sig: bitstring = sig_sign(th,sk_real_server_cert) in
         out(c, server_hello_handshake(server_hostname,server_ip,server_mechine,real_s_hello,real_s_cert,s_handshake_sig));
-        let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),trans) in
+        let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),th) in
         in(c, sens_cipher: bitstring);
         if (check_authtag(ss,sens_cipher) = true) then
-        event RSConn(server_hostname,trans,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
+        event RSConn(server_hostname,th,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
     ) | (
         !
         new sk_rogue_server_temp: skey;
@@ -317,22 +317,22 @@ New processes:
         new sensitive_data: bitstring;
         let c_hello_1: bitstring = client_hello(random_app,pk(sk_app_temp)) in
         out(c, c_hello_1);
-        in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
-        let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,iss,cert_sig_recv) in
-        let trans_1: bitstring = transcript_hash(client_hello(random_app,pk(sk_app_temp)),server_hello(rand_s,pk_recv),s_cert) in
-        if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && (sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
+        in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
+        let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,issuer_recv,cert_sig_recv) in
+        let th_1: bitstring = transcript_hash(client_hello(random_app,pk(sk_app_temp)),server_hello(rand_s,pk_recv),s_cert) in
+        if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,issuer_recv),cert_sig_recv,pk(gen_sk_for_id(issuer_recv))) = true) && ((check_issuer(issuer_recv,system_ca_list) = issuer_true) && (sig_verify(th_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
         (
-            let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),trans_1) in
-            if (iss = real_cert_issuer) then
-                event AppConnRS(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+            let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),th_1) in
+            if (issuer_recv = real_cert_issuer) then
+                event AppConnRS(hostn,th_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
                 out(c, enc_data(ss_1,sensitive_data))
             else
-                if (iss = rogue_cert_issuer) then
-                event AppConnMS(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+                if (issuer_recv = rogue_cert_issuer) then
+                event AppConnMS(hostn,th_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
                 out(c, enc_data(ss_1,sensitive_data))
         )
         else
-            event AppRejectConn(hostn,subj_and_san_recv,iss)
+            event AppRejectConn(hostn,subj_and_san_recv,issuer_recv)
     )
 
 --------------------------------------------------------------
@@ -377,13 +377,13 @@ New processes:
     let real_s_cert_sig: bitstring = sig_sign(cert_content(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer),sk_real_issuer) in
     let real_s_cert: bitstring = gen_cert(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer,real_s_cert_sig) in
     let c_hello: bitstring = client_hello(rand_c,pk_c) in
-    let trans: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
-    let s_handshake_sig: bitstring = sig_sign(trans,sk_real_server_cert) in
+    let th: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
+    let s_handshake_sig: bitstring = sig_sign(th,sk_real_server_cert) in
     out(c, server_hello_handshake(server_hostname,server_ip,server_mechine,real_s_hello,real_s_cert,s_handshake_sig));
-    let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),trans) in
+    let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),th) in
     in(c, sens_cipher: bitstring);
     if (check_authtag(ss,sens_cipher) = true) then
-    event RSConn(server_hostname,trans,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
+    event RSConn(server_hostname,th,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
 ) | (
     in(c, client_hello(rand_c: bitstring,pk_c: pkey));
     new sk_real_server_temp: skey;
@@ -394,30 +394,30 @@ New processes:
     let real_s_cert_sig: bitstring = sig_sign(cert_content(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer),sk_real_issuer) in
     let real_s_cert: bitstring = gen_cert(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer,real_s_cert_sig) in
     let c_hello: bitstring = client_hello(rand_c,pk_c) in
-    let trans: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
-    let s_handshake_sig: bitstring = sig_sign(trans,sk_real_server_cert) in
+    let th: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
+    let s_handshake_sig: bitstring = sig_sign(th,sk_real_server_cert) in
     out(c, server_hello_handshake(server_hostname,server_ip,server_mechine,real_s_hello,real_s_cert,s_handshake_sig));
-    let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),trans) in
+    let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),th) in
     in(c, sens_cipher: bitstring);
     if (check_authtag(ss,sens_cipher) = true) then
-    event RSConn(server_hostname,trans,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
+    event RSConn(server_hostname,th,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
 ) | (
-    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
-    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,iss,cert_sig_recv) in
-    let trans_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
-    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && (sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
+    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
+    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,issuer_recv,cert_sig_recv) in
+    let th_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
+    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,issuer_recv),cert_sig_recv,pk(gen_sk_for_id(issuer_recv))) = true) && ((check_issuer(issuer_recv,system_ca_list) = issuer_true) && (sig_verify(th_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
     (
-        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        if (iss = real_cert_issuer) then
-            event AppConnRS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),th_1) in
+        if (issuer_recv = real_cert_issuer) then
+            event AppConnRS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
         else
-            if (iss = rogue_cert_issuer) then
-            event AppConnMS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            if (issuer_recv = rogue_cert_issuer) then
+            event AppConnMS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event AppRejectConn(hostn,subj_and_san_recv,iss)
+        event AppRejectConn(hostn,subj_and_san_recv,issuer_recv)
 )
 
 --------------------------------------------------------------
@@ -439,7 +439,7 @@ New processes:
 
 1st process: let c_hello: bitstring = client_hello(a_1,a) succeeds
 
-1st process: let trans: bitstring = transcript_hash(client_hello(a_1,a),server_hello(random_real_server_3,pk(sk_real_server_temp_3)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))) succeeds
+1st process: let th: bitstring = transcript_hash(client_hello(a_1,a),server_hello(random_real_server_3,pk(sk_real_server_temp_3)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))) succeeds
 
 1st process: let s_handshake_sig: bitstring = sig_sign(transcript_hash(client_hello(a_1,a),server_hello(random_real_server_3,pk(sk_real_server_temp_3)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server)) succeeds
 
@@ -469,30 +469,30 @@ New processes:
     let real_s_cert_sig: bitstring = sig_sign(cert_content(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer),sk_real_issuer) in
     let real_s_cert: bitstring = gen_cert(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer,real_s_cert_sig) in
     let c_hello: bitstring = client_hello(rand_c,pk_c) in
-    let trans: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
-    let s_handshake_sig: bitstring = sig_sign(trans,sk_real_server_cert) in
+    let th: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
+    let s_handshake_sig: bitstring = sig_sign(th,sk_real_server_cert) in
     out(c, server_hello_handshake(server_hostname,server_ip,server_mechine,real_s_hello,real_s_cert,s_handshake_sig));
-    let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),trans) in
+    let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),th) in
     in(c, sens_cipher: bitstring);
     if (check_authtag(ss,sens_cipher) = true) then
-    event RSConn(server_hostname,trans,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
+    event RSConn(server_hostname,th,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
 ) | (
-    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
-    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,iss,cert_sig_recv) in
-    let trans_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
-    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && (sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
+    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
+    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,issuer_recv,cert_sig_recv) in
+    let th_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
+    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,issuer_recv),cert_sig_recv,pk(gen_sk_for_id(issuer_recv))) = true) && ((check_issuer(issuer_recv,system_ca_list) = issuer_true) && (sig_verify(th_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
     (
-        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        if (iss = real_cert_issuer) then
-            event AppConnRS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),th_1) in
+        if (issuer_recv = real_cert_issuer) then
+            event AppConnRS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
         else
-            if (iss = rogue_cert_issuer) then
-            event AppConnMS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            if (issuer_recv = rogue_cert_issuer) then
+            event AppConnMS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event AppRejectConn(hostn,subj_and_san_recv,iss)
+        event AppRejectConn(hostn,subj_and_san_recv,issuer_recv)
 )
 
 --------------------------------------------------------------
@@ -514,7 +514,7 @@ New processes:
 
 1st process: let c_hello: bitstring = client_hello(random_app_2,pk(sk_app_temp_2)) succeeds
 
-1st process: let trans: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))) succeeds
+1st process: let th: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))) succeeds
 
 1st process: let s_handshake_sig: bitstring = sig_sign(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server)) succeeds
 
@@ -533,30 +533,30 @@ New processes:
     if (check_authtag(session_key(client_shared_secret(sk_app_temp_2,pk(sk_real_server_temp_4)),transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sens_cipher) = true) then
     event RSConn(server_hostname,transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),dec_data(session_key(client_shared_secret(sk_app_temp_2,pk(sk_real_server_temp_4)),transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sens_cipher),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher)
 ) | (
-    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
-    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,iss,cert_sig_recv) in
-    let trans_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
-    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && (sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
+    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
+    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,issuer_recv,cert_sig_recv) in
+    let th_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
+    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,issuer_recv),cert_sig_recv,pk(gen_sk_for_id(issuer_recv))) = true) && ((check_issuer(issuer_recv,system_ca_list) = issuer_true) && (sig_verify(th_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
     (
-        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        if (iss = real_cert_issuer) then
-            event AppConnRS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),th_1) in
+        if (issuer_recv = real_cert_issuer) then
+            event AppConnRS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
         else
-            if (iss = rogue_cert_issuer) then
-            event AppConnMS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            if (issuer_recv = rogue_cert_issuer) then
+            event AppConnMS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event AppRejectConn(hostn,subj_and_san_recv,iss)
+        event AppRejectConn(hostn,subj_and_san_recv,issuer_recv)
 )
 
 --------------------------------------------------------------
-2nd process: in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring)) done with message server_hello_handshake(server_hostname,a_3,a_2,server_hello(~M_15,~M_16),gen_cert(~M_7,server_cert_subject_and_san,real_cert_issuer,~M_10),~M_21) = server_hello_handshake(server_hostname,a_3,a_2,server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sig_sign(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server)))
+2nd process: in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring)) done with message server_hello_handshake(server_hostname,a_3,a_2,server_hello(~M_15,~M_16),gen_cert(~M_7,server_cert_subject_and_san,real_cert_issuer,~M_10),~M_21) = server_hello_handshake(server_hostname,a_3,a_2,server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sig_sign(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server)))
 
 2nd process: let s_cert: bitstring = gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))) succeeds
 
-2nd process: let trans_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))) succeeds
+2nd process: let th_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))) succeeds
 
 2nd process: if ((check_host(server_hostname,server_cert_subject_and_san) = host_true) && ((sig_verify(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)),pk(gen_sk_for_id(real_cert_issuer))) = true) && ((check_issuer(real_cert_issuer,system_ca_list) = issuer_true) && (sig_verify(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sig_sign(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server)),pk(gen_sk_for_id(real_server))) = true)))) succeeds
 
@@ -749,13 +749,13 @@ New processes:
         let real_s_cert_sig: bitstring = sig_sign(cert_content(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer),sk_real_issuer) in
         let real_s_cert: bitstring = gen_cert(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer,real_s_cert_sig) in
         let c_hello: bitstring = client_hello(rand_c,pk_c) in
-        let trans: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
-        let s_handshake_sig: bitstring = sig_sign(trans,sk_real_server_cert) in
+        let th: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
+        let s_handshake_sig: bitstring = sig_sign(th,sk_real_server_cert) in
         out(c, server_hello_handshake(server_hostname,server_ip,server_mechine,real_s_hello,real_s_cert,s_handshake_sig));
-        let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),trans) in
+        let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),th) in
         in(c, sens_cipher: bitstring);
         if (check_authtag(ss,sens_cipher) = true) then
-        event RSConn(server_hostname,trans,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
+        event RSConn(server_hostname,th,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
     ) | (
         !
         new sk_rogue_server_temp: skey;
@@ -781,22 +781,22 @@ New processes:
         new sensitive_data: bitstring;
         let c_hello_1: bitstring = client_hello(random_app,pk(sk_app_temp)) in
         out(c, c_hello_1);
-        in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
-        let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,iss,cert_sig_recv) in
-        let trans_1: bitstring = transcript_hash(client_hello(random_app,pk(sk_app_temp)),server_hello(rand_s,pk_recv),s_cert) in
-        if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && (sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
+        in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
+        let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,issuer_recv,cert_sig_recv) in
+        let th_1: bitstring = transcript_hash(client_hello(random_app,pk(sk_app_temp)),server_hello(rand_s,pk_recv),s_cert) in
+        if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,issuer_recv),cert_sig_recv,pk(gen_sk_for_id(issuer_recv))) = true) && ((check_issuer(issuer_recv,system_ca_list) = issuer_true) && (sig_verify(th_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
         (
-            let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),trans_1) in
-            if (iss = real_cert_issuer) then
-                event AppConnRS(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+            let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),th_1) in
+            if (issuer_recv = real_cert_issuer) then
+                event AppConnRS(hostn,th_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
                 out(c, enc_data(ss_1,sensitive_data))
             else
-                if (iss = rogue_cert_issuer) then
-                event AppConnMS(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+                if (issuer_recv = rogue_cert_issuer) then
+                event AppConnMS(hostn,th_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
                 out(c, enc_data(ss_1,sensitive_data))
         )
         else
-            event AppRejectConn(hostn,subj_and_san_recv,iss)
+            event AppRejectConn(hostn,subj_and_san_recv,issuer_recv)
     )
 
 --------------------------------------------------------------
@@ -841,13 +841,13 @@ New processes:
     let real_s_cert_sig: bitstring = sig_sign(cert_content(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer),sk_real_issuer) in
     let real_s_cert: bitstring = gen_cert(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer,real_s_cert_sig) in
     let c_hello: bitstring = client_hello(rand_c,pk_c) in
-    let trans: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
-    let s_handshake_sig: bitstring = sig_sign(trans,sk_real_server_cert) in
+    let th: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
+    let s_handshake_sig: bitstring = sig_sign(th,sk_real_server_cert) in
     out(c, server_hello_handshake(server_hostname,server_ip,server_mechine,real_s_hello,real_s_cert,s_handshake_sig));
-    let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),trans) in
+    let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),th) in
     in(c, sens_cipher: bitstring);
     if (check_authtag(ss,sens_cipher) = true) then
-    event RSConn(server_hostname,trans,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
+    event RSConn(server_hostname,th,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
 ) | (
     in(c, client_hello(rand_c: bitstring,pk_c: pkey));
     new sk_real_server_temp: skey;
@@ -858,30 +858,30 @@ New processes:
     let real_s_cert_sig: bitstring = sig_sign(cert_content(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer),sk_real_issuer) in
     let real_s_cert: bitstring = gen_cert(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer,real_s_cert_sig) in
     let c_hello: bitstring = client_hello(rand_c,pk_c) in
-    let trans: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
-    let s_handshake_sig: bitstring = sig_sign(trans,sk_real_server_cert) in
+    let th: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
+    let s_handshake_sig: bitstring = sig_sign(th,sk_real_server_cert) in
     out(c, server_hello_handshake(server_hostname,server_ip,server_mechine,real_s_hello,real_s_cert,s_handshake_sig));
-    let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),trans) in
+    let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),th) in
     in(c, sens_cipher: bitstring);
     if (check_authtag(ss,sens_cipher) = true) then
-    event RSConn(server_hostname,trans,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
+    event RSConn(server_hostname,th,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
 ) | (
-    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
-    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,iss,cert_sig_recv) in
-    let trans_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
-    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && (sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
+    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
+    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,issuer_recv,cert_sig_recv) in
+    let th_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
+    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,issuer_recv),cert_sig_recv,pk(gen_sk_for_id(issuer_recv))) = true) && ((check_issuer(issuer_recv,system_ca_list) = issuer_true) && (sig_verify(th_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
     (
-        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        if (iss = real_cert_issuer) then
-            event AppConnRS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),th_1) in
+        if (issuer_recv = real_cert_issuer) then
+            event AppConnRS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
         else
-            if (iss = rogue_cert_issuer) then
-            event AppConnMS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            if (issuer_recv = rogue_cert_issuer) then
+            event AppConnMS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event AppRejectConn(hostn,subj_and_san_recv,iss)
+        event AppRejectConn(hostn,subj_and_san_recv,issuer_recv)
 )
 
 --------------------------------------------------------------
@@ -903,7 +903,7 @@ New processes:
 
 1st process: let c_hello: bitstring = client_hello(a_1,a) succeeds
 
-1st process: let trans: bitstring = transcript_hash(client_hello(a_1,a),server_hello(random_real_server_3,pk(sk_real_server_temp_3)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))) succeeds
+1st process: let th: bitstring = transcript_hash(client_hello(a_1,a),server_hello(random_real_server_3,pk(sk_real_server_temp_3)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))) succeeds
 
 1st process: let s_handshake_sig: bitstring = sig_sign(transcript_hash(client_hello(a_1,a),server_hello(random_real_server_3,pk(sk_real_server_temp_3)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server)) succeeds
 
@@ -933,30 +933,30 @@ New processes:
     let real_s_cert_sig: bitstring = sig_sign(cert_content(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer),sk_real_issuer) in
     let real_s_cert: bitstring = gen_cert(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer,real_s_cert_sig) in
     let c_hello: bitstring = client_hello(rand_c,pk_c) in
-    let trans: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
-    let s_handshake_sig: bitstring = sig_sign(trans,sk_real_server_cert) in
+    let th: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
+    let s_handshake_sig: bitstring = sig_sign(th,sk_real_server_cert) in
     out(c, server_hello_handshake(server_hostname,server_ip,server_mechine,real_s_hello,real_s_cert,s_handshake_sig));
-    let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),trans) in
+    let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),th) in
     in(c, sens_cipher: bitstring);
     if (check_authtag(ss,sens_cipher) = true) then
-    event RSConn(server_hostname,trans,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
+    event RSConn(server_hostname,th,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
 ) | (
-    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
-    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,iss,cert_sig_recv) in
-    let trans_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
-    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && (sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
+    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
+    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,issuer_recv,cert_sig_recv) in
+    let th_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
+    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,issuer_recv),cert_sig_recv,pk(gen_sk_for_id(issuer_recv))) = true) && ((check_issuer(issuer_recv,system_ca_list) = issuer_true) && (sig_verify(th_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
     (
-        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        if (iss = real_cert_issuer) then
-            event AppConnRS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),th_1) in
+        if (issuer_recv = real_cert_issuer) then
+            event AppConnRS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
         else
-            if (iss = rogue_cert_issuer) then
-            event AppConnMS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            if (issuer_recv = rogue_cert_issuer) then
+            event AppConnMS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event AppRejectConn(hostn,subj_and_san_recv,iss)
+        event AppRejectConn(hostn,subj_and_san_recv,issuer_recv)
 )
 
 --------------------------------------------------------------
@@ -978,7 +978,7 @@ New processes:
 
 1st process: let c_hello: bitstring = client_hello(random_app_2,pk(sk_app_temp_2)) succeeds
 
-1st process: let trans: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))) succeeds
+1st process: let th: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))) succeeds
 
 1st process: let s_handshake_sig: bitstring = sig_sign(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server)) succeeds
 
@@ -997,30 +997,30 @@ New processes:
     if (check_authtag(session_key(client_shared_secret(sk_app_temp_2,pk(sk_real_server_temp_4)),transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sens_cipher) = true) then
     event RSConn(server_hostname,transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),dec_data(session_key(client_shared_secret(sk_app_temp_2,pk(sk_real_server_temp_4)),transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sens_cipher),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher)
 ) | (
-    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
-    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,iss,cert_sig_recv) in
-    let trans_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
-    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && (sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
+    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
+    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,issuer_recv,cert_sig_recv) in
+    let th_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
+    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,issuer_recv),cert_sig_recv,pk(gen_sk_for_id(issuer_recv))) = true) && ((check_issuer(issuer_recv,system_ca_list) = issuer_true) && (sig_verify(th_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
     (
-        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        if (iss = real_cert_issuer) then
-            event AppConnRS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),th_1) in
+        if (issuer_recv = real_cert_issuer) then
+            event AppConnRS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
         else
-            if (iss = rogue_cert_issuer) then
-            event AppConnMS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            if (issuer_recv = rogue_cert_issuer) then
+            event AppConnMS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event AppRejectConn(hostn,subj_and_san_recv,iss)
+        event AppRejectConn(hostn,subj_and_san_recv,issuer_recv)
 )
 
 --------------------------------------------------------------
-2nd process: in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring)) done with message server_hello_handshake(server_hostname,a_3,a_2,server_hello(~M_15,~M_16),gen_cert(~M_7,server_cert_subject_and_san,real_cert_issuer,~M_10),~M_21) = server_hello_handshake(server_hostname,a_3,a_2,server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sig_sign(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server)))
+2nd process: in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring)) done with message server_hello_handshake(server_hostname,a_3,a_2,server_hello(~M_15,~M_16),gen_cert(~M_7,server_cert_subject_and_san,real_cert_issuer,~M_10),~M_21) = server_hello_handshake(server_hostname,a_3,a_2,server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sig_sign(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server)))
 
 2nd process: let s_cert: bitstring = gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))) succeeds
 
-2nd process: let trans_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))) succeeds
+2nd process: let th_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))) succeeds
 
 2nd process: if ((check_host(server_hostname,server_cert_subject_and_san) = host_true) && ((sig_verify(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)),pk(gen_sk_for_id(real_cert_issuer))) = true) && ((check_issuer(real_cert_issuer,system_ca_list) = issuer_true) && (sig_verify(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sig_sign(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_real_server_4,pk(sk_real_server_temp_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server)),pk(gen_sk_for_id(real_server))) = true)))) succeeds
 
@@ -1242,13 +1242,13 @@ New processes:
         let real_s_cert_sig: bitstring = sig_sign(cert_content(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer),sk_real_issuer) in
         let real_s_cert: bitstring = gen_cert(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer,real_s_cert_sig) in
         let c_hello: bitstring = client_hello(rand_c,pk_c) in
-        let trans: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
-        let s_handshake_sig: bitstring = sig_sign(trans,sk_real_server_cert) in
+        let th: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
+        let s_handshake_sig: bitstring = sig_sign(th,sk_real_server_cert) in
         out(c, server_hello_handshake(server_hostname,server_ip,server_mechine,real_s_hello,real_s_cert,s_handshake_sig));
-        let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),trans) in
+        let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),th) in
         in(c, sens_cipher: bitstring);
         if (check_authtag(ss,sens_cipher) = true) then
-        event RSConn(server_hostname,trans,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
+        event RSConn(server_hostname,th,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
     ) | (
         !
         new sk_rogue_server_temp: skey;
@@ -1274,22 +1274,22 @@ New processes:
         new sensitive_data: bitstring;
         let c_hello_1: bitstring = client_hello(random_app,pk(sk_app_temp)) in
         out(c, c_hello_1);
-        in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
-        let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,iss,cert_sig_recv) in
-        let trans_1: bitstring = transcript_hash(client_hello(random_app,pk(sk_app_temp)),server_hello(rand_s,pk_recv),s_cert) in
-        if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && (sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
+        in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
+        let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,issuer_recv,cert_sig_recv) in
+        let th_1: bitstring = transcript_hash(client_hello(random_app,pk(sk_app_temp)),server_hello(rand_s,pk_recv),s_cert) in
+        if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,issuer_recv),cert_sig_recv,pk(gen_sk_for_id(issuer_recv))) = true) && ((check_issuer(issuer_recv,system_ca_list) = issuer_true) && (sig_verify(th_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
         (
-            let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),trans_1) in
-            if (iss = real_cert_issuer) then
-                event AppConnRS(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+            let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),th_1) in
+            if (issuer_recv = real_cert_issuer) then
+                event AppConnRS(hostn,th_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
                 out(c, enc_data(ss_1,sensitive_data))
             else
-                if (iss = rogue_cert_issuer) then
-                event AppConnMS(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+                if (issuer_recv = rogue_cert_issuer) then
+                event AppConnMS(hostn,th_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
                 out(c, enc_data(ss_1,sensitive_data))
         )
         else
-            event AppRejectConn(hostn,subj_and_san_recv,iss)
+            event AppRejectConn(hostn,subj_and_san_recv,issuer_recv)
     )
 
 --------------------------------------------------------------
@@ -1363,22 +1363,22 @@ New processes:
     let sens_d: bitstring = dec_data(ss_rogue,sens_cipher_1) in
     event MSConn(server_hostname,rogue_trans,sens_d,rogue_s_cert,sens_cipher_1)
 ) | (
-    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
-    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,iss,cert_sig_recv) in
-    let trans_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
-    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && (sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
+    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
+    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,issuer_recv,cert_sig_recv) in
+    let th_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
+    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,issuer_recv),cert_sig_recv,pk(gen_sk_for_id(issuer_recv))) = true) && ((check_issuer(issuer_recv,system_ca_list) = issuer_true) && (sig_verify(th_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
     (
-        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        if (iss = real_cert_issuer) then
-            event AppConnRS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),th_1) in
+        if (issuer_recv = real_cert_issuer) then
+            event AppConnRS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
         else
-            if (iss = rogue_cert_issuer) then
-            event AppConnMS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            if (issuer_recv = rogue_cert_issuer) then
+            event AppConnMS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event AppRejectConn(hostn,subj_and_san_recv,iss)
+        event AppRejectConn(hostn,subj_and_san_recv,issuer_recv)
 )
 
 --------------------------------------------------------------
@@ -1430,22 +1430,22 @@ New processes:
     let sens_d: bitstring = dec_data(ss_rogue,sens_cipher_1) in
     event MSConn(server_hostname,rogue_trans,sens_d,rogue_s_cert,sens_cipher_1)
 ) | (
-    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
-    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,iss,cert_sig_recv) in
-    let trans_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
-    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && (sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
+    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
+    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,issuer_recv,cert_sig_recv) in
+    let th_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
+    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,issuer_recv),cert_sig_recv,pk(gen_sk_for_id(issuer_recv))) = true) && ((check_issuer(issuer_recv,system_ca_list) = issuer_true) && (sig_verify(th_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
     (
-        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        if (iss = real_cert_issuer) then
-            event AppConnRS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),th_1) in
+        if (issuer_recv = real_cert_issuer) then
+            event AppConnRS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
         else
-            if (iss = rogue_cert_issuer) then
-            event AppConnMS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            if (issuer_recv = rogue_cert_issuer) then
+            event AppConnMS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event AppRejectConn(hostn,subj_and_san_recv,iss)
+        event AppRejectConn(hostn,subj_and_san_recv,issuer_recv)
 )
 
 --------------------------------------------------------------
@@ -1481,30 +1481,30 @@ New processes:
     let sens_d: bitstring = dec_data(session_key(client_shared_secret(sk_app_temp_2,pk(sk_rogue_server_temp_3)),transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))))),sens_cipher_1) in
     event MSConn(server_hostname,transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_1)
 ) | (
-    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
-    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,iss,cert_sig_recv) in
-    let trans_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
-    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && (sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
+    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
+    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,issuer_recv,cert_sig_recv) in
+    let th_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
+    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,issuer_recv),cert_sig_recv,pk(gen_sk_for_id(issuer_recv))) = true) && ((check_issuer(issuer_recv,system_ca_list) = issuer_true) && (sig_verify(th_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
     (
-        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        if (iss = real_cert_issuer) then
-            event AppConnRS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),th_1) in
+        if (issuer_recv = real_cert_issuer) then
+            event AppConnRS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
         else
-            if (iss = rogue_cert_issuer) then
-            event AppConnMS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            if (issuer_recv = rogue_cert_issuer) then
+            event AppConnMS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event AppRejectConn(hostn,subj_and_san_recv,iss)
+        event AppRejectConn(hostn,subj_and_san_recv,issuer_recv)
 )
 
 --------------------------------------------------------------
-2nd process: in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring)) done with message server_hello_handshake(server_hostname,a_3,a_2,server_hello(~M_15,~M_16),gen_cert(~M_7,server_cert_subject_and_san,rogue_cert_issuer,~M_10),~M_21) = server_hello_handshake(server_hostname,a_3,a_2,server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)))
+2nd process: in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring)) done with message server_hello_handshake(server_hostname,a_3,a_2,server_hello(~M_15,~M_16),gen_cert(~M_7,server_cert_subject_and_san,rogue_cert_issuer,~M_10),~M_21) = server_hello_handshake(server_hostname,a_3,a_2,server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)))
 
 2nd process: let s_cert: bitstring = gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))) succeeds
 
-2nd process: let trans_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))) succeeds
+2nd process: let th_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))) succeeds
 
 2nd process: if ((check_host(server_hostname,server_cert_subject_and_san) = host_true) && ((sig_verify(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)),pk(gen_sk_for_id(rogue_cert_issuer))) = true) && ((check_issuer(rogue_cert_issuer,system_ca_list) = issuer_true) && (sig_verify(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sig_sign(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)),pk(gen_sk_for_id(rogue_server))) = true)))) succeeds
 
@@ -1722,13 +1722,13 @@ New processes:
         let real_s_cert_sig: bitstring = sig_sign(cert_content(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer),sk_real_issuer) in
         let real_s_cert: bitstring = gen_cert(pk(sk_real_server_cert),server_cert_subject_and_san,real_cert_issuer,real_s_cert_sig) in
         let c_hello: bitstring = client_hello(rand_c,pk_c) in
-        let trans: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
-        let s_handshake_sig: bitstring = sig_sign(trans,sk_real_server_cert) in
+        let th: bitstring = transcript_hash(c_hello,real_s_hello,real_s_cert) in
+        let s_handshake_sig: bitstring = sig_sign(th,sk_real_server_cert) in
         out(c, server_hello_handshake(server_hostname,server_ip,server_mechine,real_s_hello,real_s_cert,s_handshake_sig));
-        let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),trans) in
+        let ss: bitstring = session_key(server_shared_secret(sk_real_server_temp,pk_c),th) in
         in(c, sens_cipher: bitstring);
         if (check_authtag(ss,sens_cipher) = true) then
-        event RSConn(server_hostname,trans,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
+        event RSConn(server_hostname,th,dec_data(ss,sens_cipher),real_s_cert,sens_cipher)
     ) | (
         !
         new sk_rogue_server_temp: skey;
@@ -1754,22 +1754,22 @@ New processes:
         new sensitive_data: bitstring;
         let c_hello_1: bitstring = client_hello(random_app,pk(sk_app_temp)) in
         out(c, c_hello_1);
-        in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
-        let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,iss,cert_sig_recv) in
-        let trans_1: bitstring = transcript_hash(client_hello(random_app,pk(sk_app_temp)),server_hello(rand_s,pk_recv),s_cert) in
-        if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && (sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
+        in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
+        let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,issuer_recv,cert_sig_recv) in
+        let th_1: bitstring = transcript_hash(client_hello(random_app,pk(sk_app_temp)),server_hello(rand_s,pk_recv),s_cert) in
+        if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,issuer_recv),cert_sig_recv,pk(gen_sk_for_id(issuer_recv))) = true) && ((check_issuer(issuer_recv,system_ca_list) = issuer_true) && (sig_verify(th_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
         (
-            let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),trans_1) in
-            if (iss = real_cert_issuer) then
-                event AppConnRS(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+            let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp,pk_recv),th_1) in
+            if (issuer_recv = real_cert_issuer) then
+                event AppConnRS(hostn,th_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
                 out(c, enc_data(ss_1,sensitive_data))
             else
-                if (iss = rogue_cert_issuer) then
-                event AppConnMS(hostn,trans_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
+                if (issuer_recv = rogue_cert_issuer) then
+                event AppConnMS(hostn,th_1,sensitive_data,s_cert,enc_data(ss_1,sensitive_data));
                 out(c, enc_data(ss_1,sensitive_data))
         )
         else
-            event AppRejectConn(hostn,subj_and_san_recv,iss)
+            event AppRejectConn(hostn,subj_and_san_recv,issuer_recv)
     )
 
 --------------------------------------------------------------
@@ -1843,22 +1843,22 @@ New processes:
     let sens_d: bitstring = dec_data(ss_rogue,sens_cipher_1) in
     event MSConn(server_hostname,rogue_trans,sens_d,rogue_s_cert,sens_cipher_1)
 ) | (
-    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
-    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,iss,cert_sig_recv) in
-    let trans_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
-    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && (sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
+    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
+    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,issuer_recv,cert_sig_recv) in
+    let th_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
+    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,issuer_recv),cert_sig_recv,pk(gen_sk_for_id(issuer_recv))) = true) && ((check_issuer(issuer_recv,system_ca_list) = issuer_true) && (sig_verify(th_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
     (
-        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        if (iss = real_cert_issuer) then
-            event AppConnRS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),th_1) in
+        if (issuer_recv = real_cert_issuer) then
+            event AppConnRS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
         else
-            if (iss = rogue_cert_issuer) then
-            event AppConnMS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            if (issuer_recv = rogue_cert_issuer) then
+            event AppConnMS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event AppRejectConn(hostn,subj_and_san_recv,iss)
+        event AppRejectConn(hostn,subj_and_san_recv,issuer_recv)
 )
 
 --------------------------------------------------------------
@@ -1910,22 +1910,22 @@ New processes:
     let sens_d: bitstring = dec_data(ss_rogue,sens_cipher_1) in
     event MSConn(server_hostname,rogue_trans,sens_d,rogue_s_cert,sens_cipher_1)
 ) | (
-    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
-    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,iss,cert_sig_recv) in
-    let trans_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
-    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && (sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
+    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
+    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,issuer_recv,cert_sig_recv) in
+    let th_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
+    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,issuer_recv),cert_sig_recv,pk(gen_sk_for_id(issuer_recv))) = true) && ((check_issuer(issuer_recv,system_ca_list) = issuer_true) && (sig_verify(th_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
     (
-        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        if (iss = real_cert_issuer) then
-            event AppConnRS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),th_1) in
+        if (issuer_recv = real_cert_issuer) then
+            event AppConnRS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
         else
-            if (iss = rogue_cert_issuer) then
-            event AppConnMS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            if (issuer_recv = rogue_cert_issuer) then
+            event AppConnMS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event AppRejectConn(hostn,subj_and_san_recv,iss)
+        event AppRejectConn(hostn,subj_and_san_recv,issuer_recv)
 )
 
 --------------------------------------------------------------
@@ -1961,30 +1961,30 @@ New processes:
     let sens_d: bitstring = dec_data(session_key(client_shared_secret(sk_app_temp_2,pk(sk_rogue_server_temp_3)),transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))))),sens_cipher_1) in
     event MSConn(server_hostname,transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_1)
 ) | (
-    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
-    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,iss,cert_sig_recv) in
-    let trans_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
-    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,iss),cert_sig_recv,pk(gen_sk_for_id(iss))) = true) && ((check_issuer(iss,system_ca_list) = issuer_true) && (sig_verify(trans_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
+    in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring));
+    let s_cert: bitstring = gen_cert(cert_pk_recv,subj_and_san_recv,issuer_recv,cert_sig_recv) in
+    let th_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(rand_s,pk_recv),s_cert) in
+    if ((check_host(hostn,subj_and_san_recv) = host_true) && ((sig_verify(cert_content(cert_pk_recv,subj_and_san_recv,issuer_recv),cert_sig_recv,pk(gen_sk_for_id(issuer_recv))) = true) && ((check_issuer(issuer_recv,system_ca_list) = issuer_true) && (sig_verify(th_1,s_handshake_sig_1,cert_pk_recv) = true)))) then
     (
-        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),trans_1) in
-        if (iss = real_cert_issuer) then
-            event AppConnRS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+        let ss_1: bitstring = session_key(client_shared_secret(sk_app_temp_2,pk_recv),th_1) in
+        if (issuer_recv = real_cert_issuer) then
+            event AppConnRS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
         else
-            if (iss = rogue_cert_issuer) then
-            event AppConnMS(hostn,trans_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
+            if (issuer_recv = rogue_cert_issuer) then
+            event AppConnMS(hostn,th_1,sensitive_data_2,s_cert,enc_data(ss_1,sensitive_data_2));
             out(c, enc_data(ss_1,sensitive_data_2))
     )
     else
-        event AppRejectConn(hostn,subj_and_san_recv,iss)
+        event AppRejectConn(hostn,subj_and_san_recv,issuer_recv)
 )
 
 --------------------------------------------------------------
-2nd process: in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,iss: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring)) done with message server_hello_handshake(server_hostname,a_3,a_2,server_hello(~M_15,~M_16),gen_cert(~M_7,server_cert_subject_and_san,rogue_cert_issuer,~M_10),~M_21) = server_hello_handshake(server_hostname,a_3,a_2,server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)))
+2nd process: in(c, server_hello_handshake(hostn: bitstring,sip: ip,smech: mechine,server_hello(rand_s: bitstring,pk_recv: pkey),gen_cert(cert_pk_recv: pkey,subj_and_san_recv: bitstring,issuer_recv: bitstring,cert_sig_recv: bitstring),s_handshake_sig_1: bitstring)) done with message server_hello_handshake(server_hostname,a_3,a_2,server_hello(~M_15,~M_16),gen_cert(~M_7,server_cert_subject_and_san,rogue_cert_issuer,~M_10),~M_21) = server_hello_handshake(server_hostname,a_3,a_2,server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)))
 
 2nd process: let s_cert: bitstring = gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))) succeeds
 
-2nd process: let trans_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))) succeeds
+2nd process: let th_1: bitstring = transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))) succeeds
 
 2nd process: if ((check_host(server_hostname,server_cert_subject_and_san) = host_true) && ((sig_verify(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)),pk(gen_sk_for_id(rogue_cert_issuer))) = true) && ((check_issuer(rogue_cert_issuer,system_ca_list) = issuer_true) && (sig_verify(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sig_sign(transcript_hash(client_hello(random_app_2,pk(sk_app_temp_2)),server_hello(random_rogue_server_3,pk(sk_rogue_server_temp_3)),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)),pk(gen_sk_for_id(rogue_server))) = true)))) succeeds
 

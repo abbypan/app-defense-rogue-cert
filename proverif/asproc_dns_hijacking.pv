@@ -33,16 +33,16 @@ let RealServer =
   new sk_real_server_temp: skey;
   new random_real_server: bitstring;
    let real_s_hello = server_hello(random_real_server, pk(sk_real_server_temp)) in
-  let trans = transcript_hash(c_hello, real_s_hello, real_s_cert) in
-  let s_handshake_sig = sig_sign(trans, sk_real_server_cert) in
+  let th = transcript_hash(c_hello, real_s_hello, real_s_cert) in
+  let s_handshake_sig = sig_sign(th, sk_real_server_cert) in
   out(c, server_hello_handshake(server_hostname, server_ip, server_mechine, real_s_hello, real_s_cert, s_handshake_sig));
 
-  let ss = session_key(server_shared_secret(sk_real_server_temp, pk_c), trans) in
+  let ss = session_key(server_shared_secret(sk_real_server_temp, pk_c), th) in
  
   in(c, sens_cipher: bitstring);
   if check_authtag(ss, sens_cipher) = true
   then (
-  event RSConn(server_hostname, trans, dec_data(ss, sens_cipher), real_s_cert, sens_cipher)
+  event RSConn(server_hostname, th, dec_data(ss, sens_cipher), real_s_cert, sens_cipher)
   )
   .
 
@@ -82,23 +82,23 @@ let LegitimateApp =
  
   in(c, jwt(h2: bitstring, plr2: bitstring, sr2: bitstring));
   let content2 = get_content(plr2) in
-  let subject_and_san2 = get_subject_and_san(content2) in
-  let issuer2 = get_issuer(content2) in
+  let subject_and_san_claim = get_subject_and_san(content2) in
+  let issuer_claim = get_issuer(content2) in
   let exp2 = get_exp(plr2) in
   if jwt_verify(jwt(h2, plr2, sr2), pk1_recv, curr) = true then
-      event CertClaimVerify(pk1_recv, subject_and_san2, issuer2, exp2);
+      event CertClaimVerify(pk1_recv, subject_and_san_claim, issuer_claim, exp2);
   
   let c_hello = client_hello(random_app, pk(sk_app_temp)) in
   out(c, c_hello);
  
   in(c, 
   server_hello_handshake(hostn, sip, smech, server_hello(rand_s, pk_recv), 
-  gen_cert(cert_pk_recv, subj_and_san_recv, iss, cert_sig_recv),
+  gen_cert(cert_pk_recv, subj_and_san_recv, issuer_recv, cert_sig_recv),
   s_handshake_sig)
   );
   let s_hello = server_hello(rand_s, pk_recv) in
-  let s_cert = gen_cert(cert_pk_recv, subj_and_san_recv, iss, cert_sig_recv) in
-  let trans = transcript_hash(client_hello(random_app, pk(sk_app_temp)), 
+  let s_cert = gen_cert(cert_pk_recv, subj_and_san_recv, issuer_recv, cert_sig_recv) in
+  let th = transcript_hash(client_hello(random_app, pk(sk_app_temp)), 
   server_hello(rand_s, pk_recv),
   s_cert)
    in
@@ -107,25 +107,25 @@ let LegitimateApp =
     
 
  if  (check_host(hostn, subj_and_san_recv) = host_true) &&
-     (sig_verify(cert_content(cert_pk_recv, subj_and_san_recv, iss), cert_sig_recv, pk(gen_sk_for_id(iss))) = true) &&
-     (check_issuer(iss, system_ca_list) = issuer_true) &&
-     (sig_verify(trans, s_handshake_sig, cert_pk_recv) = true) &&
-     (check_host(hostn, subject_and_san2) = host_true) &&
-     (issuer2 = iss)
+     (sig_verify(cert_content(cert_pk_recv, subj_and_san_recv, issuer_recv), cert_sig_recv, pk(gen_sk_for_id(issuer_recv))) = true) &&
+     (check_issuer(issuer_recv, system_ca_list) = issuer_true) &&
+     (sig_verify(th, s_handshake_sig, cert_pk_recv) = true) &&
+     (check_host(hostn, subject_and_san_claim) = host_true) &&
+     (issuer_claim = issuer_recv)
       then
     (
-      let ss = session_key(client_shared_secret(sk_app_temp, pk_recv), trans) in
-      if iss = real_cert_issuer then (
-        event AppConnRS(hostn, trans, sensitive_data, s_cert, enc_data(ss, sensitive_data));
+      let ss = session_key(client_shared_secret(sk_app_temp, pk_recv), th) in
+      if issuer_recv = real_cert_issuer then (
+        event AppConnRS(hostn, th, sensitive_data, s_cert, enc_data(ss, sensitive_data));
         out(c, enc_data(ss, sensitive_data))
       )
-      else if iss = rogue_cert_issuer then (
-        event AppConnMS(hostn, trans, sensitive_data, s_cert, enc_data(ss, sensitive_data));
+      else if issuer_recv = rogue_cert_issuer then (
+        event AppConnMS(hostn, th, sensitive_data, s_cert, enc_data(ss, sensitive_data));
         out(c, enc_data(ss, sensitive_data))
       )
     )
     else
-      event AppRejectConn(hostn, subj_and_san_recv, iss)
+      event AppRejectConn(hostn, subj_and_san_recv, issuer_recv)
       .
 
 (* Query introduction:
