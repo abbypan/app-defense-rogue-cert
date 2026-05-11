@@ -42,7 +42,7 @@ let RealServer =
   in(c, sens_cipher: bitstring);
   if check_authtag(ss, sens_cipher) = true
   then (
-  event real_server_conn(server_hostname, trans, dec_data(ss, sens_cipher), real_s_cert, sens_cipher)
+  event RSConn(server_hostname, trans, dec_data(ss, sens_cipher), real_s_cert, sens_cipher)
   )
   .
 
@@ -64,7 +64,7 @@ let DNSHijackingRogueServer =
   if check_authtag(ss_rogue, sens_cipher) = true
   then (
   let sens_d = dec_data(ss_rogue, sens_cipher) in
-  event rogue_server_conn(server_hostname, rogue_trans, sens_d, rogue_s_cert, sens_cipher)
+  event MSConn(server_hostname, rogue_trans, sens_d, rogue_s_cert, sens_cipher)
   )
   .
 
@@ -116,16 +116,16 @@ let LegitimateApp =
     (
       let ss = session_key(client_shared_secret(sk_app_temp, pk_recv), trans) in
       if iss = real_cert_issuer then (
-        event app_conn_real(hostn, trans, sensitive_data, s_cert, enc_data(ss, sensitive_data));
+        event AppConnRS(hostn, trans, sensitive_data, s_cert, enc_data(ss, sensitive_data));
         out(c, enc_data(ss, sensitive_data))
       )
       else if iss = rogue_cert_issuer then (
-        event app_conn_rogue(hostn, trans, sensitive_data, s_cert, enc_data(ss, sensitive_data));
+        event AppConnMS(hostn, trans, sensitive_data, s_cert, enc_data(ss, sensitive_data));
         out(c, enc_data(ss, sensitive_data))
       )
     )
     else
-      event app_reject_conn(hostn, subj_and_san_recv, iss)
+      event AppRejectConn(hostn, subj_and_san_recv, iss)
       .
 
 (* Query introduction:
@@ -170,7 +170,7 @@ query claim_sk: skey, subject_and_san: bitstring, issuer: bitstring, exp: timest
    True  = there exists a trace where RealServer accepts/decrypts client data for the modeled legitimate transcript.
    False = this modeled RealServer acceptance path is unreachable. *)
 query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(real_server_conn(server_hostname,
+  event(RSConn(server_hostname,
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
@@ -183,7 +183,7 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
    True  = there exists a trace where the app accepts the modeled legitimate transcript and sends ciphertext.
    False = this modeled app-acceptance path is unreachable. *)
 query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(app_conn_real(server_hostname, 
+  event(AppConnRS(server_hostname, 
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
@@ -195,9 +195,9 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
 
 (* Query: Real-server implies app-accepted correspondence.
    True  = whenever RealServer accepts the modeled legitimate transcript, the app also accepted it.
-   False = there is a trace where RealServer connects but app_conn_real does not occur. *)
+   False = there is a trace where RealServer connects but AppConnRS does not occur. *)
 query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(real_server_conn(server_hostname,
+  event(RSConn(server_hostname,
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
@@ -206,7 +206,7 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
   sens_d, 
   gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer))), sens_cipher))
   ==>
-  event(app_conn_real(server_hostname, 
+  event(AppConnRS(server_hostname, 
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
@@ -220,13 +220,13 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
 (* Query: Client-side rejection of rogue TLS session.
    True  = client can reject mismatched issuer/session.
    False = rejection event never occurs in this model. *)
-query event(app_reject_conn(server_hostname, server_cert_subject_and_san, rogue_cert_issuer)).
+query event(AppRejectConn(server_hostname, server_cert_subject_and_san, rogue_cert_issuer)).
 
 (* Query: Rogue-server acceptance reachability.
    True  = there exists a trace where the rogue server accepts/decrypts data under the modeled rogue transcript.
    False = rogue acceptance/decryption is unreachable in this model. *)
 query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(rogue_server_conn(server_hostname,
+  event(MSConn(server_hostname,
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
@@ -240,7 +240,7 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
    True  = there exists a trace where the app accepts the modeled rogue transcript and sends ciphertext.
    False = this modeled app-acceptance path is unreachable. *)
 query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(app_conn_rogue(server_hostname, 
+  event(AppConnMS(server_hostname, 
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
@@ -252,9 +252,9 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
 
 (* Query: rogue-server implies app-accepted correspondence.
    True  = whenever rogueServer accepts the modeled rogue transcript, the app also accepted it.
-   False = there is a trace where rogueServer connects but app_conn_real does not occur. *)
+   False = there is a trace where rogueServer connects but AppConnRS does not occur. *)
 query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(rogue_server_conn(server_hostname,
+  event(MSConn(server_hostname,
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
@@ -263,7 +263,7 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
   sens_d, 
   gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_cert_issuer))), sens_cipher))
   ==>
-  event(app_conn_rogue(server_hostname, 
+  event(AppConnMS(server_hostname, 
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),

@@ -42,7 +42,7 @@ let RealServer =
   in(cs, sens_cipher: bitstring);
   if check_authtag(ss, sens_cipher) = true
   then (
-  event real_server_conn(server_hostname, trans, dec_data(ss, sens_cipher), real_s_cert, sens_cipher)
+  event RSConn(server_hostname, trans, dec_data(ss, sens_cipher), real_s_cert, sens_cipher)
   )
   .
 
@@ -74,7 +74,7 @@ let MitmServer =
   if check_authtag(ss_mitm_c, sens_cipher) = true
   then (
     let sens_d = dec_data(ss_mitm_c, sens_cipher) in
-    event mitm_fake_server(hostn_s, trans_mitm_c, sens_d, rogue_s_cert, sens_cipher);
+    event MSFakeServer(hostn_s, trans_mitm_c, sens_d, rogue_s_cert, sens_cipher);
 
     let trans_mitm_s = transcript_hash(
       rogue_c_hello,
@@ -84,7 +84,7 @@ let MitmServer =
     let ss_mitm_s = session_key(client_shared_secret(sk_rogue_server_temp, pk_srv), trans_mitm_s) in
     let sens_cipher2 = enc_data(ss_mitm_s, sens_d) in
    
-    event mitm_fake_client(hostn_s, trans_mitm_s, sens_d, real_s_cert, sens_cipher2);
+    event MSFakeClient(hostn_s, trans_mitm_s, sens_d, real_s_cert, sens_cipher2);
      out(cs, sens_cipher2)
   )
   .
@@ -137,16 +137,16 @@ let LegitimateApp =
     (
       let ss = session_key(client_shared_secret(sk_app_temp, pk_recv), trans) in
       if iss = real_cert_issuer then (
-        event app_conn_real(hostn, trans, sensitive_data, s_cert, enc_data(ss, sensitive_data));
+        event AppConnRS(hostn, trans, sensitive_data, s_cert, enc_data(ss, sensitive_data));
         out(cc, enc_data(ss, sensitive_data))
       )
       else if iss = rogue_cert_issuer then (
-        event app_conn_rogue(hostn, trans, sensitive_data, s_cert, enc_data(ss, sensitive_data));
+        event AppConnMS(hostn, trans, sensitive_data, s_cert, enc_data(ss, sensitive_data));
         out(cc, enc_data(ss, sensitive_data))
       )
     )
     else
-      event app_reject_conn(hostn, subj_and_san_recv, iss)
+      event AppRejectConn(hostn, subj_and_san_recv, iss)
       .
 
 (* Query introduction:
@@ -191,7 +191,7 @@ query claim_sk: skey, subject_and_san: bitstring, issuer: bitstring, exp: timest
    True  = there exists a trace where RealServer accepts/decrypts client data for the modeled legitimate transcript.
    False = this modeled RealServer acceptance path is unreachable. *)
 query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(real_server_conn(server_hostname,
+  event(RSConn(server_hostname,
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
@@ -204,7 +204,7 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
    True  = there exists a trace where the app accepts the modeled legitimate transcript and sends ciphertext.
    False = this modeled app-acceptance path is unreachable. *)
 query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(app_conn_real(server_hostname, 
+  event(AppConnRS(server_hostname, 
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
@@ -216,9 +216,9 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
 
 (* Query: Real-server implies app-accepted correspondence.
    True  = whenever RealServer accepts the modeled legitimate transcript, the app also accepted it.
-   False = there is a trace where RealServer connects but app_conn_real does not occur. *)
+   False = there is a trace where RealServer connects but AppConnRS does not occur. *)
 query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(real_server_conn(server_hostname,
+  event(RSConn(server_hostname,
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
@@ -227,7 +227,7 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
   sens_d, 
   gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer))), sens_cipher))
   ==>
-  event(app_conn_real(server_hostname, 
+  event(AppConnRS(server_hostname, 
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
@@ -241,26 +241,26 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
 (* Query: Client-side rejection of rogue TLS session.
    True  = client can reject mismatched issuer/session.
    False = rejection event never occurs in this model. *)
-query event(app_reject_conn(server_hostname, server_cert_subject_and_san, rogue_cert_issuer)).
+query event(AppRejectConn(server_hostname, server_cert_subject_and_san, rogue_cert_issuer)).
 
 (* Query: MITM interception reachability.
    True  = there exists a trace where the MITM endpoint decrypts client data.
    False = interception/decryption is unreachable in this model. *)
 query trans: bitstring, sens_d: bitstring, sens_cipher: bitstring;
-  event(mitm_fake_server(server_hostname, trans, sens_d, gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_cert_issuer))), sens_cipher)).
+  event(MSFakeServer(server_hostname, trans, sens_d, gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_cert_issuer))), sens_cipher)).
 
   (* Query: MITM interception reachability.
    True  = there exists a trace where the MITM endpoint decrypts client data.
    False = interception/decryption is unreachable in this model. *)
 query trans: bitstring, sens_d: bitstring, sens_cipher: bitstring;
-  event(mitm_fake_client(server_hostname, trans, sens_d, gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer))), sens_cipher)).
+  event(MSFakeClient(server_hostname, trans, sens_d, gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer))), sens_cipher)).
 
 
 (* Query: Client acceptance path reachability.
    True  = there exists a trace where the app accepts the modeled rogue transcript and sends ciphertext.
    False = this modeled app-acceptance path is unreachable. *)
 query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(app_conn_rogue(server_hostname, 
+  event(AppConnMS(server_hostname, 
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
@@ -274,7 +274,7 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
    True  = there exists a trace where the app accepts the modeled rogue transcript and sends ciphertext.
    False = this modeled app-acceptance path is unreachable. *)
 query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-event(mitm_fake_server(server_hostname,
+event(MSFakeServer(server_hostname,
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
@@ -282,7 +282,7 @@ event(mitm_fake_server(server_hostname,
   ),
   sens_d, 
   gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_cert_issuer))), sens_cipher)) ==>
-  event(app_conn_rogue(server_hostname, 
+  event(AppConnMS(server_hostname, 
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
@@ -293,7 +293,7 @@ event(mitm_fake_server(server_hostname,
 
 query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
 
-  event(real_server_conn(server_hostname,
+  event(RSConn(server_hostname,
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
@@ -302,7 +302,7 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
   sens_d, 
   gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer))), sens_cipher))
    ==>
-  event(mitm_fake_client(server_hostname,
+  event(MSFakeClient(server_hostname,
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
