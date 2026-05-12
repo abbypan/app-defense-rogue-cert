@@ -20,24 +20,28 @@ import org.json.JSONObject;
 public class MainActivity extends AppCompatActivity {
     
     private static final String TAG = "MainActivity";
-    private static final String ASPROC_HOST = "appservercert.run.place";
+    private static final String ASPROC_HOST = "asproc.es256.run.place";
+    private static final String DCP_HOST = "dcp.run.place";
     //private static final String ASPROC_ISSUER = "CN=E7, O=Let's Encrypt, C=US";
     private static final String ASPROC_ISSUER = "CN=test issuer";
     
     private HttpsRequestHelper httpsRequestHelper;
    // private AppInfoManager appInfoManager;
     private EditText hostTextView;
+    private EditText dcpHostTextView;
     private EditText expIssuerTextView;
+    private EditText expSPKTextView;
     private TextView responseTextView;
     private Button GetHTTPContentButton;
     private Button GetAndVerifyClaimButton;
-    private Button JWTSCCSKBenchmarkButton;
-    private Button JWTSCCBenchmarkButton;
+    private Button GetAndVerifyDCPButton;
+    private Button JwtCskBenchmarkButton;
+    private Button JwtSccBenchmarkButton;
+    private Button DCPBenchmarkButton;
     private Button httpsDefaultConnectionBenchmarkButton;
-    private Button httpsBypassConnectionBenchmarkButton;
     private Button httpsASPRoCConnectionBenchmarkButton;
-    private Button httpsCreateConnBenchmarkButton;
-    private Button getCertClaimJWTBenchmarkButton;
+    private Button getJwtCskBenchmarkButton;
+    private Button getJwtSccBenchmarkButton;
     private EditText maxBenchmarkAttemptNumber;
     private Handler mainHandler;
 
@@ -56,17 +60,20 @@ public class MainActivity extends AppCompatActivity {
         
         // Initialize UI components
         hostTextView = findViewById(R.id.hostTextView);
+        dcpHostTextView = findViewById(R.id.dcpHostTextView);
         expIssuerTextView = findViewById(R.id.expIssuerTextView);
+        expSPKTextView = findViewById(R.id.expSPKTextView);
         responseTextView = findViewById(R.id.responseTextView);
         GetHTTPContentButton = findViewById(R.id.GetHTTPContentButton);
         GetAndVerifyClaimButton = findViewById(R.id.GetAndVerifyClaimButton);
-        JWTSCCSKBenchmarkButton = findViewById(R.id.JWTSCCSKBenchmarkButton);
-        JWTSCCBenchmarkButton = findViewById(R.id.JWTSCCBenchmarkButton);
+        GetAndVerifyDCPButton = findViewById(R.id.GetAndVerifyDCPButton);
+        JwtCskBenchmarkButton = findViewById(R.id.JwtCskBenchmarkButton);
+        JwtSccBenchmarkButton = findViewById(R.id.JwtSccBenchmarkButton);
+        DCPBenchmarkButton = findViewById(R.id.DCPBenchmarkButton);
         httpsDefaultConnectionBenchmarkButton = findViewById(R.id.httpsDefaultConnectionBenchmarkButton);
-        httpsBypassConnectionBenchmarkButton = findViewById(R.id.httpsBypassConnectionBenchmarkButton);
         httpsASPRoCConnectionBenchmarkButton = findViewById(R.id.httpsASPRoCConnectionBenchmarkButton);
-        httpsCreateConnBenchmarkButton = findViewById(R.id.httpsCreateConnBenchmarkButton);
-        getCertClaimJWTBenchmarkButton = findViewById(R.id.getCertClaimJWTBenchmarkButton);
+        getJwtCskBenchmarkButton = findViewById(R.id.getJwtCskBenchmarkButton);
+        getJwtSccBenchmarkButton = findViewById(R.id.getJwtSccBenchmarkButton);
         maxBenchmarkAttemptNumber = findViewById(R.id.maxBenchmarkAttemptNumber);
         mainHandler = new Handler(Looper.getMainLooper());
         
@@ -76,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Set initial host display
         updateHostDisplay(ASPROC_HOST);
+        updateDCPHostDisplay(DCP_HOST);
         
         // Set initial expected issuer display
         updateExpIssuerDisplay(ASPROC_ISSUER);
@@ -88,33 +96,37 @@ public class MainActivity extends AppCompatActivity {
         GetAndVerifyClaimButton.setOnClickListener(v -> {
             GetAndVerifyClaim();
         });
-        
-        JWTSCCSKBenchmarkButton.setOnClickListener(v -> {
-            runVerifyJwtSigningKeyBenchmark();
+
+        GetAndVerifyDCPButton.setOnClickListener(v -> {
+            GetAndVerifyDCP();
         });
         
-        JWTSCCBenchmarkButton.setOnClickListener(v -> {
-            runVerifyJWTCertClaimBenchmark();
+        JwtCskBenchmarkButton.setOnClickListener(v -> {
+            runVerifyJwtCskBenchmark();
+        });
+        
+        JwtSccBenchmarkButton.setOnClickListener(v -> {
+            runVerifyJwtSccBenchmark();
+        });
+
+        DCPBenchmarkButton.setOnClickListener(v -> {
+            runVerifyDCPBenchmark();
         });
         
         httpsDefaultConnectionBenchmarkButton.setOnClickListener(v -> {
             runHttpsDefaultConnectionBenchmark();
         });
         
-        httpsBypassConnectionBenchmarkButton.setOnClickListener(v -> {
-            runHttpsBypassConnectionBenchmark();
-        });
-        
         httpsASPRoCConnectionBenchmarkButton.setOnClickListener(v -> {
             runHttpsASPRoCConnectionBenchmark();
         });
 
-        httpsCreateConnBenchmarkButton.setOnClickListener(v -> {
-            runGetSigningKeyJWTBenchmark();
+        getJwtCskBenchmarkButton.setOnClickListener(v -> {
+            runGetJwtCskBenchmark();
         });
 
-        getCertClaimJWTBenchmarkButton.setOnClickListener(v -> {
-            runGetCertClaimJWTBenchmark();
+        getJwtSccBenchmarkButton.setOnClickListener(v -> {
+            runGetJwtSccBenchmark();
         });
     }
 
@@ -127,6 +139,12 @@ public class MainActivity extends AppCompatActivity {
             hostTextView.setText(host);
         }
     }
+
+    public void updateDCPHostDisplay(String host) {
+        if (dcpHostTextView != null) {
+            dcpHostTextView.setText(host);
+        }
+    }
     
     /**
      * Update the expected issuer display EditText
@@ -135,6 +153,12 @@ public class MainActivity extends AppCompatActivity {
     public void updateExpIssuerDisplay(String expIssuer) {
         if (expIssuerTextView != null) {
             expIssuerTextView.setText(expIssuer);
+        }
+    }
+
+    public void updateExpSPKDisplay(String expSPK) {
+        if (expSPKTextView != null) {
+            expSPKTextView.setText(expSPK);
         }
     }
     
@@ -149,6 +173,14 @@ public class MainActivity extends AppCompatActivity {
         }
         return ASPROC_HOST;
     }
+
+    public String getDCPHost() {
+        if (dcpHostTextView != null) {
+            String host = dcpHostTextView.getText().toString().trim();
+            return host.isEmpty() ? DCP_HOST : host;
+        }
+        return DCP_HOST;
+    }
     
     /**
      * Get the current expected issuer from the EditText
@@ -160,6 +192,13 @@ public class MainActivity extends AppCompatActivity {
             return expIssuer.isEmpty() ? ASPROC_ISSUER : expIssuer;
         }
         return ASPROC_ISSUER;
+    }
+
+    public String getCurrentExpSPK() {
+        if (expSPKTextView != null) {
+            return expSPKTextView.getText().toString().trim();
+        }
+        return "";
     }
     
     /**
@@ -248,8 +287,41 @@ public class MainActivity extends AppCompatActivity {
             }
         }).start();
     }
+
+    public void GetAndVerifyDCP() {
+        mainHandler.post(() -> {
+            responseTextView.setText("Getting and verifying DCP pin...\nPlease wait...");
+        });
+
+        new Thread(() -> {
+            try {
+                String host = getDCPHost();
+
+                HttpsURLConnection pubkeyConn = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/my-dcp-pubkey.pem");
+                String dcpPublicKeyPem = HttpsRequestHelper.get_content(pubkeyConn);
+
+                HttpsURLConnection dcpConn = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/my-dcp-servercertpin.json");
+                String dcpJson = HttpsRequestHelper.get_content(dcpConn);
+
+                String pin = DCPVerifier.verifyDCPWithPublicKeyPem(dcpJson, dcpPublicKeyPem);
+
+                mainHandler.post(() -> {
+                    responseTextView.setText(pin);
+                    expSPKTextView.setText(pin);
+                    Toast.makeText(MainActivity.this, "DCP pin verified", Toast.LENGTH_SHORT).show();
+                });
+
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to get and verify DCP pin: " + e.getMessage(), e);
+                mainHandler.post(() -> {
+                    responseTextView.setText("Failed to get and verify DCP pin: " + e.getMessage());
+                    Toast.makeText(MainActivity.this, "Failed to get and verify DCP pin: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        }).start();
+    }
     
-    public void runVerifyJwtSigningKeyBenchmark() {
+    public void runVerifyJwtCskBenchmark() {
         // Show loading message
         int maxAttempts = getCurrentMaxBenchmarkAttempts();
         mainHandler.post(() -> {
@@ -268,7 +340,7 @@ public class MainActivity extends AppCompatActivity {
                 String csjwt = HttpsRequestHelper.get_content(csconn);
                 
                 // Run benchmark with dynamic iterations
-                String benchmarkResults = JwtBenchmark.runVerifyJwtSigningKeyBenchmark(csjwt, appcert, maxAttempts);
+                String benchmarkResults = JwtBenchmark.runVerifyJwtCskBenchmark(csjwt, appcert, maxAttempts);
                 
                 // Update the response text view with benchmark results on main thread
                 mainHandler.post(() -> {
@@ -293,7 +365,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
     
-    public void runVerifyJWTCertClaimBenchmark() {
+    public void runVerifyJwtSccBenchmark() {
         // Show loading message
         int maxAttempts = getCurrentMaxBenchmarkAttempts();
         mainHandler.post(() -> {
@@ -320,7 +392,7 @@ public class MainActivity extends AppCompatActivity {
                 String certclaim = HttpsRequestHelper.get_content(certconn);
                 
                 // Run benchmark with dynamic iterations
-                String benchmarkResults = JwtBenchmark.runVerifyJWTCertClaimBenchmark(certclaim, cs_jwk, maxAttempts);
+                String benchmarkResults = JwtBenchmark.runVerifyJwtSccBenchmark(certclaim, cs_jwk, maxAttempts);
                 
                 // Update the response text view with benchmark results on main thread
                 mainHandler.post(() -> {
@@ -340,6 +412,40 @@ public class MainActivity extends AppCompatActivity {
                 mainHandler.post(() -> {
                     responseTextView.setText("JWT Server Cert Claim Benchmark failed: " + e.getMessage());
                     Toast.makeText(MainActivity.this, "JWT Server Cert Claim Benchmark failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        }).start();
+    }
+
+    public void runVerifyDCPBenchmark() {
+        int maxAttempts = getCurrentMaxBenchmarkAttempts();
+        mainHandler.post(() -> {
+            responseTextView.setText("Running DCP verification benchmark...\nPlease wait...");
+        });
+
+        new Thread(() -> {
+            try {
+                String host = getDCPHost();
+
+                HttpsURLConnection pubkeyConn = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/my-dcp-pubkey.pem");
+                String dcpPublicKeyPem = HttpsRequestHelper.get_content(pubkeyConn);
+
+                HttpsURLConnection dcpConn = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/my-dcp-servercertpin.json");
+                String dcpJson = HttpsRequestHelper.get_content(dcpConn);
+
+                String benchmarkResults = JwtBenchmark.runVerifyDCPBenchmark(dcpJson, dcpPublicKeyPem, maxAttempts);
+
+                mainHandler.post(() -> {
+                    responseTextView.setText("DCP Verification Benchmark Results\n" +
+                                           "==================================\n\n" + benchmarkResults);
+                    Toast.makeText(MainActivity.this, "DCP Benchmark completed", Toast.LENGTH_SHORT).show();
+                });
+
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to run DCP benchmark: " + e.getMessage(), e);
+                mainHandler.post(() -> {
+                    responseTextView.setText("DCP Benchmark failed: " + e.getMessage());
+                    Toast.makeText(MainActivity.this, "DCP Benchmark failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
             }
         }).start();
@@ -469,7 +575,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
     
-    public void runGetSigningKeyJWTBenchmark() {
+    public void runGetJwtCskBenchmark() {
         // Show loading message
         int maxAttempts = getCurrentMaxBenchmarkAttempts();
         mainHandler.post(() -> {
@@ -483,7 +589,7 @@ public class MainActivity extends AppCompatActivity {
                 String host = getCurrentHost();
                 
                 // Run benchmark with dynamic iterations
-                String benchmarkResults = JwtBenchmark.runGetSigningKeyJWTBenchmark(host, maxAttempts);
+                String benchmarkResults = JwtBenchmark.runGetJwtCskBenchmark(host, maxAttempts);
                 
                 // Update the response text view with benchmark results on main thread
                 mainHandler.post(() -> {
@@ -508,7 +614,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
     
-    public void runGetCertClaimJWTBenchmark() {
+    public void runGetJwtSccBenchmark() {
         // Show loading message
         int maxAttempts = getCurrentMaxBenchmarkAttempts();
         mainHandler.post(() -> {
@@ -522,7 +628,7 @@ public class MainActivity extends AppCompatActivity {
                 String host = getCurrentHost();
                 
                 // Run benchmark with dynamic iterations
-                String benchmarkResults = JwtBenchmark.runGetCertClaimJWTBenchmark(host, maxAttempts);
+                String benchmarkResults = JwtBenchmark.runGetJwtSccBenchmark(host, maxAttempts);
                 
                 // Update the response text view with benchmark results on main thread
                 mainHandler.post(() -> {

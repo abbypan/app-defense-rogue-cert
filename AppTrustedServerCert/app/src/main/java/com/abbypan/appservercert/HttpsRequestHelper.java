@@ -218,7 +218,6 @@ public class HttpsRequestHelper {
     //@Setup(Level.Iteration)
     public static void main(String[] args) throws Exception
     {
-
         //String trustStorePath = System.getProperty("java.home") + "/lib/security/cacerts";
         //System.out.println("trustStorePath: " + trustStorePath);
 

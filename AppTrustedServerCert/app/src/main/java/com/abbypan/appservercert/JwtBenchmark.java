@@ -484,6 +484,43 @@ public class JwtBenchmark {
     }
 
     /**
+     * Benchmark DCP pin verification with DCP public key PEM
+     */
+    public static JwtBenchmark benchmarkVerifyDCP(String dcpJson, String dcpPublicKeyPem, int attemptNumber) {
+        JwtBenchmark result = new JwtBenchmark();
+        result.setOperation("verifyDCP");
+        result.setAttemptNumber(attemptNumber);
+        result.setTokenType("DCP");
+        result.setTokenSizeBytes(dcpJson.getBytes().length);
+
+        long startTime = System.nanoTime();
+        long parseStartTime, parseEndTime, verificationStartTime, verificationEndTime;
+
+        try {
+            parseStartTime = System.nanoTime();
+            PemUtils.parsePemString(dcpPublicKeyPem);
+            parseEndTime = System.nanoTime();
+            result.setParseTimeUs((parseEndTime - parseStartTime) / 1_000);
+
+            verificationStartTime = System.nanoTime();
+            DCPVerifier.verifyDCPWithPublicKeyPem(dcpJson, dcpPublicKeyPem);
+            verificationEndTime = System.nanoTime();
+            result.setVerificationTimeUs((verificationEndTime - verificationStartTime) / 1_000);
+
+            result.setSuccess(true);
+            result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000);
+            result.setAlgorithm("DCP");
+
+        } catch (Exception e) {
+            result.setSuccess(false);
+            result.setErrorMessage(e.getMessage());
+            result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000);
+        }
+
+        return result;
+    }
+
+    /**
      * Run multiple HTTPS ASPRoC connection benchmark iterations and return statistics
      */
     public static String runHttpsASPRoCConnectionBenchmark(String host, String expIssuer, int iterations) {
@@ -534,7 +571,7 @@ public class JwtBenchmark {
     /**
      * Run multiple Get Cert Claim JWT benchmark iterations and return statistics
      */
-    public static String runGetCertClaimJWTBenchmark(String host, int iterations) {
+    public static String runGetJwtSccBenchmark(String host, int iterations) {
         List<JwtBenchmark> results = new ArrayList<>();
         
         // Run benchmark iterations
@@ -558,7 +595,7 @@ public class JwtBenchmark {
     /**
      * Run multiple Get Signing Key JWT benchmark iterations and return statistics
      */
-    public static String runGetSigningKeyJWTBenchmark(String host, int iterations) {
+    public static String runGetJwtCskBenchmark(String host, int iterations) {
         List<JwtBenchmark> results = new ArrayList<>();
         
         // Run benchmark iterations
@@ -606,7 +643,7 @@ public class JwtBenchmark {
     /**
      * Run multiple JWK benchmark iterations and return statistics
      */
-    public static String runVerifyJWTCertClaimBenchmark(String token, String jwkJson, int iterations) {
+    public static String runVerifyJwtSccBenchmark(String token, String jwkJson, int iterations) {
         List<JwtBenchmark> results = new ArrayList<>();
         
         // Run benchmark iterations
@@ -628,9 +665,30 @@ public class JwtBenchmark {
     }
 
     /**
+     * Run multiple DCP verification benchmark iterations and return statistics
+     */
+    public static String runVerifyDCPBenchmark(String dcpJson, String dcpPublicKeyPem, int iterations) {
+        List<JwtBenchmark> results = new ArrayList<>();
+
+        for (int i = 1; i <= iterations; i++) {
+            JwtBenchmark result = benchmarkVerifyDCP(dcpJson, dcpPublicKeyPem, i);
+            results.add(result);
+
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+
+        return calculateBenchmarkStatistics(results);
+    }
+
+    /**
      * Run multiple benchmark iterations and return statistics
      */
-    public static String runVerifyJwtSigningKeyBenchmark(String token, String cert, int iterations) {
+    public static String runVerifyJwtCskBenchmark(String token, String cert, int iterations) {
         List<JwtBenchmark> results = new ArrayList<>();
         
         // Run benchmark iterations
