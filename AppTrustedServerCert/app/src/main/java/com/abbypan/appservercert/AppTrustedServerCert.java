@@ -27,7 +27,7 @@ public class AppTrustedServerCert {
         //Log.d(TAG, "Testing with host: " + host);
     }  
     
-    public  static String  getAppSignedServerCertClaim(Context ts, String host) throws Exception {
+    public  static String  getServerCertClaim(Context ts, String host) throws Exception {
  
         String appcert = AppInfo.getPrimarySigningCert(ts);
         //Log.d(TAG, "appcert: " + appcert);

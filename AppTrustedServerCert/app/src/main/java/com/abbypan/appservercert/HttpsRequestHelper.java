@@ -51,13 +51,14 @@ import java.nio.charset.StandardCharsets;
 
 public class HttpsRequestHelper {
 
-    //private static JSONObject our_cache;
+    //private static JSONObject asproc_cache;
     
     // Static global X509TrustManager
     private static X509TrustManager default_tm = null;
     private static TrustManager[] bypassTrustManagers = null;
     private static TrustManager[] defaultTrustManagers = null;
-    private static TrustManager[] ourTrustManagers = null;
+    private static TrustManager[] asprocTrustManagers = null;
+    private static TrustManager[] dcpTrustManagers = null;
     
     // Pre-allocated empty array for bypass trust manager to avoid allocation overhead
     private static final X509Certificate[] EMPTY_CERT_ARRAY = new X509Certificate[0];
@@ -65,7 +66,8 @@ public class HttpsRequestHelper {
     // Cached SSLContext instances for performance
     private static SSLSocketFactory defaultSslSocketFactory = null;
     private static SSLSocketFactory bypassSslSocketFactory = null;
-    private static SSLSocketFactory ourSslSocketFactory = null;
+    private static SSLSocketFactory asprocSslSocketFactory = null;
+    private static SSLSocketFactory dcpSslSocketFactory = null;
     
     // Static initialization method
     private static synchronized X509TrustManager getDefaultTrustManager() throws Exception {
@@ -134,11 +136,11 @@ public class HttpsRequestHelper {
         return defaultTrustManagers;
     }
 
-    private static synchronized  TrustManager[]  getOurTrustManagers(String exp_issuer) throws Exception {
-        // For our connection, we need to create new trust managers each time due to exp_issuer parameter
+    private static synchronized  TrustManager[]  getASPRoCTrustManagers(String exp_issuer) throws Exception {
+        // For ASPRoC connection, we need to create new trust managers each time due to exp_issuer parameter
         // But we can optimize by ensuring default_tm is already initialized
         default_tm = getDefaultTrustManager();
-        ourTrustManagers = new TrustManager[] { new X509TrustManager() {
+        asprocTrustManagers = new TrustManager[] { new X509TrustManager() {
 
             public X509Certificate[] getAcceptedIssuers() {
                 return default_tm.getAcceptedIssuers();
@@ -151,9 +153,9 @@ public class HttpsRequestHelper {
 
                 try {
                     boolean res = HttpsRequestHelper.checkExpIssuer(ee, exp_issuer);
-                    //System.out.println(host + ",our!," + res);
+                    //System.out.println(host + ",asproc!," + res);
                     if(!res) {
-                        throw new Exception("HttpsRequestHelper check: fail!");
+                        throw new Exception("HttpsRequestHelper issuer check: fail!");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -165,7 +167,41 @@ public class HttpsRequestHelper {
         }
 
         };
-        return ourTrustManagers;
+        return asprocTrustManagers;
+    }
+
+    private static synchronized TrustManager[] getDCPTrustManagers(String exp_spk) throws Exception {
+        default_tm = getDefaultTrustManager();
+        dcpTrustManagers = new TrustManager[] { new X509TrustManager() {
+
+            public X509Certificate[] getAcceptedIssuers() {
+                return default_tm.getAcceptedIssuers();
+            }
+
+            public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                default_tm.checkServerTrusted(chain, authType);
+
+                X509Certificate ee = chain[0];
+
+                try {
+                    boolean res = HttpsRequestHelper.checkExpSPK(ee, exp_spk);
+                    if(!res) {
+                        throw new CertificateException("HttpsRequestHelper DCP SPK check: fail!");
+                    }
+                } catch (CertificateException e) {
+                    throw e;
+                } catch (Exception e) {
+                    throw new CertificateException(e);
+                }
+            }
+
+            public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                default_tm.checkClientTrusted(chain, authType);
+            }
+        }
+
+        };
+        return dcpTrustManagers;
     }
 
     // Constructor to initialize trust managers and SSL socket factories
@@ -186,14 +222,14 @@ public class HttpsRequestHelper {
         //String trustStorePath = System.getProperty("java.home") + "/lib/security/cacerts";
         //System.out.println("trustStorePath: " + trustStorePath);
 
-        //args: www.xxx.com, bypass/default/our, exp_issuer
+        //args: www.xxx.com, bypass/default/asproc, exp_issuer/dcp, exp_spk
 
-        HttpsRequestHelper our = new HttpsRequestHelper();
+        HttpsRequestHelper req = new HttpsRequestHelper();
 
         long startTime = System.nanoTime();
 
-        HttpsURLConnection con = our.create_main_conn(args);
-        String res = our.get_content(con);
+        HttpsURLConnection con = req.create_main_conn(args);
+        String res = req.get_content(con);
 
         long endTime = System.nanoTime();
         //System.out.println(args[0] + "," + args[1] + "," + (endTime - startTime) / 1_000_000.0 );
@@ -211,7 +247,7 @@ public class HttpsRequestHelper {
     }
 
     public static HttpsURLConnection create_main_conn(String[] para) throws Exception {
-        //para: www.xxx.com, bypass/default/our, exp_issuer
+        //para: www.xxx.com, bypass/default/asproc, exp_issuer
 
         URL url;
         url = URI.create("https://" + para[0]).toURL();
@@ -223,12 +259,14 @@ public class HttpsRequestHelper {
         }else if(para[1].equals("bypass")) {
             bypassSslSocketFactory = createBypassSslSocketFactory();
             con.setSSLSocketFactory(bypassSslSocketFactory);
-
             //HostnameVerifier hv = createBypassHostnameVerifier();
             //con.setHostnameVerifier(hv);
-        }else if(para[1].equals("our")) {
-            ourSslSocketFactory = createOurSslSocketFactory(para[0], para[2]);
-            con.setSSLSocketFactory(ourSslSocketFactory);
+        }else if(para[1].equals("asproc")) {
+            asprocSslSocketFactory = createASPRoCSslSocketFactory(para[0], para[2]);
+            con.setSSLSocketFactory(asprocSslSocketFactory);
+        }else if(para[1].equals("dcp")) {
+            dcpSslSocketFactory = createDCPSslSocketFactory(para[0], para[3]);
+            con.setSSLSocketFactory(dcpSslSocketFactory);
         }
         return con;
     }
@@ -243,6 +281,12 @@ public class HttpsRequestHelper {
             return true;
         }
         return false;
+    }
+
+    public static boolean checkExpSPK(X509Certificate ee, String exp_spk) throws Exception {
+        String spk = CertificateInfo.calcSubjecPKHash("SHA-256", ee);
+        String normalizedExpSpk = exp_spk.replace(":", "").toLowerCase();
+        return spk.equals(normalizedExpSpk);
     }
 
     private static SSLSocketFactory createDefaultSslSocketFactory() throws Exception {
@@ -261,22 +305,37 @@ public class HttpsRequestHelper {
     }
 
 
-    private static SSLSocketFactory createOurSslSocketFactory(String host, String exp_issuer) throws Exception {
-        // For our connection, we need to create a new SSLContext each time due to exp_issuer parameter
+    private static SSLSocketFactory createASPRoCSslSocketFactory(String host, String exp_issuer) throws Exception {
+        // For ASPRoC connection, we need to create a new SSLContext each time due to exp_issuer parameter
         // But we can optimize by reusing the trust managers if they're already created
         // Double-check locking pattern for better performance - avoids synchronization on every call
-        if(ourSslSocketFactory == null) {
+        if(asprocSslSocketFactory == null) {
             synchronized (HttpsRequestHelper.class) {
-                if(ourSslSocketFactory == null) {
-                    ourTrustManagers = getOurTrustManagers(exp_issuer);
+                if(asprocSslSocketFactory == null) {
+                    asprocTrustManagers = getASPRoCTrustManagers(exp_issuer);
                     
                     SSLContext sslContext = SSLContext.getInstance("TLS");
-                    sslContext.init(null, ourTrustManagers, new SecureRandom());
-                    ourSslSocketFactory = sslContext.getSocketFactory();
+                    sslContext.init(null, asprocTrustManagers, new SecureRandom());
+                    asprocSslSocketFactory = sslContext.getSocketFactory();
                 }
             }
         }
-        return ourSslSocketFactory;
+        return asprocSslSocketFactory;
+    }
+
+    private static SSLSocketFactory createDCPSslSocketFactory(String host, String exp_spk) throws Exception {
+        if(dcpSslSocketFactory == null) {
+            synchronized (HttpsRequestHelper.class) {
+                if(dcpSslSocketFactory == null) {
+                    dcpTrustManagers = getDCPTrustManagers(exp_spk);
+
+                    SSLContext sslContext = SSLContext.getInstance("TLS");
+                    sslContext.init(null, dcpTrustManagers, new SecureRandom());
+                    dcpSslSocketFactory = sslContext.getSocketFactory();
+                }
+            }
+        }
+        return dcpSslSocketFactory;
     }
 
     private static HostnameVerifier createBypassHostnameVerifier() {
@@ -308,8 +367,6 @@ public class HttpsRequestHelper {
         //System.out.println("Response Code : " + con.getResponseCode());
         //System.out.println("Cipher Suite : " + con.getCipherSuite());
         //System.out.println("\n");
-
-
 
         Certificate[] certs = con.getServerCertificates();
         for(Certificate cert : certs){

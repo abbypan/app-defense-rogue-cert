@@ -472,7 +472,7 @@ public class CertificateInfo {
      * @param ee the X509Certificate to extract public key from
      * @return the public key as DER-encoded byte array
      */
-    public static byte[] read_subject_pk(X509Certificate ee) {
+    public static byte[] readSubjectPK(X509Certificate ee) {
         PublicKey pk = ee.getPublicKey();
         //System.out.println(">>> Cert Public Key Algorithm : " + pk.getAlgorithm());
 
@@ -490,8 +490,8 @@ public class CertificateInfo {
      * @return the digest as a hexadecimal string
      * @throws Exception if digest calculation fails
      */
-    public static String calc_subject_pk_dgst(String dgstAlg, X509Certificate ee) throws Exception {
-        byte[] pk_der = read_subject_pk(ee);
+    public static String calcSubjecPKHash(String dgstAlg, X509Certificate ee) throws Exception {
+        byte[] pk_der = readSubjectPK(ee);
         //  System.out.println(">>> Cert Public Key DER : " + HexFormat.of().formatHex(pk_der) );
 
         byte[] dgst = HashUtils.digest(dgstAlg, pk_der);

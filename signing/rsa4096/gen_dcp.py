@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import base64
+import json
 import re
 import sys
 from Crypto.Hash import SHA256
@@ -39,9 +40,9 @@ def read_subject_pk(cert):
    return tbs_seq[subject_pk_index]
 
 
-def sign_subject_pk(dcp_priv, subject_pk):
+def sign_subject_pk(dcp_priv, subject_pk_hash):
    dcp_key = RSA.import_key(read_pem_file(dcp_priv, "PRIVATE KEY"))
-   return pkcs1_15.new(dcp_key).sign(SHA256.new(subject_pk))
+   return pkcs1_15.new(dcp_key).sign(subject_pk_hash)
 
 
 dcp_cert = "my-dcp-cert.pem"
@@ -53,9 +54,15 @@ f.close()
 dcp_priv = "my-dcp-key.pem"
 server_cert = sys.argv[1]
 subject_pk = read_subject_pk(server_cert)
-sig = sign_subject_pk(dcp_priv, subject_pk)
+subject_pk_hash = SHA256.new(subject_pk)
+sig = sign_subject_pk(dcp_priv, subject_pk_hash)
 
-sigf = ("my-dcp-servercertpin.bin")
-f = open(sigf, "wb")
-f.write(sig)
+dcp = json.dumps({
+        "pin": subject_pk_hash.hexdigest(),
+        "sig": sig.hex()
+        })
+
+sigf = ("my-dcp-servercertpin.json")
+f = open(sigf, "w")
+f.write(dcp)
 f.close()

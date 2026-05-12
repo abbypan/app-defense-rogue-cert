@@ -177,23 +177,23 @@ public class JwtBenchmark {
     }
 
     /**
-     * Benchmark HTTPS our connection creation
+     * Benchmark HTTPS ASPRoC connection creation
      */
-    public static JwtBenchmark benchmarkHttpsOurConnection(String host, String expIssuer, int attemptNumber) {
+    public static JwtBenchmark benchmarkHttpsASPRoCConnection(String host, String expIssuer, int attemptNumber) {
         JwtBenchmark result = new JwtBenchmark();
-        result.setOperation("createHttpsOurConnection");
+        result.setOperation("createHttpsASPRoCConnection");
         result.setAttemptNumber(attemptNumber);
-        result.setTokenType("HTTPS-Our");
+        result.setTokenType("HTTPS-ASPRoC");
         result.setTokenSizeBytes((host + expIssuer).getBytes().length);
         
         long startTime = System.nanoTime();
         long connectionStartTime, connectionEndTime;
         
         try {
-            // Measure our connection creation time
+            // Measure ASPRoC connection creation time
             connectionStartTime = System.nanoTime();
 
-            HttpsURLConnection con = HttpsRequestHelper.create_main_conn(new String[] { host, "our", expIssuer});
+            HttpsURLConnection con = HttpsRequestHelper.create_main_conn(new String[] { host, "asproc", expIssuer});
             HttpsRequestHelper.get_content(con);
 
             connectionEndTime = System.nanoTime();
@@ -205,7 +205,7 @@ public class JwtBenchmark {
             // Set success
             result.setSuccess(true);
             result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000); // Convert nanoseconds to microseconds
-            result.setAlgorithm("HTTPS-Our");
+            result.setAlgorithm("HTTPS-ASPRoC");
             
         } catch (Exception e) {
             result.setSuccess(false);
@@ -484,14 +484,14 @@ public class JwtBenchmark {
     }
 
     /**
-     * Run multiple HTTPS our connection benchmark iterations and return statistics
+     * Run multiple HTTPS ASPRoC connection benchmark iterations and return statistics
      */
-    public static String runHttpsOurConnectionBenchmark(String host, String expIssuer, int iterations) {
+    public static String runHttpsASPRoCConnectionBenchmark(String host, String expIssuer, int iterations) {
         List<JwtBenchmark> results = new ArrayList<>();
         
         // Run benchmark iterations
         for (int i = 1; i <= iterations; i++) {
-            JwtBenchmark result = benchmarkHttpsOurConnection(host, expIssuer, i);
+            JwtBenchmark result = benchmarkHttpsASPRoCConnection(host, expIssuer, i);
             results.add(result);
             
             // Small delay between iterations

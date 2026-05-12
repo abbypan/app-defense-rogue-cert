@@ -162,12 +162,12 @@
 
     </LinearLayout>
 
-    <!-- HTTPS Our Connection Benchmark Button -->
+    <!-- HTTPS ASPRoC Connection Benchmark Button -->
     <Button
-        android:id="@+id/httpsOurConnectionBenchmarkButton"
+        android:id="@+id/httpsASPRoCConnectionBenchmarkButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="HTTPS Our Connection Benchmark"
+        android:text="HTTPS ASPRoC Connection Benchmark"
         android:textSize="14sp"
         android:layout_marginBottom="8dp"
         android:background="#FF5722"

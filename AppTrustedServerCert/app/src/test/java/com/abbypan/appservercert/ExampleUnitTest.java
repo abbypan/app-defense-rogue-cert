@@ -24,10 +24,10 @@ public class ExampleUnitTest {
         try {
         // Test with issuer validation during handshake
         MockLog.d("ExampleUnitTest", "\n>>>>>>>Testing HTTPS request with issuer validation during handshake:");
-            HttpsURLConnection our_conn = HttpsRequestHelper.create_main_conn( new String[] {"https://appservercert.run.place", "our", "CN=E7, O=Let's Encrypt, C=US"});
-            MockLog.d("ExampleUnitTest", "Our connection created successfully");
+            HttpsURLConnection asproc_conn = HttpsRequestHelper.create_main_conn( new String[] {"https://appservercert.run.place", "asproc", "CN=E7, O=Let's Encrypt, C=US"});
+            MockLog.d("ExampleUnitTest", "ASPRoC connection created successfully");
                 } catch (Exception e) {
-            MockLog.e("ExampleUnitTest", "Failed to create our connection: " + e.getMessage());
+            MockLog.e("ExampleUnitTest", "Failed to create ASPRoC connection: " + e.getMessage());
             e.printStackTrace();
         }
         

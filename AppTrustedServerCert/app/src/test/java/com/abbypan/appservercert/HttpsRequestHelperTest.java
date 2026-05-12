@@ -11,29 +11,29 @@ public class HttpsRequestHelperTest {
 
     @Test
     public  void main() throws Exception {
-        ourConn("https://appservercert.run.place", "our", "CN=E7, O=Let's Encrypt, C=US");
+        asprocConn("https://appservercert.run.place", "asproc", "CN=E7, O=Let's Encrypt, C=US");
 
-        ourConn("https://appservercert.run.place", "our", "CN=E6, O=Let's Encrypt, C=US");
+        asprocConn("https://appservercert.run.place", "asproc", "CN=E6, O=Let's Encrypt, C=US");
 
-        ourConn("https://appservercert.run.place", "default", null);
+        asprocConn("https://appservercert.run.place", "default", null);
 
-        ourConn("https://appservercert.run.place", "bypass", null);
+        asprocConn("https://appservercert.run.place", "bypass", null);
     }
 
 
-    public static void ourConn(String host, String type, String exp_issuer) {
+    public static void asprocConn(String host, String type, String exp_issuer) {
         // Benchmark code to be measured
         String[] para = { host, type, exp_issuer };
-        HttpsRequestHelper our = null;
+        HttpsRequestHelper asproc = null;
         try {
-            our = new HttpsRequestHelper();
+            asproc = new HttpsRequestHelper();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
         HttpsURLConnection con = null;
         try {
-            con = our.create_main_conn(para);
-            our.print_content(con);
+            con = asproc.create_main_conn(para);
+            asproc.print_content(con);
 
         } catch (Exception e) {
             MockLog.e("HttpsRequestHelperTest", "Failed to create connection: " + e.getMessage());

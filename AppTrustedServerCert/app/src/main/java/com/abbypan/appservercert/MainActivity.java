@@ -20,9 +20,9 @@ import org.json.JSONObject;
 public class MainActivity extends AppCompatActivity {
     
     private static final String TAG = "MainActivity";
-    private static final String OUR_HOST = "appservercert.run.place";
-    //private static final String OUR_ISSUER = "CN=E7, O=Let's Encrypt, C=US";
-    private static final String OUR_ISSUER = "CN=test issuer";
+    private static final String ASPROC_HOST = "appservercert.run.place";
+    //private static final String ASPROC_ISSUER = "CN=E7, O=Let's Encrypt, C=US";
+    private static final String ASPROC_ISSUER = "CN=test issuer";
     
     private HttpsRequestHelper httpsRequestHelper;
    // private AppInfoManager appInfoManager;
@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private Button JWTSCCBenchmarkButton;
     private Button httpsDefaultConnectionBenchmarkButton;
     private Button httpsBypassConnectionBenchmarkButton;
-    private Button httpsOurConnectionBenchmarkButton;
+    private Button httpsASPRoCConnectionBenchmarkButton;
     private Button httpsCreateConnBenchmarkButton;
     private Button getCertClaimJWTBenchmarkButton;
     private EditText maxBenchmarkAttemptNumber;
@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
         JWTSCCBenchmarkButton = findViewById(R.id.JWTSCCBenchmarkButton);
         httpsDefaultConnectionBenchmarkButton = findViewById(R.id.httpsDefaultConnectionBenchmarkButton);
         httpsBypassConnectionBenchmarkButton = findViewById(R.id.httpsBypassConnectionBenchmarkButton);
-        httpsOurConnectionBenchmarkButton = findViewById(R.id.httpsOurConnectionBenchmarkButton);
+        httpsASPRoCConnectionBenchmarkButton = findViewById(R.id.httpsASPRoCConnectionBenchmarkButton);
         httpsCreateConnBenchmarkButton = findViewById(R.id.httpsCreateConnBenchmarkButton);
         getCertClaimJWTBenchmarkButton = findViewById(R.id.getCertClaimJWTBenchmarkButton);
         maxBenchmarkAttemptNumber = findViewById(R.id.maxBenchmarkAttemptNumber);
@@ -75,10 +75,10 @@ public class MainActivity extends AppCompatActivity {
        //AppInfo appInfo = new AppInfo(this);
 
         // Set initial host display
-        updateHostDisplay(OUR_HOST);
+        updateHostDisplay(ASPROC_HOST);
         
         // Set initial expected issuer display
-        updateExpIssuerDisplay(OUR_ISSUER);
+        updateExpIssuerDisplay(ASPROC_ISSUER);
 
         // Set up button click listeners
         GetHTTPContentButton.setOnClickListener(v -> {
@@ -105,8 +105,8 @@ public class MainActivity extends AppCompatActivity {
             runHttpsBypassConnectionBenchmark();
         });
         
-        httpsOurConnectionBenchmarkButton.setOnClickListener(v -> {
-            runHttpsOurConnectionBenchmark();
+        httpsASPRoCConnectionBenchmarkButton.setOnClickListener(v -> {
+            runHttpsASPRoCConnectionBenchmark();
         });
 
         httpsCreateConnBenchmarkButton.setOnClickListener(v -> {
@@ -145,9 +145,9 @@ public class MainActivity extends AppCompatActivity {
     public String getCurrentHost() {
         if (hostTextView != null) {
             String host = hostTextView.getText().toString().trim();
-            return host.isEmpty() ? OUR_HOST : host;
+            return host.isEmpty() ? ASPROC_HOST : host;
         }
-        return OUR_HOST;
+        return ASPROC_HOST;
     }
     
     /**
@@ -157,9 +157,9 @@ public class MainActivity extends AppCompatActivity {
     public String getCurrentExpIssuer() {
         if (expIssuerTextView != null) {
             String expIssuer = expIssuerTextView.getText().toString().trim();
-            return expIssuer.isEmpty() ? OUR_ISSUER : expIssuer;
+            return expIssuer.isEmpty() ? ASPROC_ISSUER : expIssuer;
         }
-        return OUR_ISSUER;
+        return ASPROC_ISSUER;
     }
     
     /**
@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 HttpsURLConnection con = httpsRequestHelper.create_conn(url);
                 String info = httpsRequestHelper.get_content(con);
-                //String info = getAppSignedServerCertClaim(url);
+                //String info = getServerCertClaim(url);
                 //Log.d(TAG, "HTTP content retrieved successfully from: " + url);
                 
                 // Update response text view on main thread
@@ -224,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
         new Thread(() -> {
             try {
                 // Get and verify server certificate claim
-                String expIssuer = AppTrustedServerCert.getAppSignedServerCertClaim(this, getCurrentHost());
+                String expIssuer = AppTrustedServerCert.getServerCertClaim(this, getCurrentHost());
                 
                 // Update the response text view with server certificate claim on main thread
                 mainHandler.post(() -> {
@@ -423,11 +423,11 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
     
-    public void runHttpsOurConnectionBenchmark() {
+    public void runHttpsASPRoCConnectionBenchmark() {
         // Show loading message
         int maxAttempts = getCurrentMaxBenchmarkAttempts();
         mainHandler.post(() -> {
-            responseTextView.setText("Running HTTPS our connection benchmark...\nPlease wait...");
+            responseTextView.setText("Running HTTPS ASPRoC connection benchmark...\nPlease wait...");
         });
         
         // Perform benchmark on background thread
@@ -440,30 +440,30 @@ public class MainActivity extends AppCompatActivity {
 
                 // Update UI on main thread
                 mainHandler.post(() -> {
-                    responseTextView.setText("Test Our Conn:" + host + ", " + expIssuer);
+                    responseTextView.setText("Test ASPRoC Conn:" + host + ", " + expIssuer);
                 });
 
                 // Run benchmark with dynamic iterations
-                String benchmarkResults = JwtBenchmark.runHttpsOurConnectionBenchmark(host, expIssuer, maxAttempts);
+                String benchmarkResults = JwtBenchmark.runHttpsASPRoCConnectionBenchmark(host, expIssuer, maxAttempts);
                 
                 // Update the response text view with benchmark results on main thread
                 mainHandler.post(() -> {
-                    responseTextView.setText("HTTPS Our Connection Benchmark Results\n" +
+                    responseTextView.setText("HTTPS ASPRoC Connection Benchmark Results\n" +
                                            "=====================================\n\n" + benchmarkResults);
                     
                     // Show a toast to confirm
-                    Toast.makeText(MainActivity.this, "HTTPS Our Connection Benchmark completed", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "HTTPS ASPRoC Connection Benchmark completed", Toast.LENGTH_SHORT).show();
                 });
                 
                 // Also log the results
-                //Log.d(TAG, "HTTPS Our Connection Benchmark Results:\n" + benchmarkResults);
+                //Log.d(TAG, "HTTPS ASPRoC Connection Benchmark Results:\n" + benchmarkResults);
                 
             } catch (Exception e) {
-                Log.e(TAG, "Failed to run HTTPS our connection benchmark: " + e.getMessage(), e);
+                Log.e(TAG, "Failed to run HTTPS ASPRoC connection benchmark: " + e.getMessage(), e);
                 // Update UI on main thread
                 mainHandler.post(() -> {
-                    responseTextView.setText("HTTPS Our Connection Benchmark failed: " + e.getMessage());
-                    Toast.makeText(MainActivity.this, "HTTPS Our Connection Benchmark failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    responseTextView.setText("HTTPS ASPRoC Connection Benchmark failed: " + e.getMessage());
+                    Toast.makeText(MainActivity.this, "HTTPS ASPRoC Connection Benchmark failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
             }
         }).start();
