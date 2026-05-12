@@ -264,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
                 String appcert = AppInfo.getPrimarySigningCert(this);
                 
                 // Get the JWT token to benchmark
-                HttpsURLConnection csconn = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/serverCertClaimSigningKey.jwt");
+                HttpsURLConnection csconn = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/ClaimSigningKey.jwt");
                 String csjwt = HttpsRequestHelper.get_content(csconn);
                 
                 // Run benchmark with dynamic iterations
@@ -308,7 +308,7 @@ public class MainActivity extends AppCompatActivity {
                 String appcert = AppInfo.getPrimarySigningCert(this);
                 
                 // Get the signing key JWT
-                HttpsURLConnection csconn = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/serverCertClaimSigningKey.jwt");
+                HttpsURLConnection csconn = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/ClaimSigningKey.jwt");
                 String csjwt = HttpsRequestHelper.get_content(csconn);
                 
                 // Verify the signing key JWT to get the JWK
@@ -316,7 +316,7 @@ public class MainActivity extends AppCompatActivity {
                 String cs_jwk = new JSONObject(csverifyres).getString("cs_jwk");
                 
                 // Get the certificate claim JWT
-                HttpsURLConnection certconn = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/serverCertClaim.jwt");
+                HttpsURLConnection certconn = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/ServerCertClaim.jwt");
                 String certclaim = HttpsRequestHelper.get_content(certconn);
                 
                 // Run benchmark with dynamic iterations

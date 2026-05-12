@@ -293,7 +293,7 @@ public class JwtBenchmark {
     }
 
     /**
-     * Benchmark HTTPS connection creation for serverCertClaim.jwt
+     * Benchmark HTTPS connection creation for ServerCertClaim.jwt
      */
     public static JwtBenchmark benchmarkHttpsGetCertClaim(String host, int attemptNumber) {
         JwtBenchmark result = new JwtBenchmark();
@@ -308,7 +308,7 @@ public class JwtBenchmark {
         try {
             // Measure connection creation time
             connectionStartTime = System.nanoTime();
-            HttpsURLConnection con = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/serverCertClaim.jwt");
+            HttpsURLConnection con = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/ServerCertClaim.jwt");
             String info = HttpsRequestHelper.get_content(con);
             connectionEndTime = System.nanoTime();
             result.setParseTimeUs((connectionEndTime - connectionStartTime) / 1_000); // Convert nanoseconds to microseconds
@@ -331,7 +331,7 @@ public class JwtBenchmark {
     }
 
     /**
-     * Benchmark HTTPS connection creation for serverCertClaimSigningKey.jwt
+     * Benchmark HTTPS connection creation for ClaimSigningKey.jwt
      */
     public static JwtBenchmark benchmarkGetSigningKeyJWT(String host, int attemptNumber) {
         JwtBenchmark result = new JwtBenchmark();
@@ -346,7 +346,7 @@ public class JwtBenchmark {
         try {
             // Measure connection creation time
             connectionStartTime = System.nanoTime();
-            HttpsURLConnection con = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/serverCertClaimSigningKey.jwt");
+            HttpsURLConnection con = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/ClaimSigningKey.jwt");
             String info = HttpsRequestHelper.get_content(con);
 
             connectionEndTime = System.nanoTime();

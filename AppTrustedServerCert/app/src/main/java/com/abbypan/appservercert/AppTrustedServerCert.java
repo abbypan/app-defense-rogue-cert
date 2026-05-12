@@ -32,12 +32,12 @@ public class AppTrustedServerCert {
         String appcert = AppInfo.getPrimarySigningCert(ts);
         //Log.d(TAG, "appcert: " + appcert);
  
-        HttpsURLConnection csconn = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/serverCertClaimSigningKey.jwt");
+        HttpsURLConnection csconn = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/ClaimSigningKey.jwt");
         String csjwt = HttpsRequestHelper.get_content(csconn);
         //Log.d(TAG, "csjwt: " + csjwt);
 
         HttpsURLConnection certconn = HttpsRequestHelper.create_conn("https://" + host +
-        "/.well-known/serverCertClaim.jwt");
+        "/.well-known/ServerCertClaim.jwt");
                String certclaim = HttpsRequestHelper.get_content(certconn);
         //Log.d(TAG, "certclaim: " + certclaim);
 

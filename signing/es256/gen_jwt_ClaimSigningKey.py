@@ -11,7 +11,7 @@ with open(cert, "r") as f:
 f.closed
 
 pro_header = json_encode({
-        "alg": "ES384", 
+        "alg": "ES256", 
         "x5c": [ cert_pem ]
         })
 
@@ -22,7 +22,7 @@ f.closed
 priv_key = jwk.JWK.from_pem(priv_pem, None)
 #print(priv_key)
 
-domf = "my-cs-pubkey.jwk"
+domf = "my-claim-pubkey.jwk"
 with open(domf, "r", encoding="utf-8") as f:
    pk = f.read()
    payload = json_encode({
@@ -42,7 +42,7 @@ jwstoken.add_signature(priv_key,
 sig = jwstoken.serialize(compact=True)
 #print(sig)
 
-sigf = ("serverCertClaimSigningKey.jwt")
+sigf = ("ClaimSigningKey.jwt")
 f = open(sigf, "w")
 f.write(sig)
 f.close()

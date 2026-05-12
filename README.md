@@ -2,7 +2,9 @@
 
 # install
 
-    pacman -S certificate-ripper-bin python-jwcrypto jdk21-openjdk maven openssl
+    pacman -S certificate-ripper-bin python-pip jdk21-openjdk maven openssl
+
+    pip install -r requirements.txt
 
     npm install -g eckles
     
@@ -12,11 +14,11 @@
 
 	./gen_app_signing_key.sh
 
-	./gen_certclaim_signing_key.sh
+	./gen_claim_signing_key.sh
 
-	./gen_jwt_serverCertClaimSigningKey.py 
+	./gen_jwt_ClaimSigningKey.py 
 
-	./gen_jwt_serverCertClaim.py appservercert.run.place "CN=E7, O=Let's Encrypt, C=US"
+	./gen_jwt_ServerCertClaim.py server-cert.pem
 
 
 # proverif

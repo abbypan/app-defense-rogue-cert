@@ -37,12 +37,12 @@ public class JwtVerifierTest {
       //  String alg = "rsa3072";
 
         String appcert = JsonUtils.read_file("src/main/resources/"+ alg + "/my-app-cert.pem");
-        //String cscert = JsonUtils.read_file("src/main/resources/my-cs-cert.pem");
+        //String cscert = JsonUtils.read_file("src/main/resources/my-claim-cert.pem");
 
-        String csjson = JsonUtils.read_file("src/main/resources/"+ alg + "/serverCertClaimSigningKey.jwt");
+        String csjson = JsonUtils.read_file("src/main/resources/"+ alg + "/ClaimSigningKey.jwt");
         //System.out.println(csjson);
 
-        String certclaim = JsonUtils.read_file("src/main/resources/"+ alg + "/serverCertClaim.jwt");
+        String certclaim = JsonUtils.read_file("src/main/resources/"+ alg + "/ServerCertClaim.jwt");
         //System.out.println(certclaim);
 
         //X509Certificate certificate = PemUtils.parseX509Certificate(appcert);
