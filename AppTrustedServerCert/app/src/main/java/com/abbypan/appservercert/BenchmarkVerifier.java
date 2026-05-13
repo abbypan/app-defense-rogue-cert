@@ -6,9 +6,9 @@ import java.util.List;
 import javax.net.ssl.HttpsURLConnection;
 
 /**
- * Represents the results of a benchmark test for JWT verification operations
+ * Represents the results of a benchmark test for verification operations
  */
-public class JwtBenchmark {
+public class BenchmarkVerifier {
     private String operation;
     private long totalTimeUs;
     private long parseTimeUs;
@@ -21,7 +21,7 @@ public class JwtBenchmark {
     private String algorithm;
     private int tokenSizeBytes;
 
-    public JwtBenchmark() {
+    public BenchmarkVerifier() {
         this.timestamp = new Date();
         this.success = false;
     }
@@ -179,8 +179,8 @@ public class JwtBenchmark {
     /**
      * Benchmark HTTPS ASPRoC connection creation
      */
-    public static JwtBenchmark benchmarkHttpsASPRoCConnection(String host, String expIssuer, int attemptNumber) {
-        JwtBenchmark result = new JwtBenchmark();
+    public static BenchmarkVerifier benchmarkHttpsASPRoCConnection(String host, String expIssuer, int attemptNumber) {
+        BenchmarkVerifier result = new BenchmarkVerifier();
         result.setOperation("createHttpsASPRoCConnection");
         result.setAttemptNumber(attemptNumber);
         result.setTokenType("HTTPS-ASPRoC");
@@ -193,8 +193,8 @@ public class JwtBenchmark {
             // Measure ASPRoC connection creation time
             connectionStartTime = System.nanoTime();
 
-            HttpsURLConnection con = HttpsRequestHelper.create_main_conn(new String[] { host, "asproc", expIssuer});
-            HttpsRequestHelper.get_content(con);
+            HttpsURLConnection con = HttpsConn.create_main_conn(new String[] { host, "asproc", expIssuer});
+            HttpsConn.get_content(con);
 
             connectionEndTime = System.nanoTime();
             result.setParseTimeUs((connectionEndTime - connectionStartTime) / 1_000); // Convert nanoseconds to microseconds
@@ -219,8 +219,8 @@ public class JwtBenchmark {
     /**
      * Benchmark HTTPS bypass connection creation
      */
-    public static JwtBenchmark benchmarkHttpsBypassConnection(String host, int attemptNumber) {
-        JwtBenchmark result = new JwtBenchmark();
+    public static BenchmarkVerifier benchmarkHttpsBypassConnection(String host, int attemptNumber) {
+        BenchmarkVerifier result = new BenchmarkVerifier();
         result.setOperation("createHttpsBypassConnection");
         result.setAttemptNumber(attemptNumber);
         result.setTokenType("HTTPS-Bypass");
@@ -232,8 +232,8 @@ public class JwtBenchmark {
         try {
             // Measure bypass connection creation time
             connectionStartTime = System.nanoTime();
-            HttpsURLConnection con = HttpsRequestHelper.create_main_conn(new    String [] {host, "bypass"});
-            HttpsRequestHelper.get_content(con);
+            HttpsURLConnection con = HttpsConn.create_main_conn(new    String [] {host, "bypass"});
+            HttpsConn.get_content(con);
             connectionEndTime = System.nanoTime();
             result.setParseTimeUs((connectionEndTime - connectionStartTime) / 1_000); // Convert nanoseconds to microseconds
             
@@ -257,8 +257,8 @@ public class JwtBenchmark {
     /**
      * Benchmark HTTPS connection creation
      */
-    public static JwtBenchmark benchmarkHttpsConnection(String host, int attemptNumber) {
-        JwtBenchmark result = new JwtBenchmark();
+    public static BenchmarkVerifier benchmarkHttpsConnection(String host, int attemptNumber) {
+        BenchmarkVerifier result = new BenchmarkVerifier();
         result.setOperation("createHttpsConnection");
         result.setAttemptNumber(attemptNumber);
         result.setTokenType("HTTPS");
@@ -270,8 +270,8 @@ public class JwtBenchmark {
         try {
             // Measure connection creation time
             connectionStartTime = System.nanoTime();
-            HttpsURLConnection con = HttpsRequestHelper.create_main_conn(new    String [] { host, "default"});
-            HttpsRequestHelper.get_content(con);
+            HttpsURLConnection con = HttpsConn.create_main_conn(new    String [] { host, "default"});
+            HttpsConn.get_content(con);
             connectionEndTime = System.nanoTime();
             result.setParseTimeUs((connectionEndTime - connectionStartTime) / 1_000); // Convert nanoseconds to microseconds
             
@@ -295,8 +295,8 @@ public class JwtBenchmark {
     /**
      * Benchmark HTTPS connection creation for ServerCertClaim.jwt
      */
-    public static JwtBenchmark benchmarkHttpsGetCertClaim(String host, int attemptNumber) {
-        JwtBenchmark result = new JwtBenchmark();
+    public static BenchmarkVerifier benchmarkHttpsGetCertClaim(String host, int attemptNumber) {
+        BenchmarkVerifier result = new BenchmarkVerifier();
         result.setOperation("getCertClaim");
         result.setAttemptNumber(attemptNumber);
         result.setTokenType("HTTPS");
@@ -308,8 +308,8 @@ public class JwtBenchmark {
         try {
             // Measure connection creation time
             connectionStartTime = System.nanoTime();
-            HttpsURLConnection con = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/ServerCertClaim.jwt");
-            String info = HttpsRequestHelper.get_content(con);
+            HttpsURLConnection con = HttpsConn.create_conn("https://" + host + "/.well-known/ServerCertClaim.jwt");
+            String info = HttpsConn.get_content(con);
             connectionEndTime = System.nanoTime();
             result.setParseTimeUs((connectionEndTime - connectionStartTime) / 1_000); // Convert nanoseconds to microseconds
             
@@ -333,8 +333,8 @@ public class JwtBenchmark {
     /**
      * Benchmark HTTPS connection creation for ClaimSigningKey.jwt
      */
-    public static JwtBenchmark benchmarkGetSigningKeyJWT(String host, int attemptNumber) {
-        JwtBenchmark result = new JwtBenchmark();
+    public static BenchmarkVerifier benchmarkGetSigningKeyJWT(String host, int attemptNumber) {
+        BenchmarkVerifier result = new BenchmarkVerifier();
         result.setOperation("createConn");
         result.setAttemptNumber(attemptNumber);
         result.setTokenType("HTTPS");
@@ -346,8 +346,8 @@ public class JwtBenchmark {
         try {
             // Measure connection creation time
             connectionStartTime = System.nanoTime();
-            HttpsURLConnection con = HttpsRequestHelper.create_conn("https://" + host + "/.well-known/ClaimSigningKey.jwt");
-            String info = HttpsRequestHelper.get_content(con);
+            HttpsURLConnection con = HttpsConn.create_conn("https://" + host + "/.well-known/ClaimSigningKey.jwt");
+            String info = HttpsConn.get_content(con);
 
             connectionEndTime = System.nanoTime();
             result.setParseTimeUs((connectionEndTime - connectionStartTime) / 1_000); // Convert nanoseconds to microseconds
@@ -372,8 +372,8 @@ public class JwtBenchmark {
     /**
      * Benchmark JWT verification with JWK
      */
-    public static JwtBenchmark benchmarkVerifyJwtWithJwk(String token, String jwkJson, int attemptNumber) {
-        JwtBenchmark result = new JwtBenchmark();
+    public static BenchmarkVerifier benchmarkVerifyJwtWithJwk(String token, String jwkJson, int attemptNumber) {
+        BenchmarkVerifier result = new BenchmarkVerifier();
         result.setOperation("verifyJwtWithJwk");
         result.setAttemptNumber(attemptNumber);
         result.setTokenType(token.trim().startsWith("{") ? "JSON" : "Compact");
@@ -429,8 +429,8 @@ public class JwtBenchmark {
     /**
      * Benchmark JWT verification with certificate
      */
-    public static JwtBenchmark benchmarkVerifyJwtWithCert(String token, String cert, int attemptNumber) {
-        JwtBenchmark result = new JwtBenchmark();
+    public static BenchmarkVerifier benchmarkVerifyJwtWithCert(String token, String cert, int attemptNumber) {
+        BenchmarkVerifier result = new BenchmarkVerifier();
         result.setOperation("verifyJwtWithCert");
         result.setAttemptNumber(attemptNumber);
         result.setTokenType(token.trim().startsWith("{") ? "JSON" : "Compact");
@@ -486,8 +486,8 @@ public class JwtBenchmark {
     /**
      * Benchmark DCP pin verification with DCP public key PEM
      */
-    public static JwtBenchmark benchmarkVerifyDCP(String dcpJson, String dcpPublicKeyPem, int attemptNumber) {
-        JwtBenchmark result = new JwtBenchmark();
+    public static BenchmarkVerifier benchmarkVerifyDCP(String dcpJson, String dcpPublicKeyPem, int attemptNumber) {
+        BenchmarkVerifier result = new BenchmarkVerifier();
         result.setOperation("verifyDCP");
         result.setAttemptNumber(attemptNumber);
         result.setTokenType("DCP");
@@ -524,11 +524,11 @@ public class JwtBenchmark {
      * Run multiple HTTPS ASPRoC connection benchmark iterations and return statistics
      */
     public static String runHttpsASPRoCConnectionBenchmark(String host, String expIssuer, int iterations) {
-        List<JwtBenchmark> results = new ArrayList<>();
+        List<BenchmarkVerifier> results = new ArrayList<>();
         
         // Run benchmark iterations
         for (int i = 1; i <= iterations; i++) {
-            JwtBenchmark result = benchmarkHttpsASPRoCConnection(host, expIssuer, i);
+            BenchmarkVerifier result = benchmarkHttpsASPRoCConnection(host, expIssuer, i);
             results.add(result);
             
             // Small delay between iterations
@@ -548,11 +548,11 @@ public class JwtBenchmark {
      * Run multiple HTTPS bypass connection benchmark iterations and return statistics
      */
     public static String runHttpsBypassConnectionBenchmark(String url, int iterations) {
-        List<JwtBenchmark> results = new ArrayList<>();
+        List<BenchmarkVerifier> results = new ArrayList<>();
         
         // Run benchmark iterations
         for (int i = 1; i <= iterations; i++) {
-            JwtBenchmark result = benchmarkHttpsBypassConnection(url, i);
+            BenchmarkVerifier result = benchmarkHttpsBypassConnection(url, i);
             results.add(result);
             
             // Small delay between iterations
@@ -572,11 +572,11 @@ public class JwtBenchmark {
      * Run multiple Get Cert Claim JWT benchmark iterations and return statistics
      */
     public static String runGetJwtSccBenchmark(String host, int iterations) {
-        List<JwtBenchmark> results = new ArrayList<>();
+        List<BenchmarkVerifier> results = new ArrayList<>();
         
         // Run benchmark iterations
         for (int i = 1; i <= iterations; i++) {
-            JwtBenchmark result = benchmarkHttpsGetCertClaim(host, i);
+            BenchmarkVerifier result = benchmarkHttpsGetCertClaim(host, i);
             results.add(result);
             
             // Small delay between iterations
@@ -596,11 +596,11 @@ public class JwtBenchmark {
      * Run multiple Get Signing Key JWT benchmark iterations and return statistics
      */
     public static String runGetJwtCskBenchmark(String host, int iterations) {
-        List<JwtBenchmark> results = new ArrayList<>();
+        List<BenchmarkVerifier> results = new ArrayList<>();
         
         // Run benchmark iterations
         for (int i = 1; i <= iterations; i++) {
-            JwtBenchmark result = benchmarkGetSigningKeyJWT(host, i);
+            BenchmarkVerifier result = benchmarkGetSigningKeyJWT(host, i);
             results.add(result);
             
             // Small delay between iterations
@@ -620,11 +620,11 @@ public class JwtBenchmark {
      * Run multiple HTTPS connection benchmark iterations and return statistics
      */
     public static String runHttpsDefaultConnectionBenchmark(String host, int iterations) {
-        List<JwtBenchmark> results = new ArrayList<>();
+        List<BenchmarkVerifier> results = new ArrayList<>();
         
         // Run benchmark iterations
         for (int i = 1; i <= iterations; i++) {
-            JwtBenchmark result = benchmarkHttpsConnection(host, i);
+            BenchmarkVerifier result = benchmarkHttpsConnection(host, i);
             results.add(result);
             
             // Small delay between iterations
@@ -644,11 +644,11 @@ public class JwtBenchmark {
      * Run multiple JWK benchmark iterations and return statistics
      */
     public static String runVerifyJwtSccBenchmark(String token, String jwkJson, int iterations) {
-        List<JwtBenchmark> results = new ArrayList<>();
+        List<BenchmarkVerifier> results = new ArrayList<>();
         
         // Run benchmark iterations
         for (int i = 1; i <= iterations; i++) {
-            JwtBenchmark result = benchmarkVerifyJwtWithJwk(token, jwkJson, i);
+            BenchmarkVerifier result = benchmarkVerifyJwtWithJwk(token, jwkJson, i);
             results.add(result);
             
             // Small delay between iterations
@@ -668,10 +668,10 @@ public class JwtBenchmark {
      * Run multiple DCP verification benchmark iterations and return statistics
      */
     public static String runVerifyDCPBenchmark(String dcpJson, String dcpPublicKeyPem, int iterations) {
-        List<JwtBenchmark> results = new ArrayList<>();
+        List<BenchmarkVerifier> results = new ArrayList<>();
 
         for (int i = 1; i <= iterations; i++) {
-            JwtBenchmark result = benchmarkVerifyDCP(dcpJson, dcpPublicKeyPem, i);
+            BenchmarkVerifier result = benchmarkVerifyDCP(dcpJson, dcpPublicKeyPem, i);
             results.add(result);
 
             try {
@@ -689,11 +689,11 @@ public class JwtBenchmark {
      * Run multiple benchmark iterations and return statistics
      */
     public static String runVerifyJwtCskBenchmark(String token, String cert, int iterations) {
-        List<JwtBenchmark> results = new ArrayList<>();
+        List<BenchmarkVerifier> results = new ArrayList<>();
         
         // Run benchmark iterations
         for (int i = 1; i <= iterations; i++) {
-            JwtBenchmark result = benchmarkVerifyJwtWithCert(token, cert, i);
+            BenchmarkVerifier result = benchmarkVerifyJwtWithCert(token, cert, i);
             results.add(result);
             
             // Small delay between iterations
@@ -712,14 +712,14 @@ public class JwtBenchmark {
     /**
      * Calculate benchmark statistics from multiple results
      */
-    private static String calculateBenchmarkStatistics(List<JwtBenchmark> results) {
+    private static String calculateBenchmarkStatistics(List<BenchmarkVerifier> results) {
         if (results.isEmpty()) {
             return "No benchmark results available.";
         }
         
         // Filter successful results
-        List<JwtBenchmark> successfulResults = new ArrayList<>();
-        for (JwtBenchmark result : results) {
+        List<BenchmarkVerifier> successfulResults = new ArrayList<>();
+        for (BenchmarkVerifier result : results) {
             if (result.isSuccess()) {
                 successfulResults.add(result);
             }
@@ -736,7 +736,7 @@ public class JwtBenchmark {
         long minTotalTime = Long.MAX_VALUE;
         long maxTotalTime = 0;
         
-        for (JwtBenchmark result : successfulResults) {
+        for (BenchmarkVerifier result : successfulResults) {
             totalTimeSum += result.getTotalTimeUs();
             parseTimeSum += result.getParseTimeUs();
             verificationTimeSum += result.getVerificationTimeUs();
@@ -768,7 +768,7 @@ public class JwtBenchmark {
             // Show individual results
             sb.append("\nIndividual Results:\n");
             for (int i = 0; i < Math.min(successfulResults.size(), 5); i++) {
-                JwtBenchmark result = successfulResults.get(i);
+                BenchmarkVerifier result = successfulResults.get(i);
                 sb.append("  Attempt ").append(result.getAttemptNumber()).append(": ")
                   .append(result.getTotalTimeUs()).append("μs")
                   .append(" (Parse: ").append(result.getParseTimeUs()).append("μs, ")

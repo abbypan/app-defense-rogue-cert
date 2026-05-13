@@ -19,12 +19,12 @@ public class ExampleUnitTest {
     
     @Test
     public void RequestHttps() {
-        HttpsRequestHelperTest helper = new HttpsRequestHelperTest();
+        HttpsConnTest helper = new HttpsConnTest();
         
         try {
         // Test with issuer validation during handshake
         MockLog.d("ExampleUnitTest", "\n>>>>>>>Testing HTTPS request with issuer validation during handshake:");
-            HttpsURLConnection asproc_conn = HttpsRequestHelper.create_main_conn( new String[] {"https://appservercert.run.place", "asproc", "CN=E7, O=Let's Encrypt, C=US"});
+            HttpsURLConnection asproc_conn = HttpsConn.create_main_conn( new String[] {"https://appservercert.run.place", "asproc", "CN=E7, O=Let's Encrypt, C=US"});
             MockLog.d("ExampleUnitTest", "ASPRoC connection created successfully");
                 } catch (Exception e) {
             MockLog.e("ExampleUnitTest", "Failed to create ASPRoC connection: " + e.getMessage());
@@ -34,7 +34,7 @@ public class ExampleUnitTest {
         try {
         // Test without issuer validation
         MockLog.d("ExampleUnitTest", "\n>>>>>>>Testing HTTPS request without issuer validation:");
-            HttpsURLConnection conn = HttpsRequestHelper.create_conn("https://appservercert.run.place");
+            HttpsURLConnection conn = HttpsConn.create_conn("https://appservercert.run.place");
             //helper.print_content(conn);
             MockLog.d("ExampleUnitTest", "Standard connection created successfully");
                 } catch (Exception e) {

@@ -4,9 +4,9 @@ import javax.net.ssl.HttpsURLConnection;
 
 import org.junit.Test;
 
-import com.abbypan.appservercert.HttpsRequestHelper;
+import com.abbypan.appservercert.HttpsConn;
 
-public class HttpsRequestHelperTest {
+public class HttpsConnTest {
 
 
     @Test
@@ -24,9 +24,9 @@ public class HttpsRequestHelperTest {
     public static void asprocConn(String host, String type, String exp_issuer) {
         // Benchmark code to be measured
         String[] para = { host, type, exp_issuer };
-        HttpsRequestHelper asproc = null;
+        HttpsConn asproc = null;
         try {
-            asproc = new HttpsRequestHelper();
+            asproc = new HttpsConn();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -36,7 +36,7 @@ public class HttpsRequestHelperTest {
             asproc.print_content(con);
 
         } catch (Exception e) {
-            MockLog.e("HttpsRequestHelperTest", "Failed to create connection: " + e.getMessage());
+            MockLog.e("HttpsConnTest", "Failed to create connection: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }

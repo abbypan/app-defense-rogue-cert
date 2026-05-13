@@ -6,44 +6,37 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Base64;
 
-/**
- * Verifies DCP pin JSON produced by signing/*/gen_dcp.py.
- */
 public class DCPVerifier {
     public static String verifyDCPWithPublicKeyPem(String dcpJson, String dcpPublicKeyPem) throws Exception {
-        PublicKey publicKey = parsePublicKey(dcpPublicKeyPem);
+        PublicKey publicKey = parsePublicKeyPem(dcpPublicKeyPem);
         return verifyDCP(dcpJson, publicKey);
     }
 
     public static String verifyDCP(String dcpJson, PublicKey publicKey) throws Exception {
         JSONObject json = new JSONObject(dcpJson);
         String pin = json.getString("pin");
-        String sig = json.getString("sig");
+        String signature = getSignature(json);
 
-        byte[] pinBytes = hexToBytes(pin);
-        byte[] sigBytes = hexToBytes(sig);
+        byte[] pinBytes = decodeValue(pin);
+        byte[] signatureBytes = decodeValue(signature);
 
-        boolean valid;
-        if (publicKey instanceof ECPublicKey) {
-            valid = verifyECDSA(pinBytes, sigBytes, publicKey);
-        } else if (publicKey instanceof RSAPublicKey) {
-            valid = verifyRSA(pinBytes, sigBytes, publicKey);
-        } else {
-            throw new IllegalArgumentException("Unsupported DCP key type: " + publicKey.getAlgorithm());
+        Signature verifier = createVerifier(publicKey);
+        verifier.initVerify(publicKey);
+        verifier.update(pinBytes);
+
+        if (!verifier.verify(signatureBytes)) {
+            throw new RuntimeException("DCP signature verification failed");
         }
 
-        if (!valid) {
-            throw new SecurityException("DCP signature verification failed");
-        }
-
-        return normalizeHex(pin);
+        return normalizePin(pin);
     }
 
-    private static PublicKey parsePublicKey(String dcpPublicKeyPem) throws Exception {
-        Object parsed = PemUtils.parsePemString(dcpPublicKeyPem);
-        if (parsed instanceof java.security.cert.X509Certificate cert) {
-            return cert.getPublicKey();
+    private static PublicKey parsePublicKeyPem(String publicKeyPem) throws Exception {
+        Object parsed = PemUtils.parsePemString(publicKeyPem);
+        if (parsed instanceof java.security.cert.X509Certificate certificate) {
+            return certificate.getPublicKey();
         }
         if (parsed instanceof PublicKey publicKey) {
             return publicKey;
@@ -51,22 +44,41 @@ public class DCPVerifier {
         throw new IllegalArgumentException("DCP PEM does not contain a public key or certificate");
     }
 
-    private static boolean verifyECDSA(byte[] pinBytes, byte[] sigBytes, PublicKey publicKey) throws Exception {
-        Signature verifier = Signature.getInstance("NONEwithECDSA");
-        verifier.initVerify(publicKey);
-        verifier.update(pinBytes);
-        return verifier.verify(sigBytes);
+    private static Signature createVerifier(PublicKey publicKey) throws Exception {
+        if (publicKey instanceof ECPublicKey) {
+            return Signature.getInstance("NONEwithECDSA");
+        } else if (publicKey instanceof RSAPublicKey) {
+            return Signature.getInstance("SHA256withRSA");
+        } else {
+            throw new IllegalArgumentException("Unsupported DCP key type: " + publicKey.getAlgorithm());
+        }
     }
 
-    private static boolean verifyRSA(byte[] pinBytes, byte[] sigBytes, PublicKey publicKey) throws Exception {
-        Signature verifier = Signature.getInstance("SHA256withRSA");
-        verifier.initVerify(publicKey);
-        verifier.update(pinBytes);
-        return verifier.verify(sigBytes);
+    private static String getSignature(JSONObject json) {
+        String signature = json.optString("sig", "");
+        if (signature.isEmpty()) {
+            signature = json.optString("signature", "");
+        }
+        if (signature.isEmpty()) {
+            throw new IllegalArgumentException("DCP JSON missing required field (sig)");
+        }
+        return signature;
+    }
+
+    private static byte[] decodeValue(String value) {
+        String normalized = value.trim();
+        if (isHex(normalized)) {
+            return hexToBytes(normalized);
+        }
+        try {
+            return Base64.getUrlDecoder().decode(normalized);
+        } catch (IllegalArgumentException e) {
+            return Base64.getDecoder().decode(normalized);
+        }
     }
 
     private static byte[] hexToBytes(String hex) {
-        String normalized = normalizeHex(hex);
+        String normalized = normalizePin(hex);
         if (normalized.length() % 2 != 0) {
             throw new IllegalArgumentException("Hex string length must be even");
         }
@@ -78,7 +90,12 @@ public class DCPVerifier {
         return bytes;
     }
 
-    private static String normalizeHex(String hex) {
-        return hex.replace(":", "").toLowerCase();
+    private static boolean isHex(String value) {
+        String normalized = normalizePin(value);
+        return !normalized.isEmpty() && normalized.matches("[0-9a-fA-F]+");
+    }
+
+    private static String normalizePin(String pin) {
+        return pin.replace(":", "").toLowerCase();
     }
 }

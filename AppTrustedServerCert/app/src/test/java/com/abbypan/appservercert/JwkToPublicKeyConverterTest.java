@@ -49,7 +49,7 @@ public class JwkToPublicKeyConverterTest {
             System.out.println("EC Public Key Algorithm: " + ecKey.getAlgorithm());
             System.out.println("EC Public Key Format: " + ecKey.getFormat());
             
-            System.out.println("Successfully converted JWK to PublicKey âœ?);
+            System.out.println("Successfully converted JWK to PublicKey ï¿½?);
         } else {
             fail("JWT should have at least 2 parts");
         }
@@ -73,7 +73,7 @@ public class JwkToPublicKeyConverterTest {
                 try {
                     PublicKey publicKey = JwkToPublicKeyConverter.extractJwkFromJwtPayload(payload);
                     assertNotNull("PublicKey should not be null", publicKey);
-                    System.out.println("Successfully extracted JWK from JWT payload âœ?);
+                    System.out.println("Successfully extracted JWK from JWT payload ï¿½?);
                 } catch (Exception e) {
                     System.out.println("Could not extract JWK from JWT payload: " + e.getMessage());
                     // This is expected if the payload doesn't contain a JWK
@@ -124,7 +124,7 @@ public class JwkToPublicKeyConverterTest {
             // Test that this public key can be used with JwtVerifier
             // (This would require a valid JWT signed with the corresponding private key)
             assertNotNull("PublicKey should be usable with JwtVerifier", publicKey);
-            System.out.println("PublicKey is ready for JWT verification âœ?);
+            System.out.println("PublicKey is ready for JWT verification ï¿½?);
         } else {
             fail("JWT should have at least 2 parts");
         }

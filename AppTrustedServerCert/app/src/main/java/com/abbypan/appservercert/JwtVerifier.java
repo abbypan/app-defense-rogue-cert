@@ -17,7 +17,7 @@ import org.json.JSONObject;
 
 public class JwtVerifier {
     public static String verifyJwtWithCert(String token, String cert) throws Exception {
-        // 3️⃣ Load certificate public key
+        // Load certificate public key
         PublicKey publicKey = PemUtils.parseX509Certificate(cert).getPublicKey();
     return verifyJwt(token, publicKey);
     }
@@ -38,7 +38,7 @@ public class JwtVerifier {
         public static String verifyJwt(String token, PublicKey publicKey) throws Exception {
 
 
-            // 4️⃣ Create appropriate verifier
+            // Create appropriate verifier
         JWSVerifier verifier;
         if (publicKey instanceof ECPublicKey) {
             verifier = new ECDSAVerifier((ECPublicKey) publicKey);
@@ -58,6 +58,7 @@ public class JwtVerifier {
         }
     }
 
+    
     private static String verifyJsonSerializedJwt(String jsonToken, JWSVerifier verifier) throws Exception {
         // Parse the JSON to extract JWT components
         JSONObject jsonObj = new JSONObject(jsonToken);
@@ -85,12 +86,13 @@ public class JwtVerifier {
         // Verify signature
         boolean valid = signedJWT.verify(verifier);
         if (!valid) {
-            throw new RuntimeException("JWT signature verification failed ❌");
+            throw new RuntimeException("JWT signature verification failed");
         }
 
         String payload = signedJWT.getPayload().toString();
-        //System.out.println("JWT verified ✅");
+        //System.out.println("JWT verified");
         //System.out.println("Payload JSON: " + payload);
         return payload;
     }
 }
+

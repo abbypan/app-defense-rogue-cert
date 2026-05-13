@@ -47,9 +47,7 @@ import org.apache.kerby.asn1.type.Asn1OctetString;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
-
-
-public class HttpsRequestHelper {
+public class HttpsConn {
 
     //private static JSONObject asproc_cache;
     
@@ -87,7 +85,7 @@ public class HttpsRequestHelper {
     private static TrustManager[] getBypassTrustManagers() throws Exception {
         // Double-check locking pattern for better performance - avoids synchronization on every call
         if (bypassTrustManagers == null) {
-            synchronized (HttpsRequestHelper.class) {
+            synchronized (HttpsConn.class) {
                 if (bypassTrustManagers == null) {
                     bypassTrustManagers = new TrustManager[]{
                         new X509TrustManager() {
@@ -111,7 +109,7 @@ public class HttpsRequestHelper {
     private static TrustManager[] getDefaultTrustManagers() throws Exception {
         // Double-check locking pattern for better performance - avoids synchronization on every call
         if (defaultTrustManagers == null) {
-            synchronized (HttpsRequestHelper.class) {
+            synchronized (HttpsConn.class) {
                 if (defaultTrustManagers == null) {
                     default_tm = getDefaultTrustManager();
                     defaultTrustManagers = new TrustManager[] { new X509TrustManager() {
@@ -152,10 +150,10 @@ public class HttpsRequestHelper {
                 X509Certificate ee = chain[0];
 
                 try {
-                    boolean res = HttpsRequestHelper.checkExpIssuer(ee, exp_issuer);
+                    boolean res = HttpsConn.checkExpIssuer(ee, exp_issuer);
                     //System.out.println(host + ",asproc!," + res);
                     if(!res) {
-                        throw new Exception("HttpsRequestHelper issuer check: fail!");
+                        throw new Exception("HttpsConn issuer check: fail!");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -184,9 +182,9 @@ public class HttpsRequestHelper {
                 X509Certificate ee = chain[0];
 
                 try {
-                    boolean res = HttpsRequestHelper.checkExpSPK(ee, exp_spk);
+                    boolean res = HttpsConn.checkExpSPK(ee, exp_spk);
                     if(!res) {
-                        throw new CertificateException("HttpsRequestHelper DCP SPK check: fail!");
+                        throw new CertificateException("HttpsConn DCP SPK check: fail!");
                     }
                 } catch (CertificateException e) {
                     throw e;
@@ -205,7 +203,7 @@ public class HttpsRequestHelper {
     }
 
     // Constructor to initialize trust managers and SSL socket factories
-    public HttpsRequestHelper() throws Exception {
+    public HttpsConn() throws Exception {
         // Initialize default trust manager
         getDefaultTrustManager();
         // Initialize bypass trust manager  
@@ -223,7 +221,7 @@ public class HttpsRequestHelper {
 
         //args: www.xxx.com, bypass/default/asproc, exp_issuer/dcp, exp_spk
 
-        HttpsRequestHelper req = new HttpsRequestHelper();
+        HttpsConn req = new HttpsConn();
 
         long startTime = System.nanoTime();
 
@@ -291,7 +289,7 @@ public class HttpsRequestHelper {
     private static SSLSocketFactory createDefaultSslSocketFactory() throws Exception {
         // Double-check locking pattern for better performance - avoids synchronization on every call
         if (defaultSslSocketFactory == null) {
-            synchronized (HttpsRequestHelper.class) {
+            synchronized (HttpsConn.class) {
                 if (defaultSslSocketFactory == null) {
                     TrustManager[] defaultTrustManagers = getDefaultTrustManagers();
                     SSLContext sslContext = SSLContext.getInstance("TLS");
@@ -309,7 +307,7 @@ public class HttpsRequestHelper {
         // But we can optimize by reusing the trust managers if they're already created
         // Double-check locking pattern for better performance - avoids synchronization on every call
         if(asprocSslSocketFactory == null) {
-            synchronized (HttpsRequestHelper.class) {
+            synchronized (HttpsConn.class) {
                 if(asprocSslSocketFactory == null) {
                     asprocTrustManagers = getASPRoCTrustManagers(exp_issuer);
                     
@@ -324,7 +322,7 @@ public class HttpsRequestHelper {
 
     private static SSLSocketFactory createDCPSslSocketFactory(String host, String exp_spk) throws Exception {
         if(dcpSslSocketFactory == null) {
-            synchronized (HttpsRequestHelper.class) {
+            synchronized (HttpsConn.class) {
                 if(dcpSslSocketFactory == null) {
                     dcpTrustManagers = getDCPTrustManagers(exp_spk);
 
@@ -347,7 +345,7 @@ public class HttpsRequestHelper {
     public static SSLSocketFactory createBypassSslSocketFactory() throws Exception {
         // Double-check locking pattern for better performance - avoids synchronization on every call
         if (bypassSslSocketFactory == null) {
-            synchronized (HttpsRequestHelper.class) {
+            synchronized (HttpsConn.class) {
                 if (bypassSslSocketFactory == null) {
                     TrustManager[] bypassTrustManagers = getBypassTrustManagers();
                     SSLContext sslContext = SSLContext.getInstance("TLS");

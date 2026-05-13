@@ -5,7 +5,7 @@ import java.util.Date;
 /**
  * Represents the results of a TLS connection benchmark test
  */
-public class TlsBenchmarkResult {
+public class BenchmarkTLS {
     private String hostname;
     private int port;
     private String protocol;
@@ -34,7 +34,7 @@ public class TlsBenchmarkResult {
     private Date timestamp;
     private int attemptNumber;
 
-    public TlsBenchmarkResult() {
+    public BenchmarkTLS() {
         this.timestamp = new Date();
         this.connectionSuccessful = false;
         this.port = 443; // Default HTTPS port
