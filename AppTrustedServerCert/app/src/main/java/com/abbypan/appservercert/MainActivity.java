@@ -22,8 +22,8 @@ import org.json.JSONObject;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-    private static final String ASPROC_HOST = "es256.asproc.run.place";
-    private static final String DCP_HOST = "dcp.run.place";
+    private static final String ASPROC_HOST = "es256.work.gd";
+    private static final String DCP_HOST = "dcp.work.gd";
     //private static final String ASPROC_ISSUER = "CN=E7, O=Let's Encrypt, C=US";
     private static final String ASPROC_ISSUER = "CN=test issuer";
 

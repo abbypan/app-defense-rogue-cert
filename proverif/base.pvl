@@ -1,5 +1,5 @@
 set traceDisplay = long.
-set attacker = active.
+set attacker = passive.
 
 
 (* type *)

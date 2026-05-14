@@ -170,11 +170,11 @@ query app_sk: skey, claim_pk: pkey, exp: timestamp;
 (* Query: JWT server-cert-claim verification reachability.
    True  = the app can verify the real server certificate claim from claim_signing.
    False = this JWT server-cert-claim verification path is unreachable. *)
-query exp2: timestamp;
-  event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)), server_cert_subject_and_san, real_cert_issuer, exp2)).
+query exp: timestamp;
+  event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)), server_cert_subject_and_san, real_cert_issuer, exp)).
 
-  query exp2: timestamp;
-  event(CertClaimSign(gen_sk_for_id(claim_signing), server_cert_subject_and_san, real_cert_issuer, exp2)).
+  query exp: timestamp;
+  event(CertClaimSign(gen_sk_for_id(claim_signing), server_cert_subject_and_san, real_cert_issuer, exp)).
 
 
 (* Query: JWT server-cert-claim authenticity.
@@ -182,6 +182,11 @@ query exp2: timestamp;
    False = a cert claim can be verified without being legitimately created. *)
 query claim_sk: skey, subject_and_san: bitstring, issuer: bitstring, exp: timestamp;
   event(CertClaimVerify(pk(claim_sk), subject_and_san, issuer, exp)) ==> event(CertClaimSign(claim_sk, subject_and_san, issuer, exp)).
+
+
+query exp: timestamp;
+  event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)), server_cert_subject_and_san, real_cert_issuer, exp)) ==> 
+     event(CertClaimSign(gen_sk_for_id(claim_signing), server_cert_subject_and_san, real_cert_issuer, exp)).
 
 
 (* Query: Real-server receive path reachability.
