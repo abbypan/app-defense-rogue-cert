@@ -124,3 +124,19 @@ If you like Certbot, please consider supporting our work by:
  * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
  * Donating to EFF:                    https://eff.org/donate-le
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for rsa4096.idouzi.top
+
+Successfully received certificate.
+Certificate is saved at:            /root/etc/cert/rsa4096/0000_cert.pem
+Intermediate CA chain is saved at:  /root/etc/cert/rsa4096/0000_chain.pem
+Full certificate chain is saved at: /root/etc/cert/rsa4096/0001_chain.pem
+This certificate expires on 2026-08-14.
+NEXT STEPS:
+- Certificates created using --csr will not be renewed automatically by Certbot. You will need to renew the certificate before it expires, by running the same Certbot command again.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

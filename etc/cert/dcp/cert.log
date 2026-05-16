@@ -1,0 +1,18 @@
+/var/www/somedomain.com does not exist or is not a directory
+Ask for help or search for solutions at https://community.letsencrypt.org. See the logfile /tmp/certbot-log-9o36ycvn/log or re-run Certbot with -v for more details.
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for dcp.idouzi.top
+
+Successfully received certificate.
+Certificate is saved at:            /root/etc/cert/dcp/0000_cert.pem
+Intermediate CA chain is saved at:  /root/etc/cert/dcp/0000_chain.pem
+Full certificate chain is saved at: /root/etc/cert/dcp/0001_chain.pem
+This certificate expires on 2026-08-14.
+NEXT STEPS:
+- Certificates created using --csr will not be renewed automatically by Certbot. You will need to renew the certificate before it expires, by running the same Certbot command again.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
