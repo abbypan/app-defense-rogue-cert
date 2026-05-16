@@ -4,6 +4,7 @@ AppTrustedServerCert/.gradle
 AppTrustedServerCert/app/build
 AppTrustedServerCert/app/debug
 signed-apks
+proverif-passive
 tex
 __pycache__
 .vscode
