@@ -14,21 +14,6 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- App Title -->
-    <TextView
-        android:id="@+id/appTitleTextView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:layout_marginBottom="24dp"
-        android:gravity="center"
-        android:text="ASPRoC Demo"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:background="#e1f5fe"
-        android:padding="16dp"
-        android:elevation="4dp" />
-
     <!-- Max Benchmark Attempt Number Input -->
     <EditText
         android:id="@+id/maxBenchmarkAttemptNumber"
@@ -36,12 +21,12 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:gravity="center"
-        android:text="1000"
+        android:text="2000"
         android:textSize="16sp"
         android:textStyle="bold"
         android:background="#f3e5f5"
         android:padding="8dp"
-        android:hint="Enter number of benchmark iterations (default: 1000)"
+        android:hint="Enter number of benchmark iterations (default: 2000)"
         android:inputType="number"
         android:selectAllOnFocus="true" />
 
@@ -55,7 +40,7 @@
         android:background="#e3f2fd"
         android:padding="8dp"
         android:layout_marginBottom="8dp"
-        android:hint="Enter server hostname (e.g., appservercert.run.place)"
+        android:hint="Enter server hostname"
         android:inputType="textUri"
         android:selectAllOnFocus="true" />
 
@@ -69,7 +54,7 @@
         android:background="#e8f5e9"
         android:padding="8dp"
         android:layout_marginBottom="8dp"
-        android:hint="Enter DCP hostname (e.g., dcp.run.place)"
+        android:hint="Enter DCP hostname"
         android:inputType="textUri"
         android:selectAllOnFocus="true" />
 
@@ -113,7 +98,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Get HTTP Content"
+            android:text="Get Index Page"
             android:textSize="14sp"
             android:layout_marginEnd="4dp" />
 
@@ -122,7 +107,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Get And Verify ASPRoC"
+            android:text="Get ASPRoC"
             android:textSize="14sp"
             android:layout_marginStart="4dp" />
 
@@ -132,7 +117,7 @@
         android:id="@+id/GetAndVerifyDCPButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Get And Verify DCP"
+        android:text="Get DCP"
         android:textSize="14sp"
         android:layout_marginBottom="8dp" />
 
@@ -148,7 +133,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Claim Signing Key Benchmark"
+            android:text="CSK Benchmark"
             android:textSize="12sp"
             android:layout_marginEnd="4dp"
             android:background="#4CAF50"
@@ -159,8 +144,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Server Cert Claim Benchmark"
-            android:textSize="12sp"
+            android:text="SCC Benchmark"
+             android:textSize="12sp"
             android:layout_marginStart="4dp"
             android:background="#FF9800"
             android:textColor="@android:color/white" />
@@ -228,28 +213,6 @@
             android:textColor="@android:color/white" />
 
     </LinearLayout>
-
-    <!-- HTTPS Create Conn Benchmark Button -->
-    <Button
-        android:id="@+id/getJwtCskBenchmarkButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Get Tk Benchmark"
-        android:textSize="14sp"
-        android:layout_marginBottom="8dp"
-        android:background="#9C27B0"
-        android:textColor="@android:color/white" />
-
-    <!-- Get Cert Claim JWT Benchmark Button -->
-    <Button
-        android:id="@+id/getJwtSccBenchmarkButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Get Tc Benchmark"
-        android:textSize="14sp"
-        android:layout_marginBottom="8dp"
-        android:background="#607D8B"
-        android:textColor="@android:color/white" />
 
     <!-- Combined Response View -->
     <ScrollView

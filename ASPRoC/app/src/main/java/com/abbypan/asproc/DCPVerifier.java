@@ -2,10 +2,13 @@ package com.abbypan.asproc;
 
 import org.json.JSONObject;
 
+import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Arrays;
 import java.util.Base64;
 
 public class DCPVerifier {
@@ -22,11 +25,7 @@ public class DCPVerifier {
         byte[] pinBytes = decodeValue(pin);
         byte[] signatureBytes = decodeValue(signature);
 
-        Signature verifier = createVerifier(publicKey);
-        verifier.initVerify(publicKey);
-        verifier.update(pinBytes);
-
-        if (!verifier.verify(signatureBytes)) {
+        if (!verifySignature(publicKey, pinBytes, signatureBytes)) {
             throw new RuntimeException("DCP signature verification failed");
         }
 
@@ -44,14 +43,126 @@ public class DCPVerifier {
         throw new IllegalArgumentException("DCP PEM does not contain a public key or certificate");
     }
 
-    private static Signature createVerifier(PublicKey publicKey) throws Exception {
+    private static boolean verifySignature(PublicKey publicKey, byte[] pinBytes, byte[] signatureBytes) throws Exception {
         if (publicKey instanceof ECPublicKey) {
-            return Signature.getInstance("NONEwithECDSA");
+            Signature verifier = Signature.getInstance("NONEwithECDSA");
+            verifier.initVerify(publicKey);
+            verifier.update(pinBytes);
+            return verifier.verify(signatureBytes);
         } else if (publicKey instanceof RSAPublicKey) {
-            return Signature.getInstance("SHA256withRSA");
+            return verifyRsaPss((RSAPublicKey) publicKey, pinBytes, signatureBytes);
         } else {
             throw new IllegalArgumentException("Unsupported DCP key type: " + publicKey.getAlgorithm());
         }
+    }
+
+    private static boolean verifyRsaPss(RSAPublicKey publicKey, byte[] messageHash, byte[] signature) throws Exception {
+        final int hashLength = 32;
+        final int saltLength = hashLength;
+        if (messageHash.length != hashLength) {
+            throw new IllegalArgumentException("RSA DCP pin must be a SHA-256 digest");
+        }
+
+        BigInteger modulus = publicKey.getModulus();
+        int modulusBits = modulus.bitLength();
+        int emBits = modulusBits - 1;
+        int emLen = (emBits + 7) / 8;
+        if (emLen < hashLength + saltLength + 2) {
+            return false;
+        }
+
+        BigInteger signatureInt = new BigInteger(1, signature);
+        if (signatureInt.compareTo(modulus) >= 0) {
+            return false;
+        }
+
+        byte[] em = toFixedLength(signatureInt.modPow(publicKey.getPublicExponent(), modulus), emLen);
+        return verifyPssEncoding(messageHash, em, emBits, hashLength, saltLength);
+    }
+
+    private static boolean verifyPssEncoding(
+            byte[] messageHash,
+            byte[] encodedMessage,
+            int emBits,
+            int hashLength,
+            int saltLength
+    ) throws Exception {
+        int emLen = encodedMessage.length;
+        if (encodedMessage[emLen - 1] != (byte) 0xbc) {
+            return false;
+        }
+
+        int dbLength = emLen - hashLength - 1;
+        byte[] maskedDb = Arrays.copyOfRange(encodedMessage, 0, dbLength);
+        byte[] hash = Arrays.copyOfRange(encodedMessage, dbLength, dbLength + hashLength);
+
+        int unusedBits = 8 * emLen - emBits;
+        if (unusedBits > 0 && ((maskedDb[0] & 0xff) >>> (8 - unusedBits)) != 0) {
+            return false;
+        }
+
+        byte[] dbMask = mgf1(hash, dbLength);
+        byte[] db = new byte[dbLength];
+        for (int i = 0; i < dbLength; i++) {
+            db[i] = (byte) (maskedDb[i] ^ dbMask[i]);
+        }
+        if (unusedBits > 0) {
+            db[0] &= (byte) (0xff >>> unusedBits);
+        }
+
+        int psLength = emLen - hashLength - saltLength - 2;
+        for (int i = 0; i < psLength; i++) {
+            if (db[i] != 0) {
+                return false;
+            }
+        }
+        if (db[psLength] != 0x01) {
+            return false;
+        }
+
+        byte[] salt = Arrays.copyOfRange(db, dbLength - saltLength, dbLength);
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        digest.update(new byte[8]);
+        digest.update(messageHash);
+        digest.update(salt);
+        return MessageDigest.isEqual(hash, digest.digest());
+    }
+
+    private static byte[] mgf1(byte[] seed, int length) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] mask = new byte[length];
+        byte[] counter = new byte[4];
+        int offset = 0;
+
+        for (int i = 0; offset < length; i++) {
+            counter[0] = (byte) (i >>> 24);
+            counter[1] = (byte) (i >>> 16);
+            counter[2] = (byte) (i >>> 8);
+            counter[3] = (byte) i;
+            digest.update(seed);
+            byte[] block = digest.digest(counter);
+            int copyLength = Math.min(block.length, length - offset);
+            System.arraycopy(block, 0, mask, offset, copyLength);
+            offset += copyLength;
+        }
+
+        return mask;
+    }
+
+    private static byte[] toFixedLength(BigInteger value, int length) {
+        byte[] bytes = value.toByteArray();
+        if (bytes.length == length) {
+            return bytes;
+        }
+        if (bytes.length == length + 1 && bytes[0] == 0) {
+            return Arrays.copyOfRange(bytes, 1, bytes.length);
+        }
+        if (bytes.length > length) {
+            throw new IllegalArgumentException("Integer does not fit expected length");
+        }
+        byte[] fixed = new byte[length];
+        System.arraycopy(bytes, 0, fixed, length - bytes.length, bytes.length);
+        return fixed;
     }
 
     private static String getSignature(JSONObject json) {

@@ -6,7 +6,7 @@ import re
 import sys
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
-from Crypto.Signature import pkcs1_15
+from Crypto.Signature import pss
 from Crypto.Util.asn1 import DerSequence
 
 
@@ -42,7 +42,7 @@ def read_subject_pk(cert):
 
 def sign_subject_pk(dcp_priv, subject_pk_hash):
    dcp_key = RSA.import_key(read_pem_file(dcp_priv, "PRIVATE KEY"))
-   return pkcs1_15.new(dcp_key).sign(subject_pk_hash)
+   return pss.new(dcp_key).sign(subject_pk_hash)
 
 
 dcp_cert = "my-dcp-cert.pem"

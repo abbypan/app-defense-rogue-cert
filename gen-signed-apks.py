@@ -128,7 +128,7 @@ def gradle_wrapper(project_dir):
 
     wrapper = project_dir / "gradlew"
     if wrapper.exists():
-        return [str(wrapper)]
+        return ["sh", str(wrapper)]
 
     wrapper = project_dir / "gradlew.bat"
     if wrapper.exists():

@@ -47,9 +47,6 @@ public class MainActivity extends AppCompatActivity {
     private Button httpsASPRoCConnectionBenchmarkButton;
     private Button httpsDCPConnectionBenchmarkButton;
 
-    private Button getJwtCskBenchmarkButton;
-    private Button getJwtSccBenchmarkButton;
-
     private EditText maxBenchmarkAttemptNumber;
     private Handler mainHandler;
 
@@ -81,8 +78,6 @@ public class MainActivity extends AppCompatActivity {
         httpsDefaultConnectionBenchmarkButton = findViewById(R.id.httpsDefaultConnectionBenchmarkButton);
         httpsASPRoCConnectionBenchmarkButton = findViewById(R.id.httpsASPRoCConnectionBenchmarkButton);
         httpsDCPConnectionBenchmarkButton = findViewById(R.id.httpsDCPConnectionBenchmarkButton);
-        getJwtCskBenchmarkButton = findViewById(R.id.getJwtCskBenchmarkButton);
-        getJwtSccBenchmarkButton = findViewById(R.id.getJwtSccBenchmarkButton);
         maxBenchmarkAttemptNumber = findViewById(R.id.maxBenchmarkAttemptNumber);
         mainHandler = new Handler(Looper.getMainLooper());
 
@@ -134,13 +129,6 @@ public class MainActivity extends AppCompatActivity {
             runHttpsDCPConnectionBenchmark();
         });
 
-        getJwtCskBenchmarkButton.setOnClickListener(v -> {
-            runGetJwtCskBenchmark();
-        });
-
-        getJwtSccBenchmarkButton.setOnClickListener(v -> {
-            runGetJwtSccBenchmark();
-        });
     }
 
     /**
@@ -366,7 +354,7 @@ public class MainActivity extends AppCompatActivity {
         // Show loading message
         int maxAttempts = getCurrentMaxBenchmarkAttempts();
         mainHandler.post(() -> {
-            responseTextView.setText("Running JWT signing key verification benchmark...\nPlease wait...");
+            responseTextView.setText("Running CSK verification benchmark...\nPlease wait...");
         });
 
         // Perform benchmark on background thread
@@ -385,22 +373,22 @@ public class MainActivity extends AppCompatActivity {
 
                 // Update the response text view with benchmark results on main thread
                 mainHandler.post(() -> {
-                    responseTextView.setText("JWT Signing Key Verification Benchmark Results\n" +
+                    responseTextView.setText("CSK Verification Benchmark Results\n" +
                                            "============================================\n\n" + benchmarkResults);
 
                     // Show a toast to confirm
-                    Toast.makeText(MainActivity.this, "JWT Signing Key Benchmark completed", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "CSK Verification Benchmark completed", Toast.LENGTH_SHORT).show();
                 });
 
                 // Also log the results
-                //Log.d(TAG, "JWT Signing Key Benchmark Results:\n" + benchmarkResults);
+                //Log.d(TAG, "CSK Verification Benchmark Results:\n" + benchmarkResults);
 
             } catch (Exception e) {
-                Log.e(TAG, "Failed to run JWT signing key benchmark: " + e.getMessage(), e);
+                Log.e(TAG, "Failed to run CSK verification benchmark: " + e.getMessage(), e);
                 // Update UI on main thread
                 mainHandler.post(() -> {
-                    responseTextView.setText("JWT Signing Key Benchmark failed: " + e.getMessage());
-                    Toast.makeText(MainActivity.this, "JWT Signing Key Benchmark failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    responseTextView.setText("CSK Verification Benchmark failed: " + e.getMessage());
+                    Toast.makeText(MainActivity.this, "CSK Verification Benchmark failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
             }
         }).start();
@@ -410,7 +398,7 @@ public class MainActivity extends AppCompatActivity {
         // Show loading message
         int maxAttempts = getCurrentMaxBenchmarkAttempts();
         mainHandler.post(() -> {
-            responseTextView.setText("Running JWT server cert claim verification benchmark...\nPlease wait...");
+            responseTextView.setText("Running SCC  verification benchmark...\nPlease wait...");
         });
 
         // Perform benchmark on background thread
@@ -437,22 +425,22 @@ public class MainActivity extends AppCompatActivity {
 
                 // Update the response text view with benchmark results on main thread
                 mainHandler.post(() -> {
-                    responseTextView.setText("JWT Server Cert Claim Verification Benchmark Results\n" +
-                                           "==================================================\n\n" + benchmarkResults);
+                    responseTextView.setText("SCC Verification Benchmark Results\n" +
+                                           "==================================\n\n" + benchmarkResults);
 
                     // Show a toast to confirm
-                    Toast.makeText(MainActivity.this, "JWT Server Cert Claim Benchmark completed", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "SCC Benchmark completed", Toast.LENGTH_SHORT).show();
                 });
 
                 // Also log the results
-                //Log.d(TAG, "JWT Server Cert Claim Benchmark Results:\n" + benchmarkResults);
+                //Log.d(TAG, "SCC Benchmark Results:\n" + benchmarkResults);
 
             } catch (Exception e) {
-                Log.e(TAG, "Failed to run JWT server cert claim benchmark: " + e.getMessage(), e);
+                Log.e(TAG, "Failed to run SCC benchmark: " + e.getMessage(), e);
                 // Update UI on main thread
                 mainHandler.post(() -> {
-                    responseTextView.setText("JWT Server Cert Claim Benchmark failed: " + e.getMessage());
-                    Toast.makeText(MainActivity.this, "JWT Server Cert Claim Benchmark failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    responseTextView.setText("SCC Benchmark failed: " + e.getMessage());
+                    Toast.makeText(MainActivity.this, "SCC Benchmark failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
             }
         }).start();
@@ -669,8 +657,8 @@ public class MainActivity extends AppCompatActivity {
         // Show loading message
         int maxAttempts = getCurrentMaxBenchmarkAttempts();
         mainHandler.post(() -> {
-            responseTextView.setText("Running Get Signing Key JWT benchmark...\nPlease wait...");
-        });
+            responseTextView.setText("Running Get CSK  benchmark...\nPlease wait...");
+             });
 
         // Perform benchmark on background thread
         new Thread(() -> {
@@ -683,22 +671,22 @@ public class MainActivity extends AppCompatActivity {
 
                 // Update the response text view with benchmark results on main thread
                 mainHandler.post(() -> {
-                    responseTextView.setText("Get Signing Key JWT Benchmark Results\n" +
-                                           "=====================================\n\n" + benchmarkResults);
+                    responseTextView.setText("Get CSK Benchmark Results\n" +
+                                           "========================\n\n" + benchmarkResults);
 
                     // Show a toast to confirm
-                    Toast.makeText(MainActivity.this, "Get Signing Key JWT Benchmark completed", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Get CSK Benchmark completed", Toast.LENGTH_SHORT).show();
                 });
 
                 // Also log the results
-                //Log.d(TAG, "Get Signing Key JWT Benchmark Results:\n" + benchmarkResults);
+                //Log.d(TAG, "Get CSK Benchmark Results:\n" + benchmarkResults);
 
             } catch (Exception e) {
-                Log.e(TAG, "Failed to run Get Signing Key JWT benchmark: " + e.getMessage(), e);
+                Log.e(TAG, "Failed to run Get CSK benchmark: " + e.getMessage(), e);
                 // Update UI on main thread
                 mainHandler.post(() -> {
-                    responseTextView.setText("Get Signing Key JWT Benchmark failed: " + e.getMessage());
-                    Toast.makeText(MainActivity.this, "Get Signing Key JWT Benchmark failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    responseTextView.setText("Get CSK Benchmark failed: " + e.getMessage());
+                    Toast.makeText(MainActivity.this, "Get CSK Benchmark failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
             }
         }).start();
@@ -708,8 +696,7 @@ public class MainActivity extends AppCompatActivity {
         // Show loading message
         int maxAttempts = getCurrentMaxBenchmarkAttempts();
         mainHandler.post(() -> {
-            responseTextView.setText("Running Get Cert Claim JWT benchmark...\nPlease wait...");
-        });
+            responseTextView.setText("Running Get SCC benchmark...\nPlease wait..."); });
 
         // Perform benchmark on background thread
         new Thread(() -> {
@@ -722,22 +709,22 @@ public class MainActivity extends AppCompatActivity {
 
                 // Update the response text view with benchmark results on main thread
                 mainHandler.post(() -> {
-                    responseTextView.setText("Get Cert Claim JWT Benchmark Results\n" +
-                                           "===================================\n\n" + benchmarkResults);
+                    responseTextView.setText("Get SCC Benchmark Results\n" +
+                                           "========================\n\n" + benchmarkResults);
 
                     // Show a toast to confirm
-                    Toast.makeText(MainActivity.this, "Get Cert Claim JWT Benchmark completed", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Get SCC Benchmark completed", Toast.LENGTH_SHORT).show();
                 });
 
                 // Also log the results
-                //Log.d(TAG, "Get Cert Claim JWT Benchmark Results:\n" + benchmarkResults);
+                //Log.d(TAG, "Get SCC Benchmark Results:\n" + benchmarkResults);
 
             } catch (Exception e) {
-                Log.e(TAG, "Failed to run Get Cert Claim JWT benchmark: " + e.getMessage(), e);
+                Log.e(TAG, "Failed to run Get SCC benchmark: " + e.getMessage(), e);
                 // Update UI on main thread
                 mainHandler.post(() -> {
-                    responseTextView.setText("Get Cert Claim JWT Benchmark failed: " + e.getMessage());
-                    Toast.makeText(MainActivity.this, "Get Cert Claim JWT Benchmark failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    responseTextView.setText("Get SCC Benchmark failed: " + e.getMessage());
+                    Toast.makeText(MainActivity.this, "Get SCC Benchmark failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
             }
         }).start();
