@@ -22,8 +22,8 @@ import org.json.JSONObject;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-    private static final String ASPROC_HOST = "es256.work.gd";
-    private static final String DCP_HOST = "dcp.work.gd";
+    private static final String ASPROC_HOST = "es256.idouzi.top";
+    private static final String DCP_HOST = "dcp.idouzi.top";
     //private static final String ASPROC_ISSUER = "CN=E7, O=Let's Encrypt, C=US";
     private static final String ASPROC_ISSUER = "CN=test issuer";
 
@@ -34,16 +34,22 @@ public class MainActivity extends AppCompatActivity {
     private EditText expIssuerTextView;
     private EditText expSPKTextView;
     private TextView responseTextView;
+
     private Button GetHTTPContentButton;
     private Button GetAndVerifyClaimButton;
     private Button GetAndVerifyDCPButton;
+
     private Button JwtCskBenchmarkButton;
     private Button JwtSccBenchmarkButton;
     private Button DCPBenchmarkButton;
+
     private Button httpsDefaultConnectionBenchmarkButton;
     private Button httpsASPRoCConnectionBenchmarkButton;
+    private Button httpsDCPConnectionBenchmarkButton;
+
     private Button getJwtCskBenchmarkButton;
     private Button getJwtSccBenchmarkButton;
+
     private EditText maxBenchmarkAttemptNumber;
     private Handler mainHandler;
 
@@ -74,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
         DCPBenchmarkButton = findViewById(R.id.DCPBenchmarkButton);
         httpsDefaultConnectionBenchmarkButton = findViewById(R.id.httpsDefaultConnectionBenchmarkButton);
         httpsASPRoCConnectionBenchmarkButton = findViewById(R.id.httpsASPRoCConnectionBenchmarkButton);
+        httpsDCPConnectionBenchmarkButton = findViewById(R.id.httpsDCPConnectionBenchmarkButton);
         getJwtCskBenchmarkButton = findViewById(R.id.getJwtCskBenchmarkButton);
         getJwtSccBenchmarkButton = findViewById(R.id.getJwtSccBenchmarkButton);
         maxBenchmarkAttemptNumber = findViewById(R.id.maxBenchmarkAttemptNumber);
@@ -121,6 +128,10 @@ public class MainActivity extends AppCompatActivity {
 
         httpsASPRoCConnectionBenchmarkButton.setOnClickListener(v -> {
             runHttpsASPRoCConnectionBenchmark();
+        });
+
+        httpsDCPConnectionBenchmarkButton.setOnClickListener(v -> {
+            runHttpsDCPConnectionBenchmark();
         });
 
         getJwtCskBenchmarkButton.setOnClickListener(v -> {
@@ -322,12 +333,15 @@ public class MainActivity extends AppCompatActivity {
 
         new Thread(() -> {
             try {
-                String host = getDCPHost();
+                String dcp_host = getDCPHost();
 
-                HttpsURLConnection pubkeyConn = HttpsConn.create_conn("https://" + host + "/.well-known/my-dcp-pubkey.pem");
-                String dcpPublicKeyPem = HttpsConn.get_content(pubkeyConn);
+                String host = getCurrentHost();
+                String alg = extractHostAlgorithm(host);
 
-                HttpsURLConnection dcpConn = HttpsConn.create_conn("https://" + host + "/.well-known/my-dcp-servercertpin.json");
+                String dcpPubkeyFile = "resources/" + alg + "/my-dcp-pubkey.pem";
+                String dcpPublicKeyPem = readResourceFile(dcpPubkeyFile);
+
+                HttpsURLConnection dcpConn = HttpsConn.create_conn("https://" + dcp_host + "/.well-known/DCPServerCertPin-" + alg + ".json");
                 String dcpJson = HttpsConn.get_content(dcpConn);
 
                 String pin = DCPVerifier.verifyDCPWithPublicKeyPem(dcpJson, dcpPublicKeyPem);
@@ -459,7 +473,7 @@ public class MainActivity extends AppCompatActivity {
                 String dcpPubkeyFile = "resources/" + alg + "/my-dcp-pubkey.pem";
                 String dcpPublicKeyPem = readResourceFile(dcpPubkeyFile);
 
-                HttpsURLConnection dcpConn = HttpsConn.create_conn("https://" + dcp_host + "/.well-known/my-dcp-servercertpin.json");
+                HttpsURLConnection dcpConn = HttpsConn.create_conn("https://" + dcp_host + "/.well-known/DCPServerCertPin-" + alg + ".json");
                 String dcpJson = HttpsConn.get_content(dcpConn);
 
                 String benchmarkResults = BenchmarkVerifier.runVerifyDCPBenchmark(dcpJson, dcpPublicKeyPem, maxAttempts);
@@ -613,6 +627,39 @@ public class MainActivity extends AppCompatActivity {
                 mainHandler.post(() -> {
                     responseTextView.setText("HTTPS ASPRoC Connection Benchmark failed: " + e.getMessage());
                     Toast.makeText(MainActivity.this, "HTTPS ASPRoC Connection Benchmark failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        }).start();
+    }
+
+    public void runHttpsDCPConnectionBenchmark() {
+        int maxAttempts = getCurrentMaxBenchmarkAttempts();
+        mainHandler.post(() -> {
+            responseTextView.setText("Running HTTPS DCP connection benchmark...\nPlease wait...");
+        });
+
+        new Thread(() -> {
+            try {
+                String host = getCurrentHost();
+                String expSPK = getCurrentExpSPK();
+
+                mainHandler.post(() -> {
+                    responseTextView.setText("Test DCP Conn:" + host + ", " + expSPK);
+                });
+
+                String benchmarkResults = BenchmarkVerifier.runHttpsDCPConnectionBenchmark(host, expSPK, maxAttempts);
+
+                mainHandler.post(() -> {
+                    responseTextView.setText("HTTPS DCP Connection Benchmark Results\n" +
+                                           "==================================\n\n" + benchmarkResults);
+                    Toast.makeText(MainActivity.this, "HTTPS DCP Connection Benchmark completed", Toast.LENGTH_SHORT).show();
+                });
+
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to run HTTPS DCP connection benchmark: " + e.getMessage(), e);
+                mainHandler.post(() -> {
+                    responseTextView.setText("HTTPS DCP Connection Benchmark failed: " + e.getMessage());
+                    Toast.makeText(MainActivity.this, "HTTPS DCP Connection Benchmark failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
             }
         }).start();

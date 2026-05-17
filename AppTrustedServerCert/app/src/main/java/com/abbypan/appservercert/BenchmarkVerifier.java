@@ -217,6 +217,41 @@ public class BenchmarkVerifier {
     }
 
     /**
+     * Benchmark HTTPS DCP connection creation
+     */
+    public static BenchmarkVerifier benchmarkHttpsDCPConnection(String host, String expSPK, int attemptNumber) {
+        BenchmarkVerifier result = new BenchmarkVerifier();
+        result.setOperation("createHttpsDCPConnection");
+        result.setAttemptNumber(attemptNumber);
+        result.setTokenType("HTTPS-DCP");
+        result.setTokenSizeBytes((host + expSPK).getBytes().length);
+
+        long startTime = System.nanoTime();
+        long connectionStartTime, connectionEndTime;
+
+        try {
+            connectionStartTime = System.nanoTime();
+
+            HttpsURLConnection con = HttpsConn.create_main_conn(new String[] { host, "dcp", "", expSPK });
+            HttpsConn.get_content(con);
+
+            connectionEndTime = System.nanoTime();
+            result.setParseTimeUs((connectionEndTime - connectionStartTime) / 1_000);
+            result.setVerificationTimeUs(0);
+            result.setSuccess(true);
+            result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000);
+            result.setAlgorithm("HTTPS-DCP");
+
+        } catch (Exception e) {
+            result.setSuccess(false);
+            result.setErrorMessage(e.getMessage());
+            result.setTotalTimeUs((System.nanoTime() - startTime) / 1_000);
+        }
+
+        return result;
+    }
+
+    /**
      * Benchmark HTTPS bypass connection creation
      */
     public static BenchmarkVerifier benchmarkHttpsBypassConnection(String host, int attemptNumber) {
@@ -541,6 +576,27 @@ public class BenchmarkVerifier {
         }
         
         // Calculate statistics
+        return calculateBenchmarkStatistics(results);
+    }
+
+    /**
+     * Run multiple HTTPS DCP connection benchmark iterations and return statistics
+     */
+    public static String runHttpsDCPConnectionBenchmark(String host, String expSPK, int iterations) {
+        List<BenchmarkVerifier> results = new ArrayList<>();
+
+        for (int i = 1; i <= iterations; i++) {
+            BenchmarkVerifier result = benchmarkHttpsDCPConnection(host, expSPK, i);
+            results.add(result);
+
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+
         return calculateBenchmarkStatistics(results);
     }
 
