@@ -174,7 +174,7 @@ def main():
     parser.add_argument("--apk", help="Use an existing APK instead of the default Gradle output path")
     args = parser.parse_args()
 
-    project_dir = repo_root / "AppTrustedServerCert"
+    project_dir = repo_root / "ASPRoC"
     if not project_dir.is_dir():
         raise SystemExit(f"Cannot find Android project directory: {project_dir}")
 
