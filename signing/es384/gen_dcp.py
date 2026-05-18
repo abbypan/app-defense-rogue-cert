@@ -4,7 +4,7 @@ import base64
 import json
 import re
 import sys
-from Crypto.Hash import SHA256
+from Crypto.Hash import SHA384
 from Crypto.PublicKey import ECC
 from Crypto.Signature import DSS
 from Crypto.Util.asn1 import DerSequence
@@ -55,7 +55,7 @@ f.close()
 dcp_priv = "my-dcp-key.pem"
 server_cert = sys.argv[1]
 subject_pk = read_subject_pk(server_cert)
-subject_pk_hash = SHA256.new(subject_pk)
+subject_pk_hash = SHA384.new(subject_pk)
 sig = sign_subject_pk(dcp_priv, subject_pk_hash)
 
 dcp = json.dumps({

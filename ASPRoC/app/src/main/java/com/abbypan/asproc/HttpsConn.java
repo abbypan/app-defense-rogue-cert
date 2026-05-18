@@ -83,22 +83,7 @@ public class HttpsConn {
 
     private static TrustManager[] getDefaultTrustManagers() throws Exception {
         final X509TrustManager defaultTrustManager = createDefaultTrustManager();
-        return new TrustManager[] { new X509TrustManager() {
-
-            public X509Certificate[] getAcceptedIssuers() {
-                return defaultTrustManager.getAcceptedIssuers();
-            }
-
-            public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                defaultTrustManager.checkServerTrusted(chain, authType);
-
-            }
-            public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                defaultTrustManager.checkClientTrusted(chain, authType);
-            }
-        }
-
-        };
+        return new TrustManager[] { defaultTrustManager };
     }
 
     private static TrustManager[] getASPRoCTrustManagers(String exp_issuer) throws Exception {
@@ -240,9 +225,20 @@ public class HttpsConn {
     }
 
     public static boolean checkExpSPK(X509Certificate ee, String exp_spk) throws Exception {
-        String spk = CertificateInfo.calcSubjecPKHash("SHA-256", ee);
         String normalizedExpSpk = exp_spk.replace(":", "").toLowerCase();
+        String hashAlgorithm = spkHashAlgorithm(normalizedExpSpk);
+        String spk = CertificateInfo.calcSubjecPKHash(hashAlgorithm, ee);
         return spk.equals(normalizedExpSpk);
+    }
+
+    private static String spkHashAlgorithm(String normalizedExpSpk) {
+        if (normalizedExpSpk.length() == 64) {
+            return "SHA-256";
+        }
+        if (normalizedExpSpk.length() == 96) {
+            return "SHA-384";
+        }
+        throw new IllegalArgumentException("Expected SPK must be a SHA-256 or SHA-384 hex digest");
     }
 
     private static SSLSocketFactory createDefaultSslSocketFactory() throws Exception {

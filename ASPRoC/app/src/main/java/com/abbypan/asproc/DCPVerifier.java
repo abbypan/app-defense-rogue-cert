@@ -44,24 +44,27 @@ public class DCPVerifier {
     }
 
     private static boolean verifySignature(PublicKey publicKey, byte[] pinBytes, byte[] signatureBytes) throws Exception {
+        HashAlgorithm hashAlgorithm = hashAlgorithmForPin(pinBytes);
         if (publicKey instanceof ECPublicKey) {
             Signature verifier = Signature.getInstance("NONEwithECDSA");
             verifier.initVerify(publicKey);
             verifier.update(pinBytes);
             return verifier.verify(signatureBytes);
         } else if (publicKey instanceof RSAPublicKey) {
-            return verifyRsaPss((RSAPublicKey) publicKey, pinBytes, signatureBytes);
+            return verifyRsaPss((RSAPublicKey) publicKey, pinBytes, signatureBytes, hashAlgorithm);
         } else {
             throw new IllegalArgumentException("Unsupported DCP key type: " + publicKey.getAlgorithm());
         }
     }
 
-    private static boolean verifyRsaPss(RSAPublicKey publicKey, byte[] messageHash, byte[] signature) throws Exception {
-        final int hashLength = 32;
+    private static boolean verifyRsaPss(
+            RSAPublicKey publicKey,
+            byte[] messageHash,
+            byte[] signature,
+            HashAlgorithm hashAlgorithm
+    ) throws Exception {
+        final int hashLength = hashAlgorithm.digestLength;
         final int saltLength = hashLength;
-        if (messageHash.length != hashLength) {
-            throw new IllegalArgumentException("RSA DCP pin must be a SHA-256 digest");
-        }
 
         BigInteger modulus = publicKey.getModulus();
         int modulusBits = modulus.bitLength();
@@ -77,16 +80,17 @@ public class DCPVerifier {
         }
 
         byte[] em = toFixedLength(signatureInt.modPow(publicKey.getPublicExponent(), modulus), emLen);
-        return verifyPssEncoding(messageHash, em, emBits, hashLength, saltLength);
+        return verifyPssEncoding(messageHash, em, emBits, hashAlgorithm, saltLength);
     }
 
     private static boolean verifyPssEncoding(
             byte[] messageHash,
             byte[] encodedMessage,
             int emBits,
-            int hashLength,
+            HashAlgorithm hashAlgorithm,
             int saltLength
     ) throws Exception {
+        int hashLength = hashAlgorithm.digestLength;
         int emLen = encodedMessage.length;
         if (encodedMessage[emLen - 1] != (byte) 0xbc) {
             return false;
@@ -101,7 +105,7 @@ public class DCPVerifier {
             return false;
         }
 
-        byte[] dbMask = mgf1(hash, dbLength);
+        byte[] dbMask = mgf1(hash, dbLength, hashAlgorithm);
         byte[] db = new byte[dbLength];
         for (int i = 0; i < dbLength; i++) {
             db[i] = (byte) (maskedDb[i] ^ dbMask[i]);
@@ -121,15 +125,15 @@ public class DCPVerifier {
         }
 
         byte[] salt = Arrays.copyOfRange(db, dbLength - saltLength, dbLength);
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        MessageDigest digest = MessageDigest.getInstance(hashAlgorithm.jcaName);
         digest.update(new byte[8]);
         digest.update(messageHash);
         digest.update(salt);
         return MessageDigest.isEqual(hash, digest.digest());
     }
 
-    private static byte[] mgf1(byte[] seed, int length) throws Exception {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+    private static byte[] mgf1(byte[] seed, int length, HashAlgorithm hashAlgorithm) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance(hashAlgorithm.jcaName);
         byte[] mask = new byte[length];
         byte[] counter = new byte[4];
         int offset = 0;
@@ -147,6 +151,29 @@ public class DCPVerifier {
         }
 
         return mask;
+    }
+
+    private static HashAlgorithm hashAlgorithmForPin(byte[] pinBytes) {
+        if (pinBytes.length == HashAlgorithm.SHA256.digestLength) {
+            return HashAlgorithm.SHA256;
+        }
+        if (pinBytes.length == HashAlgorithm.SHA384.digestLength) {
+            return HashAlgorithm.SHA384;
+        }
+        throw new IllegalArgumentException("DCP pin must be a SHA-256 or SHA-384 digest");
+    }
+
+    private enum HashAlgorithm {
+        SHA256("SHA-256", 32),
+        SHA384("SHA-384", 48);
+
+        private final String jcaName;
+        private final int digestLength;
+
+        HashAlgorithm(String jcaName, int digestLength) {
+            this.jcaName = jcaName;
+            this.digestLength = digestLength;
+        }
     }
 
     private static byte[] toFixedLength(BigInteger value, int length) {
