@@ -29,11 +29,13 @@ def copy_file(source, destination):
 
 def generate_for_algorithm(repo_root, alg):
     signing_dir = repo_root / "signing" / alg
+    scp_generator = repo_root / "signing" / "gen_scp_hash.py"
     server_cert = repo_root / "realserver" / "etc" / "cert" / alg / "real-cert.pem"
     alg_well_known_dir = repo_root / "realserver" / "var" / "www" / alg / ".well-known"
     dcp_well_known_dir = repo_root / "realserver" / "var" / "www" / "dcp" / ".well-known"
 
     require_file(signing_dir / "gen_dcp.py", "DCP generator")
+    require_file(scp_generator, "SCP hash generator")
     require_file(signing_dir / "gen_jwt_ClaimSigningKey.py", "ClaimSigningKey JWT generator")
     require_file(signing_dir / "gen_jwt_ServerCertClaim.py", "ServerCertClaim JWT generator")
     require_file(server_cert, "server certificate")
@@ -41,6 +43,17 @@ def generate_for_algorithm(repo_root, alg):
     require_file(signing_dir / "my-app-key.pem", "app signing key")
     require_file(signing_dir / "my-dcp-key.pem", "DCP signing key")
 
+    run_checked(
+        [
+            sys.executable,
+            str(scp_generator),
+            str(server_cert),
+            "--output",
+            str(signing_dir / "my-app-cert-scp-hash.txt"),
+        ],
+        f"{alg}: generate my-app-cert-scp-hash.txt",
+        signing_dir,
+    )
     run_checked(
         [sys.executable, "gen_dcp.py", str(server_cert)],
         f"{alg}: generate DCPServerCertPin.json",
@@ -57,6 +70,7 @@ def generate_for_algorithm(repo_root, alg):
         signing_dir,
     )
 
+    print(f"Wrote {signing_dir / 'my-app-cert-scp-hash.txt'}")
     print(f"Wrote {signing_dir / 'DCPServerCertPin.json'}")
     print(f"Wrote {signing_dir / 'ClaimSigningKey.jwt'}")
     print(f"Wrote {signing_dir / 'ServerCertClaim.jwt'}")

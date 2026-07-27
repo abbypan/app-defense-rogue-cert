@@ -1,4 +1,4 @@
-# app_trust_cert
+# app defense rogue cert
 
 # install
 
@@ -22,9 +22,14 @@
 
 # proverif
 
-    proverif -lib base.pvl asproc_bgp_hijacking.pv 
-    proverif -lib base.pvl asproc_dns_hijacking.pv
-    proverif -lib base.pvl asproc_mitm.pv 
+    proverif -lib base.pvl aspin_bgp_hijacking.pv
+    proverif -lib base.pvl aspin_dns_hijacking.pv
+    proverif -lib base.pvl aspin_mitm.pv
+
+Verify that the ASPin/TLS models, saved ProVerif results, and the protocol
+and result tables in `tex/` remain aligned:
+
+    python proverif/check_consistency.py
     
     proverif -lib base.pvl tls_bgp_hijacking.pv 
     proverif -lib base.pvl tls_dns_hijacking.pv
