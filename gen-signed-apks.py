@@ -65,13 +65,14 @@ def resolve_tool(name, explicit_path=None, sdk_root=None, search_android_sdk=Tru
         sdk_roots.append(Path(user_profile) / "AppData" / "Local" / "Android" / "Sdk")
     if program_files:
         sdk_roots.append(Path(program_files) / "Android" / "Sdk")
+    sdk_roots.append(Path("/opt/android-sdk"))
     sdk_roots.append(Path("D:/software/Android/SDK"))
 
     seen = set()
     unique_roots = []
     for root in sdk_roots:
         resolved = root.resolve()
-        if resolved not in seen:
+        if resolved not in seen and resolved.exists():
             seen.add(resolved)
             unique_roots.append(resolved)
 
@@ -159,30 +160,20 @@ def built_apk(project_dir, build_type, explicit_apk=None):
 
 def main():
     repo_root = Path(__file__).resolve().parent
-    default_output = repo_root / "signed-apks"
+    default_output = repo_root / "results" / "apks"
 
     parser = argparse.ArgumentParser(
-        description="Build and sign APKs with signing/es256, es384, rsa3072, and rsa4096 app keys."
+        description="Build and sign APKs for es256, es384, rsa3072, and rsa4096 using signing/<variant>/my-app-key."
     )
-    parser.add_argument("--build-type", choices=("debug", "release"), default="release")
+    parser.add_argument("--build-type", choices=("debug", "release"), default="debug")
     parser.add_argument("--skip-build", action="store_true")
     parser.add_argument("--output-dir", default=str(default_output))
     parser.add_argument("--sdk-root", help="Android SDK root containing build-tools/")
     parser.add_argument("--zipalign", help="Path to zipalign or zipalign.exe")
     parser.add_argument("--apksigner", help="Path to apksigner or apksigner.bat")
     parser.add_argument("--openssl", help="Path to openssl or openssl.exe")
-    parser.add_argument("--apk", help="Use an existing APK instead of the default Gradle output path")
     args = parser.parse_args()
 
-    project_dir = repo_root / "ASPin"
-    if not project_dir.is_dir():
-        raise SystemExit(f"Cannot find Android project directory: {project_dir}")
-
-    if not args.skip_build:
-        task = f":app:assemble{args.build_type[:1].upper()}{args.build_type[1:]}"
-        run_checked(gradle_wrapper(project_dir) + [task], f"Gradle task {task}", cwd=project_dir)
-
-    unsigned_apk = built_apk(project_dir, args.build_type, args.apk)
     output_dir = Path(args.output_dir).expanduser().resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -191,18 +182,29 @@ def main():
     openssl = None
 
     for variant in VARIANTS:
+        variant_project_dir = repo_root / "ASPin" / variant
+        if not variant_project_dir.is_dir():
+            print(f"Skipping missing variant project directory: {variant_project_dir}")
+            continue
+
+        if not args.skip_build:
+            task = f":app:assemble{args.build_type[:1].upper()}{args.build_type[1:]}"
+            run_checked(gradle_wrapper(variant_project_dir) + [task], f"Gradle task {task} for {variant}", cwd=variant_project_dir)
+
+        unsigned_apk = built_apk(variant_project_dir, args.build_type)
+
         signing_dir = repo_root / "signing" / variant
         key = signing_dir / "my-app-key.pk8"
         pem_key = signing_dir / "my-app-key.pem"
         cert = signing_dir / "my-app-cert.pem"
 
         if not key.exists() and not pem_key.exists():
-            raise SystemExit(f"Missing private key: {key} or {pem_key}")
+            raise SystemExit(f"Missing private key for {variant}: {key} or {pem_key}")
         if not cert.exists():
-            raise SystemExit(f"Missing certificate: {cert}")
+            raise SystemExit(f"Missing certificate for {variant}: {cert}")
 
-        aligned_apk = output_dir / f"app-{args.build_type}-{variant}-aligned.apk"
-        signed_apk = output_dir / f"app-{args.build_type}-{variant}-signed.apk"
+        aligned_apk = output_dir / f"ASPin-{variant}-aligned.apk"
+        signed_apk = output_dir / f"ASPin-{variant}.apk"
         pk8_key = output_dir / f"{variant}-my-app-key.pk8"
 
         try:
@@ -212,6 +214,7 @@ def main():
                 if openssl is None:
                     openssl = resolve_tool("openssl", args.openssl, search_android_sdk=False)
                 convert_pem_to_pk8(openssl, pem_key, pk8_key)
+
             run_checked(
                 [str(zipalign), "-p", "-f", "4", str(unsigned_apk), str(aligned_apk)],
                 f"zipalign for {variant}",
@@ -228,7 +231,7 @@ def main():
                     str(signed_apk),
                     str(aligned_apk),
                 ],
-                f"APK signing for {variant}",
+                f"APK signing for {variant} using signing/{variant}/my-app-key",
             )
             run_checked(
                 [str(apksigner), "verify", "--verbose", "--print-certs", str(signed_apk)],
@@ -239,7 +242,7 @@ def main():
             if pk8_key != key:
                 pk8_key.unlink(missing_ok=True)
 
-        print(f"Wrote {signed_apk}")
+        print(f"--> Successfully built and signed {variant} APK: {signed_apk}")
 
 
 if __name__ == "__main__":

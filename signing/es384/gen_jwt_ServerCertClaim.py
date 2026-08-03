@@ -1,10 +1,17 @@
 #!/usr/bin/python3
 
+import base64
 import ssl
 import sys
 import time
 from jwcrypto import jwk,jws
 from jwcrypto.common import json_encode
+
+
+def get_pubkey_der_b64(pubkey_pem_path):
+    with open(pubkey_pem_path, "r") as f:
+        pem = f.read()
+    return "".join([l.strip() for l in pem.splitlines() if l.strip() and not l.startswith("-----")])
 
 
 def x509_name_to_string(name):
@@ -46,50 +53,41 @@ def read_cert_claim(server_cert):
    if host is None:
       raise ValueError("Could not read host from certificate SAN or subject CN")
 
+   subject = x509_name_to_string(cert_info["subject"])
+   sans = [value for san_type, value in cert_info.get("subjectAltName", [])
+           if san_type == "DNS"]
    issuer = x509_name_to_string(cert_info["issuer"])
-   return host, issuer
+   return host, subject, sans, issuer
 
 
-cert = "my-claim-cert.pem"
-with open(cert, "r") as f:
-   cert_pem = f.read()
-f.closed
-
+claim_pubkey_b64 = get_pubkey_der_b64("my-claim-pubkey.pem")
 
 pro_header = json_encode({
         "alg": "ES384", 
-        "x5c": [ cert_pem ]
+        "pubkey": claim_pubkey_b64
         })
-
 
 priv = "my-claim-key.pem"
 with open(priv, "rb") as f:
    priv_pem = f.read()
-f.closed
 priv_key = jwk.JWK.from_pem(priv_pem, None)
-#print(priv_key)
-
 
 server_cert = sys.argv[1]
-host, issuer = read_cert_claim(server_cert)
+host, subject, sans, issuer = read_cert_claim(server_cert)
 
 payload = json_encode({
     "host": host,
-    "issuer": issuer, 
-    "exp": int(time.time()) + 518400      # expires in 60 days
+    "subject": subject,
+    "san": sans,
+    "issuer": issuer,
+    "exp": int(time.time()) + 315360000,
+    "ttl": 86400
     })
 
 jwstoken = jws.JWS(payload)
-
-jwstoken.add_signature(priv_key, 
-                       None, #alg
-                       pro_header , #protected
-                       None, 
-                       )
+jwstoken.add_signature(priv_key, None, pro_header, None)
 sig = jwstoken.serialize(compact=True)
-#print(sig)
 
-sigf = ("ServerCertClaim.jwt")
-f = open(sigf, "w")
-f.write(sig)
-f.close()
+sigf = "ServerCertClaim.jwt"
+with open(sigf, "w") as f:
+   f.write(sig)

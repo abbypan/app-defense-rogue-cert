@@ -6,15 +6,17 @@ let RealServer =
   
   let header = pk2s(pk(sk_app_signing)) in
   let good_exp = succ_t(curr) in
+  let good_ttl = ttl_one in
   let content = pk2s(pk(sk_claim_signing)) in
-  let token_k = jwt_sign(header, content, good_exp, sk_app_signing) in
+  let token_k = jwt_sign(header, content, good_exp, good_ttl, sk_app_signing) in
   event ClaimKeySign(sk_app_signing, pk(sk_claim_signing), good_exp);
   out(c, token_k);
 
   let header2 = pk2s(pk(sk_claim_signing)) in
   let good_exp2 = succ_t(curr) in
+  let good_ttl2 = ttl_one in
   let content2 = cert_claim(server_cert_subject_and_san, real_cert_issuer) in
-  let token_c = jwt_sign(header2, content2, good_exp2, sk_claim_signing) in
+  let token_c = jwt_sign(header2, content2, good_exp2, good_ttl2, sk_claim_signing) in
   event CertClaimSign(sk_claim_signing, server_cert_subject_and_san, real_cert_issuer, good_exp2);
   out(c, token_c);
   
@@ -77,7 +79,9 @@ let LegitimateApp =
   let content = get_content(plr) in
   let pk1_recv = s2pk(content) in
   let exp_recv = get_exp(plr) in
+  let ttl_recv = get_ttl(plr) in
   if jwt_verify(jwt(h, plr, sr), pk_app_signing, curr) = true then
+      let true = ttl_recv = ttl_one in
       event ClaimKeyVerify(pk_app_signing, pk1_recv, exp_recv);
  
   in(c, jwt(h2: bitstring, plr2: bitstring, sr2: bitstring));
@@ -85,7 +89,9 @@ let LegitimateApp =
   let subject_and_san_claim = get_subject_and_san(content2) in
   let issuer_claim = get_issuer(content2) in
   let exp2 = get_exp(plr2) in
+  let ttl_recv2 = get_ttl(plr2) in
   if jwt_verify(jwt(h2, plr2, sr2), pk1_recv, curr) = true then
+      let true = ttl_recv2 = ttl_one in
       event CertClaimVerify(pk1_recv, subject_and_san_claim, issuer_claim, exp2);
   
   let c_hello = client_hello(random_app, pk(sk_app_temp)) in

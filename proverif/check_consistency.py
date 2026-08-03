@@ -16,14 +16,15 @@ ASPIN_MODELS = (
 )
 
 PROTOCOL_FRAGMENTS = (
-    "jwt_sign(header, content, good_exp, sk_app_signing)",
-    "jwt_sign(header2, content2, good_exp2, sk_claim_signing)",
+    "jwt_sign(header, content, good_exp, good_ttl, sk_app_signing)",
+    "jwt_sign(header2, content2, good_exp2, good_ttl2, sk_claim_signing)",
     "jwt_verify(jwt(h, plr, sr), pk_app_signing, curr)",
     "jwt_verify(jwt(h2, plr2, sr2), pk1_recv, curr)",
     "check_host(hostname, subj_and_san_recv)",
     "check_issuer(issuer_recv, system_ca_list)",
     "check_host(hostname, subject_and_san_claim)",
     "issuer_claim = issuer_recv",
+    "get_ttl(plr)",
 )
 
 TEX_FRAGMENTS = (
@@ -35,13 +36,13 @@ TEX_FRAGMENTS = (
     r"\texttt{not event(MSFakeServer(...))} & true & false",
     r"\texttt{not event(MSConn(...))} & true & false & true & false",
     r"\label{sec:cache}",
-    "maintains a valid $T'_c$ for at least two claim-expiration windows",
-    "After the overlap period, the developer deploys \\emph{NewCert}",
+    "keeps $T'_c$ continuously available for at least two complete $ttl$-length cache windows",
+    "Only after the overlap period ends does the app developer deploy \\emph{NewCert}",
 )
 
 APPENDIX_FRAGMENTS = (
-    "jwt_sign(header, content, good_exp, sk_app_signing)",
-    "jwt_sign(header2, content2, good_exp2, sk_claim_signing)",
+    "jwt_sign(header, content, good_exp, good_ttl, sk_app_signing)",
+    "jwt_sign(header2, content2, good_exp2, good_ttl2, sk_claim_signing)",
     "check_host(hostname, subject_and_san_claim)",
     "issuer_claim = issuer_recv",
 )
@@ -57,6 +58,13 @@ def require_fragments(path: Path, fragments: tuple[str, ...]) -> None:
     for fragment in fragments:
         if fragment not in text:
             fail(f"{path.relative_to(ROOT.parent)} is missing: {fragment}")
+
+
+def require_no_fragments(path: Path, fragments: tuple[str, ...]) -> None:
+    text = path.read_text(encoding="utf-8")
+    for fragment in fragments:
+        if fragment in text:
+            fail(f"{path.relative_to(ROOT.parent)} still contains obsolete format: {fragment}")
 
 
 def results(path: Path) -> list[str]:
@@ -130,7 +138,7 @@ def check_mitm() -> None:
 
 def check_cache_migration() -> None:
     require_fragments(
-        ROOT / "aspin-cache.pv",
+        ROOT / "aspin_cache.pv",
         (
             "policy_current_ca",
             "policy_transition_ca",
@@ -177,6 +185,14 @@ def main() -> None:
     require_fragments(TEX, TEX_FRAGMENTS)
     require_fragments(APPENDIX, APPENDIX_FRAGMENTS)
     require_fragments(ROOT / "base.pvl", ("token not expired", "succ_t(now2)"))
+    require_fragments(
+        ROOT.parent / "ASPin/app/src/main/java/com/abbypan/aspin/JwtVerifier.java",
+        ("cnf.jwk", "JWT x5c verification key is required", "getClaim(\"ttl\")"),
+    )
+    require_fragments(
+        ROOT.parent / "ASPin/app/src/main/java/com/abbypan/aspin/AppTrustedServerCert.java",
+        ("staleDeadline", "KEY_CACHE", "CLAIM_CACHE"),
+    )
     for model in ASPIN_MODELS:
         require_fragments(ROOT / model, PROTOCOL_FRAGMENTS)
 

@@ -6,6 +6,7 @@ set attacker = active.
 type skey [private].
 type pkey.
 type timestamp.
+type ttl.
 type ip.
 type mechine.
 
@@ -28,6 +29,8 @@ const rogue_ip: ip.
 const rogue_mechine: mechine.
 
 free curr: timestamp.
+const ttl_one: ttl.
+const ttl_two: ttl.
 
 (* app signing key *)
 const app_signing: bitstring.
@@ -113,11 +116,13 @@ reduc forall subject_and_san: bitstring, issuer: bitstring;
 
 
 (* jwt *)
-fun jwt_payload(bitstring, timestamp): bitstring [data]. (* content, exp *)
-reduc forall content: bitstring, exp: timestamp;
-      get_content(jwt_payload(content, exp)) = content.
-reduc forall content: bitstring, exp: timestamp;
-      get_exp(jwt_payload(content, exp)) = exp.
+fun jwt_payload(bitstring, timestamp, ttl): bitstring [data]. (* content, exp, ttl *)
+reduc forall content: bitstring, exp: timestamp, lifetime: ttl;
+      get_content(jwt_payload(content, exp, lifetime)) = content.
+reduc forall content: bitstring, exp: timestamp, lifetime: ttl;
+      get_exp(jwt_payload(content, exp, lifetime)) = exp.
+reduc forall content: bitstring, exp: timestamp, lifetime: ttl;
+      get_ttl(jwt_payload(content, exp, lifetime)) = lifetime.
 
 fun jwt(bitstring, bitstring, bitstring): bitstring [data].  (* header, payload, signature *)
 fun jwt_tosign(bitstring, bitstring): bitstring.             (* header, payload *)
@@ -131,23 +136,24 @@ reduc forall header: bitstring, payload: bitstring, signature: bitstring;
 reduc forall header: bitstring, payload: bitstring, signature: bitstring;
       get_jwt_sig(jwt(header, payload, signature)) = signature.
 
-reduc forall header: bitstring, content: bitstring, exp: timestamp, privkey: skey;
-      jwt_sign(header, content, exp, privkey) =
+reduc forall header: bitstring, content: bitstring, exp: timestamp,
+             lifetime: ttl, privkey: skey;
+      jwt_sign(header, content, exp, lifetime, privkey) =
       jwt(header,
-          jwt_payload(content, exp),
-          sig_sign(jwt_tosign(header, jwt_payload(content, exp)), privkey)).
+          jwt_payload(content, exp, lifetime),
+          sig_sign(jwt_tosign(header, jwt_payload(content, exp, lifetime)), privkey)).
 
 
 (* jwt_verify checks: valid signature and token not expired *)
-reduc forall content: bitstring, sk: skey, now: timestamp;
+reduc forall content: bitstring, lifetime: ttl, sk: skey, now: timestamp;
       jwt_verify(jwt(pk2s(pk(sk)),
-                     jwt_payload(content, now),
-                     sig_sign(jwt_tosign(pk2s(pk(sk)), jwt_payload(content, now)), sk)),
+                     jwt_payload(content, now, lifetime),
+                     sig_sign(jwt_tosign(pk2s(pk(sk)), jwt_payload(content, now, lifetime)), sk)),
                  pk(sk), now) = true;
-      forall content2: bitstring, sk2: skey, now2: timestamp;
+      forall content2: bitstring, lifetime2: ttl, sk2: skey, now2: timestamp;
       jwt_verify(jwt(pk2s(pk(sk2)),
-                     jwt_payload(content2, succ_t(now2)),
-                     sig_sign(jwt_tosign(pk2s(pk(sk2)), jwt_payload(content2, succ_t(now2))), sk2)),
+                     jwt_payload(content2, succ_t(now2), lifetime2),
+                     sig_sign(jwt_tosign(pk2s(pk(sk2)), jwt_payload(content2, succ_t(now2), lifetime2)), sk2)),
                  pk(sk2), now2) = true.
 
 
