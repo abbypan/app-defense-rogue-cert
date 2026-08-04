@@ -33,11 +33,11 @@ TEX_FRAGMENTS = (
     "ClaimKeyVerify($T_k,K_{apub}$)",
     "CertClaimVerify($T_c,K_{cpub}$)",
     "CertClaimCheck(Claim, Cert)",
-    r"\texttt{not event(MSFakeServer(...))} & true & false",
-    r"\texttt{not event(MSConn(...))} & true & false & true & false",
+    r"\texttt{not event(MSAccept(...))} & true & false",
+    r"\texttt{not event(MSAccept(...))} & true & false & true & false",
     r"\label{sec:cache}",
-    "keeps $T'_c$ continuously available for at least two complete $ttl$-length cache windows",
-    "Only after the overlap period ends does the app developer deploy \\emph{NewCert}",
+    "keeps $T'_c$ continuously available for at least two complete $ttl$ cache windows",
+    "simultaneously deploys \\emph{NewCert} on the app server and publishes a new token $T''_c$",
 )
 
 APPENDIX_FRAGMENTS = (
@@ -86,53 +86,53 @@ def require_outcome(lines: list[str], terms: tuple[str, ...], outcome: str) -> N
 
 
 def check_common_reachability(lines: list[str]) -> None:
-    require_outcome(lines, ("not event(RSConn(",), "is false.")
+    require_outcome(lines, ("not event(RSAccept(",), "is false.")
     require_outcome(lines, ("not event(AppConnRS(",), "is false.")
-    require_outcome(lines, ("not event(AppRejectConn(",), "is false.")
+    require_outcome(lines, ("not event(AppReject(",), "is false.")
 
 
 def check_network(kind: str) -> None:
     aspin = results(ROOT / "result" / f"aspin_{kind}_hijacking.log")
     tls = results(ROOT / "result" / f"tls_{kind}_hijacking.log")
     check_common_reachability(aspin)
-    require_outcome(aspin, ("not event(MSConn(",), "is true.")
+    require_outcome(aspin, ("not event(MSAccept(",), "is true.")
     require_outcome(aspin, ("not event(AppConnMS(",), "is true.")
-    require_outcome(aspin, ("event(MSConn(", "==> event(AppConnMS("), "is true.")
+    require_outcome(aspin, ("event(MSAccept(", "==> event(AppConnMS("), "is true.")
 
-    require_outcome(tls, ("not event(RSConn(",), "is false.")
+    require_outcome(tls, ("not event(RSAccept(",), "is false.")
     require_outcome(tls, ("not event(AppConnRS(",), "is false.")
-    require_outcome(tls, ("not event(AppRejectConn(",), "is true.")
-    require_outcome(tls, ("not event(MSConn(",), "is false.")
+    require_outcome(tls, ("not event(AppReject(",), "is true.")
+    require_outcome(tls, ("not event(MSAccept(",), "is false.")
     require_outcome(tls, ("not event(AppConnMS(",), "is false.")
-    require_outcome(tls, ("event(MSConn(", "==> event(AppConnMS("), "is true.")
+    require_outcome(tls, ("event(MSAccept(", "==> event(AppConnMS("), "is true.")
 
 
 def check_mitm() -> None:
     aspin = results(ROOT / "result" / "aspin_mitm.log")
     tls = results(ROOT / "result" / "tls_mitm.log")
     check_common_reachability(aspin)
-    require_outcome(aspin, ("not event(MSFakeServer(",), "is true.")
+    require_outcome(aspin, ("not event(MSAccept(",), "is true.")
     require_outcome(aspin, ("not event(AppConnMS(",), "is true.")
     require_outcome(
-        aspin, ("event(MSFakeServer(", "==> event(AppConnMS("), "is true."
+        aspin, ("event(MSAccept(", "==> event(AppConnMS("), "is true."
     )
-    require_outcome(aspin, ("not event(MSFakeClient(",), "is true.")
+    require_outcome(aspin, ("not event(MSConnRS(",), "is true.")
     require_outcome(
-        aspin, ("event(RSConn(", "==> event(MSFakeClient("), "is false."
+        aspin, ("event(RSAccept(", "==> event(MSConnRS("), "is false."
     )
 
-    require_outcome(tls, ("not event(RSConn(",), "is false.")
+    require_outcome(tls, ("not event(RSAccept(",), "is false.")
     require_outcome(tls, ("not event(AppConnRS(",), "is false.")
-    require_outcome(tls, ("event(RSConn(", "==> event(AppConnRS("), "cannot be proved.")
-    require_outcome(tls, ("not event(AppRejectConn(",), "is true.")
-    require_outcome(tls, ("not event(MSFakeServer(",), "is false.")
+    require_outcome(tls, ("event(RSAccept(", "==> event(AppConnRS("), "cannot be proved.")
+    require_outcome(tls, ("not event(AppReject(",), "is true.")
+    require_outcome(tls, ("not event(MSAccept(",), "is false.")
     require_outcome(tls, ("not event(AppConnMS(",), "is false.")
     require_outcome(
-        tls, ("event(MSFakeServer(", "==> event(AppConnMS("), "cannot be proved."
+        tls, ("event(MSAccept(", "==> event(AppConnMS("), "cannot be proved."
     )
-    require_outcome(tls, ("not event(MSFakeClient(",), "is false.")
+    require_outcome(tls, ("not event(MSConnRS(",), "is false.")
     require_outcome(
-        tls, ("event(RSConn(", "==> event(MSFakeClient("), "is false."
+        tls, ("event(RSAccept(", "==> event(MSConnRS("), "is false."
     )
 
 
@@ -140,15 +140,20 @@ def check_cache_migration() -> None:
     require_fragments(
         ROOT / "aspin_cache.pv",
         (
-            "policy_current_ca",
-            "policy_transition_ca",
-            "policy_new_ca",
+            "claim_current_ca",
+            "claim_transition_ca",
+            "claim_new_ca",
             "window_overlap_1",
             "window_overlap_2",
             "window_new_cert",
-            "issuer_allowed(new_cert_issuer, policy_transition_ca)",
+            "issuer_allowed(new_cert_issuer, claim_transition_ca)",
+            "cached_claim(content2, succ_t(cached_at2), ttl_one, cached_at2)",
+            "MigrationTransitionAvailable(window_overlap_1)",
+            "MigrationTransitionAvailable(window_overlap_2)",
+            "MigrationCutover(new_cert_issuer, claim_new_ca)",
         ),
     )
+    require_no_fragments(ROOT / "aspin_cache.pv", ("window_final",))
     cache = results(ROOT / "result" / "aspin-cache.log")
     require_outcome(
         cache,
@@ -156,29 +161,81 @@ def check_cache_migration() -> None:
         "is true.",
     )
     windows = (
-        ("window_current", "real_cert_issuer", "policy_current_ca"),
-        ("window_overlap_1", "real_cert_issuer", "policy_transition_ca"),
-        ("window_overlap_2", "real_cert_issuer", "policy_transition_ca"),
-        ("window_new_cert", "new_cert_issuer", "policy_transition_ca"),
-        ("window_final", "new_cert_issuer", "policy_new_ca"),
+        ("window_current", "real_cert_issuer", "claim_current_ca"),
+        ("window_overlap_1", "real_cert_issuer", "claim_transition_ca"),
+        ("window_overlap_2", "real_cert_issuer", "claim_transition_ca"),
     )
-    for window, issuer, policy in windows:
+    for window, issuer, claim in windows:
         require_outcome(
             cache, (f"not event(MigrationWindowComplete({window}))",), "is false."
         )
         require_outcome(
             cache,
-            (f"not event(MigrationCertAccepted({window},{issuer},{policy}))",),
+            (f"not event(MigrationCertAccepted({window},{issuer},{claim}))",),
             "is false.",
         )
         require_outcome(
             cache,
             (
                 f"event(MigrationWindowComplete({window}))",
-                f"event(MigrationCertAccepted({window},{issuer},{policy}))",
+                f"event(MigrationCertAccepted({window},{issuer},{claim}))",
             ),
             "is true.",
         )
+    require_outcome(
+        cache,
+        ("not event(MigrationWindowComplete(window_new_cert))",),
+        "is false.",
+    )
+    for claim in ("claim_transition_ca", "claim_new_ca"):
+        require_outcome(
+            cache,
+            (
+                "not event(MigrationCertAccepted("
+                f"window_new_cert,new_cert_issuer,{claim}))",
+            ),
+            "is false.",
+        )
+        require_outcome(
+            cache,
+            (
+                "event(MigrationWindowComplete(window_new_cert))",
+                "event(MigrationCertAccepted("
+                f"window_new_cert,new_cert_issuer,{claim}))",
+            ),
+            "is true.",
+        )
+    require_outcome(
+        cache,
+        (
+            "event(MigrationCutover(new_cert_issuer,claim_new_ca))",
+            "event(MigrationTransitionAvailable(window_overlap_1))",
+        ),
+        "is true.",
+    )
+    require_outcome(
+        cache,
+        (
+            "event(MigrationCutover(new_cert_issuer,claim_new_ca))",
+            "event(MigrationTransitionAvailable(window_overlap_2))",
+        ),
+        "is true.",
+    )
+    require_outcome(
+        cache,
+        (
+            "event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca))",
+            "event(MigrationCutover(new_cert_issuer,claim_new_ca))",
+        ),
+        "is true.",
+    )
+    require_outcome(
+        cache,
+        (
+            "not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_current_ca))",
+        ),
+        "is true.",
+    )
 
 
 def main() -> None:
@@ -186,11 +243,11 @@ def main() -> None:
     require_fragments(APPENDIX, APPENDIX_FRAGMENTS)
     require_fragments(ROOT / "base.pvl", ("token not expired", "succ_t(now2)"))
     require_fragments(
-        ROOT.parent / "ASPin/app/src/main/java/com/abbypan/aspin/JwtVerifier.java",
-        ("cnf.jwk", "JWT x5c verification key is required", "getClaim(\"ttl\")"),
+        ROOT.parent / "ASPin/es256/app/src/main/java/com/abbypan/aspin/JwtVerifier.java",
+        ("cnf.jwk", "ClaimSigningKey JWT is missing cnf.pubkey or cnf.x5c or cnf.jwk", "getClaim(\"ttl\")"),
     )
     require_fragments(
-        ROOT.parent / "ASPin/app/src/main/java/com/abbypan/aspin/AppTrustedServerCert.java",
+        ROOT.parent / "ASPin/es256/app/src/main/java/com/abbypan/aspin/AppTrustedServerCert.java",
         ("staleDeadline", "KEY_CACHE", "CLAIM_CACHE"),
     )
     for model in ASPIN_MODELS:

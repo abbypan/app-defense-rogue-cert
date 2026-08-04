@@ -164,14 +164,13 @@ event CertClaimSign(skey, bitstring, bitstring, timestamp).
 event CertClaimVerify(pkey, bitstring, bitstring, timestamp).
 
 
-event RSConn(bitstring, bitstring, bitstring, bitstring, bitstring).
-event MSConn(bitstring, bitstring, bitstring, bitstring, bitstring).
+event RSAccept(bitstring, bitstring, bitstring, bitstring, bitstring).
+event MSAccept(bitstring, bitstring, bitstring, bitstring, bitstring).
 
 event AppConnRS(bitstring, bitstring, bitstring, bitstring, bitstring).
 event AppConnMS(bitstring, bitstring, bitstring, bitstring, bitstring).
 
-event AppRejectConn(bitstring, bitstring, bitstring).
+event AppReject(bitstring, bitstring, bitstring).
 
 
-event MSFakeServer(bitstring, bitstring, bitstring, bitstring, bitstring).
-event MSFakeClient(bitstring, bitstring, bitstring, bitstring, bitstring).
+event MSConnRS(bitstring, bitstring, bitstring, bitstring, bitstring).

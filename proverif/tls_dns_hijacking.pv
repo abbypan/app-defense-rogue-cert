@@ -23,7 +23,7 @@ let RealServer =
   in(c, sens_cipher: bitstring);
   if check_authtag(ss, sens_cipher) = true
   then (
-  event RSConn(server_hostname, th, dec_data(ss, sens_cipher), real_s_cert, sens_cipher)
+  event RSAccept(server_hostname, th, dec_data(ss, sens_cipher), real_s_cert, sens_cipher)
   )
   .
 
@@ -45,7 +45,7 @@ let DNSHijackingRogueServer =
   if check_authtag(ss_rogue, sens_cipher) = true
   then (
   let sens_d = dec_data(ss_rogue, sens_cipher) in
-  event MSConn(server_hostname, rogue_trans, sens_d, rogue_s_cert, sens_cipher)
+  event MSAccept(server_hostname, rogue_trans, sens_d, rogue_s_cert, sens_cipher)
   )
   .
 
@@ -89,7 +89,7 @@ let LegitimateApp =
       )
     )
     else
-      event AppRejectConn(hostname, subj_and_san_recv, issuer_recv)
+      event AppReject(hostname, subj_and_san_recv, issuer_recv)
       .
 (* Query introduction:
    Each query asks whether a security property is reachable or guaranteed.
@@ -101,7 +101,7 @@ let LegitimateApp =
    True  = there exists a trace where RealServer accepts/decrypts client data for the modeled legitimate transcript.
    False = this modeled RealServer acceptance path is unreachable. *)
 query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(RSConn(server_hostname,
+  event(RSAccept(server_hostname,
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
@@ -127,7 +127,7 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
    True  = whenever RealServer accepts the modeled legitimate transcript, the app also accepted it.
    False = there is a trace where RealServer connects but AppConnRS does not occur. *)
 query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(RSConn(server_hostname,
+  event(RSAccept(server_hostname,
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
@@ -149,13 +149,13 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
 (* Query: Client-side rejection of rogue TLS session.
    True  = client can reject mismatched issuer/session.
    False = rejection event never occurs in this model. *)
-query event(AppRejectConn(server_hostname, server_cert_subject_and_san, rogue_cert_issuer)).
+query event(AppReject(server_hostname, server_cert_subject_and_san, rogue_cert_issuer)).
 
 (* Query: Rogue-server acceptance reachability.
    True  = there exists a trace where the rogue server accepts/decrypts data under the modeled rogue transcript.
    False = rogue acceptance/decryption is unreachable in this model. *)
 query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(MSConn(server_hostname,
+  event(MSAccept(server_hostname,
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),
@@ -183,7 +183,7 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
    True  = whenever rogueServer accepts the modeled rogue transcript, the app also accepted it.
    False = there is a trace where rogueServer connects but AppConnRS does not occur. *)
 query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(MSConn(server_hostname,
+  event(MSAccept(server_hostname,
   transcript_hash(
   client_hello(rc, pkc), 
   server_hello(rs, pks),

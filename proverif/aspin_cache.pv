@@ -10,9 +10,9 @@
  * Windows:
  *   w0  CurrCert + claim(CurrCA)
  *   w1  CurrCert + transitional claim(CurrCA, NewCA)
- *   w2  CurrCert + renewed transitional claim (second expiration window)
- *   w3  NewCert  + cached transitional claim
- *   w4  NewCert  + final claim(NewCA)
+ *   w2  CurrCert + renewed transitional claim (second ttl window)
+ *   w3  atomic cutover: NewCert + final claim(NewCA), with the cached
+ *       transitional claim bridging the cutover until the final claim refresh
  *)
 
 const new_cert_issuer: bitstring.
@@ -22,7 +22,6 @@ const window_current: bitstring.
 const window_overlap_1: bitstring.
 const window_overlap_2: bitstring.
 const window_new_cert: bitstring.
-const window_final: bitstring.
 
 const time_setup: timestamp.
 const time_current: timestamp.
@@ -30,24 +29,46 @@ const time_overlap_1: timestamp.
 const time_overlap_2: timestamp.
 const time_final: timestamp.
 
-const policy_current_ca: bitstring.
-const policy_transition_ca: bitstring.
-const policy_new_ca: bitstring.
+const claim_current_ca: bitstring.
+const claim_transition_ca: bitstring.
+const claim_new_ca: bitstring.
+
+(* Availability/lifecycle synchronization is not controlled by the network
+ * attacker. Public token retrieval itself still uses the attacker-controlled
+ * channel c. *)
+free migration_lifecycle: channel [private].
 
 fun migration_claim(bitstring, bitstring): bitstring [data].
-reduc forall subject_and_san: bitstring, policy: bitstring;
-      get_migration_subject_and_san(migration_claim(subject_and_san, policy)) =
+reduc forall subject_and_san: bitstring, claim_issuers: bitstring;
+      get_migration_subject_and_san(
+          migration_claim(subject_and_san, claim_issuers)) =
       subject_and_san.
-reduc forall subject_and_san: bitstring, policy: bitstring;
-      get_migration_policy(migration_claim(subject_and_san, policy)) = policy.
+reduc forall subject_and_san: bitstring, claim_issuers: bitstring;
+      get_migration_claim_issuers(
+          migration_claim(subject_and_san, claim_issuers)) = claim_issuers.
 
-reduc issuer_allowed(real_cert_issuer, policy_current_ca) = true;
-      issuer_allowed(real_cert_issuer, policy_transition_ca) = true;
-      issuer_allowed(new_cert_issuer, policy_transition_ca) = true;
-      issuer_allowed(new_cert_issuer, policy_new_ca) = true.
+reduc issuer_allowed(real_cert_issuer, claim_current_ca) = true;
+      issuer_allowed(real_cert_issuer, claim_transition_ca) = true;
+      issuer_allowed(new_cert_issuer, claim_transition_ca) = true;
+      issuer_allowed(new_cert_issuer, claim_new_ca) = true.
+
+(* A verified claim may be read immediately.  It may still be read at the next
+ * cache-window boundary only when both its ttl and exp permit that use. *)
+fun cached_claim(bitstring, timestamp, ttl, timestamp): bitstring [private].
+reduc forall content: bitstring, exp: timestamp, lifetime: ttl,
+             cached_at: timestamp;
+      read_cached_claim(
+          cached_claim(content, exp, lifetime, cached_at), cached_at) = content;
+      forall content2: bitstring, cached_at2: timestamp;
+      read_cached_claim(
+          cached_claim(content2, succ_t(cached_at2), ttl_one, cached_at2),
+          succ_t(cached_at2)) = content2.
 
 event MigrationClaimPublished(bitstring, bitstring, timestamp).
 event MigrationClaimCached(bitstring, bitstring, timestamp).
+event MigrationNewCertObtained(bitstring).
+event MigrationTransitionAvailable(bitstring).
+event MigrationCutover(bitstring, bitstring).
 event MigrationWindowComplete(bitstring).
 event MigrationCertAccepted(bitstring, bitstring, bitstring).
 
@@ -67,43 +88,52 @@ let MigrationServer =
   (* Window w0: current certificate and current-CA-only claim. *)
   let exp_current = succ_t(time_current) in
   let claim_current =
-      migration_claim(server_cert_subject_and_san, policy_current_ca) in
+      migration_claim(server_cert_subject_and_san, claim_current_ca) in
   let token_current =
       jwt_sign(pk2s(pk(sk_claim_signing)), claim_current, exp_current,
                ttl_one, sk_claim_signing) in
-  event MigrationClaimPublished(window_current, policy_current_ca, exp_current);
+  event MigrationClaimPublished(window_current, claim_current_ca, exp_current);
   out(c, token_current);
+
+  (* The developer obtains NewCert before publishing a transition claim. *)
+  event MigrationNewCertObtained(new_cert_issuer);
 
   (* Window w1: publish transition before changing the certificate. *)
   let exp_overlap_1 = succ_t(time_overlap_1) in
   let claim_overlap_1 =
-      migration_claim(server_cert_subject_and_san, policy_transition_ca) in
+      migration_claim(server_cert_subject_and_san, claim_transition_ca) in
   let token_overlap_1 =
       jwt_sign(pk2s(pk(sk_claim_signing)), claim_overlap_1, exp_overlap_1,
-               ttl_two, sk_claim_signing) in
+               ttl_one, sk_claim_signing) in
   event MigrationClaimPublished(
-      window_overlap_1, policy_transition_ca, exp_overlap_1);
+      window_overlap_1, claim_transition_ca, exp_overlap_1);
+  event MigrationTransitionAvailable(window_overlap_1);
   out(c, token_overlap_1);
 
-  (* Window w2: renew and retain the transition for a second expiration window. *)
+  (* Window w2: renew and retain the same transition claim for a second
+   * complete ttl cache window. *)
   let exp_overlap_2 = succ_t(time_overlap_2) in
   let claim_overlap_2 =
-      migration_claim(server_cert_subject_and_san, policy_transition_ca) in
+      migration_claim(server_cert_subject_and_san, claim_transition_ca) in
   let token_overlap_2 =
       jwt_sign(pk2s(pk(sk_claim_signing)), claim_overlap_2, exp_overlap_2,
-               ttl_two, sk_claim_signing) in
+               ttl_one, sk_claim_signing) in
   event MigrationClaimPublished(
-      window_overlap_2, policy_transition_ca, exp_overlap_2);
+      window_overlap_2, claim_transition_ca, exp_overlap_2);
+  event MigrationTransitionAvailable(window_overlap_2);
   out(c, token_overlap_2);
 
-  (* Window w4: after NewCert deployment, converge to NewCA-only policy. *)
+  (* Window w3: deploy NewCert and publish the NewCA-only claim as one
+   * cutover operation; there is no separate final-claim time window. *)
   let exp_final = succ_t(time_final) in
   let claim_final =
-      migration_claim(server_cert_subject_and_san, policy_new_ca) in
+      migration_claim(server_cert_subject_and_san, claim_new_ca) in
   let token_final =
       jwt_sign(pk2s(pk(sk_claim_signing)), claim_final, exp_final,
                ttl_one, sk_claim_signing) in
-  event MigrationClaimPublished(window_final, policy_new_ca, exp_final);
+  event MigrationClaimPublished(window_new_cert, claim_new_ca, exp_final);
+  event MigrationCutover(new_cert_issuer, claim_new_ca);
+  out(migration_lifecycle, new_cert_issuer);
   out(c, token_final)
   .
 
@@ -121,112 +151,164 @@ let UpdatingApp =
   (* w0: cache CurrCA and accept CurrCert. *)
   in(c, jwt(h0: bitstring, p0: bitstring, s0: bitstring));
   let content0 = get_content(p0) in
-  let policy0 = get_migration_policy(content0) in
+  let payload_claim0 = get_migration_claim_issuers(content0) in
   let exp0 = get_exp(p0) in
   let ttl0 = get_ttl(p0) in
   let true = jwt_verify(jwt(h0, p0, s0), claim_key, time_current) in
   let true = ttl0 = ttl_one in
-  event MigrationClaimCached(window_current, policy0, exp0);
+  event MigrationClaimCached(window_current, payload_claim0, exp0);
+  let cache0 = cached_claim(content0, exp0, ttl0, time_current) in
+  let cached_content0 = read_cached_claim(cache0, time_current) in
   let true =
-      check_host(server_hostname, get_migration_subject_and_san(content0)) in
-  let true = issuer_allowed(real_cert_issuer, policy0) in
-  event MigrationCertAccepted(window_current, real_cert_issuer, policy0);
+      check_host(
+          server_hostname, get_migration_subject_and_san(cached_content0)) in
+  let cached_claim0 = get_migration_claim_issuers(cached_content0) in
+  let true = issuer_allowed(real_cert_issuer, cached_claim0) in
+  event MigrationCertAccepted(
+      window_current, real_cert_issuer, cached_claim0);
   event MigrationWindowComplete(window_current);
 
   (* w1: refresh transition claim while CurrCert remains deployed. *)
   in(c, jwt(h1: bitstring, p1: bitstring, s1: bitstring));
   let content1 = get_content(p1) in
-  let policy1 = get_migration_policy(content1) in
+  let payload_claim1 = get_migration_claim_issuers(content1) in
   let exp1 = get_exp(p1) in
   let ttl1 = get_ttl(p1) in
   let true = jwt_verify(jwt(h1, p1, s1), claim_key, time_overlap_1) in
-  let true = ttl1 = ttl_two in
-  event MigrationClaimCached(window_overlap_1, policy1, exp1);
+  let true = ttl1 = ttl_one in
+  event MigrationClaimCached(window_overlap_1, payload_claim1, exp1);
+  let cache1 = cached_claim(content1, exp1, ttl1, time_overlap_1) in
+  let cached_content1 = read_cached_claim(cache1, time_overlap_1) in
   let true =
-      check_host(server_hostname, get_migration_subject_and_san(content1)) in
-  let true = issuer_allowed(real_cert_issuer, policy1) in
-  event MigrationCertAccepted(window_overlap_1, real_cert_issuer, policy1);
+      check_host(
+          server_hostname, get_migration_subject_and_san(cached_content1)) in
+  let cached_claim1 = get_migration_claim_issuers(cached_content1) in
+  let true = issuer_allowed(real_cert_issuer, cached_claim1) in
+  event MigrationCertAccepted(
+      window_overlap_1, real_cert_issuer, cached_claim1);
   event MigrationWindowComplete(window_overlap_1);
 
   (* w2: cache the renewed transition claim for late clients. *)
   in(c, jwt(h2: bitstring, p2: bitstring, s2: bitstring));
   let content2 = get_content(p2) in
-  let policy2 = get_migration_policy(content2) in
+  let payload_claim2 = get_migration_claim_issuers(content2) in
   let exp2 = get_exp(p2) in
   let ttl2 = get_ttl(p2) in
   let true = jwt_verify(jwt(h2, p2, s2), claim_key, time_overlap_2) in
-  let true = ttl2 = ttl_two in
-  event MigrationClaimCached(window_overlap_2, policy2, exp2);
+  let true = ttl2 = ttl_one in
+  event MigrationClaimCached(window_overlap_2, payload_claim2, exp2);
+  let cache2 = cached_claim(content2, exp2, ttl2, time_overlap_2) in
+  let cached_content2 = read_cached_claim(cache2, time_overlap_2) in
   let true =
-      check_host(server_hostname, get_migration_subject_and_san(content2)) in
-  let true = issuer_allowed(real_cert_issuer, policy2) in
-  event MigrationCertAccepted(window_overlap_2, real_cert_issuer, policy2);
+      check_host(
+          server_hostname, get_migration_subject_and_san(cached_content2)) in
+  let cached_claim2 = get_migration_claim_issuers(cached_content2) in
+  let true = issuer_allowed(real_cert_issuer, cached_claim2) in
+  event MigrationCertAccepted(
+      window_overlap_2, real_cert_issuer, cached_claim2);
   event MigrationWindowComplete(window_overlap_2);
 
-  (* w3: deploy NewCert only after the two overlap refresh windows. *)
+  (* w3: after both overlap windows, the cutover simultaneously makes NewCert
+   * and the final token available.  The cached transition claim bridges the
+   * connection until the app refreshes the final claim in this same window. *)
+  in(migration_lifecycle, =new_cert_issuer);
+  let content3 =
+      read_cached_claim(cache2, succ_t(time_overlap_2)) in
+  let claim3 = get_migration_claim_issuers(content3) in
   let true =
-      check_host(server_hostname, get_migration_subject_and_san(content2)) in
-  let true = issuer_allowed(new_cert_issuer, policy2) in
-  event MigrationCertAccepted(window_new_cert, new_cert_issuer, policy2);
-  event MigrationWindowComplete(window_new_cert);
+      check_host(server_hostname, get_migration_subject_and_san(content3)) in
+  let true = issuer_allowed(new_cert_issuer, claim3) in
+  event MigrationCertAccepted(window_new_cert, new_cert_issuer, claim3);
 
-  (* w4: cache NewCA-only claim and continue accepting NewCert. *)
+  (* Still in w3: cache NewCA-only claim and continue accepting NewCert. *)
   in(c, jwt(h4: bitstring, p4: bitstring, s4: bitstring));
   let content4 = get_content(p4) in
-  let policy4 = get_migration_policy(content4) in
+  let payload_claim4 = get_migration_claim_issuers(content4) in
   let exp4 = get_exp(p4) in
   let ttl4 = get_ttl(p4) in
   let true = jwt_verify(jwt(h4, p4, s4), claim_key, time_final) in
   let true = ttl4 = ttl_one in
-  event MigrationClaimCached(window_final, policy4, exp4);
+  event MigrationClaimCached(window_new_cert, payload_claim4, exp4);
+  let cache4 = cached_claim(content4, exp4, ttl4, time_final) in
+  let cached_content4 = read_cached_claim(cache4, time_final) in
   let true =
-      check_host(server_hostname, get_migration_subject_and_san(content4)) in
-  let true = issuer_allowed(new_cert_issuer, policy4) in
-  event MigrationCertAccepted(window_final, new_cert_issuer, policy4);
-  event MigrationWindowComplete(window_final)
+      check_host(
+          server_hostname, get_migration_subject_and_san(cached_content4)) in
+  let cached_claim4 = get_migration_claim_issuers(cached_content4) in
+  let true = issuer_allowed(new_cert_issuer, cached_claim4) in
+  event MigrationCertAccepted(
+      window_new_cert, new_cert_issuer, cached_claim4);
+  event MigrationWindowComplete(window_new_cert)
   .
 
 (* Every published claim accepted by the app was created by the migration server. *)
-query w: bitstring, policy: bitstring, exp: timestamp;
-  event(MigrationClaimCached(w, policy, exp)) ==>
-  event(MigrationClaimPublished(w, policy, exp)).
+query w: bitstring, claim: bitstring, exp: timestamp;
+  event(MigrationClaimCached(w, claim, exp)) ==>
+  event(MigrationClaimPublished(w, claim, exp)).
+
+(* Cutover occurs only after NewCert was obtained and the transition claim was
+ * continuously available during both complete ttl cache windows. *)
+query event(MigrationCutover(new_cert_issuer, claim_new_ca)) ==>
+  event(MigrationNewCertObtained(new_cert_issuer)).
+query event(MigrationCutover(new_cert_issuer, claim_new_ca)) ==>
+  event(MigrationTransitionAvailable(window_overlap_1)).
+query event(MigrationCutover(new_cert_issuer, claim_new_ca)) ==>
+  event(MigrationTransitionAvailable(window_overlap_2)).
+
+(* Acceptance after cutover is rooted in the transition claim cached during
+ * the second overlap window, while the final cache removes CurrCA. *)
+query event(MigrationCertAccepted(
+    window_new_cert, new_cert_issuer, claim_transition_ca)) ==>
+  event(MigrationClaimCached(
+      window_overlap_2, claim_transition_ca, succ_t(time_overlap_2))).
+query event(MigrationCertAccepted(
+    window_new_cert, new_cert_issuer, claim_transition_ca)) ==>
+  event(MigrationCutover(new_cert_issuer, claim_new_ca)).
+query event(MigrationCertAccepted(
+    window_new_cert, new_cert_issuer, claim_new_ca)) ==>
+  event(MigrationCutover(new_cert_issuer, claim_new_ca)).
+
+(* Unsafe claim/certificate combinations are unreachable. *)
+query event(MigrationCertAccepted(
+    window_new_cert, new_cert_issuer, claim_current_ca)).
+query event(MigrationCertAccepted(
+    window_new_cert, real_cert_issuer, claim_new_ca)).
 
 (* Each cache/update window and its legitimate connection are reachable. *)
 query event(MigrationWindowComplete(window_current)).
 query event(MigrationWindowComplete(window_overlap_1)).
 query event(MigrationWindowComplete(window_overlap_2)).
 query event(MigrationWindowComplete(window_new_cert)).
-query event(MigrationWindowComplete(window_final)).
 
 query event(MigrationCertAccepted(
-    window_current, real_cert_issuer, policy_current_ca)).
+    window_current, real_cert_issuer, claim_current_ca)).
 query event(MigrationCertAccepted(
-    window_overlap_1, real_cert_issuer, policy_transition_ca)).
+    window_overlap_1, real_cert_issuer, claim_transition_ca)).
 query event(MigrationCertAccepted(
-    window_overlap_2, real_cert_issuer, policy_transition_ca)).
+    window_overlap_2, real_cert_issuer, claim_transition_ca)).
 query event(MigrationCertAccepted(
-    window_new_cert, new_cert_issuer, policy_transition_ca)).
+    window_new_cert, new_cert_issuer, claim_transition_ca)).
 query event(MigrationCertAccepted(
-    window_final, new_cert_issuer, policy_new_ca)).
+    window_new_cert, new_cert_issuer, claim_new_ca)).
 
 (* Completion of each window implies that its legitimate certificate was
  * accepted. In particular, NewCert cannot complete with a stale CurrCA-only
- * policy: it requires the cached transition policy. *)
+ * claim: it requires the cached transition claim. *)
 query event(MigrationWindowComplete(window_current)) ==>
   event(MigrationCertAccepted(
-      window_current, real_cert_issuer, policy_current_ca)).
+      window_current, real_cert_issuer, claim_current_ca)).
 query event(MigrationWindowComplete(window_overlap_1)) ==>
   event(MigrationCertAccepted(
-      window_overlap_1, real_cert_issuer, policy_transition_ca)).
+      window_overlap_1, real_cert_issuer, claim_transition_ca)).
 query event(MigrationWindowComplete(window_overlap_2)) ==>
   event(MigrationCertAccepted(
-      window_overlap_2, real_cert_issuer, policy_transition_ca)).
+      window_overlap_2, real_cert_issuer, claim_transition_ca)).
 query event(MigrationWindowComplete(window_new_cert)) ==>
   event(MigrationCertAccepted(
-      window_new_cert, new_cert_issuer, policy_transition_ca)).
-query event(MigrationWindowComplete(window_final)) ==>
+      window_new_cert, new_cert_issuer, claim_transition_ca)).
+query event(MigrationWindowComplete(window_new_cert)) ==>
   event(MigrationCertAccepted(
-      window_final, new_cert_issuer, policy_new_ca)).
+      window_new_cert, new_cert_issuer, claim_new_ca)).
 
 process
   (!MigrationServer) | (!UpdatingApp)
