@@ -243,11 +243,11 @@ def main() -> None:
     require_fragments(APPENDIX, APPENDIX_FRAGMENTS)
     require_fragments(ROOT / "base.pvl", ("token not expired", "succ_t(now2)"))
     require_fragments(
-        ROOT.parent / "ASPin/es256/app/src/main/java/com/abbypan/aspin/JwtVerifier.java",
+        ROOT.parent / "ASPin/es256/app/src/main/java/com/cert/aspin/JwtVerifier.java",
         ("cnf.jwk", "ClaimSigningKey JWT is missing cnf.pubkey or cnf.x5c or cnf.jwk", "getClaim(\"ttl\")"),
     )
     require_fragments(
-        ROOT.parent / "ASPin/es256/app/src/main/java/com/abbypan/aspin/AppTrustedServerCert.java",
+        ROOT.parent / "ASPin/es256/app/src/main/java/com/cert/aspin/AppTrustedServerCert.java",
         ("staleDeadline", "KEY_CACHE", "CLAIM_CACHE"),
     )
     for model in ASPIN_MODELS:

@@ -43,7 +43,7 @@ for ALG in es256 es384 rsa3072 rsa4096; do
     echo "=== ALGORITHM: $ALG ==="
     echo "========================================================="
 
-    PACKAGE="com.abbypan.aspin"
+    PACKAGE="com.cert.aspin"
 
     # 1. Deploy realserver configuration & restart nginx on PC
     echo "--> [1/5] Deploying realserver config to Nginx..."
