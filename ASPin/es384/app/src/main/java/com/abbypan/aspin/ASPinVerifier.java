@@ -25,7 +25,8 @@ public final class ASPinVerifier {
     public static CertificateClaim parseVerifiedClaim(String verifiedPayload)
             throws org.json.JSONException {
         JSONObject json = new JSONObject(verifiedPayload);
-        String host = required(json, "host").toLowerCase(Locale.ROOT);
+        String host = json.optString("host", "").toLowerCase(Locale.ROOT);
+
         String subject = required(json, "subject");
         List<String> sans = stringList(json.opt("san"));
         if (sans.isEmpty()) {

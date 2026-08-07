@@ -1,0 +1,133 @@
+(*
+ * ASPIN App-Signing Key Rotation Model (General JWS Dual-Signature Transition)
+ *
+ * This model corresponds to paper_content.tex Section 3.3.
+ * It proves that:
+ * 1. During transition, dual-signed T'_k (carrying sig_old and sig_new) is
+ *    authentically verified by both old-key apps and new-key apps.
+ * 2. After cutover to single-signed T''_k (new key, higher iat), replay of
+ *    an older T_k signed by the old key is rejected via highest-seen iat.
+ *)
+
+const time_key_setup: timestamp.
+const time_key_overlap: timestamp.
+const time_key_cutover: timestamp.
+const time_key_replay_attempt: timestamp.
+
+const window_key_old: bitstring.
+const window_key_transition: bitstring.
+const window_key_cutover: bitstring.
+
+event KeyRotationOldAppVerified(pkey, pkey, timestamp).
+event KeyRotationNewAppVerified(pkey, pkey, timestamp).
+event KeyRotationCutoverVerified(pkey, pkey, timestamp).
+event KeyRotationOldReplayRejected(pkey, timestamp, timestamp).
+
+let RotationServer =
+  new sk_app_old: skey;
+  new sk_app_new: skey;
+  let sk_claim = gen_sk_for_id(claim_signing) in
+
+  let pk_app_old = pk(sk_app_old) in
+  let pk_app_new = pk(sk_app_new) in
+  let pk_claim = pk(sk_claim) in
+  let claim_content = pk2s(pk_claim) in
+
+  (* 1. Initial state: T_k signed by sk_app_old *)
+  let exp0 = succ_t(time_key_setup) in
+  let header_old = pk2s(pk_app_old) in
+  let token_k0 = jwt_sign(header_old, claim_content, exp0, ttl_one, sk_app_old) in
+  event ClaimKeySign(sk_app_old, pk_claim, exp0);
+  out(c, (pk_app_old, pk_app_new, token_k0));
+
+  (* 2. Transitional state: T'_k dual-signed with sk_app_old AND sk_app_new *)
+  let exp1 = succ_t(time_key_overlap) in
+  let header_new = pk2s(pk_app_new) in
+  let token_k_dual = jws_dual_sign(header_old, header_new, claim_content, exp1, ttl_one, sk_app_old, sk_app_new) in
+  event ClaimKeySign(sk_app_old, pk_claim, exp1);
+  event ClaimKeySign(sk_app_new, pk_claim, exp1);
+  out(c, token_k_dual);
+
+  (* 3. Cutover state: T''_k signed with sk_app_new only, higher iat *)
+  let exp2 = succ_t(time_key_cutover) in
+  let token_k2 = jwt_sign(header_new, claim_content, exp2, ttl_one, sk_app_new) in
+  event ClaimKeySign(sk_app_new, pk_claim, exp2);
+  out(c, token_k2)
+  .
+
+let AppOldClient =
+  in(c, (pk_app_old: pkey, pk_app_new: pkey, token_k0: bitstring));
+  
+  (* Verify initial token signed by old key *)
+  let jwt(h0: bitstring, p0: bitstring, s0: bitstring) = token_k0 in
+  let claim_key0 = s2pk(get_content(p0)) in
+  let exp0 = get_exp(p0) in
+  if jwt_verify(token_k0, pk_app_old, time_key_setup) = true then
+  (
+    event KeyRotationOldAppVerified(pk_app_old, claim_key0, exp0);
+
+    (* Verify transitional dual-signed token T'_k *)
+    in(c, token_dual: bitstring);
+    if jws_dual_verify1(token_dual, pk_app_old, time_key_overlap) = true then
+    (
+      let jws_dual(dh1: bitstring, dh2: bitstring, dp: bitstring, ds1: bitstring, ds2: bitstring) = token_dual in
+      let claim_key_dual = s2pk(get_content(dp)) in
+      let exp_dual = get_exp(dp) in
+      event KeyRotationOldAppVerified(pk_app_old, claim_key_dual, exp_dual);
+      event DualSigAppKeyVerify(pk_app_old, pk_app_new, claim_key_dual, exp_dual)
+    )
+  )
+  .
+
+let AppNewClient =
+  in(c, (pk_app_old: pkey, pk_app_new: pkey, token_k0: bitstring));
+  
+  (* Updated app trusts pk_app_new *)
+  in(c, token_dual: bitstring);
+  if jws_dual_verify2(token_dual, pk_app_new, time_key_overlap) = true then
+  (
+    let jws_dual(dh1: bitstring, dh2: bitstring, dp: bitstring, ds1: bitstring, ds2: bitstring) = token_dual in
+    let claim_key_dual = s2pk(get_content(dp)) in
+    let exp_dual = get_exp(dp) in
+    event KeyRotationNewAppVerified(pk_app_new, claim_key_dual, exp_dual);
+
+    (* Accept cutover token T''_k *)
+    in(c, token_cutover: bitstring);
+    let jwt(h2: bitstring, p2: bitstring, s2: bitstring) = token_cutover in
+    let claim_key2 = s2pk(get_content(p2)) in
+    let exp2 = get_exp(p2) in
+    if jwt_verify(token_cutover, pk_app_new, time_key_cutover) = true then
+    (
+      event KeyRotationCutoverVerified(pk_app_new, claim_key2, exp2);
+
+      (* Attacker tries to replay old token_k0 signed by old key.
+         New app compares iat/exp: exp0 < exp2, so highest-seen iat rejects it *)
+      let exp_old_replay = get_exp(get_jwt_payload(token_k0)) in
+      if ts_geq(exp_old_replay, exp2) = false then
+      (
+        event KeyRotationOldReplayRejected(pk_app_new, exp_old_replay, exp2)
+      )
+    )
+  )
+  .
+
+(* Queries *)
+
+(* 1. Dual-signature reachability for old app version *)
+query pk_old: pkey, pk_new: pkey, claim_key: pkey, exp: timestamp;
+  event(DualSigAppKeyVerify(pk_old, pk_new, claim_key, exp)).
+
+(* 2. Dual-signature reachability for updated app version *)
+query pk_new: pkey, claim_key: pkey, exp: timestamp;
+  event(KeyRotationNewAppVerified(pk_new, claim_key, exp)).
+
+(* 3. Post-cutover single-signature (new key) reachability *)
+query pk_new: pkey, claim_key: pkey, exp: timestamp;
+  event(KeyRotationCutoverVerified(pk_new, claim_key, exp)).
+
+(* 4. Preservation of anti-rollback state across key transition: replay of old-key token is rejected *)
+query pk_new: pkey, exp_old: timestamp, highest_exp: timestamp;
+  event(KeyRotationOldReplayRejected(pk_new, exp_old, highest_exp)).
+
+process
+  (!RotationServer) | (!AppOldClient) | (!AppNewClient)

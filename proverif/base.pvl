@@ -157,6 +157,45 @@ reduc forall content: bitstring, lifetime: ttl, sk: skey, now: timestamp;
                  pk(sk2), now2) = true.
 
 
+(* General JWS Dual Signature for T_k app-signing key rotation *)
+fun jws_dual(bitstring, bitstring, bitstring, bitstring, bitstring): bitstring [data].
+reduc forall h1: bitstring, h2: bitstring, content: bitstring, exp: timestamp, lifetime: ttl, sk1: skey, sk2: skey;
+      jws_dual_sign(h1, h2, content, exp, lifetime, sk1, sk2) =
+      jws_dual(h1, h2, jwt_payload(content, exp, lifetime),
+               sig_sign(jwt_tosign(h1, jwt_payload(content, exp, lifetime)), sk1),
+               sig_sign(jwt_tosign(h2, jwt_payload(content, exp, lifetime)), sk2)).
+
+reduc forall h1: bitstring, h2: bitstring, content: bitstring, lifetime: ttl, sk1: skey, sk2: skey, now: timestamp;
+      jws_dual_verify1(jws_dual(h1, h2, jwt_payload(content, now, lifetime),
+                                sig_sign(jwt_tosign(h1, jwt_payload(content, now, lifetime)), sk1),
+                                sig_sign(jwt_tosign(h2, jwt_payload(content, now, lifetime)), sk2)),
+                       pk(sk1), now) = true;
+      forall h1: bitstring, h2: bitstring, content: bitstring, lifetime: ttl, sk1: skey, sk2: skey, now: timestamp;
+      jws_dual_verify1(jws_dual(h1, h2, jwt_payload(content, succ_t(now), lifetime),
+                                sig_sign(jwt_tosign(h1, jwt_payload(content, succ_t(now), lifetime)), sk1),
+                                sig_sign(jwt_tosign(h2, jwt_payload(content, succ_t(now), lifetime)), sk2)),
+                       pk(sk1), now) = true.
+
+reduc forall h1: bitstring, h2: bitstring, content: bitstring, lifetime: ttl, sk1: skey, sk2: skey, now: timestamp;
+      jws_dual_verify2(jws_dual(h1, h2, jwt_payload(content, now, lifetime),
+                                sig_sign(jwt_tosign(h1, jwt_payload(content, now, lifetime)), sk1),
+                                sig_sign(jwt_tosign(h2, jwt_payload(content, now, lifetime)), sk2)),
+                       pk(sk2), now) = true;
+      forall h1: bitstring, h2: bitstring, content: bitstring, lifetime: ttl, sk1: skey, sk2: skey, now: timestamp;
+      jws_dual_verify2(jws_dual(h1, h2, jwt_payload(content, succ_t(now), lifetime),
+                                sig_sign(jwt_tosign(h1, jwt_payload(content, succ_t(now), lifetime)), sk1),
+                                sig_sign(jwt_tosign(h2, jwt_payload(content, succ_t(now), lifetime)), sk2)),
+                       pk(sk2), now) = true.
+
+(* Token scope constants and reductions *)
+const default_app_id: bitstring.
+const other_app_id: bitstring.
+const default_scope_host: bitstring.
+const other_scope_host: bitstring.
+
+reduc check_app_id(default_app_id, default_app_id) = true.
+reduc check_scope_host(server_hostname, server_hostname) = true.
+
 
 event ClaimKeySign(skey, pkey, timestamp).
 event ClaimKeyVerify(pkey, pkey, timestamp).
@@ -174,3 +213,12 @@ event AppReject(bitstring, bitstring, bitstring).
 
 
 event MSConnRS(bitstring, bitstring, bitstring, bitstring, bitstring).
+
+(* Additional events for expanded formal verification *)
+event TokenScopeVerify(bitstring, bitstring).
+event TokenScopeMismatch(bitstring, bitstring).
+event RollbackRejected(bitstring, timestamp, timestamp).
+event ExpiredTokenRejected(bitstring, timestamp, timestamp).
+event EmergencyTokenRevoked(bitstring, timestamp).
+event DualSigAppKeyVerify(pkey, pkey, pkey, timestamp).
+

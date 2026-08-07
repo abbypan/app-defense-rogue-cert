@@ -25,11 +25,15 @@ priv_key = jwk.JWK.from_pem(priv_pem, None)
 
 claim_pubkey_b64 = get_pubkey_der_b64("my-claim-pubkey.pem")
 
+now = int(time.time())
 payload = json_encode({
         "cnf": {"pubkey": claim_pubkey_b64},
-        "exp": int(time.time()) + 315360000,
-        "ttl": 86400
+        "iat": now,
+        "exp": now + 315360000
         })
+
+
+
 
 jwstoken = jws.JWS(payload)
 jwstoken.add_signature(priv_key, None, pro_header, None)

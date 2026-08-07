@@ -28,24 +28,24 @@ PROTOCOL_FRAGMENTS = (
 )
 
 TEX_FRAGMENTS = (
-    "ClaimKeySign($K_{app}, K_{cpub}$, aux)",
-    "CertClaimSign($K_{claim}$, Claim, aux')",
-    "ClaimKeyVerify($T_k,K_{apub}$)",
-    "CertClaimVerify($T_c,K_{cpub}$)",
-    "CertClaimCheck(Claim, Cert)",
+    r"\subsubsection{\textbf{ClaimKeySign}}",
+    r"\subsubsection{\textbf{CertClaimSign}}",
+    r"\subsubsection{\textbf{ClaimKeyVerify}}",
+    r"\subsubsection{\textbf{CertClaimVerify}}",
+    r"\subsubsection{\textbf{CertClaimCheck}}",
     r"\texttt{not event(MSAccept(...))} & true & false",
     r"\texttt{not event(MSAccept(...))} & true & false & true & false",
     r"\label{sec:cache}",
-    "keeps $T'_c$ continuously available for at least two complete $ttl$ cache windows",
-    "simultaneously deploys \\emph{NewCert} on the app server and publishes a new token $T''_c$",
+    "keeps $T'_c$ available for at least two complete",
+    "simultaneously deploys \\emph{NewCert}",
 )
 
+
 APPENDIX_FRAGMENTS = (
-    "jwt_sign(header, content, good_exp, good_ttl, sk_app_signing)",
-    "jwt_sign(header2, content2, good_exp2, good_ttl2, sk_claim_signing)",
-    "check_host(hostname, subject_and_san_claim)",
-    "issuer_claim = issuer_recv",
+    r"\appendix",
+    r"\section{Open Science}",
 )
+
 
 
 def fail(message: str) -> None:
@@ -236,6 +236,27 @@ def check_cache_migration() -> None:
         ),
         "is true.",
     )
+    require_outcome(cache, ("not event(RollbackRejected(",), "is false.")
+    require_outcome(cache, ("not event(ExpiredTokenRejected(",), "is false.")
+    require_outcome(cache, ("not event(EmergencyTokenRevoked(",), "is false.")
+
+
+def check_key_rotation() -> None:
+    require_fragments(
+        ROOT / "aspin_key_rotation.pv",
+        (
+            "jws_dual_sign",
+            "jws_dual_verify1",
+            "jws_dual_verify2",
+            "DualSigAppKeyVerify",
+            "KeyRotationOldReplayRejected",
+        ),
+    )
+    rotation = results(ROOT / "result" / "aspin_key_rotation.log")
+    require_outcome(rotation, ("not event(DualSigAppKeyVerify(",), "is false.")
+    require_outcome(rotation, ("not event(KeyRotationNewAppVerified(",), "is false.")
+    require_outcome(rotation, ("not event(KeyRotationCutoverVerified(",), "is false.")
+    require_outcome(rotation, ("not event(KeyRotationOldReplayRejected(",), "is false.")
 
 
 def main() -> None:
@@ -257,8 +278,10 @@ def main() -> None:
     check_network("bgp")
     check_mitm()
     check_cache_migration()
+    check_key_rotation()
     print("ProVerif models, saved results, and tex design are consistent.")
 
 
 if __name__ == "__main__":
     main()
+

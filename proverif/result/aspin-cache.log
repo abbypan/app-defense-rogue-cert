@@ -151,6 +151,28 @@ Process 0 (that is, the initial process):
     {108}let true_20: bool = issuer_allowed(new_cert_issuer,cached_claim4) in
     {109}event MigrationCertAccepted(window_new_cert,new_cert_issuer,cached_claim4);
     {110}event MigrationWindowComplete(window_new_cert)
+) | (
+    {111}!
+    {112}in(c, jwt(h0_1: bitstring,p0_1: bitstring,s0_1: bitstring));
+    {113}let exp0_1: timestamp = get_exp(p0_1) in
+    {114}let exp_highest: timestamp = succ_t(time_overlap_2) in
+    {115}if (ts_geq(exp0_1,exp_highest) = false) then
+    {116}event RollbackRejected(window_current,exp0_1,exp_highest)
+) | (
+    {117}!
+    {118}in(c, jwt(h: bitstring,p: bitstring,s: bitstring));
+    {119}let exp_token: timestamp = get_exp(p) in
+    {120}let now: timestamp = time_overlap_2 in
+    {121}if (ts_geq(exp_token,now) = false) then
+    {122}event ExpiredTokenRejected(window_current,exp_token,now)
+) | (
+    {123}!
+    {124}let sk_claim_signing_1: skey = gen_sk_for_id(claim_signing) in
+    {125}let exp_emergency: timestamp = succ_t(time_final) in
+    {126}let claim_emergency: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+    {127}let token_emergency: bitstring = jwt_sign(pk2s(pk(sk_claim_signing_1)),claim_emergency,exp_emergency,ttl_one,sk_claim_signing_1) in
+    {128}event EmergencyTokenRevoked(claim_current_ca,exp_emergency);
+    {129}out(c, token_emergency)
 )
 
 --  Process 1 (that is, process 0, with let moved downwards):
@@ -261,16 +283,39 @@ Process 0 (that is, the initial process):
     {108}let true_20: bool = issuer_allowed(new_cert_issuer,cached_claim4) in
     {109}event MigrationCertAccepted(window_new_cert,new_cert_issuer,cached_claim4);
     {110}event MigrationWindowComplete(window_new_cert)
+) | (
+    {111}!
+    {112}in(c, jwt(h0_1: bitstring,p0_1: bitstring,s0_1: bitstring));
+    {113}let exp0_1: timestamp = get_exp(p0_1) in
+    {114}let exp_highest: timestamp = succ_t(time_overlap_2) in
+    {115}if (ts_geq(exp0_1,exp_highest) = false) then
+    {116}event RollbackRejected(window_current,exp0_1,exp_highest)
+) | (
+    {117}!
+    {118}in(c, jwt(h: bitstring,p: bitstring,s: bitstring));
+    {119}let exp_token: timestamp = get_exp(p) in
+    {120}let now: timestamp = time_overlap_2 in
+    {121}if (ts_geq(exp_token,now) = false) then
+    {122}event ExpiredTokenRejected(window_current,exp_token,now)
+) | (
+    {123}!
+    {125}let exp_emergency: timestamp = succ_t(time_final) in
+    {128}event EmergencyTokenRevoked(claim_current_ca,exp_emergency);
+    {126}let claim_emergency: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+    {124}let sk_claim_signing_1: skey = gen_sk_for_id(claim_signing) in
+    {127}let token_emergency: bitstring = jwt_sign(pk2s(pk(sk_claim_signing_1)),claim_emergency,exp_emergency,ttl_one,sk_claim_signing_1) in
+    {129}out(c, token_emergency)
 )
 
 -- Query event(MigrationClaimCached(w,claim,exp)) ==> event(MigrationClaimPublished(w,claim,exp)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 225 rules.
-400 rules inserted. Base: 384 rules (73 with conclusion selected). Queue: 257 rules.
-600 rules inserted. Base: 529 rules (75 with conclusion selected). Queue: 230 rules.
-800 rules inserted. Base: 651 rules (75 with conclusion selected). Queue: 195 rules.
-1000 rules inserted. Base: 726 rules (76 with conclusion selected). Queue: 106 rules.
+200 rules inserted. Base: 195 rules (75 with conclusion selected). Queue: 221 rules.
+400 rules inserted. Base: 385 rules (79 with conclusion selected). Queue: 253 rules.
+600 rules inserted. Base: 534 rules (81 with conclusion selected). Queue: 231 rules.
+800 rules inserted. Base: 654 rules (81 with conclusion selected). Queue: 198 rules.
+1000 rules inserted. Base: 761 rules (82 with conclusion selected). Queue: 147 rules.
+1200 rules inserted. Base: 473 rules (85 with conclusion selected). Queue: 11 rules.
 Starting query event(MigrationClaimCached(w,claim,exp)) ==> event(MigrationClaimPublished(w,claim,exp))
 goal reachable: b-event(MigrationClaimPublished(window_current,claim_current_ca,succ_t(time_current))) -> event(MigrationClaimCached(window_current,claim_current_ca,succ_t(time_current)))
 goal reachable: b-event(MigrationClaimPublished(window_overlap_1,claim_transition_ca,succ_t(time_overlap_1))) && b-event(MigrationClaimPublished(window_current,claim_current_ca,succ_t(time_current))) -> event(MigrationClaimCached(window_overlap_1,claim_transition_ca,succ_t(time_overlap_1)))
@@ -298,81 +343,871 @@ RESULT event(MigrationCutover(new_cert_issuer,claim_new_ca)) ==> event(Migration
 -- Query event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca)) ==> event(MigrationClaimCached(window_overlap_2,claim_transition_ca,succ_t(time_overlap_2))) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 351 rules.
-400 rules inserted. Base: 387 rules (73 with conclusion selected). Queue: 398 rules.
-600 rules inserted. Base: 515 rules (73 with conclusion selected). Queue: 390 rules.
-800 rules inserted. Base: 685 rules (75 with conclusion selected). Queue: 381 rules.
-1000 rules inserted. Base: 791 rules (75 with conclusion selected). Queue: 352 rules.
-1200 rules inserted. Base: 909 rules (75 with conclusion selected). Queue: 333 rules.
-1400 rules inserted. Base: 1035 rules (75 with conclusion selected). Queue: 311 rules.
-1600 rules inserted. Base: 1099 rules (76 with conclusion selected). Queue: 288 rules.
-1800 rules inserted. Base: 1120 rules (77 with conclusion selected). Queue: 266 rules.
-2000 rules inserted. Base: 1078 rules (77 with conclusion selected). Queue: 253 rules.
-2200 rules inserted. Base: 1048 rules (78 with conclusion selected). Queue: 244 rules.
-2400 rules inserted. Base: 795 rules (79 with conclusion selected). Queue: 218 rules.
-2600 rules inserted. Base: 746 rules (80 with conclusion selected). Queue: 183 rules.
-2800 rules inserted. Base: 689 rules (80 with conclusion selected). Queue: 102 rules.
+200 rules inserted. Base: 194 rules (76 with conclusion selected). Queue: 333 rules.
+400 rules inserted. Base: 394 rules (78 with conclusion selected). Queue: 398 rules.
+600 rules inserted. Base: 523 rules (79 with conclusion selected). Queue: 391 rules.
+800 rules inserted. Base: 688 rules (81 with conclusion selected). Queue: 381 rules.
+1000 rules inserted. Base: 798 rules (81 with conclusion selected). Queue: 356 rules.
+1200 rules inserted. Base: 921 rules (81 with conclusion selected). Queue: 337 rules.
+1400 rules inserted. Base: 1039 rules (81 with conclusion selected). Queue: 311 rules.
+1600 rules inserted. Base: 1112 rules (82 with conclusion selected). Queue: 290 rules.
+1800 rules inserted. Base: 1143 rules (83 with conclusion selected). Queue: 268 rules.
+2000 rules inserted. Base: 1100 rules (83 with conclusion selected). Queue: 254 rules.
+2200 rules inserted. Base: 1070 rules (84 with conclusion selected). Queue: 244 rules.
+2400 rules inserted. Base: 834 rules (85 with conclusion selected). Queue: 220 rules.
+2600 rules inserted. Base: 762 rules (86 with conclusion selected). Queue: 184 rules.
+2800 rules inserted. Base: 710 rules (86 with conclusion selected). Queue: 113 rules.
+3000 rules inserted. Base: 763 rules (86 with conclusion selected). Queue: 10 rules.
 Starting query event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca)) ==> event(MigrationClaimCached(window_overlap_2,claim_transition_ca,succ_t(time_overlap_2)))
 goal reachable: b-event(MigrationClaimCached(window_overlap_2,claim_transition_ca,succ_t(time_overlap_2))) && b-event(MigrationClaimCached(window_overlap_1,claim_transition_ca,succ_t(time_overlap_1))) && b-event(MigrationClaimCached(window_current,claim_current_ca,succ_t(time_current))) -> event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca))
 RESULT event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca)) ==> event(MigrationClaimCached(window_overlap_2,claim_transition_ca,succ_t(time_overlap_2))) is true.
 -- Query event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca)) ==> event(MigrationCutover(new_cert_issuer,claim_new_ca)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 351 rules.
-400 rules inserted. Base: 388 rules (73 with conclusion selected). Queue: 394 rules.
-600 rules inserted. Base: 511 rules (73 with conclusion selected). Queue: 360 rules.
-800 rules inserted. Base: 670 rules (75 with conclusion selected). Queue: 319 rules.
-1000 rules inserted. Base: 780 rules (75 with conclusion selected). Queue: 284 rules.
-1200 rules inserted. Base: 859 rules (75 with conclusion selected). Queue: 175 rules.
-1400 rules inserted. Base: 530 rules (78 with conclusion selected). Queue: 26 rules.
+200 rules inserted. Base: 195 rules (75 with conclusion selected). Queue: 337 rules.
+400 rules inserted. Base: 394 rules (78 with conclusion selected). Queue: 398 rules.
+600 rules inserted. Base: 519 rules (79 with conclusion selected). Queue: 365 rules.
+800 rules inserted. Base: 677 rules (81 with conclusion selected). Queue: 330 rules.
+1000 rules inserted. Base: 775 rules (81 with conclusion selected). Queue: 266 rules.
+1200 rules inserted. Base: 856 rules (81 with conclusion selected). Queue: 176 rules.
 Starting query event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca)) ==> event(MigrationCutover(new_cert_issuer,claim_new_ca))
 goal reachable: b-event(MigrationCutover(new_cert_issuer,claim_new_ca)) -> event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca))
 RESULT event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca)) ==> event(MigrationCutover(new_cert_issuer,claim_new_ca)) is true.
 -- Query event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca)) ==> event(MigrationCutover(new_cert_issuer,claim_new_ca)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 351 rules.
-400 rules inserted. Base: 388 rules (73 with conclusion selected). Queue: 394 rules.
-600 rules inserted. Base: 511 rules (73 with conclusion selected). Queue: 360 rules.
-800 rules inserted. Base: 670 rules (75 with conclusion selected). Queue: 319 rules.
-1000 rules inserted. Base: 780 rules (75 with conclusion selected). Queue: 284 rules.
-1200 rules inserted. Base: 859 rules (75 with conclusion selected). Queue: 175 rules.
-1400 rules inserted. Base: 530 rules (78 with conclusion selected). Queue: 26 rules.
+200 rules inserted. Base: 195 rules (75 with conclusion selected). Queue: 337 rules.
+400 rules inserted. Base: 394 rules (78 with conclusion selected). Queue: 398 rules.
+600 rules inserted. Base: 519 rules (79 with conclusion selected). Queue: 365 rules.
+800 rules inserted. Base: 677 rules (81 with conclusion selected). Queue: 330 rules.
+1000 rules inserted. Base: 775 rules (81 with conclusion selected). Queue: 266 rules.
+1200 rules inserted. Base: 856 rules (81 with conclusion selected). Queue: 176 rules.
 Starting query event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca)) ==> event(MigrationCutover(new_cert_issuer,claim_new_ca))
 goal reachable: b-event(MigrationCutover(new_cert_issuer,claim_new_ca)) -> event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca))
 RESULT event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca)) ==> event(MigrationCutover(new_cert_issuer,claim_new_ca)) is true.
 -- Query not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_current_ca)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 351 rules.
-400 rules inserted. Base: 388 rules (73 with conclusion selected). Queue: 394 rules.
-600 rules inserted. Base: 511 rules (73 with conclusion selected). Queue: 360 rules.
-800 rules inserted. Base: 665 rules (75 with conclusion selected). Queue: 313 rules.
-1000 rules inserted. Base: 766 rules (75 with conclusion selected). Queue: 261 rules.
-1200 rules inserted. Base: 807 rules (76 with conclusion selected). Queue: 161 rules.
+200 rules inserted. Base: 194 rules (76 with conclusion selected). Queue: 333 rules.
+400 rules inserted. Base: 394 rules (78 with conclusion selected). Queue: 398 rules.
+600 rules inserted. Base: 519 rules (79 with conclusion selected). Queue: 365 rules.
+800 rules inserted. Base: 677 rules (81 with conclusion selected). Queue: 330 rules.
+1000 rules inserted. Base: 775 rules (81 with conclusion selected). Queue: 266 rules.
+1200 rules inserted. Base: 856 rules (81 with conclusion selected). Queue: 176 rules.
 Starting query not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_current_ca))
 RESULT not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_current_ca)) is true.
 -- Query not event(MigrationCertAccepted(window_new_cert,real_cert_issuer,claim_new_ca)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 351 rules.
-400 rules inserted. Base: 388 rules (73 with conclusion selected). Queue: 394 rules.
-600 rules inserted. Base: 511 rules (73 with conclusion selected). Queue: 360 rules.
-800 rules inserted. Base: 665 rules (75 with conclusion selected). Queue: 313 rules.
-1000 rules inserted. Base: 766 rules (75 with conclusion selected). Queue: 261 rules.
-1200 rules inserted. Base: 807 rules (76 with conclusion selected). Queue: 161 rules.
+200 rules inserted. Base: 194 rules (76 with conclusion selected). Queue: 333 rules.
+400 rules inserted. Base: 394 rules (78 with conclusion selected). Queue: 398 rules.
+600 rules inserted. Base: 519 rules (79 with conclusion selected). Queue: 365 rules.
+800 rules inserted. Base: 677 rules (81 with conclusion selected). Queue: 330 rules.
+1000 rules inserted. Base: 775 rules (81 with conclusion selected). Queue: 266 rules.
+1200 rules inserted. Base: 856 rules (81 with conclusion selected). Queue: 176 rules.
 Starting query not event(MigrationCertAccepted(window_new_cert,real_cert_issuer,claim_new_ca))
 RESULT not event(MigrationCertAccepted(window_new_cert,real_cert_issuer,claim_new_ca)) is true.
+-- Query not event(RollbackRejected(w,exp0_2,exp_h)) in process 1.
+Translating the process into Horn clauses...
+Completing...
+Starting query not event(RollbackRejected(w,exp0_2,exp_h))
+goal reachable: event(RollbackRejected(window_current,prev_t(succ_t(time_overlap_2)),succ_t(time_overlap_2)))
+
+Derivation:
+
+1. The attacker has some term s0_2.
+attacker(s0_2).
+
+2. The attacker has some term lifetime.
+attacker(lifetime).
+
+3. Using the function time_overlap_2 the attacker may obtain time_overlap_2.
+attacker(time_overlap_2).
+
+4. By 3, the attacker may know time_overlap_2.
+Using the function succ_t the attacker may obtain succ_t(time_overlap_2).
+attacker(succ_t(time_overlap_2)).
+
+5. By 4, the attacker may know succ_t(time_overlap_2).
+Using the function prev_t the attacker may obtain prev_t(succ_t(time_overlap_2)).
+attacker(prev_t(succ_t(time_overlap_2))).
+
+6. The attacker has some term content.
+attacker(content).
+
+7. By 6, the attacker may know content.
+By 5, the attacker may know prev_t(succ_t(time_overlap_2)).
+By 2, the attacker may know lifetime.
+Using the function jwt_payload the attacker may obtain jwt_payload(content,prev_t(succ_t(time_overlap_2)),lifetime).
+attacker(jwt_payload(content,prev_t(succ_t(time_overlap_2)),lifetime)).
+
+8. The attacker has some term h0_2.
+attacker(h0_2).
+
+9. By 8, the attacker may know h0_2.
+By 7, the attacker may know jwt_payload(content,prev_t(succ_t(time_overlap_2)),lifetime).
+By 1, the attacker may know s0_2.
+Using the function jwt the attacker may obtain jwt(h0_2,jwt_payload(content,prev_t(succ_t(time_overlap_2)),lifetime),s0_2).
+attacker(jwt(h0_2,jwt_payload(content,prev_t(succ_t(time_overlap_2)),lifetime),s0_2)).
+
+10. The message jwt(h0_2,jwt_payload(content,prev_t(succ_t(time_overlap_2)),lifetime),s0_2) that the attacker may have by 9 may be received at input {112}.
+So event RollbackRejected(window_current,prev_t(succ_t(time_overlap_2)),succ_t(time_overlap_2)) may be executed at {116}.
+event(RollbackRejected(window_current,prev_t(succ_t(time_overlap_2)),succ_t(time_overlap_2))).
+
+11. By 10, event(RollbackRejected(window_current,prev_t(succ_t(time_overlap_2)),succ_t(time_overlap_2))).
+The goal is reached, represented in the following fact:
+event(RollbackRejected(window_current,prev_t(succ_t(time_overlap_2)),succ_t(time_overlap_2))).
+
+
+Initial state
+
+Additional knowledge of the attacker:
+c
+cc
+cs
+curr
+a
+a_1
+a_2
+a_3
+prev_t(succ_t(time_overlap_2))
+succ_t(time_overlap_2)
+time_overlap_2
+--------------------------------------------------------------
+New processes:
+    (
+        !
+        let key_exp: timestamp = succ_t(time_setup) in
+        let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
+        let sk_app_signing: skey = gen_sk_for_id(app_signing) in
+        event ClaimKeySign(sk_app_signing,pk(sk_claim_signing),key_exp);
+        let key_content: bitstring = pk2s(pk(sk_claim_signing)) in
+        let key_ttl: ttl = ttl_one in
+        let key_header: bitstring = pk2s(pk(sk_app_signing)) in
+        let token_k: bitstring = jwt_sign(key_header,key_content,key_exp,key_ttl,sk_app_signing) in
+        out(c, token_k);
+        let exp_current: timestamp = succ_t(time_current) in
+        event MigrationClaimPublished(window_current,claim_current_ca,exp_current);
+        let claim_current: bitstring = migration_claim(server_cert_subject_and_san,claim_current_ca) in
+        let token_current: bitstring = jwt_sign(pk2s(pk(sk_claim_signing)),claim_current,exp_current,ttl_one,sk_claim_signing) in
+        out(c, token_current);
+        event MigrationNewCertObtained(new_cert_issuer);
+        let exp_overlap_1: timestamp = succ_t(time_overlap_1) in
+        event MigrationClaimPublished(window_overlap_1,claim_transition_ca,exp_overlap_1);
+        event MigrationTransitionAvailable(window_overlap_1);
+        let claim_overlap_1: bitstring = migration_claim(server_cert_subject_and_san,claim_transition_ca) in
+        let token_overlap_1: bitstring = jwt_sign(pk2s(pk(sk_claim_signing)),claim_overlap_1,exp_overlap_1,ttl_one,sk_claim_signing) in
+        out(c, token_overlap_1);
+        let exp_overlap_2: timestamp = succ_t(time_overlap_2) in
+        event MigrationClaimPublished(window_overlap_2,claim_transition_ca,exp_overlap_2);
+        event MigrationTransitionAvailable(window_overlap_2);
+        let claim_overlap_2: bitstring = migration_claim(server_cert_subject_and_san,claim_transition_ca) in
+        let token_overlap_2: bitstring = jwt_sign(pk2s(pk(sk_claim_signing)),claim_overlap_2,exp_overlap_2,ttl_one,sk_claim_signing) in
+        out(c, token_overlap_2);
+        let exp_final: timestamp = succ_t(time_final) in
+        event MigrationClaimPublished(window_new_cert,claim_new_ca,exp_final);
+        event MigrationCutover(new_cert_issuer,claim_new_ca);
+        out(migration_lifecycle, new_cert_issuer);
+        let claim_final: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+        let token_final: bitstring = jwt_sign(pk2s(pk(sk_claim_signing)),claim_final,exp_final,ttl_one,sk_claim_signing) in
+        out(c, token_final)
+    ) | (
+        !
+        in(c, jwt(kh: bitstring,kp: bitstring,ks: bitstring));
+        let claim_key: pkey = s2pk(get_content(kp)) in
+        let key_exp_recv: timestamp = get_exp(kp) in
+        let key_ttl_recv: ttl = get_ttl(kp) in
+        let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
+        let true_1: bool = jwt_verify(jwt(kh,kp,ks),pk_app_signing,time_setup) in
+        event ClaimKeyVerify(pk_app_signing,claim_key,key_exp_recv);
+        in(c, jwt(h0: bitstring,p0: bitstring,s0: bitstring));
+        let content0: bitstring = get_content(p0) in
+        let payload_claim0: bitstring = get_migration_claim_issuers(content0) in
+        let exp0: timestamp = get_exp(p0) in
+        let ttl0: ttl = get_ttl(p0) in
+        let true_3: bool = jwt_verify(jwt(h0,p0,s0),claim_key,time_current) in
+        event MigrationClaimCached(window_current,payload_claim0,exp0);
+        let cache0: bitstring = cached_claim(content0,exp0,ttl0,time_current) in
+        let cached_content0: bitstring = read_cached_claim(cache0,time_current) in
+        let true_5: bool = check_host(server_hostname,get_migration_subject_and_san(cached_content0)) in
+        let cached_claim0: bitstring = get_migration_claim_issuers(cached_content0) in
+        let true_6: bool = issuer_allowed(real_cert_issuer,cached_claim0) in
+        event MigrationCertAccepted(window_current,real_cert_issuer,cached_claim0);
+        event MigrationWindowComplete(window_current);
+        in(c, jwt(h1: bitstring,p1: bitstring,s1: bitstring));
+        let content1: bitstring = get_content(p1) in
+        let payload_claim1: bitstring = get_migration_claim_issuers(content1) in
+        let exp1: timestamp = get_exp(p1) in
+        let ttl1: ttl = get_ttl(p1) in
+        let true_7: bool = jwt_verify(jwt(h1,p1,s1),claim_key,time_overlap_1) in
+        event MigrationClaimCached(window_overlap_1,payload_claim1,exp1);
+        let cache1: bitstring = cached_claim(content1,exp1,ttl1,time_overlap_1) in
+        let cached_content1: bitstring = read_cached_claim(cache1,time_overlap_1) in
+        let true_9: bool = check_host(server_hostname,get_migration_subject_and_san(cached_content1)) in
+        let cached_claim1: bitstring = get_migration_claim_issuers(cached_content1) in
+        let true_10: bool = issuer_allowed(real_cert_issuer,cached_claim1) in
+        event MigrationCertAccepted(window_overlap_1,real_cert_issuer,cached_claim1);
+        event MigrationWindowComplete(window_overlap_1);
+        in(c, jwt(h2: bitstring,p2: bitstring,s2: bitstring));
+        let content2: bitstring = get_content(p2) in
+        let payload_claim2: bitstring = get_migration_claim_issuers(content2) in
+        let exp2: timestamp = get_exp(p2) in
+        let ttl2: ttl = get_ttl(p2) in
+        let true_11: bool = jwt_verify(jwt(h2,p2,s2),claim_key,time_overlap_2) in
+        event MigrationClaimCached(window_overlap_2,payload_claim2,exp2);
+        let cache2: bitstring = cached_claim(content2,exp2,ttl2,time_overlap_2) in
+        let cached_content2: bitstring = read_cached_claim(cache2,time_overlap_2) in
+        let true_13: bool = check_host(server_hostname,get_migration_subject_and_san(cached_content2)) in
+        let cached_claim2: bitstring = get_migration_claim_issuers(cached_content2) in
+        let true_14: bool = issuer_allowed(real_cert_issuer,cached_claim2) in
+        event MigrationCertAccepted(window_overlap_2,real_cert_issuer,cached_claim2);
+        event MigrationWindowComplete(window_overlap_2);
+        in(migration_lifecycle, =new_cert_issuer);
+        let content3: bitstring = read_cached_claim(cache2,succ_t(time_overlap_2)) in
+        let claim3: bitstring = get_migration_claim_issuers(content3) in
+        let true_15: bool = check_host(server_hostname,get_migration_subject_and_san(content3)) in
+        let true_16: bool = issuer_allowed(new_cert_issuer,claim3) in
+        event MigrationCertAccepted(window_new_cert,new_cert_issuer,claim3);
+        in(c, jwt(h4: bitstring,p4: bitstring,s4: bitstring));
+        let content4: bitstring = get_content(p4) in
+        let payload_claim4: bitstring = get_migration_claim_issuers(content4) in
+        let exp4: timestamp = get_exp(p4) in
+        let ttl4: ttl = get_ttl(p4) in
+        let true_17: bool = jwt_verify(jwt(h4,p4,s4),claim_key,time_final) in
+        event MigrationClaimCached(window_new_cert,payload_claim4,exp4);
+        let cache4: bitstring = cached_claim(content4,exp4,ttl4,time_final) in
+        let cached_content4: bitstring = read_cached_claim(cache4,time_final) in
+        let true_19: bool = check_host(server_hostname,get_migration_subject_and_san(cached_content4)) in
+        let cached_claim4: bitstring = get_migration_claim_issuers(cached_content4) in
+        let true_20: bool = issuer_allowed(new_cert_issuer,cached_claim4) in
+        event MigrationCertAccepted(window_new_cert,new_cert_issuer,cached_claim4);
+        event MigrationWindowComplete(window_new_cert)
+    ) | (
+        !
+        in(c, jwt(h0_1: bitstring,p0_1: bitstring,s0_1: bitstring));
+        let exp0_1: timestamp = get_exp(p0_1) in
+        let exp_highest: timestamp = succ_t(time_overlap_2) in
+        if (ts_geq(exp0_1,exp_highest) = false) then
+        event RollbackRejected(window_current,exp0_1,exp_highest)
+    ) | (
+        !
+        in(c, jwt(h: bitstring,p: bitstring,s: bitstring));
+        let exp_token: timestamp = get_exp(p) in
+        let now: timestamp = time_overlap_2 in
+        if (ts_geq(exp_token,now) = false) then
+        event ExpiredTokenRejected(window_current,exp_token,now)
+    ) | (
+        !
+        let exp_emergency: timestamp = succ_t(time_final) in
+        event EmergencyTokenRevoked(claim_current_ca,exp_emergency);
+        let claim_emergency: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+        let sk_claim_signing_1: skey = gen_sk_for_id(claim_signing) in
+        let token_emergency: bitstring = jwt_sign(pk2s(pk(sk_claim_signing_1)),claim_emergency,exp_emergency,ttl_one,sk_claim_signing_1) in
+        out(c, token_emergency)
+    )
+
+--------------------------------------------------------------
+1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction |
+
+5th process: Reduction ! 0 copy(ies)
+
+4th process: Reduction ! 0 copy(ies)
+
+3rd process: Reduction ! 1 copy(ies)
+
+3rd process: Beginning of process AntiRollbackCheckerApp
+
+2nd process: Reduction ! 0 copy(ies)
+
+1st process: Reduction ! 0 copy(ies)
+
+New processes:
+    in(c, jwt(h0_1: bitstring,p0_1: bitstring,s0_1: bitstring));
+    let exp0_1: timestamp = get_exp(p0_1) in
+    let exp_highest: timestamp = succ_t(time_overlap_2) in
+    if (ts_geq(exp0_1,exp_highest) = false) then
+    event RollbackRejected(window_current,exp0_1,exp_highest)
+
+--------------------------------------------------------------
+1st process: in(c, jwt(h0_1: bitstring,p0_1: bitstring,s0_1: bitstring)) done with message jwt(a_3,jwt_payload(a_2,prev_t(succ_t(time_overlap_2)),a_1),a)
+
+1st process: let exp0_1: timestamp = prev_t(succ_t(time_overlap_2)) succeeds
+
+1st process: let exp_highest: timestamp = succ_t(time_overlap_2) succeeds
+
+1st process: if (ts_geq(prev_t(succ_t(time_overlap_2)),succ_t(time_overlap_2)) = false) succeeds
+
+1st process: event RollbackRejected(window_current,prev_t(succ_t(time_overlap_2)),succ_t(time_overlap_2)) executed; it is a goal
+
+New processes:
+    0
+
+--------------------------------------------------------------
+The event RollbackRejected(window_current,prev_t(succ_t(time_overlap_2)),succ_t(time_overlap_2)) is executed at {116} in copy a_4.
+A trace has been found.
+RESULT not event(RollbackRejected(w,exp0_2,exp_h)) is false.
+-- Query not event(ExpiredTokenRejected(w,exp_t,now_t)) in process 1.
+Translating the process into Horn clauses...
+Completing...
+Starting query not event(ExpiredTokenRejected(w,exp_t,now_t))
+goal reachable: event(ExpiredTokenRejected(window_current,prev_t(time_overlap_2),time_overlap_2))
+
+Derivation:
+
+1. The attacker has some term s_1.
+attacker(s_1).
+
+2. The attacker has some term lifetime.
+attacker(lifetime).
+
+3. Using the function time_overlap_2 the attacker may obtain time_overlap_2.
+attacker(time_overlap_2).
+
+4. By 3, the attacker may know time_overlap_2.
+Using the function prev_t the attacker may obtain prev_t(time_overlap_2).
+attacker(prev_t(time_overlap_2)).
+
+5. The attacker has some term content.
+attacker(content).
+
+6. By 5, the attacker may know content.
+By 4, the attacker may know prev_t(time_overlap_2).
+By 2, the attacker may know lifetime.
+Using the function jwt_payload the attacker may obtain jwt_payload(content,prev_t(time_overlap_2),lifetime).
+attacker(jwt_payload(content,prev_t(time_overlap_2),lifetime)).
+
+7. The attacker has some term h_1.
+attacker(h_1).
+
+8. By 7, the attacker may know h_1.
+By 6, the attacker may know jwt_payload(content,prev_t(time_overlap_2),lifetime).
+By 1, the attacker may know s_1.
+Using the function jwt the attacker may obtain jwt(h_1,jwt_payload(content,prev_t(time_overlap_2),lifetime),s_1).
+attacker(jwt(h_1,jwt_payload(content,prev_t(time_overlap_2),lifetime),s_1)).
+
+9. The message jwt(h_1,jwt_payload(content,prev_t(time_overlap_2),lifetime),s_1) that the attacker may have by 8 may be received at input {118}.
+So event ExpiredTokenRejected(window_current,prev_t(time_overlap_2),time_overlap_2) may be executed at {122}.
+event(ExpiredTokenRejected(window_current,prev_t(time_overlap_2),time_overlap_2)).
+
+10. By 9, event(ExpiredTokenRejected(window_current,prev_t(time_overlap_2),time_overlap_2)).
+The goal is reached, represented in the following fact:
+event(ExpiredTokenRejected(window_current,prev_t(time_overlap_2),time_overlap_2)).
+
+
+Initial state
+
+Additional knowledge of the attacker:
+c
+cc
+cs
+curr
+a
+a_1
+a_2
+a_3
+prev_t(time_overlap_2)
+time_overlap_2
+--------------------------------------------------------------
+New processes:
+    (
+        !
+        let key_exp: timestamp = succ_t(time_setup) in
+        let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
+        let sk_app_signing: skey = gen_sk_for_id(app_signing) in
+        event ClaimKeySign(sk_app_signing,pk(sk_claim_signing),key_exp);
+        let key_content: bitstring = pk2s(pk(sk_claim_signing)) in
+        let key_ttl: ttl = ttl_one in
+        let key_header: bitstring = pk2s(pk(sk_app_signing)) in
+        let token_k: bitstring = jwt_sign(key_header,key_content,key_exp,key_ttl,sk_app_signing) in
+        out(c, token_k);
+        let exp_current: timestamp = succ_t(time_current) in
+        event MigrationClaimPublished(window_current,claim_current_ca,exp_current);
+        let claim_current: bitstring = migration_claim(server_cert_subject_and_san,claim_current_ca) in
+        let token_current: bitstring = jwt_sign(pk2s(pk(sk_claim_signing)),claim_current,exp_current,ttl_one,sk_claim_signing) in
+        out(c, token_current);
+        event MigrationNewCertObtained(new_cert_issuer);
+        let exp_overlap_1: timestamp = succ_t(time_overlap_1) in
+        event MigrationClaimPublished(window_overlap_1,claim_transition_ca,exp_overlap_1);
+        event MigrationTransitionAvailable(window_overlap_1);
+        let claim_overlap_1: bitstring = migration_claim(server_cert_subject_and_san,claim_transition_ca) in
+        let token_overlap_1: bitstring = jwt_sign(pk2s(pk(sk_claim_signing)),claim_overlap_1,exp_overlap_1,ttl_one,sk_claim_signing) in
+        out(c, token_overlap_1);
+        let exp_overlap_2: timestamp = succ_t(time_overlap_2) in
+        event MigrationClaimPublished(window_overlap_2,claim_transition_ca,exp_overlap_2);
+        event MigrationTransitionAvailable(window_overlap_2);
+        let claim_overlap_2: bitstring = migration_claim(server_cert_subject_and_san,claim_transition_ca) in
+        let token_overlap_2: bitstring = jwt_sign(pk2s(pk(sk_claim_signing)),claim_overlap_2,exp_overlap_2,ttl_one,sk_claim_signing) in
+        out(c, token_overlap_2);
+        let exp_final: timestamp = succ_t(time_final) in
+        event MigrationClaimPublished(window_new_cert,claim_new_ca,exp_final);
+        event MigrationCutover(new_cert_issuer,claim_new_ca);
+        out(migration_lifecycle, new_cert_issuer);
+        let claim_final: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+        let token_final: bitstring = jwt_sign(pk2s(pk(sk_claim_signing)),claim_final,exp_final,ttl_one,sk_claim_signing) in
+        out(c, token_final)
+    ) | (
+        !
+        in(c, jwt(kh: bitstring,kp: bitstring,ks: bitstring));
+        let claim_key: pkey = s2pk(get_content(kp)) in
+        let key_exp_recv: timestamp = get_exp(kp) in
+        let key_ttl_recv: ttl = get_ttl(kp) in
+        let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
+        let true_1: bool = jwt_verify(jwt(kh,kp,ks),pk_app_signing,time_setup) in
+        event ClaimKeyVerify(pk_app_signing,claim_key,key_exp_recv);
+        in(c, jwt(h0: bitstring,p0: bitstring,s0: bitstring));
+        let content0: bitstring = get_content(p0) in
+        let payload_claim0: bitstring = get_migration_claim_issuers(content0) in
+        let exp0: timestamp = get_exp(p0) in
+        let ttl0: ttl = get_ttl(p0) in
+        let true_3: bool = jwt_verify(jwt(h0,p0,s0),claim_key,time_current) in
+        event MigrationClaimCached(window_current,payload_claim0,exp0);
+        let cache0: bitstring = cached_claim(content0,exp0,ttl0,time_current) in
+        let cached_content0: bitstring = read_cached_claim(cache0,time_current) in
+        let true_5: bool = check_host(server_hostname,get_migration_subject_and_san(cached_content0)) in
+        let cached_claim0: bitstring = get_migration_claim_issuers(cached_content0) in
+        let true_6: bool = issuer_allowed(real_cert_issuer,cached_claim0) in
+        event MigrationCertAccepted(window_current,real_cert_issuer,cached_claim0);
+        event MigrationWindowComplete(window_current);
+        in(c, jwt(h1: bitstring,p1: bitstring,s1: bitstring));
+        let content1: bitstring = get_content(p1) in
+        let payload_claim1: bitstring = get_migration_claim_issuers(content1) in
+        let exp1: timestamp = get_exp(p1) in
+        let ttl1: ttl = get_ttl(p1) in
+        let true_7: bool = jwt_verify(jwt(h1,p1,s1),claim_key,time_overlap_1) in
+        event MigrationClaimCached(window_overlap_1,payload_claim1,exp1);
+        let cache1: bitstring = cached_claim(content1,exp1,ttl1,time_overlap_1) in
+        let cached_content1: bitstring = read_cached_claim(cache1,time_overlap_1) in
+        let true_9: bool = check_host(server_hostname,get_migration_subject_and_san(cached_content1)) in
+        let cached_claim1: bitstring = get_migration_claim_issuers(cached_content1) in
+        let true_10: bool = issuer_allowed(real_cert_issuer,cached_claim1) in
+        event MigrationCertAccepted(window_overlap_1,real_cert_issuer,cached_claim1);
+        event MigrationWindowComplete(window_overlap_1);
+        in(c, jwt(h2: bitstring,p2: bitstring,s2: bitstring));
+        let content2: bitstring = get_content(p2) in
+        let payload_claim2: bitstring = get_migration_claim_issuers(content2) in
+        let exp2: timestamp = get_exp(p2) in
+        let ttl2: ttl = get_ttl(p2) in
+        let true_11: bool = jwt_verify(jwt(h2,p2,s2),claim_key,time_overlap_2) in
+        event MigrationClaimCached(window_overlap_2,payload_claim2,exp2);
+        let cache2: bitstring = cached_claim(content2,exp2,ttl2,time_overlap_2) in
+        let cached_content2: bitstring = read_cached_claim(cache2,time_overlap_2) in
+        let true_13: bool = check_host(server_hostname,get_migration_subject_and_san(cached_content2)) in
+        let cached_claim2: bitstring = get_migration_claim_issuers(cached_content2) in
+        let true_14: bool = issuer_allowed(real_cert_issuer,cached_claim2) in
+        event MigrationCertAccepted(window_overlap_2,real_cert_issuer,cached_claim2);
+        event MigrationWindowComplete(window_overlap_2);
+        in(migration_lifecycle, =new_cert_issuer);
+        let content3: bitstring = read_cached_claim(cache2,succ_t(time_overlap_2)) in
+        let claim3: bitstring = get_migration_claim_issuers(content3) in
+        let true_15: bool = check_host(server_hostname,get_migration_subject_and_san(content3)) in
+        let true_16: bool = issuer_allowed(new_cert_issuer,claim3) in
+        event MigrationCertAccepted(window_new_cert,new_cert_issuer,claim3);
+        in(c, jwt(h4: bitstring,p4: bitstring,s4: bitstring));
+        let content4: bitstring = get_content(p4) in
+        let payload_claim4: bitstring = get_migration_claim_issuers(content4) in
+        let exp4: timestamp = get_exp(p4) in
+        let ttl4: ttl = get_ttl(p4) in
+        let true_17: bool = jwt_verify(jwt(h4,p4,s4),claim_key,time_final) in
+        event MigrationClaimCached(window_new_cert,payload_claim4,exp4);
+        let cache4: bitstring = cached_claim(content4,exp4,ttl4,time_final) in
+        let cached_content4: bitstring = read_cached_claim(cache4,time_final) in
+        let true_19: bool = check_host(server_hostname,get_migration_subject_and_san(cached_content4)) in
+        let cached_claim4: bitstring = get_migration_claim_issuers(cached_content4) in
+        let true_20: bool = issuer_allowed(new_cert_issuer,cached_claim4) in
+        event MigrationCertAccepted(window_new_cert,new_cert_issuer,cached_claim4);
+        event MigrationWindowComplete(window_new_cert)
+    ) | (
+        !
+        in(c, jwt(h0_1: bitstring,p0_1: bitstring,s0_1: bitstring));
+        let exp0_1: timestamp = get_exp(p0_1) in
+        let exp_highest: timestamp = succ_t(time_overlap_2) in
+        if (ts_geq(exp0_1,exp_highest) = false) then
+        event RollbackRejected(window_current,exp0_1,exp_highest)
+    ) | (
+        !
+        in(c, jwt(h: bitstring,p: bitstring,s: bitstring));
+        let exp_token: timestamp = get_exp(p) in
+        let now: timestamp = time_overlap_2 in
+        if (ts_geq(exp_token,now) = false) then
+        event ExpiredTokenRejected(window_current,exp_token,now)
+    ) | (
+        !
+        let exp_emergency: timestamp = succ_t(time_final) in
+        event EmergencyTokenRevoked(claim_current_ca,exp_emergency);
+        let claim_emergency: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+        let sk_claim_signing_1: skey = gen_sk_for_id(claim_signing) in
+        let token_emergency: bitstring = jwt_sign(pk2s(pk(sk_claim_signing_1)),claim_emergency,exp_emergency,ttl_one,sk_claim_signing_1) in
+        out(c, token_emergency)
+    )
+
+--------------------------------------------------------------
+1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction |
+
+5th process: Reduction ! 0 copy(ies)
+
+4th process: Reduction ! 1 copy(ies)
+
+4th process: Beginning of process FreezeDefenseCheckerApp
+
+3rd process: Reduction ! 0 copy(ies)
+
+2nd process: Reduction ! 0 copy(ies)
+
+1st process: Reduction ! 0 copy(ies)
+
+New processes:
+    in(c, jwt(h: bitstring,p: bitstring,s: bitstring));
+    let exp_token: timestamp = get_exp(p) in
+    let now: timestamp = time_overlap_2 in
+    if (ts_geq(exp_token,now) = false) then
+    event ExpiredTokenRejected(window_current,exp_token,now)
+
+--------------------------------------------------------------
+1st process: in(c, jwt(h: bitstring,p: bitstring,s: bitstring)) done with message jwt(a_3,jwt_payload(a_2,prev_t(time_overlap_2),a_1),a)
+
+1st process: let exp_token: timestamp = prev_t(time_overlap_2) succeeds
+
+1st process: let now: timestamp = time_overlap_2 succeeds
+
+1st process: if (ts_geq(prev_t(time_overlap_2),time_overlap_2) = false) succeeds
+
+1st process: event ExpiredTokenRejected(window_current,prev_t(time_overlap_2),time_overlap_2) executed; it is a goal
+
+New processes:
+    0
+
+--------------------------------------------------------------
+The event ExpiredTokenRejected(window_current,prev_t(time_overlap_2),time_overlap_2) is executed at {122} in copy a_4.
+A trace has been found.
+RESULT not event(ExpiredTokenRejected(w,exp_t,now_t)) is false.
+-- Query not event(EmergencyTokenRevoked(revoked,exp_e)) in process 1.
+Translating the process into Horn clauses...
+Completing...
+Starting query not event(EmergencyTokenRevoked(revoked,exp_e))
+goal reachable: event(EmergencyTokenRevoked(claim_current_ca,succ_t(time_final)))
+
+Derivation:
+
+1. Event EmergencyTokenRevoked(claim_current_ca,succ_t(time_final)) may be executed at {128}.
+event(EmergencyTokenRevoked(claim_current_ca,succ_t(time_final))).
+
+2. By 1, event(EmergencyTokenRevoked(claim_current_ca,succ_t(time_final))).
+The goal is reached, represented in the following fact:
+event(EmergencyTokenRevoked(claim_current_ca,succ_t(time_final))).
+
+
+Initial state
+
+Additional knowledge of the attacker:
+c
+cc
+cs
+curr
+--------------------------------------------------------------
+New processes:
+    (
+        !
+        let key_exp: timestamp = succ_t(time_setup) in
+        let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
+        let sk_app_signing: skey = gen_sk_for_id(app_signing) in
+        event ClaimKeySign(sk_app_signing,pk(sk_claim_signing),key_exp);
+        let key_content: bitstring = pk2s(pk(sk_claim_signing)) in
+        let key_ttl: ttl = ttl_one in
+        let key_header: bitstring = pk2s(pk(sk_app_signing)) in
+        let token_k: bitstring = jwt_sign(key_header,key_content,key_exp,key_ttl,sk_app_signing) in
+        out(c, token_k);
+        let exp_current: timestamp = succ_t(time_current) in
+        event MigrationClaimPublished(window_current,claim_current_ca,exp_current);
+        let claim_current: bitstring = migration_claim(server_cert_subject_and_san,claim_current_ca) in
+        let token_current: bitstring = jwt_sign(pk2s(pk(sk_claim_signing)),claim_current,exp_current,ttl_one,sk_claim_signing) in
+        out(c, token_current);
+        event MigrationNewCertObtained(new_cert_issuer);
+        let exp_overlap_1: timestamp = succ_t(time_overlap_1) in
+        event MigrationClaimPublished(window_overlap_1,claim_transition_ca,exp_overlap_1);
+        event MigrationTransitionAvailable(window_overlap_1);
+        let claim_overlap_1: bitstring = migration_claim(server_cert_subject_and_san,claim_transition_ca) in
+        let token_overlap_1: bitstring = jwt_sign(pk2s(pk(sk_claim_signing)),claim_overlap_1,exp_overlap_1,ttl_one,sk_claim_signing) in
+        out(c, token_overlap_1);
+        let exp_overlap_2: timestamp = succ_t(time_overlap_2) in
+        event MigrationClaimPublished(window_overlap_2,claim_transition_ca,exp_overlap_2);
+        event MigrationTransitionAvailable(window_overlap_2);
+        let claim_overlap_2: bitstring = migration_claim(server_cert_subject_and_san,claim_transition_ca) in
+        let token_overlap_2: bitstring = jwt_sign(pk2s(pk(sk_claim_signing)),claim_overlap_2,exp_overlap_2,ttl_one,sk_claim_signing) in
+        out(c, token_overlap_2);
+        let exp_final: timestamp = succ_t(time_final) in
+        event MigrationClaimPublished(window_new_cert,claim_new_ca,exp_final);
+        event MigrationCutover(new_cert_issuer,claim_new_ca);
+        out(migration_lifecycle, new_cert_issuer);
+        let claim_final: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+        let token_final: bitstring = jwt_sign(pk2s(pk(sk_claim_signing)),claim_final,exp_final,ttl_one,sk_claim_signing) in
+        out(c, token_final)
+    ) | (
+        !
+        in(c, jwt(kh: bitstring,kp: bitstring,ks: bitstring));
+        let claim_key: pkey = s2pk(get_content(kp)) in
+        let key_exp_recv: timestamp = get_exp(kp) in
+        let key_ttl_recv: ttl = get_ttl(kp) in
+        let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
+        let true_1: bool = jwt_verify(jwt(kh,kp,ks),pk_app_signing,time_setup) in
+        event ClaimKeyVerify(pk_app_signing,claim_key,key_exp_recv);
+        in(c, jwt(h0: bitstring,p0: bitstring,s0: bitstring));
+        let content0: bitstring = get_content(p0) in
+        let payload_claim0: bitstring = get_migration_claim_issuers(content0) in
+        let exp0: timestamp = get_exp(p0) in
+        let ttl0: ttl = get_ttl(p0) in
+        let true_3: bool = jwt_verify(jwt(h0,p0,s0),claim_key,time_current) in
+        event MigrationClaimCached(window_current,payload_claim0,exp0);
+        let cache0: bitstring = cached_claim(content0,exp0,ttl0,time_current) in
+        let cached_content0: bitstring = read_cached_claim(cache0,time_current) in
+        let true_5: bool = check_host(server_hostname,get_migration_subject_and_san(cached_content0)) in
+        let cached_claim0: bitstring = get_migration_claim_issuers(cached_content0) in
+        let true_6: bool = issuer_allowed(real_cert_issuer,cached_claim0) in
+        event MigrationCertAccepted(window_current,real_cert_issuer,cached_claim0);
+        event MigrationWindowComplete(window_current);
+        in(c, jwt(h1: bitstring,p1: bitstring,s1: bitstring));
+        let content1: bitstring = get_content(p1) in
+        let payload_claim1: bitstring = get_migration_claim_issuers(content1) in
+        let exp1: timestamp = get_exp(p1) in
+        let ttl1: ttl = get_ttl(p1) in
+        let true_7: bool = jwt_verify(jwt(h1,p1,s1),claim_key,time_overlap_1) in
+        event MigrationClaimCached(window_overlap_1,payload_claim1,exp1);
+        let cache1: bitstring = cached_claim(content1,exp1,ttl1,time_overlap_1) in
+        let cached_content1: bitstring = read_cached_claim(cache1,time_overlap_1) in
+        let true_9: bool = check_host(server_hostname,get_migration_subject_and_san(cached_content1)) in
+        let cached_claim1: bitstring = get_migration_claim_issuers(cached_content1) in
+        let true_10: bool = issuer_allowed(real_cert_issuer,cached_claim1) in
+        event MigrationCertAccepted(window_overlap_1,real_cert_issuer,cached_claim1);
+        event MigrationWindowComplete(window_overlap_1);
+        in(c, jwt(h2: bitstring,p2: bitstring,s2: bitstring));
+        let content2: bitstring = get_content(p2) in
+        let payload_claim2: bitstring = get_migration_claim_issuers(content2) in
+        let exp2: timestamp = get_exp(p2) in
+        let ttl2: ttl = get_ttl(p2) in
+        let true_11: bool = jwt_verify(jwt(h2,p2,s2),claim_key,time_overlap_2) in
+        event MigrationClaimCached(window_overlap_2,payload_claim2,exp2);
+        let cache2: bitstring = cached_claim(content2,exp2,ttl2,time_overlap_2) in
+        let cached_content2: bitstring = read_cached_claim(cache2,time_overlap_2) in
+        let true_13: bool = check_host(server_hostname,get_migration_subject_and_san(cached_content2)) in
+        let cached_claim2: bitstring = get_migration_claim_issuers(cached_content2) in
+        let true_14: bool = issuer_allowed(real_cert_issuer,cached_claim2) in
+        event MigrationCertAccepted(window_overlap_2,real_cert_issuer,cached_claim2);
+        event MigrationWindowComplete(window_overlap_2);
+        in(migration_lifecycle, =new_cert_issuer);
+        let content3: bitstring = read_cached_claim(cache2,succ_t(time_overlap_2)) in
+        let claim3: bitstring = get_migration_claim_issuers(content3) in
+        let true_15: bool = check_host(server_hostname,get_migration_subject_and_san(content3)) in
+        let true_16: bool = issuer_allowed(new_cert_issuer,claim3) in
+        event MigrationCertAccepted(window_new_cert,new_cert_issuer,claim3);
+        in(c, jwt(h4: bitstring,p4: bitstring,s4: bitstring));
+        let content4: bitstring = get_content(p4) in
+        let payload_claim4: bitstring = get_migration_claim_issuers(content4) in
+        let exp4: timestamp = get_exp(p4) in
+        let ttl4: ttl = get_ttl(p4) in
+        let true_17: bool = jwt_verify(jwt(h4,p4,s4),claim_key,time_final) in
+        event MigrationClaimCached(window_new_cert,payload_claim4,exp4);
+        let cache4: bitstring = cached_claim(content4,exp4,ttl4,time_final) in
+        let cached_content4: bitstring = read_cached_claim(cache4,time_final) in
+        let true_19: bool = check_host(server_hostname,get_migration_subject_and_san(cached_content4)) in
+        let cached_claim4: bitstring = get_migration_claim_issuers(cached_content4) in
+        let true_20: bool = issuer_allowed(new_cert_issuer,cached_claim4) in
+        event MigrationCertAccepted(window_new_cert,new_cert_issuer,cached_claim4);
+        event MigrationWindowComplete(window_new_cert)
+    ) | (
+        !
+        in(c, jwt(h0_1: bitstring,p0_1: bitstring,s0_1: bitstring));
+        let exp0_1: timestamp = get_exp(p0_1) in
+        let exp_highest: timestamp = succ_t(time_overlap_2) in
+        if (ts_geq(exp0_1,exp_highest) = false) then
+        event RollbackRejected(window_current,exp0_1,exp_highest)
+    ) | (
+        !
+        in(c, jwt(h: bitstring,p: bitstring,s: bitstring));
+        let exp_token: timestamp = get_exp(p) in
+        let now: timestamp = time_overlap_2 in
+        if (ts_geq(exp_token,now) = false) then
+        event ExpiredTokenRejected(window_current,exp_token,now)
+    ) | (
+        !
+        let exp_emergency: timestamp = succ_t(time_final) in
+        event EmergencyTokenRevoked(claim_current_ca,exp_emergency);
+        let claim_emergency: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+        let sk_claim_signing_1: skey = gen_sk_for_id(claim_signing) in
+        let token_emergency: bitstring = jwt_sign(pk2s(pk(sk_claim_signing_1)),claim_emergency,exp_emergency,ttl_one,sk_claim_signing_1) in
+        out(c, token_emergency)
+    )
+
+--------------------------------------------------------------
+1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction |
+
+5th process: Reduction ! 1 copy(ies)
+
+5th process: Beginning of process EmergencyUpdateProcess
+
+5th process: let exp_emergency: timestamp = succ_t(time_final) succeeds
+
+5th process: event EmergencyTokenRevoked(claim_current_ca,succ_t(time_final)) executed; it is a goal
+
+New processes:
+(
+    !
+    let key_exp: timestamp = succ_t(time_setup) in
+    let sk_claim_signing: skey = gen_sk_for_id(claim_signing) in
+    let sk_app_signing: skey = gen_sk_for_id(app_signing) in
+    event ClaimKeySign(sk_app_signing,pk(sk_claim_signing),key_exp);
+    let key_content: bitstring = pk2s(pk(sk_claim_signing)) in
+    let key_ttl: ttl = ttl_one in
+    let key_header: bitstring = pk2s(pk(sk_app_signing)) in
+    let token_k: bitstring = jwt_sign(key_header,key_content,key_exp,key_ttl,sk_app_signing) in
+    out(c, token_k);
+    let exp_current: timestamp = succ_t(time_current) in
+    event MigrationClaimPublished(window_current,claim_current_ca,exp_current);
+    let claim_current: bitstring = migration_claim(server_cert_subject_and_san,claim_current_ca) in
+    let token_current: bitstring = jwt_sign(pk2s(pk(sk_claim_signing)),claim_current,exp_current,ttl_one,sk_claim_signing) in
+    out(c, token_current);
+    event MigrationNewCertObtained(new_cert_issuer);
+    let exp_overlap_1: timestamp = succ_t(time_overlap_1) in
+    event MigrationClaimPublished(window_overlap_1,claim_transition_ca,exp_overlap_1);
+    event MigrationTransitionAvailable(window_overlap_1);
+    let claim_overlap_1: bitstring = migration_claim(server_cert_subject_and_san,claim_transition_ca) in
+    let token_overlap_1: bitstring = jwt_sign(pk2s(pk(sk_claim_signing)),claim_overlap_1,exp_overlap_1,ttl_one,sk_claim_signing) in
+    out(c, token_overlap_1);
+    let exp_overlap_2: timestamp = succ_t(time_overlap_2) in
+    event MigrationClaimPublished(window_overlap_2,claim_transition_ca,exp_overlap_2);
+    event MigrationTransitionAvailable(window_overlap_2);
+    let claim_overlap_2: bitstring = migration_claim(server_cert_subject_and_san,claim_transition_ca) in
+    let token_overlap_2: bitstring = jwt_sign(pk2s(pk(sk_claim_signing)),claim_overlap_2,exp_overlap_2,ttl_one,sk_claim_signing) in
+    out(c, token_overlap_2);
+    let exp_final: timestamp = succ_t(time_final) in
+    event MigrationClaimPublished(window_new_cert,claim_new_ca,exp_final);
+    event MigrationCutover(new_cert_issuer,claim_new_ca);
+    out(migration_lifecycle, new_cert_issuer);
+    let claim_final: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+    let token_final: bitstring = jwt_sign(pk2s(pk(sk_claim_signing)),claim_final,exp_final,ttl_one,sk_claim_signing) in
+    out(c, token_final)
+) | (
+    !
+    in(c, jwt(kh: bitstring,kp: bitstring,ks: bitstring));
+    let claim_key: pkey = s2pk(get_content(kp)) in
+    let key_exp_recv: timestamp = get_exp(kp) in
+    let key_ttl_recv: ttl = get_ttl(kp) in
+    let pk_app_signing: pkey = pk(gen_sk_for_id(app_signing)) in
+    let true_1: bool = jwt_verify(jwt(kh,kp,ks),pk_app_signing,time_setup) in
+    event ClaimKeyVerify(pk_app_signing,claim_key,key_exp_recv);
+    in(c, jwt(h0: bitstring,p0: bitstring,s0: bitstring));
+    let content0: bitstring = get_content(p0) in
+    let payload_claim0: bitstring = get_migration_claim_issuers(content0) in
+    let exp0: timestamp = get_exp(p0) in
+    let ttl0: ttl = get_ttl(p0) in
+    let true_3: bool = jwt_verify(jwt(h0,p0,s0),claim_key,time_current) in
+    event MigrationClaimCached(window_current,payload_claim0,exp0);
+    let cache0: bitstring = cached_claim(content0,exp0,ttl0,time_current) in
+    let cached_content0: bitstring = read_cached_claim(cache0,time_current) in
+    let true_5: bool = check_host(server_hostname,get_migration_subject_and_san(cached_content0)) in
+    let cached_claim0: bitstring = get_migration_claim_issuers(cached_content0) in
+    let true_6: bool = issuer_allowed(real_cert_issuer,cached_claim0) in
+    event MigrationCertAccepted(window_current,real_cert_issuer,cached_claim0);
+    event MigrationWindowComplete(window_current);
+    in(c, jwt(h1: bitstring,p1: bitstring,s1: bitstring));
+    let content1: bitstring = get_content(p1) in
+    let payload_claim1: bitstring = get_migration_claim_issuers(content1) in
+    let exp1: timestamp = get_exp(p1) in
+    let ttl1: ttl = get_ttl(p1) in
+    let true_7: bool = jwt_verify(jwt(h1,p1,s1),claim_key,time_overlap_1) in
+    event MigrationClaimCached(window_overlap_1,payload_claim1,exp1);
+    let cache1: bitstring = cached_claim(content1,exp1,ttl1,time_overlap_1) in
+    let cached_content1: bitstring = read_cached_claim(cache1,time_overlap_1) in
+    let true_9: bool = check_host(server_hostname,get_migration_subject_and_san(cached_content1)) in
+    let cached_claim1: bitstring = get_migration_claim_issuers(cached_content1) in
+    let true_10: bool = issuer_allowed(real_cert_issuer,cached_claim1) in
+    event MigrationCertAccepted(window_overlap_1,real_cert_issuer,cached_claim1);
+    event MigrationWindowComplete(window_overlap_1);
+    in(c, jwt(h2: bitstring,p2: bitstring,s2: bitstring));
+    let content2: bitstring = get_content(p2) in
+    let payload_claim2: bitstring = get_migration_claim_issuers(content2) in
+    let exp2: timestamp = get_exp(p2) in
+    let ttl2: ttl = get_ttl(p2) in
+    let true_11: bool = jwt_verify(jwt(h2,p2,s2),claim_key,time_overlap_2) in
+    event MigrationClaimCached(window_overlap_2,payload_claim2,exp2);
+    let cache2: bitstring = cached_claim(content2,exp2,ttl2,time_overlap_2) in
+    let cached_content2: bitstring = read_cached_claim(cache2,time_overlap_2) in
+    let true_13: bool = check_host(server_hostname,get_migration_subject_and_san(cached_content2)) in
+    let cached_claim2: bitstring = get_migration_claim_issuers(cached_content2) in
+    let true_14: bool = issuer_allowed(real_cert_issuer,cached_claim2) in
+    event MigrationCertAccepted(window_overlap_2,real_cert_issuer,cached_claim2);
+    event MigrationWindowComplete(window_overlap_2);
+    in(migration_lifecycle, =new_cert_issuer);
+    let content3: bitstring = read_cached_claim(cache2,succ_t(time_overlap_2)) in
+    let claim3: bitstring = get_migration_claim_issuers(content3) in
+    let true_15: bool = check_host(server_hostname,get_migration_subject_and_san(content3)) in
+    let true_16: bool = issuer_allowed(new_cert_issuer,claim3) in
+    event MigrationCertAccepted(window_new_cert,new_cert_issuer,claim3);
+    in(c, jwt(h4: bitstring,p4: bitstring,s4: bitstring));
+    let content4: bitstring = get_content(p4) in
+    let payload_claim4: bitstring = get_migration_claim_issuers(content4) in
+    let exp4: timestamp = get_exp(p4) in
+    let ttl4: ttl = get_ttl(p4) in
+    let true_17: bool = jwt_verify(jwt(h4,p4,s4),claim_key,time_final) in
+    event MigrationClaimCached(window_new_cert,payload_claim4,exp4);
+    let cache4: bitstring = cached_claim(content4,exp4,ttl4,time_final) in
+    let cached_content4: bitstring = read_cached_claim(cache4,time_final) in
+    let true_19: bool = check_host(server_hostname,get_migration_subject_and_san(cached_content4)) in
+    let cached_claim4: bitstring = get_migration_claim_issuers(cached_content4) in
+    let true_20: bool = issuer_allowed(new_cert_issuer,cached_claim4) in
+    event MigrationCertAccepted(window_new_cert,new_cert_issuer,cached_claim4);
+    event MigrationWindowComplete(window_new_cert)
+) | (
+    !
+    in(c, jwt(h0_1: bitstring,p0_1: bitstring,s0_1: bitstring));
+    let exp0_1: timestamp = get_exp(p0_1) in
+    let exp_highest: timestamp = succ_t(time_overlap_2) in
+    if (ts_geq(exp0_1,exp_highest) = false) then
+    event RollbackRejected(window_current,exp0_1,exp_highest)
+) | (
+    !
+    in(c, jwt(h: bitstring,p: bitstring,s: bitstring));
+    let exp_token: timestamp = get_exp(p) in
+    let now: timestamp = time_overlap_2 in
+    if (ts_geq(exp_token,now) = false) then
+    event ExpiredTokenRejected(window_current,exp_token,now)
+) | (
+    let claim_emergency: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+    let sk_claim_signing_1: skey = gen_sk_for_id(claim_signing) in
+    let token_emergency: bitstring = jwt_sign(pk2s(pk(sk_claim_signing_1)),claim_emergency,succ_t(time_final),ttl_one,sk_claim_signing_1) in
+    out(c, token_emergency)
+)
+
+--------------------------------------------------------------
+The event EmergencyTokenRevoked(claim_current_ca,succ_t(time_final)) is executed at {128} in copy a.
+A trace has been found.
+RESULT not event(EmergencyTokenRevoked(revoked,exp_e)) is false.
 -- Query not event(MigrationWindowComplete(window_current)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 383 rules.
-400 rules inserted. Base: 394 rules (70 with conclusion selected). Queue: 447 rules.
-600 rules inserted. Base: 517 rules (73 with conclusion selected). Queue: 396 rules.
-800 rules inserted. Base: 689 rules (75 with conclusion selected). Queue: 384 rules.
-1000 rules inserted. Base: 795 rules (75 with conclusion selected). Queue: 288 rules.
-1200 rules inserted. Base: 868 rules (75 with conclusion selected). Queue: 201 rules.
-1400 rules inserted. Base: 895 rules (76 with conclusion selected). Queue: 119 rules.
+200 rules inserted. Base: 194 rules (76 with conclusion selected). Queue: 365 rules.
+400 rules inserted. Base: 394 rules (76 with conclusion selected). Queue: 447 rules.
+600 rules inserted. Base: 527 rules (79 with conclusion selected). Queue: 405 rules.
+800 rules inserted. Base: 694 rules (79 with conclusion selected). Queue: 397 rules.
+1000 rules inserted. Base: 800 rules (81 with conclusion selected). Queue: 286 rules.
+1200 rules inserted. Base: 881 rules (81 with conclusion selected). Queue: 212 rules.
+1400 rules inserted. Base: 903 rules (82 with conclusion selected). Queue: 127 rules.
 Starting query not event(MigrationWindowComplete(window_current))
 goal reachable: event(MigrationWindowComplete(window_current))
 
@@ -589,10 +1424,44 @@ New processes:
         let true_20: bool = issuer_allowed(new_cert_issuer,cached_claim4) in
         event MigrationCertAccepted(window_new_cert,new_cert_issuer,cached_claim4);
         event MigrationWindowComplete(window_new_cert)
+    ) | (
+        !
+        in(c, jwt(h0_1: bitstring,p0_1: bitstring,s0_1: bitstring));
+        let exp0_1: timestamp = get_exp(p0_1) in
+        let exp_highest: timestamp = succ_t(time_overlap_2) in
+        if (ts_geq(exp0_1,exp_highest) = false) then
+        event RollbackRejected(window_current,exp0_1,exp_highest)
+    ) | (
+        !
+        in(c, jwt(h: bitstring,p: bitstring,s: bitstring));
+        let exp_token: timestamp = get_exp(p) in
+        let now: timestamp = time_overlap_2 in
+        if (ts_geq(exp_token,now) = false) then
+        event ExpiredTokenRejected(window_current,exp_token,now)
+    ) | (
+        !
+        let exp_emergency: timestamp = succ_t(time_final) in
+        event EmergencyTokenRevoked(claim_current_ca,exp_emergency);
+        let claim_emergency: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+        let sk_claim_signing_1: skey = gen_sk_for_id(claim_signing) in
+        let token_emergency: bitstring = jwt_sign(pk2s(pk(sk_claim_signing_1)),claim_emergency,exp_emergency,ttl_one,sk_claim_signing_1) in
+        out(c, token_emergency)
     )
 
 --------------------------------------------------------------
 1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction |
+
+5th process: Reduction ! 0 copy(ies)
+
+4th process: Reduction ! 0 copy(ies)
+
+3rd process: Reduction ! 0 copy(ies)
 
 2nd process: Reduction ! 1 copy(ies)
 
@@ -1013,13 +1882,13 @@ RESULT not event(MigrationWindowComplete(window_current)) is false.
 -- Query not event(MigrationWindowComplete(window_overlap_1)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 383 rules.
-400 rules inserted. Base: 394 rules (70 with conclusion selected). Queue: 447 rules.
-600 rules inserted. Base: 517 rules (73 with conclusion selected). Queue: 396 rules.
-800 rules inserted. Base: 689 rules (75 with conclusion selected). Queue: 384 rules.
-1000 rules inserted. Base: 795 rules (75 with conclusion selected). Queue: 288 rules.
-1200 rules inserted. Base: 868 rules (75 with conclusion selected). Queue: 201 rules.
-1400 rules inserted. Base: 895 rules (76 with conclusion selected). Queue: 119 rules.
+200 rules inserted. Base: 194 rules (76 with conclusion selected). Queue: 365 rules.
+400 rules inserted. Base: 394 rules (76 with conclusion selected). Queue: 447 rules.
+600 rules inserted. Base: 527 rules (79 with conclusion selected). Queue: 405 rules.
+800 rules inserted. Base: 694 rules (79 with conclusion selected). Queue: 397 rules.
+1000 rules inserted. Base: 800 rules (81 with conclusion selected). Queue: 286 rules.
+1200 rules inserted. Base: 881 rules (81 with conclusion selected). Queue: 212 rules.
+1400 rules inserted. Base: 903 rules (82 with conclusion selected). Queue: 127 rules.
 Starting query not event(MigrationWindowComplete(window_overlap_1))
 goal reachable: event(MigrationWindowComplete(window_overlap_1))
 
@@ -1274,10 +2143,44 @@ New processes:
         let true_20: bool = issuer_allowed(new_cert_issuer,cached_claim4) in
         event MigrationCertAccepted(window_new_cert,new_cert_issuer,cached_claim4);
         event MigrationWindowComplete(window_new_cert)
+    ) | (
+        !
+        in(c, jwt(h0_1: bitstring,p0_1: bitstring,s0_1: bitstring));
+        let exp0_1: timestamp = get_exp(p0_1) in
+        let exp_highest: timestamp = succ_t(time_overlap_2) in
+        if (ts_geq(exp0_1,exp_highest) = false) then
+        event RollbackRejected(window_current,exp0_1,exp_highest)
+    ) | (
+        !
+        in(c, jwt(h: bitstring,p: bitstring,s: bitstring));
+        let exp_token: timestamp = get_exp(p) in
+        let now: timestamp = time_overlap_2 in
+        if (ts_geq(exp_token,now) = false) then
+        event ExpiredTokenRejected(window_current,exp_token,now)
+    ) | (
+        !
+        let exp_emergency: timestamp = succ_t(time_final) in
+        event EmergencyTokenRevoked(claim_current_ca,exp_emergency);
+        let claim_emergency: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+        let sk_claim_signing_1: skey = gen_sk_for_id(claim_signing) in
+        let token_emergency: bitstring = jwt_sign(pk2s(pk(sk_claim_signing_1)),claim_emergency,exp_emergency,ttl_one,sk_claim_signing_1) in
+        out(c, token_emergency)
     )
 
 --------------------------------------------------------------
 1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction |
+
+5th process: Reduction ! 0 copy(ies)
+
+4th process: Reduction ! 0 copy(ies)
+
+3rd process: Reduction ! 0 copy(ies)
 
 2nd process: Reduction ! 1 copy(ies)
 
@@ -1855,13 +2758,13 @@ RESULT not event(MigrationWindowComplete(window_overlap_1)) is false.
 -- Query not event(MigrationWindowComplete(window_overlap_2)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 383 rules.
-400 rules inserted. Base: 394 rules (70 with conclusion selected). Queue: 447 rules.
-600 rules inserted. Base: 517 rules (73 with conclusion selected). Queue: 396 rules.
-800 rules inserted. Base: 689 rules (75 with conclusion selected). Queue: 384 rules.
-1000 rules inserted. Base: 795 rules (75 with conclusion selected). Queue: 288 rules.
-1200 rules inserted. Base: 868 rules (75 with conclusion selected). Queue: 201 rules.
-1400 rules inserted. Base: 895 rules (76 with conclusion selected). Queue: 119 rules.
+200 rules inserted. Base: 194 rules (76 with conclusion selected). Queue: 365 rules.
+400 rules inserted. Base: 394 rules (76 with conclusion selected). Queue: 447 rules.
+600 rules inserted. Base: 527 rules (79 with conclusion selected). Queue: 405 rules.
+800 rules inserted. Base: 694 rules (79 with conclusion selected). Queue: 397 rules.
+1000 rules inserted. Base: 800 rules (81 with conclusion selected). Queue: 286 rules.
+1200 rules inserted. Base: 881 rules (81 with conclusion selected). Queue: 212 rules.
+1400 rules inserted. Base: 903 rules (82 with conclusion selected). Queue: 127 rules.
 Starting query not event(MigrationWindowComplete(window_overlap_2))
 goal reachable: event(MigrationWindowComplete(window_overlap_2))
 
@@ -2145,10 +3048,44 @@ New processes:
         let true_20: bool = issuer_allowed(new_cert_issuer,cached_claim4) in
         event MigrationCertAccepted(window_new_cert,new_cert_issuer,cached_claim4);
         event MigrationWindowComplete(window_new_cert)
+    ) | (
+        !
+        in(c, jwt(h0_1: bitstring,p0_1: bitstring,s0_1: bitstring));
+        let exp0_1: timestamp = get_exp(p0_1) in
+        let exp_highest: timestamp = succ_t(time_overlap_2) in
+        if (ts_geq(exp0_1,exp_highest) = false) then
+        event RollbackRejected(window_current,exp0_1,exp_highest)
+    ) | (
+        !
+        in(c, jwt(h: bitstring,p: bitstring,s: bitstring));
+        let exp_token: timestamp = get_exp(p) in
+        let now: timestamp = time_overlap_2 in
+        if (ts_geq(exp_token,now) = false) then
+        event ExpiredTokenRejected(window_current,exp_token,now)
+    ) | (
+        !
+        let exp_emergency: timestamp = succ_t(time_final) in
+        event EmergencyTokenRevoked(claim_current_ca,exp_emergency);
+        let claim_emergency: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+        let sk_claim_signing_1: skey = gen_sk_for_id(claim_signing) in
+        let token_emergency: bitstring = jwt_sign(pk2s(pk(sk_claim_signing_1)),claim_emergency,exp_emergency,ttl_one,sk_claim_signing_1) in
+        out(c, token_emergency)
     )
 
 --------------------------------------------------------------
 1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction |
+
+5th process: Reduction ! 0 copy(ies)
+
+4th process: Reduction ! 0 copy(ies)
+
+3rd process: Reduction ! 0 copy(ies)
 
 2nd process: Reduction ! 1 copy(ies)
 
@@ -2880,13 +3817,13 @@ RESULT not event(MigrationWindowComplete(window_overlap_2)) is false.
 -- Query not event(MigrationWindowComplete(window_new_cert)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 383 rules.
-400 rules inserted. Base: 394 rules (70 with conclusion selected). Queue: 447 rules.
-600 rules inserted. Base: 517 rules (73 with conclusion selected). Queue: 396 rules.
-800 rules inserted. Base: 689 rules (75 with conclusion selected). Queue: 384 rules.
-1000 rules inserted. Base: 795 rules (75 with conclusion selected). Queue: 288 rules.
-1200 rules inserted. Base: 868 rules (75 with conclusion selected). Queue: 201 rules.
-1400 rules inserted. Base: 895 rules (76 with conclusion selected). Queue: 119 rules.
+200 rules inserted. Base: 194 rules (76 with conclusion selected). Queue: 365 rules.
+400 rules inserted. Base: 394 rules (76 with conclusion selected). Queue: 447 rules.
+600 rules inserted. Base: 527 rules (79 with conclusion selected). Queue: 405 rules.
+800 rules inserted. Base: 694 rules (79 with conclusion selected). Queue: 397 rules.
+1000 rules inserted. Base: 800 rules (81 with conclusion selected). Queue: 286 rules.
+1200 rules inserted. Base: 881 rules (81 with conclusion selected). Queue: 212 rules.
+1400 rules inserted. Base: 903 rules (82 with conclusion selected). Queue: 127 rules.
 Starting query not event(MigrationWindowComplete(window_new_cert))
 goal reachable: event(MigrationWindowComplete(window_new_cert))
 
@@ -3212,10 +4149,44 @@ New processes:
         let true_20: bool = issuer_allowed(new_cert_issuer,cached_claim4) in
         event MigrationCertAccepted(window_new_cert,new_cert_issuer,cached_claim4);
         event MigrationWindowComplete(window_new_cert)
+    ) | (
+        !
+        in(c, jwt(h0_1: bitstring,p0_1: bitstring,s0_1: bitstring));
+        let exp0_1: timestamp = get_exp(p0_1) in
+        let exp_highest: timestamp = succ_t(time_overlap_2) in
+        if (ts_geq(exp0_1,exp_highest) = false) then
+        event RollbackRejected(window_current,exp0_1,exp_highest)
+    ) | (
+        !
+        in(c, jwt(h: bitstring,p: bitstring,s: bitstring));
+        let exp_token: timestamp = get_exp(p) in
+        let now: timestamp = time_overlap_2 in
+        if (ts_geq(exp_token,now) = false) then
+        event ExpiredTokenRejected(window_current,exp_token,now)
+    ) | (
+        !
+        let exp_emergency: timestamp = succ_t(time_final) in
+        event EmergencyTokenRevoked(claim_current_ca,exp_emergency);
+        let claim_emergency: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+        let sk_claim_signing_1: skey = gen_sk_for_id(claim_signing) in
+        let token_emergency: bitstring = jwt_sign(pk2s(pk(sk_claim_signing_1)),claim_emergency,exp_emergency,ttl_one,sk_claim_signing_1) in
+        out(c, token_emergency)
     )
 
 --------------------------------------------------------------
 1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction |
+
+5th process: Reduction ! 0 copy(ies)
+
+4th process: Reduction ! 0 copy(ies)
+
+3rd process: Reduction ! 0 copy(ies)
 
 2nd process: Reduction ! 1 copy(ies)
 
@@ -4300,12 +5271,12 @@ RESULT not event(MigrationWindowComplete(window_new_cert)) is false.
 -- Query not event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 351 rules.
-400 rules inserted. Base: 388 rules (73 with conclusion selected). Queue: 394 rules.
-600 rules inserted. Base: 511 rules (73 with conclusion selected). Queue: 360 rules.
-800 rules inserted. Base: 665 rules (75 with conclusion selected). Queue: 313 rules.
-1000 rules inserted. Base: 766 rules (75 with conclusion selected). Queue: 261 rules.
-1200 rules inserted. Base: 807 rules (76 with conclusion selected). Queue: 161 rules.
+200 rules inserted. Base: 194 rules (76 with conclusion selected). Queue: 333 rules.
+400 rules inserted. Base: 394 rules (78 with conclusion selected). Queue: 398 rules.
+600 rules inserted. Base: 519 rules (79 with conclusion selected). Queue: 365 rules.
+800 rules inserted. Base: 677 rules (81 with conclusion selected). Queue: 330 rules.
+1000 rules inserted. Base: 775 rules (81 with conclusion selected). Queue: 266 rules.
+1200 rules inserted. Base: 856 rules (81 with conclusion selected). Queue: 176 rules.
 Starting query not event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca))
 goal reachable: event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca))
 
@@ -4522,10 +5493,44 @@ New processes:
         let true_20: bool = issuer_allowed(new_cert_issuer,cached_claim4) in
         event MigrationCertAccepted(window_new_cert,new_cert_issuer,cached_claim4);
         event MigrationWindowComplete(window_new_cert)
+    ) | (
+        !
+        in(c, jwt(h0_1: bitstring,p0_1: bitstring,s0_1: bitstring));
+        let exp0_1: timestamp = get_exp(p0_1) in
+        let exp_highest: timestamp = succ_t(time_overlap_2) in
+        if (ts_geq(exp0_1,exp_highest) = false) then
+        event RollbackRejected(window_current,exp0_1,exp_highest)
+    ) | (
+        !
+        in(c, jwt(h: bitstring,p: bitstring,s: bitstring));
+        let exp_token: timestamp = get_exp(p) in
+        let now: timestamp = time_overlap_2 in
+        if (ts_geq(exp_token,now) = false) then
+        event ExpiredTokenRejected(window_current,exp_token,now)
+    ) | (
+        !
+        let exp_emergency: timestamp = succ_t(time_final) in
+        event EmergencyTokenRevoked(claim_current_ca,exp_emergency);
+        let claim_emergency: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+        let sk_claim_signing_1: skey = gen_sk_for_id(claim_signing) in
+        let token_emergency: bitstring = jwt_sign(pk2s(pk(sk_claim_signing_1)),claim_emergency,exp_emergency,ttl_one,sk_claim_signing_1) in
+        out(c, token_emergency)
     )
 
 --------------------------------------------------------------
 1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction |
+
+5th process: Reduction ! 0 copy(ies)
+
+4th process: Reduction ! 0 copy(ies)
+
+3rd process: Reduction ! 0 copy(ies)
 
 2nd process: Reduction ! 1 copy(ies)
 
@@ -4945,12 +5950,12 @@ RESULT not event(MigrationCertAccepted(window_current,real_cert_issuer,claim_cur
 -- Query not event(MigrationCertAccepted(window_overlap_1,real_cert_issuer,claim_transition_ca)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 351 rules.
-400 rules inserted. Base: 388 rules (73 with conclusion selected). Queue: 394 rules.
-600 rules inserted. Base: 511 rules (73 with conclusion selected). Queue: 360 rules.
-800 rules inserted. Base: 665 rules (75 with conclusion selected). Queue: 313 rules.
-1000 rules inserted. Base: 766 rules (75 with conclusion selected). Queue: 261 rules.
-1200 rules inserted. Base: 807 rules (76 with conclusion selected). Queue: 161 rules.
+200 rules inserted. Base: 194 rules (76 with conclusion selected). Queue: 333 rules.
+400 rules inserted. Base: 394 rules (78 with conclusion selected). Queue: 398 rules.
+600 rules inserted. Base: 519 rules (79 with conclusion selected). Queue: 365 rules.
+800 rules inserted. Base: 677 rules (81 with conclusion selected). Queue: 330 rules.
+1000 rules inserted. Base: 775 rules (81 with conclusion selected). Queue: 266 rules.
+1200 rules inserted. Base: 856 rules (81 with conclusion selected). Queue: 176 rules.
 Starting query not event(MigrationCertAccepted(window_overlap_1,real_cert_issuer,claim_transition_ca))
 goal reachable: event(MigrationCertAccepted(window_overlap_1,real_cert_issuer,claim_transition_ca))
 
@@ -5205,10 +6210,44 @@ New processes:
         let true_20: bool = issuer_allowed(new_cert_issuer,cached_claim4) in
         event MigrationCertAccepted(window_new_cert,new_cert_issuer,cached_claim4);
         event MigrationWindowComplete(window_new_cert)
+    ) | (
+        !
+        in(c, jwt(h0_1: bitstring,p0_1: bitstring,s0_1: bitstring));
+        let exp0_1: timestamp = get_exp(p0_1) in
+        let exp_highest: timestamp = succ_t(time_overlap_2) in
+        if (ts_geq(exp0_1,exp_highest) = false) then
+        event RollbackRejected(window_current,exp0_1,exp_highest)
+    ) | (
+        !
+        in(c, jwt(h: bitstring,p: bitstring,s: bitstring));
+        let exp_token: timestamp = get_exp(p) in
+        let now: timestamp = time_overlap_2 in
+        if (ts_geq(exp_token,now) = false) then
+        event ExpiredTokenRejected(window_current,exp_token,now)
+    ) | (
+        !
+        let exp_emergency: timestamp = succ_t(time_final) in
+        event EmergencyTokenRevoked(claim_current_ca,exp_emergency);
+        let claim_emergency: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+        let sk_claim_signing_1: skey = gen_sk_for_id(claim_signing) in
+        let token_emergency: bitstring = jwt_sign(pk2s(pk(sk_claim_signing_1)),claim_emergency,exp_emergency,ttl_one,sk_claim_signing_1) in
+        out(c, token_emergency)
     )
 
 --------------------------------------------------------------
 1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction |
+
+5th process: Reduction ! 0 copy(ies)
+
+4th process: Reduction ! 0 copy(ies)
+
+3rd process: Reduction ! 0 copy(ies)
 
 2nd process: Reduction ! 1 copy(ies)
 
@@ -5785,12 +6824,12 @@ RESULT not event(MigrationCertAccepted(window_overlap_1,real_cert_issuer,claim_t
 -- Query not event(MigrationCertAccepted(window_overlap_2,real_cert_issuer,claim_transition_ca)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 351 rules.
-400 rules inserted. Base: 388 rules (73 with conclusion selected). Queue: 394 rules.
-600 rules inserted. Base: 511 rules (73 with conclusion selected). Queue: 360 rules.
-800 rules inserted. Base: 665 rules (75 with conclusion selected). Queue: 313 rules.
-1000 rules inserted. Base: 766 rules (75 with conclusion selected). Queue: 261 rules.
-1200 rules inserted. Base: 807 rules (76 with conclusion selected). Queue: 161 rules.
+200 rules inserted. Base: 194 rules (76 with conclusion selected). Queue: 333 rules.
+400 rules inserted. Base: 394 rules (78 with conclusion selected). Queue: 398 rules.
+600 rules inserted. Base: 519 rules (79 with conclusion selected). Queue: 365 rules.
+800 rules inserted. Base: 677 rules (81 with conclusion selected). Queue: 330 rules.
+1000 rules inserted. Base: 775 rules (81 with conclusion selected). Queue: 266 rules.
+1200 rules inserted. Base: 856 rules (81 with conclusion selected). Queue: 176 rules.
 Starting query not event(MigrationCertAccepted(window_overlap_2,real_cert_issuer,claim_transition_ca))
 goal reachable: event(MigrationCertAccepted(window_overlap_2,real_cert_issuer,claim_transition_ca))
 
@@ -6074,10 +7113,44 @@ New processes:
         let true_20: bool = issuer_allowed(new_cert_issuer,cached_claim4) in
         event MigrationCertAccepted(window_new_cert,new_cert_issuer,cached_claim4);
         event MigrationWindowComplete(window_new_cert)
+    ) | (
+        !
+        in(c, jwt(h0_1: bitstring,p0_1: bitstring,s0_1: bitstring));
+        let exp0_1: timestamp = get_exp(p0_1) in
+        let exp_highest: timestamp = succ_t(time_overlap_2) in
+        if (ts_geq(exp0_1,exp_highest) = false) then
+        event RollbackRejected(window_current,exp0_1,exp_highest)
+    ) | (
+        !
+        in(c, jwt(h: bitstring,p: bitstring,s: bitstring));
+        let exp_token: timestamp = get_exp(p) in
+        let now: timestamp = time_overlap_2 in
+        if (ts_geq(exp_token,now) = false) then
+        event ExpiredTokenRejected(window_current,exp_token,now)
+    ) | (
+        !
+        let exp_emergency: timestamp = succ_t(time_final) in
+        event EmergencyTokenRevoked(claim_current_ca,exp_emergency);
+        let claim_emergency: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+        let sk_claim_signing_1: skey = gen_sk_for_id(claim_signing) in
+        let token_emergency: bitstring = jwt_sign(pk2s(pk(sk_claim_signing_1)),claim_emergency,exp_emergency,ttl_one,sk_claim_signing_1) in
+        out(c, token_emergency)
     )
 
 --------------------------------------------------------------
 1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction |
+
+5th process: Reduction ! 0 copy(ies)
+
+4th process: Reduction ! 0 copy(ies)
+
+3rd process: Reduction ! 0 copy(ies)
 
 2nd process: Reduction ! 1 copy(ies)
 
@@ -6808,12 +7881,12 @@ RESULT not event(MigrationCertAccepted(window_overlap_2,real_cert_issuer,claim_t
 -- Query not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 351 rules.
-400 rules inserted. Base: 388 rules (73 with conclusion selected). Queue: 394 rules.
-600 rules inserted. Base: 511 rules (73 with conclusion selected). Queue: 360 rules.
-800 rules inserted. Base: 665 rules (75 with conclusion selected). Queue: 313 rules.
-1000 rules inserted. Base: 766 rules (75 with conclusion selected). Queue: 261 rules.
-1200 rules inserted. Base: 807 rules (76 with conclusion selected). Queue: 161 rules.
+200 rules inserted. Base: 194 rules (76 with conclusion selected). Queue: 333 rules.
+400 rules inserted. Base: 394 rules (78 with conclusion selected). Queue: 398 rules.
+600 rules inserted. Base: 519 rules (79 with conclusion selected). Queue: 365 rules.
+800 rules inserted. Base: 677 rules (81 with conclusion selected). Queue: 330 rules.
+1000 rules inserted. Base: 775 rules (81 with conclusion selected). Queue: 266 rules.
+1200 rules inserted. Base: 856 rules (81 with conclusion selected). Queue: 176 rules.
 Starting query not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca))
 goal reachable: event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca))
 
@@ -7101,10 +8174,44 @@ New processes:
         let true_20: bool = issuer_allowed(new_cert_issuer,cached_claim4) in
         event MigrationCertAccepted(window_new_cert,new_cert_issuer,cached_claim4);
         event MigrationWindowComplete(window_new_cert)
+    ) | (
+        !
+        in(c, jwt(h0_1: bitstring,p0_1: bitstring,s0_1: bitstring));
+        let exp0_1: timestamp = get_exp(p0_1) in
+        let exp_highest: timestamp = succ_t(time_overlap_2) in
+        if (ts_geq(exp0_1,exp_highest) = false) then
+        event RollbackRejected(window_current,exp0_1,exp_highest)
+    ) | (
+        !
+        in(c, jwt(h: bitstring,p: bitstring,s: bitstring));
+        let exp_token: timestamp = get_exp(p) in
+        let now: timestamp = time_overlap_2 in
+        if (ts_geq(exp_token,now) = false) then
+        event ExpiredTokenRejected(window_current,exp_token,now)
+    ) | (
+        !
+        let exp_emergency: timestamp = succ_t(time_final) in
+        event EmergencyTokenRevoked(claim_current_ca,exp_emergency);
+        let claim_emergency: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+        let sk_claim_signing_1: skey = gen_sk_for_id(claim_signing) in
+        let token_emergency: bitstring = jwt_sign(pk2s(pk(sk_claim_signing_1)),claim_emergency,exp_emergency,ttl_one,sk_claim_signing_1) in
+        out(c, token_emergency)
     )
 
 --------------------------------------------------------------
 1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction |
+
+5th process: Reduction ! 0 copy(ies)
+
+4th process: Reduction ! 0 copy(ies)
+
+3rd process: Reduction ! 0 copy(ies)
 
 2nd process: Reduction ! 1 copy(ies)
 
@@ -8026,12 +9133,12 @@ RESULT not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_tra
 -- Query not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 351 rules.
-400 rules inserted. Base: 388 rules (73 with conclusion selected). Queue: 394 rules.
-600 rules inserted. Base: 511 rules (73 with conclusion selected). Queue: 360 rules.
-800 rules inserted. Base: 665 rules (75 with conclusion selected). Queue: 313 rules.
-1000 rules inserted. Base: 766 rules (75 with conclusion selected). Queue: 261 rules.
-1200 rules inserted. Base: 807 rules (76 with conclusion selected). Queue: 161 rules.
+200 rules inserted. Base: 194 rules (76 with conclusion selected). Queue: 333 rules.
+400 rules inserted. Base: 394 rules (78 with conclusion selected). Queue: 398 rules.
+600 rules inserted. Base: 519 rules (79 with conclusion selected). Queue: 365 rules.
+800 rules inserted. Base: 677 rules (81 with conclusion selected). Queue: 330 rules.
+1000 rules inserted. Base: 775 rules (81 with conclusion selected). Queue: 266 rules.
+1200 rules inserted. Base: 856 rules (81 with conclusion selected). Queue: 176 rules.
 Starting query not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca))
 goal reachable: event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca))
 
@@ -8357,10 +9464,44 @@ New processes:
         let true_20: bool = issuer_allowed(new_cert_issuer,cached_claim4) in
         event MigrationCertAccepted(window_new_cert,new_cert_issuer,cached_claim4);
         event MigrationWindowComplete(window_new_cert)
+    ) | (
+        !
+        in(c, jwt(h0_1: bitstring,p0_1: bitstring,s0_1: bitstring));
+        let exp0_1: timestamp = get_exp(p0_1) in
+        let exp_highest: timestamp = succ_t(time_overlap_2) in
+        if (ts_geq(exp0_1,exp_highest) = false) then
+        event RollbackRejected(window_current,exp0_1,exp_highest)
+    ) | (
+        !
+        in(c, jwt(h: bitstring,p: bitstring,s: bitstring));
+        let exp_token: timestamp = get_exp(p) in
+        let now: timestamp = time_overlap_2 in
+        if (ts_geq(exp_token,now) = false) then
+        event ExpiredTokenRejected(window_current,exp_token,now)
+    ) | (
+        !
+        let exp_emergency: timestamp = succ_t(time_final) in
+        event EmergencyTokenRevoked(claim_current_ca,exp_emergency);
+        let claim_emergency: bitstring = migration_claim(server_cert_subject_and_san,claim_new_ca) in
+        let sk_claim_signing_1: skey = gen_sk_for_id(claim_signing) in
+        let token_emergency: bitstring = jwt_sign(pk2s(pk(sk_claim_signing_1)),claim_emergency,exp_emergency,ttl_one,sk_claim_signing_1) in
+        out(c, token_emergency)
     )
 
 --------------------------------------------------------------
 1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction |
+
+5th process: Reduction ! 0 copy(ies)
+
+4th process: Reduction ! 0 copy(ies)
+
+3rd process: Reduction ! 0 copy(ies)
 
 2nd process: Reduction ! 1 copy(ies)
 
@@ -9443,75 +10584,75 @@ RESULT not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new
 -- Query event(MigrationWindowComplete(window_current)) ==> event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 383 rules.
-400 rules inserted. Base: 394 rules (70 with conclusion selected). Queue: 447 rules.
-600 rules inserted. Base: 528 rules (73 with conclusion selected). Queue: 431 rules.
-800 rules inserted. Base: 689 rules (73 with conclusion selected). Queue: 421 rules.
-1000 rules inserted. Base: 811 rules (75 with conclusion selected). Queue: 358 rules.
-1200 rules inserted. Base: 930 rules (75 with conclusion selected). Queue: 330 rules.
-1400 rules inserted. Base: 1017 rules (75 with conclusion selected). Queue: 264 rules.
-1600 rules inserted. Base: 1086 rules (76 with conclusion selected). Queue: 189 rules.
-1800 rules inserted. Base: 888 rules (78 with conclusion selected). Queue: 54 rules.
+200 rules inserted. Base: 194 rules (76 with conclusion selected). Queue: 365 rules.
+400 rules inserted. Base: 394 rules (76 with conclusion selected). Queue: 447 rules.
+600 rules inserted. Base: 534 rules (79 with conclusion selected). Queue: 433 rules.
+800 rules inserted. Base: 689 rules (79 with conclusion selected). Queue: 420 rules.
+1000 rules inserted. Base: 819 rules (81 with conclusion selected). Queue: 362 rules.
+1200 rules inserted. Base: 936 rules (81 with conclusion selected). Queue: 334 rules.
+1400 rules inserted. Base: 1025 rules (81 with conclusion selected). Queue: 263 rules.
+1600 rules inserted. Base: 1086 rules (82 with conclusion selected). Queue: 189 rules.
+1800 rules inserted. Base: 925 rules (84 with conclusion selected). Queue: 64 rules.
 Starting query event(MigrationWindowComplete(window_current)) ==> event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca))
 goal reachable: b-event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca)) -> event(MigrationWindowComplete(window_current))
 RESULT event(MigrationWindowComplete(window_current)) ==> event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca)) is true.
 -- Query event(MigrationWindowComplete(window_overlap_1)) ==> event(MigrationCertAccepted(window_overlap_1,real_cert_issuer,claim_transition_ca)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 383 rules.
-400 rules inserted. Base: 394 rules (70 with conclusion selected). Queue: 447 rules.
-600 rules inserted. Base: 528 rules (73 with conclusion selected). Queue: 431 rules.
-800 rules inserted. Base: 689 rules (73 with conclusion selected). Queue: 421 rules.
-1000 rules inserted. Base: 811 rules (75 with conclusion selected). Queue: 358 rules.
-1200 rules inserted. Base: 930 rules (75 with conclusion selected). Queue: 330 rules.
-1400 rules inserted. Base: 1017 rules (75 with conclusion selected). Queue: 264 rules.
-1600 rules inserted. Base: 1086 rules (76 with conclusion selected). Queue: 189 rules.
-1800 rules inserted. Base: 888 rules (78 with conclusion selected). Queue: 54 rules.
+200 rules inserted. Base: 194 rules (76 with conclusion selected). Queue: 365 rules.
+400 rules inserted. Base: 394 rules (76 with conclusion selected). Queue: 447 rules.
+600 rules inserted. Base: 534 rules (79 with conclusion selected). Queue: 433 rules.
+800 rules inserted. Base: 689 rules (79 with conclusion selected). Queue: 420 rules.
+1000 rules inserted. Base: 819 rules (81 with conclusion selected). Queue: 362 rules.
+1200 rules inserted. Base: 936 rules (81 with conclusion selected). Queue: 334 rules.
+1400 rules inserted. Base: 1025 rules (81 with conclusion selected). Queue: 263 rules.
+1600 rules inserted. Base: 1086 rules (82 with conclusion selected). Queue: 189 rules.
+1800 rules inserted. Base: 925 rules (84 with conclusion selected). Queue: 64 rules.
 Starting query event(MigrationWindowComplete(window_overlap_1)) ==> event(MigrationCertAccepted(window_overlap_1,real_cert_issuer,claim_transition_ca))
 goal reachable: b-event(MigrationCertAccepted(window_overlap_1,real_cert_issuer,claim_transition_ca)) && b-event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca)) -> event(MigrationWindowComplete(window_overlap_1))
 RESULT event(MigrationWindowComplete(window_overlap_1)) ==> event(MigrationCertAccepted(window_overlap_1,real_cert_issuer,claim_transition_ca)) is true.
 -- Query event(MigrationWindowComplete(window_overlap_2)) ==> event(MigrationCertAccepted(window_overlap_2,real_cert_issuer,claim_transition_ca)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 383 rules.
-400 rules inserted. Base: 394 rules (70 with conclusion selected). Queue: 447 rules.
-600 rules inserted. Base: 528 rules (73 with conclusion selected). Queue: 431 rules.
-800 rules inserted. Base: 689 rules (73 with conclusion selected). Queue: 421 rules.
-1000 rules inserted. Base: 811 rules (75 with conclusion selected). Queue: 358 rules.
-1200 rules inserted. Base: 930 rules (75 with conclusion selected). Queue: 330 rules.
-1400 rules inserted. Base: 1017 rules (75 with conclusion selected). Queue: 264 rules.
-1600 rules inserted. Base: 1086 rules (76 with conclusion selected). Queue: 189 rules.
-1800 rules inserted. Base: 888 rules (78 with conclusion selected). Queue: 54 rules.
+200 rules inserted. Base: 194 rules (76 with conclusion selected). Queue: 365 rules.
+400 rules inserted. Base: 394 rules (76 with conclusion selected). Queue: 447 rules.
+600 rules inserted. Base: 534 rules (79 with conclusion selected). Queue: 433 rules.
+800 rules inserted. Base: 689 rules (79 with conclusion selected). Queue: 420 rules.
+1000 rules inserted. Base: 819 rules (81 with conclusion selected). Queue: 362 rules.
+1200 rules inserted. Base: 936 rules (81 with conclusion selected). Queue: 334 rules.
+1400 rules inserted. Base: 1025 rules (81 with conclusion selected). Queue: 263 rules.
+1600 rules inserted. Base: 1086 rules (82 with conclusion selected). Queue: 189 rules.
+1800 rules inserted. Base: 925 rules (84 with conclusion selected). Queue: 64 rules.
 Starting query event(MigrationWindowComplete(window_overlap_2)) ==> event(MigrationCertAccepted(window_overlap_2,real_cert_issuer,claim_transition_ca))
 goal reachable: b-event(MigrationCertAccepted(window_overlap_2,real_cert_issuer,claim_transition_ca)) && b-event(MigrationCertAccepted(window_overlap_1,real_cert_issuer,claim_transition_ca)) && b-event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca)) -> event(MigrationWindowComplete(window_overlap_2))
 RESULT event(MigrationWindowComplete(window_overlap_2)) ==> event(MigrationCertAccepted(window_overlap_2,real_cert_issuer,claim_transition_ca)) is true.
 -- Query event(MigrationWindowComplete(window_new_cert)) ==> event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 383 rules.
-400 rules inserted. Base: 394 rules (70 with conclusion selected). Queue: 447 rules.
-600 rules inserted. Base: 528 rules (73 with conclusion selected). Queue: 431 rules.
-800 rules inserted. Base: 689 rules (73 with conclusion selected). Queue: 421 rules.
-1000 rules inserted. Base: 811 rules (75 with conclusion selected). Queue: 358 rules.
-1200 rules inserted. Base: 930 rules (75 with conclusion selected). Queue: 330 rules.
-1400 rules inserted. Base: 1017 rules (75 with conclusion selected). Queue: 264 rules.
-1600 rules inserted. Base: 1086 rules (76 with conclusion selected). Queue: 189 rules.
-1800 rules inserted. Base: 888 rules (78 with conclusion selected). Queue: 54 rules.
+200 rules inserted. Base: 194 rules (76 with conclusion selected). Queue: 365 rules.
+400 rules inserted. Base: 394 rules (76 with conclusion selected). Queue: 447 rules.
+600 rules inserted. Base: 534 rules (79 with conclusion selected). Queue: 433 rules.
+800 rules inserted. Base: 689 rules (79 with conclusion selected). Queue: 420 rules.
+1000 rules inserted. Base: 819 rules (81 with conclusion selected). Queue: 362 rules.
+1200 rules inserted. Base: 936 rules (81 with conclusion selected). Queue: 334 rules.
+1400 rules inserted. Base: 1025 rules (81 with conclusion selected). Queue: 263 rules.
+1600 rules inserted. Base: 1086 rules (82 with conclusion selected). Queue: 189 rules.
+1800 rules inserted. Base: 925 rules (84 with conclusion selected). Queue: 64 rules.
 Starting query event(MigrationWindowComplete(window_new_cert)) ==> event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca))
 goal reachable: b-event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca)) && b-event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca)) && b-event(MigrationCertAccepted(window_overlap_2,real_cert_issuer,claim_transition_ca)) && b-event(MigrationCertAccepted(window_overlap_1,real_cert_issuer,claim_transition_ca)) && b-event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca)) -> event(MigrationWindowComplete(window_new_cert))
 RESULT event(MigrationWindowComplete(window_new_cert)) ==> event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca)) is true.
 -- Query event(MigrationWindowComplete(window_new_cert)) ==> event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 194 rules (70 with conclusion selected). Queue: 383 rules.
-400 rules inserted. Base: 394 rules (70 with conclusion selected). Queue: 447 rules.
-600 rules inserted. Base: 528 rules (73 with conclusion selected). Queue: 431 rules.
-800 rules inserted. Base: 689 rules (73 with conclusion selected). Queue: 421 rules.
-1000 rules inserted. Base: 811 rules (75 with conclusion selected). Queue: 358 rules.
-1200 rules inserted. Base: 930 rules (75 with conclusion selected). Queue: 330 rules.
-1400 rules inserted. Base: 1017 rules (75 with conclusion selected). Queue: 264 rules.
-1600 rules inserted. Base: 1086 rules (76 with conclusion selected). Queue: 189 rules.
-1800 rules inserted. Base: 888 rules (78 with conclusion selected). Queue: 54 rules.
+200 rules inserted. Base: 194 rules (76 with conclusion selected). Queue: 365 rules.
+400 rules inserted. Base: 394 rules (76 with conclusion selected). Queue: 447 rules.
+600 rules inserted. Base: 534 rules (79 with conclusion selected). Queue: 433 rules.
+800 rules inserted. Base: 689 rules (79 with conclusion selected). Queue: 420 rules.
+1000 rules inserted. Base: 819 rules (81 with conclusion selected). Queue: 362 rules.
+1200 rules inserted. Base: 936 rules (81 with conclusion selected). Queue: 334 rules.
+1400 rules inserted. Base: 1025 rules (81 with conclusion selected). Queue: 263 rules.
+1600 rules inserted. Base: 1086 rules (82 with conclusion selected). Queue: 189 rules.
+1800 rules inserted. Base: 925 rules (84 with conclusion selected). Queue: 64 rules.
 Starting query event(MigrationWindowComplete(window_new_cert)) ==> event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca))
 goal reachable: b-event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca)) && b-event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca)) && b-event(MigrationCertAccepted(window_overlap_2,real_cert_issuer,claim_transition_ca)) && b-event(MigrationCertAccepted(window_overlap_1,real_cert_issuer,claim_transition_ca)) && b-event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca)) -> event(MigrationWindowComplete(window_new_cert))
 RESULT event(MigrationWindowComplete(window_new_cert)) ==> event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca)) is true.
@@ -9536,6 +10677,12 @@ Query event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca))
 Query not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_current_ca)) is true.
 
 Query not event(MigrationCertAccepted(window_new_cert,real_cert_issuer,claim_new_ca)) is true.
+
+Query not event(RollbackRejected(w,exp0_2,exp_h)) is false.
+
+Query not event(ExpiredTokenRejected(w,exp_t,now_t)) is false.
+
+Query not event(EmergencyTokenRevoked(revoked,exp_e)) is false.
 
 Query not event(MigrationWindowComplete(window_current)) is false.
 

@@ -1,0 +1,2 @@
+Algorithm,Iterations,Host,StandardTLS_Avg_ms,ASPin_Avg_ms,SCP_Avg_ms,DCP_Avg_ms,TLS_Success_Standard,TLS_Success_ASPin,TLS_Success_SCP,TLS_Success_DCP,HTML_Standard,HTML_ASPin,HTML_SCP,HTML_DCP,Matches_TeX_Design,Timestamp
+ES256 (NIST P-256),2000,es256.idouzi.top,48.42,51.89,49.28,50.12,2000,2000,2000,2000,"real  es256","real  es256","real  es256","real  es256",PASS,2026-08-04 08:15:32

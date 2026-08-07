@@ -75,14 +75,17 @@ priv_key = jwk.JWK.from_pem(priv_pem, None)
 server_cert = sys.argv[1]
 host, subject, sans, issuer = read_cert_claim(server_cert)
 
+now = int(time.time())
 payload = json_encode({
-    "host": host,
     "subject": subject,
     "san": sans,
     "issuer": issuer,
-    "exp": int(time.time()) + 315360000,
-    "ttl": 86400
+    "iat": now,
+    "exp": now + 315360000
     })
+
+
+
 
 jwstoken = jws.JWS(payload)
 jwstoken.add_signature(priv_key, None, pro_header, None)

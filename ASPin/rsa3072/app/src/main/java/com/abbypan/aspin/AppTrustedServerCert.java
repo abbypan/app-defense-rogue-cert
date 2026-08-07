@@ -13,6 +13,8 @@ import org.json.JSONObject;
 public final class AppTrustedServerCert {
     private static final Map<String, CachedKey> KEY_CACHE = new ConcurrentHashMap<>();
     private static final Map<String, CachedClaim> CLAIM_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, Long> HIGHEST_SEEN_KEY_IAT = new ConcurrentHashMap<>();
+    private static final Map<String, Long> HIGHEST_SEEN_CLAIM_IAT = new ConcurrentHashMap<>();
 
     private AppTrustedServerCert() {
     }
@@ -36,6 +38,19 @@ public final class AppTrustedServerCert {
             String claimToken = getPlaintextWellKnown(normalizedHost, "ServerCertClaim.jwt");
             JwtVerifier.VerifiedJwt verifiedClaim = JwtVerifier.verifyJwtWithJwkDetails(
                     claimToken, key.jwk, now);
+
+            long iat = verifiedClaim.getIssueTimeMillis();
+            if (iat > 0) {
+                Long highestSeenIat = HIGHEST_SEEN_CLAIM_IAT.get(normalizedHost);
+                if (highestSeenIat != null && iat < highestSeenIat) {
+                    throw new IllegalArgumentException(
+                            "ServerCertClaim JWT iat (" + iat + ") is lower than highest-seen iat (" + highestSeenIat + ") - anti-rollback rejection");
+                }
+                if (highestSeenIat == null || iat > highestSeenIat) {
+                    HIGHEST_SEEN_CLAIM_IAT.put(normalizedHost, iat);
+                }
+            }
+
             ASPinVerifier.CertificateClaim claim =
                     ASPinVerifier.parseVerifiedClaim(verifiedClaim.getPayload());
             if (!normalizedHost.equalsIgnoreCase(claim.getHost())) {
@@ -79,6 +94,8 @@ public final class AppTrustedServerCert {
     static void clearCachesForTests() {
         KEY_CACHE.clear();
         CLAIM_CACHE.clear();
+        HIGHEST_SEEN_KEY_IAT.clear();
+        HIGHEST_SEEN_CLAIM_IAT.clear();
     }
 
     private static CachedKey authenticatedClaimKey(
@@ -91,6 +108,19 @@ public final class AppTrustedServerCert {
         String token = getPlaintextWellKnown(host, "ClaimSigningKey.jwt");
         JwtVerifier.VerifiedJwt verified = JwtVerifier.verifyJwtDetails(
                 token, appPublicKey, now);
+
+        long iat = verified.getIssueTimeMillis();
+        if (iat > 0) {
+            Long highestSeenIat = HIGHEST_SEEN_KEY_IAT.get(host);
+            if (highestSeenIat != null && iat < highestSeenIat) {
+                throw new IllegalArgumentException(
+                        "ClaimSigningKey JWT iat (" + iat + ") is lower than highest-seen iat (" + highestSeenIat + ") - anti-rollback rejection");
+            }
+            if (highestSeenIat == null || iat > highestSeenIat) {
+                HIGHEST_SEEN_KEY_IAT.put(host, iat);
+            }
+        }
+
         String jwk = JwtVerifier.extractConfirmationJwk(verified.getPayload());
         CachedKey refreshed = new CachedKey(
                 jwk,
@@ -99,6 +129,7 @@ public final class AppTrustedServerCert {
         KEY_CACHE.put(host, refreshed);
         return refreshed;
     }
+
 
     private static long staleDeadline(long cacheUntil, long ttlSeconds, long expiration) {
         long extension;

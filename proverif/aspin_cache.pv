@@ -241,6 +241,33 @@ let UpdatingApp =
   event MigrationWindowComplete(window_new_cert)
   .
 
+let AntiRollbackCheckerApp =
+  (* Given a highest-seen iat = exp2 from window w2, when presented with token0 from w0 (exp0 < exp2), reject it *)
+  in(c, jwt(h0: bitstring, p0: bitstring, s0: bitstring));
+  let exp0 = get_exp(p0) in
+  let exp_highest = succ_t(time_overlap_2) in
+  if ts_geq(exp0, exp_highest) = false then
+    event RollbackRejected(window_current, exp0, exp_highest)
+  .
+
+let FreezeDefenseCheckerApp =
+  (* Presented with a token whose exp is past when current time is time_overlap_2 *)
+  in(c, jwt(h: bitstring, p: bitstring, s: bitstring));
+  let exp_token = get_exp(p) in
+  let now = time_overlap_2 in
+  if ts_geq(exp_token, now) = false then
+    event ExpiredTokenRejected(window_current, exp_token, now)
+  .
+
+let EmergencyUpdateProcess =
+  let sk_claim_signing = gen_sk_for_id(claim_signing) in
+  let exp_emergency = succ_t(time_final) in
+  let claim_emergency = migration_claim(server_cert_subject_and_san, claim_new_ca) in
+  let token_emergency = jwt_sign(pk2s(pk(sk_claim_signing)), claim_emergency, exp_emergency, ttl_one, sk_claim_signing) in
+  event EmergencyTokenRevoked(claim_current_ca, exp_emergency);
+  out(c, token_emergency)
+  .
+
 (* Every published claim accepted by the app was created by the migration server. *)
 query w: bitstring, claim: bitstring, exp: timestamp;
   event(MigrationClaimCached(w, claim, exp)) ==>
@@ -273,6 +300,18 @@ query event(MigrationCertAccepted(
     window_new_cert, new_cert_issuer, claim_current_ca)).
 query event(MigrationCertAccepted(
     window_new_cert, real_cert_issuer, claim_new_ca)).
+
+(* Anti-rollback rejection reachability *)
+query w: bitstring, exp0: timestamp, exp_h: timestamp;
+  event(RollbackRejected(w, exp0, exp_h)).
+
+(* Freeze attack expired token rejection reachability *)
+query w: bitstring, exp_t: timestamp, now_t: timestamp;
+  event(ExpiredTokenRejected(w, exp_t, now_t)).
+
+(* Emergency update revocation reachability *)
+query revoked: bitstring, exp_e: timestamp;
+  event(EmergencyTokenRevoked(revoked, exp_e)).
 
 (* Each cache/update window and its legitimate connection are reachable. *)
 query event(MigrationWindowComplete(window_current)).
@@ -311,4 +350,5 @@ query event(MigrationWindowComplete(window_new_cert)) ==>
       window_new_cert, new_cert_issuer, claim_new_ca)).
 
 process
-  (!MigrationServer) | (!UpdatingApp)
+  (!MigrationServer) | (!UpdatingApp) | (!AntiRollbackCheckerApp) | (!FreezeDefenseCheckerApp) | (!EmergencyUpdateProcess)
+

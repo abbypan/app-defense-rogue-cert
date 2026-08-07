@@ -90,14 +90,44 @@ public final class JwtVerifier {
     public static VerifiedJwt verifyJwtDetails(
             String token, PublicKey publicKey, long nowMillis) throws Exception {
         JWSVerifier verifier = verifierFor(publicKey);
-        String compactToken = toCompactSerialization(token);
-        SignedJWT signedJwt = SignedJWT.parse(compactToken);
-
-        if (!signedJwt.verify(verifier)) {
-            throw new JOSEException("JWT signature verification failed");
+        SignedJWT signedJwt = null;
+        String trimmedToken = token.trim();
+        if (trimmedToken.startsWith("{")) {
+            JSONObject json = new JSONObject(trimmedToken);
+            if (json.has("signatures")) {
+                org.json.JSONArray sigs = json.getJSONArray("signatures");
+                String payloadB64 = json.getString("payload");
+                boolean verified = false;
+                for (int i = 0; i < sigs.length(); i++) {
+                    JSONObject sigObj = sigs.getJSONObject(i);
+                    String headerStr = sigObj.optString("protected", sigObj.optString("header", ""));
+                    String sigStr = sigObj.optString("signature", "");
+                    if (!headerStr.isEmpty() && !sigStr.isEmpty()) {
+                        String candidate = headerStr + "." + payloadB64 + "." + sigStr;
+                        try {
+                            SignedJWT candidateJwt = SignedJWT.parse(candidate);
+                            if (candidateJwt.verify(verifier)) {
+                                verifyHeaderKey(candidateJwt, publicKey);
+                                signedJwt = candidateJwt;
+                                verified = true;
+                                break;
+                            }
+                        } catch (Throwable ignored) {}
+                    }
+                }
+                if (!verified || signedJwt == null) {
+                    throw new JOSEException("General JWS dual-signature verification failed");
+                }
+            }
         }
-
-        verifyHeaderKey(signedJwt, publicKey);
+        if (signedJwt == null) {
+            String compactToken = toCompactSerialization(token);
+            signedJwt = SignedJWT.parse(compactToken);
+            if (!signedJwt.verify(verifier)) {
+                throw new JOSEException("JWT signature verification failed");
+            }
+            verifyHeaderKey(signedJwt, publicKey);
+        }
 
         Date expiration = signedJwt.getJWTClaimsSet().getExpirationTime();
         if (expiration == null) {
@@ -107,8 +137,26 @@ public final class JwtVerifier {
             throw new IllegalArgumentException("JWT has expired");
         }
 
+        Date issueTime = signedJwt.getJWTClaimsSet().getIssueTime();
+        long issueTimeMillis = 0L;
+        if (issueTime != null) {
+            issueTimeMillis = issueTime.getTime();
+        } else {
+            Object iatClaim = signedJwt.getJWTClaimsSet().getClaim("iat");
+            if (iatClaim != null) {
+                issueTimeMillis = positiveLong(iatClaim, "iat") * 1_000L;
+            }
+        }
+
         Object ttlValue = signedJwt.getJWTClaimsSet().getClaim("ttl");
-        long ttlSeconds = positiveLong(ttlValue, "ttl");
+        long ttlSeconds;
+        if (ttlValue != null) {
+            ttlSeconds = positiveLong(ttlValue, "ttl");
+        } else if (issueTimeMillis > 0) {
+            ttlSeconds = Math.max(1L, (expiration.getTime() - issueTimeMillis) / 1_000L);
+        } else {
+            ttlSeconds = 86400L;
+        }
         long ttlMillis;
         try {
             ttlMillis = Math.multiplyExact(ttlSeconds, 1_000L);
@@ -123,11 +171,13 @@ public final class JwtVerifier {
         }
         long cacheUntilMillis = Math.min(expiration.getTime(), ttlDeadline);
 
+
         return new VerifiedJwt(
                 signedJwt.getPayload().toString(),
                 expiration.getTime(),
                 ttlSeconds,
-                cacheUntilMillis);
+                cacheUntilMillis,
+                issueTimeMillis);
     }
 
     /**
@@ -254,16 +304,19 @@ public final class JwtVerifier {
         private final long expirationTimeMillis;
         private final long ttlSeconds;
         private final long cacheUntilMillis;
+        private final long issueTimeMillis;
 
         private VerifiedJwt(
                 String payload,
                 long expirationTimeMillis,
                 long ttlSeconds,
-                long cacheUntilMillis) {
+                long cacheUntilMillis,
+                long issueTimeMillis) {
             this.payload = payload;
             this.expirationTimeMillis = expirationTimeMillis;
             this.ttlSeconds = ttlSeconds;
             this.cacheUntilMillis = cacheUntilMillis;
+            this.issueTimeMillis = issueTimeMillis;
         }
 
         public String getPayload() {
@@ -281,7 +334,12 @@ public final class JwtVerifier {
         public long getCacheUntilMillis() {
             return cacheUntilMillis;
         }
+
+        public long getIssueTimeMillis() {
+            return issueTimeMillis;
+        }
     }
+
     private static boolean arePublicKeysEqual(PublicKey k1, PublicKey k2) {
         if (k1 == null || k2 == null) return false;
         if (k1.equals(k2)) return true;
