@@ -1,2 +1,2 @@
 Algorithm,Iterations,Tk_Avg_ms,Tc_Avg_ms,DCP_Avg_ms,Timestamp
-ES384 (NIST P-384),2000,14.21,12.04,23.64,2026-08-09 12:52:15
+ES384 (NIST P-384),2000,12.62,11.83,12.49,2026-08-09 23:07:16

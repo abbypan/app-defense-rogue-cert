@@ -1,2 +1,2 @@
 Algorithm,Iterations,Host,StandardTLS_Avg_ms,ASPin_Avg_ms,SCP_Avg_ms,DCP_Avg_ms,TLS_Success_Standard,TLS_Success_ASPin,TLS_Success_SCP,TLS_Success_DCP,HTML_Standard,HTML_ASPin,HTML_SCP,HTML_DCP,Matches_TeX_Design,Timestamp
-PS384 (RSA 4096),2000,rsa4096.idouzi.top,81.53,82.41,80.46,81.69,2000,2000,2000,2000,"real  rsa4096","real  rsa4096","real  rsa4096","real  rsa4096",PASS,2026-08-09 14:11:57
+PS384 (RSA 4096),2000,rsa4096.idouzi.top,48.63,49.02,48.04,48.41,2000,2000,2000,2000,"real  rsa4096","real  rsa4096","real  rsa4096","real  rsa4096",PASS,2026-08-09 23:49:07
