@@ -1,44 +1,80 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import base64
-import sys
+import hashlib
+import json
+import os
 import time
-from jwcrypto import jwk,jws
+from pathlib import Path
+
+from jwcrypto import jwk, jws
 from jwcrypto.common import json_encode
 
-def get_pubkey_der_b64(pubkey_pem_path):
-    with open(pubkey_pem_path, "r") as f:
-        pem = f.read()
-    return "".join([l.strip() for l in pem.splitlines() if l.strip() and not l.startswith("-----")])
 
-app_pubkey_b64 = get_pubkey_der_b64("my-app-pubkey.pem")
+ALGORITHMS = {
+    "es256": "ES256",
+    "es384": "ES384",
+    "rsa3072": "PS256",
+    "rsa4096": "PS384",
+}
 
-pro_header = json_encode({
-        "alg": "PS256", 
-        "pubkey": app_pubkey_b64
-        })
 
-priv = "my-app-key.pem"
-with open(priv, "rb") as f:
-   priv_pem = f.read()
-priv_key = jwk.JWK.from_pem(priv_pem, None)
+def pem_public_key_der_b64(path):
+    lines = Path(path).read_text(encoding="utf-8").splitlines()
+    return "".join(
+        line.strip()
+        for line in lines
+        if line.strip() and not line.startswith("-----")
+    )
 
-claim_pubkey_b64 = get_pubkey_der_b64("my-claim-pubkey.pem")
 
-now = int(time.time())
+def next_issued_at(output_path):
+    issued_at = int(time.time())
+    path = Path(output_path)
+    if not path.exists():
+        return issued_at
+    try:
+        token = path.read_text(encoding="utf-8").strip()
+        encoded_payload = token.split(".")[1]
+        padding = "=" * (-len(encoded_payload) % 4)
+        payload = json.loads(
+            base64.urlsafe_b64decode(encoded_payload + padding).decode("utf-8")
+        )
+        return max(issued_at, int(payload.get("iat", 0)) + 1)
+    except (IndexError, ValueError, TypeError, json.JSONDecodeError):
+        return issued_at
+
+
+variant = Path.cwd().name
+algorithm = ALGORITHMS[variant]
+ttl_seconds = int(os.environ.get("ASPIN_TOKEN_TTL_SECONDS", "86400"))
+if ttl_seconds <= 0:
+    raise ValueError("ASPIN_TOKEN_TTL_SECONDS must be positive")
+
+app_public_key_b64 = pem_public_key_der_b64("my-app-pubkey.pem")
+app_public_key_der = base64.b64decode(app_public_key_b64)
+protected_header = json_encode({
+    "alg": algorithm,
+    "kid": base64.urlsafe_b64encode(
+        hashlib.sha256(app_public_key_der).digest()
+    ).rstrip(b"=").decode("ascii"),
+    "pubkey": app_public_key_b64,
+})
+
+private_key = jwk.JWK.from_pem(Path("my-app-key.pem").read_bytes(), None)
+claim_public_jwk = json.loads(
+    Path("my-claim-pubkey.jwk").read_text(encoding="utf-8")
+)
+
+issued_at = next_issued_at("ClaimSigningKey.jwt")
 payload = json_encode({
-        "cnf": {"pubkey": claim_pubkey_b64},
-        "iat": now,
-        "exp": now + 315360000
-        })
+    "cnf": {"jwk": claim_public_jwk},
+    "iat": issued_at,
+    "exp": issued_at + ttl_seconds,
+})
 
-
-
-
-jwstoken = jws.JWS(payload)
-jwstoken.add_signature(priv_key, None, pro_header, None)
-sig = jwstoken.serialize(compact=True)
-
-sigf = "ClaimSigningKey.jwt"
-with open(sigf, "w") as f:
-   f.write(sig)
+token = jws.JWS(payload)
+token.add_signature(private_key, None, protected_header, None)
+Path("ClaimSigningKey.jwt").write_text(
+    token.serialize(compact=True), encoding="utf-8"
+)

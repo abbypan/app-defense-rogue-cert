@@ -150,7 +150,7 @@ public final class ASPinVerifier {
         private final List<String> subjectAlternativeNames;
         private final List<String> issuers;
 
-        private CertificateClaim(String host, String subject, List<String> sans, List<String> issuers) {
+        CertificateClaim(String host, String subject, List<String> sans, List<String> issuers) {
             this.host = host;
             this.subject = subject;
             this.subjectAlternativeNames = List.copyOf(sans);

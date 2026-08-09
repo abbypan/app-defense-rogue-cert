@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-    namespace = 'com.abbypan.aspin'
+    namespace = 'com.cert.aspin'
     compileSdk 36
 
 
 
     defaultConfig {
-        applicationId "com.abbypan.aspin"
+        applicationId "com.cert.aspin"
         minSdk 28
         targetSdk 36
         versionCode 1
@@ -18,7 +18,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-        signingConfigs {
+    signingConfigs {
         debug {
             storeFile file("../../../signing/rsa4096/my-app-key.keystore")
             storePassword "123456"
@@ -41,31 +41,6 @@ android {
             signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
-        }
-    }
-
-        signingConfigs {
-        debug {
-            storeFile file("../../../signing/rsa4096/my-app-key.keystore")
-            storePassword "123456"
-            keyAlias "my_app"
-            keyPassword "123456"
-        }
-        release {
-            storeFile file("../../../signing/rsa4096/my-app-key.keystore")
-            storePassword "123456"
-            keyAlias "my_app"
-            keyPassword "123456"
-        }
-    }
-
-    buildTypes {
-        debug {
-            signingConfig signingConfigs.debug
-        }
-        release {
-            signingConfig signingConfigs.release
-            minifyEnabled false
         }
     }
 

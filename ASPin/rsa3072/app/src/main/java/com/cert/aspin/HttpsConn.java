@@ -115,9 +115,10 @@ public class HttpsConn {
 
     private static TrustManager[] getSupplementaryTrustManagers(CertificateCheck check)
             throws Exception {
+        final X509TrustManager defaultTrustManager = createDefaultTrustManager();
         return new TrustManager[] { new X509TrustManager() {
             public X509Certificate[] getAcceptedIssuers() {
-                return EMPTY_CERT_ARRAY;
+                return defaultTrustManager.getAcceptedIssuers();
             }
 
             public void checkServerTrusted(X509Certificate[] chain, String authType)
@@ -125,11 +126,13 @@ public class HttpsConn {
                 if (chain == null || chain.length == 0) {
                     throw new CertificateException("TLS server did not provide a certificate chain");
                 }
+                defaultTrustManager.checkServerTrusted(chain, authType);
                 check.verify(chain[0]);
             }
 
             public void checkClientTrusted(X509Certificate[] chain, String authType)
                     throws CertificateException {
+                defaultTrustManager.checkClientTrusted(chain, authType);
             }
         }};
     }
@@ -224,7 +227,7 @@ public class HttpsConn {
     }
 
     public static HttpsURLConnection createStandardTLSConnection(String host) throws Exception {
-        return create_main_conn(new String[] { host, "bypass" });
+        return create_main_conn(new String[] { host, "standard" });
     }
 
     public static HttpsURLConnection createSCPConnection(String host) throws Exception {

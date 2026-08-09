@@ -1,286 +1,179 @@
+(* ASPin under DNS redirection to a PKI-valid rogue endpoint. *)
+
 let RealServer =
-  let sk_app_signing = gen_sk_for_id(app_signing) in
-  let sk_claim_signing = gen_sk_for_id(claim_signing) in
-  
- 
-  
-  let header = pk2s(pk(sk_app_signing)) in
-  let good_exp = succ_t(curr) in
-  let good_ttl = ttl_one in
-  let content = pk2s(pk(sk_claim_signing)) in
-  let token_k = jwt_sign(header, content, good_exp, good_ttl, sk_app_signing) in
-  event ClaimKeySign(sk_app_signing, pk(sk_claim_signing), good_exp);
+  let sk_app = gen_sk_for_id(app_signing) in
+  let sk_claim = gen_sk_for_id(claim_signing) in
+  let token_iat = curr in
+  let token_exp = succ_t(curr) in
+
+  let token_k = jwt_sign(
+      pk2s(pk(sk_app)), pk2s(pk(sk_claim)),
+      token_iat, token_exp, sk_app) in
+  event ClaimKeySign(
+      sk_app, pk(sk_claim), token_iat, token_exp);
   out(c, token_k);
 
-  let header2 = pk2s(pk(sk_claim_signing)) in
-  let good_exp2 = succ_t(curr) in
-  let good_ttl2 = ttl_one in
-  let content2 = cert_claim(server_cert_subject_and_san, real_cert_issuer) in
-  let token_c = jwt_sign(header2, content2, good_exp2, good_ttl2, sk_claim_signing) in
-  event CertClaimSign(sk_claim_signing, server_cert_subject_and_san, real_cert_issuer, good_exp2);
+  let claim = cert_claim(
+      server_cert_subject_and_san, real_cert_issuer) in
+  let token_c = jwt_sign(
+      pk2s(pk(sk_claim)), claim, token_iat, token_exp, sk_claim) in
+  event CertClaimSign(
+      sk_claim, server_cert_subject_and_san, real_cert_issuer,
+      token_iat, token_exp);
   out(c, token_c);
-  
-  in(c, client_hello(rand_c, pk_c));
-  let c_hello = client_hello(rand_c, pk_c) in
-  let sk_real_server_cert = gen_sk_for_id(real_server) in
-  let sk_real_issuer = gen_sk_for_id(real_cert_issuer) in
-  let real_s_cert_sig = sig_sign(cert_content(pk(sk_real_server_cert), server_cert_subject_and_san, real_cert_issuer), 
-  sk_real_issuer) in
-  let real_s_cert = gen_cert(pk(sk_real_server_cert),
-  server_cert_subject_and_san,
-  real_cert_issuer,
-  real_s_cert_sig
-   ) in
 
-  new sk_real_server_temp: skey;
-  new random_real_server: bitstring;
-   let real_s_hello = server_hello(random_real_server, pk(sk_real_server_temp)) in
-  let th = transcript_hash(c_hello, real_s_hello, real_s_cert) in
-  let s_handshake_sig = sig_sign(th, sk_real_server_cert) in
-  out(c, server_hello_handshake(server_hostname, server_ip, server_mechine, real_s_hello, real_s_cert, s_handshake_sig));
-
-  let ss = session_key(server_shared_secret(sk_real_server_temp, pk_c), th) in
- 
-  in(c, sens_cipher: bitstring);
-  if check_authtag(ss, sens_cipher) = true
-  then (
-  event RSAccept(server_hostname, th, dec_data(ss, sens_cipher), real_s_cert, sens_cipher)
-  )
+  in(c, client_hello(rand_c: bitstring, pk_c: pkey));
+  let client_msg = client_hello(rand_c, pk_c) in
+  let sk_cert = gen_sk_for_id(real_server) in
+  let sk_issuer = gen_sk_for_id(real_cert_issuer) in
+  let cert_sig = sig_sign(
+      cert_content(pk(sk_cert), server_cert_subject_and_san,
+                   real_cert_issuer), sk_issuer) in
+  let cert = gen_cert(
+      pk(sk_cert), server_cert_subject_and_san, real_cert_issuer, cert_sig) in
+  new sk_ephemeral: skey;
+  new server_random: bitstring;
+  let server_msg = server_hello(server_random, pk(sk_ephemeral)) in
+  let transcript = transcript_hash(client_msg, server_msg, cert) in
+  let handshake_sig = sig_sign(transcript, sk_cert) in
+  out(c, server_hello_handshake(
+      server_hostname, server_ip, server_machine,
+      server_msg, cert, handshake_sig));
+  let key = session_key(
+      server_shared_secret(sk_ephemeral, pk_c), transcript) in
+  in(c, ciphertext: bitstring);
+  let (=true) = check_authtag(key, ciphertext) in
+  event RSAccept(
+      server_hostname, transcript, dec_data(key, ciphertext), cert, ciphertext)
   .
 
 let DNSHijackingRogueServer =
-  new sk_rogue_server_temp: skey;
-  new random_rogue_server: bitstring;
-  in(c, client_hello(rand_c, pk_c));
-  let sk_rogue_server_cert = gen_sk_for_id(rogue_server) in
-   let sk_rogue_issuer = gen_sk_for_id(rogue_cert_issuer) in
-  let rogue_s_cert_sig = sig_sign(cert_content(pk(sk_rogue_server_cert), server_cert_subject_and_san, rogue_cert_issuer), 
-  sk_rogue_issuer) in
-  let rogue_s_cert =   gen_cert(pk(sk_rogue_server_cert), server_cert_subject_and_san, rogue_cert_issuer, rogue_s_cert_sig) in
-  let rogue_s_hello = server_hello(random_rogue_server, pk(sk_rogue_server_temp)) in
-  let rogue_trans = transcript_hash(client_hello(rand_c, pk_c), rogue_s_hello, rogue_s_cert) in
-  let rogue_s_handshake_sig = sig_sign(rogue_trans, sk_rogue_server_cert) in
-  out(c, server_hello_handshake(server_hostname, rogue_ip, rogue_mechine, rogue_s_hello, rogue_s_cert, rogue_s_handshake_sig));
- let ss_rogue = session_key(server_shared_secret(sk_rogue_server_temp, pk_c), rogue_trans) in
-  in(c, sens_cipher: bitstring);
-  if check_authtag(ss_rogue, sens_cipher) = true
-  then (
-  let sens_d = dec_data(ss_rogue, sens_cipher) in
-   event MSAccept(server_hostname, rogue_trans, sens_d, rogue_s_cert, sens_cipher)
-  )
-   .
+  in(c, client_hello(rand_c: bitstring, pk_c: pkey));
+  let client_msg = client_hello(rand_c, pk_c) in
+  let sk_cert = gen_sk_for_id(rogue_server) in
+  let sk_issuer = gen_sk_for_id(rogue_cert_issuer) in
+  let cert_sig = sig_sign(
+      cert_content(pk(sk_cert), server_cert_subject_and_san,
+                   rogue_cert_issuer), sk_issuer) in
+  let cert = gen_cert(
+      pk(sk_cert), server_cert_subject_and_san, rogue_cert_issuer, cert_sig) in
+  new sk_ephemeral: skey;
+  new server_random: bitstring;
+  let server_msg = server_hello(server_random, pk(sk_ephemeral)) in
+  let transcript = transcript_hash(client_msg, server_msg, cert) in
+  let handshake_sig = sig_sign(transcript, sk_cert) in
+  out(c, server_hello_handshake(
+      server_hostname, rogue_ip, rogue_machine,
+      server_msg, cert, handshake_sig));
+  let key = session_key(
+      server_shared_secret(sk_ephemeral, pk_c), transcript) in
+  in(c, ciphertext: bitstring);
+  let (=true) = check_authtag(key, ciphertext) in
+  event MSAccept(
+      server_hostname, transcript, dec_data(key, ciphertext), cert, ciphertext)
+  .
 
 let LegitimateApp =
-  new sk_app_temp: skey;
-  new random_app: bitstring;
+  (* ClaimKeyVerify: platform-authenticated K_apub, header/kid, signature,
+   * iat/exp freshness, and derived ttl. *)
+  in(c, jwt(hk: bitstring, pk_payload: bitstring, sigk: bitstring));
+  let pk_app = pk(gen_sk_for_id(app_signing)) in
+  let key_iat = get_iat(pk_payload) in
+  let key_exp = get_exp(pk_payload) in
+  let (=true) = header_matches(hk, pk_app) in
+  let (=true) = jwt_sig_verify(jwt(hk, pk_payload, sigk), pk_app) in
+  let (=true) = token_fresh(key_iat, key_exp, curr) in
+  let (=true) = derive_ttl(key_iat, key_exp) = ttl_one in
+  let pk_claim = s2pk(get_content(pk_payload)) in
+  event ClaimKeyVerify(pk_app, pk_claim, key_iat, key_exp);
+
+  (* CertClaimVerify also requires T_c's header key to equal authenticated
+   * K_cpub, as required by the construction. *)
+  in(c, jwt(hc: bitstring, claim_payload: bitstring, sigc: bitstring));
+  let claim_iat = get_iat(claim_payload) in
+  let claim_exp = get_exp(claim_payload) in
+  let (=true) = header_matches(hc, pk_claim) in
+  let (=true) = jwt_sig_verify(jwt(hc, claim_payload, sigc), pk_claim) in
+  let (=true) = token_fresh(claim_iat, claim_exp, curr) in
+  let (=true) = derive_ttl(claim_iat, claim_exp) = ttl_one in
+  let claim = get_content(claim_payload) in
+  let claim_identity = get_subject_and_san(claim) in
+  let claim_issuer = get_issuer(claim) in
+  event CertClaimVerify(
+      pk_claim, claim_identity, claim_issuer, claim_iat, claim_exp);
+
+  new sk_ephemeral: skey;
+  new client_random: bitstring;
   new sensitive_data: bitstring;
-  in(c, jwt(h: bitstring, plr: bitstring, sr: bitstring));
-  let pk_app_signing = pk(gen_sk_for_id(app_signing)) in
-  let content = get_content(plr) in
-  let pk1_recv = s2pk(content) in
-  let exp_recv = get_exp(plr) in
-  let ttl_recv = get_ttl(plr) in
-  if jwt_verify(jwt(h, plr, sr), pk_app_signing, curr) = true then
-      let true = ttl_recv = ttl_one in
-      event ClaimKeyVerify(pk_app_signing, pk1_recv, exp_recv);
- 
-  in(c, jwt(h2: bitstring, plr2: bitstring, sr2: bitstring));
-  let content2 = get_content(plr2) in
-  let subject_and_san_claim = get_subject_and_san(content2) in
-  let issuer_claim = get_issuer(content2) in
-  let exp2 = get_exp(plr2) in
-  let ttl_recv2 = get_ttl(plr2) in
-  if jwt_verify(jwt(h2, plr2, sr2), pk1_recv, curr) = true then
-      let true = ttl_recv2 = ttl_one in
-      event CertClaimVerify(pk1_recv, subject_and_san_claim, issuer_claim, exp2);
-  
-  let c_hello = client_hello(random_app, pk(sk_app_temp)) in
-  out(c, c_hello);
- 
-  in(c, 
-  server_hello_handshake(hostname, sip, smech, server_hello(rand_s, pk_recv), 
-  gen_cert(cert_pk_recv, subj_and_san_recv, issuer_recv, cert_sig_recv),
-  s_handshake_sig)
-  );
-  let s_hello = server_hello(rand_s, pk_recv) in
-  let s_cert = gen_cert(cert_pk_recv, subj_and_san_recv, issuer_recv, cert_sig_recv) in
-  let th = transcript_hash(client_hello(random_app, pk(sk_app_temp)), 
-  server_hello(rand_s, pk_recv),
-  s_cert)
-   in
-
-  
-    
-
- if  (check_host(hostname, subj_and_san_recv) = true) &&
-     (sig_verify(cert_content(cert_pk_recv, subj_and_san_recv, issuer_recv), cert_sig_recv, pk(gen_sk_for_id(issuer_recv))) = true) &&
-     (check_issuer(issuer_recv, system_ca_list) = true) &&
-     (sig_verify(th, s_handshake_sig, cert_pk_recv) = true) &&
-     (check_host(hostname, subject_and_san_claim) = true) &&
-     (issuer_claim = issuer_recv)
-      then
+  let client_msg = client_hello(client_random, pk(sk_ephemeral)) in
+  out(c, client_msg);
+  in(c, server_hello_handshake(
+      hostname: bitstring, server_address: ip, server_host: machine,
+      server_hello(server_random: bitstring, pk_ephemeral: pkey),
+      gen_cert(cert_key: pkey, cert_identity: bitstring,
+               cert_issuer: bitstring, cert_sig: bitstring),
+      handshake_sig: bitstring));
+  let cert = gen_cert(cert_key, cert_identity, cert_issuer, cert_sig) in
+  let server_msg = server_hello(server_random, pk_ephemeral) in
+  let transcript = transcript_hash(client_msg, server_msg, cert) in
+  if (check_host(hostname, cert_identity) = true) &&
+     (sig_verify(cert_content(cert_key, cert_identity, cert_issuer),
+                 cert_sig, pk(gen_sk_for_id(cert_issuer))) = true) &&
+     (check_issuer(cert_issuer, system_ca_list) = true) &&
+     (sig_verify(transcript, handshake_sig, cert_key) = true) &&
+     (check_host(hostname, claim_identity) = true) &&
+     (claim_issuer = cert_issuer) then
+  (
+    let key = session_key(
+        client_shared_secret(sk_ephemeral, pk_ephemeral), transcript) in
+    let ciphertext = enc_data(key, sensitive_data) in
+    if cert_issuer = real_cert_issuer then
     (
-      let ss = session_key(client_shared_secret(sk_app_temp, pk_recv), th) in
-      let sensitive_cipher = enc_data(ss, sensitive_data) in
-      if issuer_recv = real_cert_issuer then (
-        event AppConnRS(hostname, th, sensitive_data, s_cert, sensitive_cipher);
-        out(c, sensitive_cipher)
-      )
-      else if issuer_recv = rogue_cert_issuer then (
-        event AppConnMS(hostname, th, sensitive_data, s_cert, sensitive_cipher);
-        out(c, sensitive_cipher)
-      )
+      event AppConnRS(
+          hostname, transcript, sensitive_data, cert, ciphertext);
+      out(c, ciphertext)
     )
-    else
-      event AppReject(hostname, subj_and_san_recv, issuer_recv)
-      .
-
-(* Query introduction:
-   Each query asks whether a security property is reachable or guaranteed.
-   ProVerif returns:
-   - True  = the stated property holds in all executions of this model.
-   - False = ProVerif found a counterexample/attack trace. *)
-
-(* Query: JWT claim-signing-key verification reachability.
-   True  = the app can verify the claim-signing key token_k from app_signing.
-   False = this JWT verification path is unreachable. *)
-query exp_recv: timestamp;
-  event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)), pk(gen_sk_for_id(claim_signing)), exp_recv)).
-
-query exp_recv: timestamp;
-  event(ClaimKeySign(gen_sk_for_id(app_signing), pk(gen_sk_for_id(claim_signing)), exp_recv)).
-
-(* Query: JWT key-chain authenticity.
-   True  = every verification event has a matching creation event by RealServer.
-   False = some verified claim-signing key has no matching creation event. *)
-query app_sk: skey, claim_pk: pkey, exp: timestamp;
-  event(ClaimKeyVerify(pk(app_sk), claim_pk, exp)) ==> event(ClaimKeySign(app_sk, claim_pk, exp)).
-
-(* Query: JWT server-cert-claim verification reachability.
-   True  = the app can verify the real server certificate claim from claim_signing.
-   False = this JWT server-cert-claim verification path is unreachable. *)
-query exp2: timestamp;
-  event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)), server_cert_subject_and_san, real_cert_issuer, exp2)).
-
-  query exp2: timestamp;
-  event(CertClaimSign(gen_sk_for_id(claim_signing), server_cert_subject_and_san, real_cert_issuer, exp2)).
-
-
-(* Query: JWT server-cert-claim authenticity.
-   True  = every verified cert claim has a matching creation event.
-   False = a cert claim can be verified without being legitimately created. *)
-query claim_sk: skey, subject_and_san: bitstring, issuer: bitstring, exp: timestamp;
-  event(CertClaimVerify(pk(claim_sk), subject_and_san, issuer, exp)) ==> event(CertClaimSign(claim_sk, subject_and_san, issuer, exp)).
-
-
-
-
-(* Query: Real-server receive path reachability.
-   True  = there exists a trace where RealServer accepts/decrypts client data for the modeled legitimate transcript.
-   False = this modeled RealServer acceptance path is unreachable. *)
-query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(RSAccept(server_hostname,
-  transcript_hash(
-  client_hello(rc, pkc), 
-  server_hello(rs, pks),
-  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))
-  ),
-  sens_d, 
-  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer))), sens_cipher)).
-
-(* Query: Client acceptance path reachability.
-   True  = there exists a trace where the app accepts the modeled legitimate transcript and sends ciphertext.
-   False = this modeled app-acceptance path is unreachable. *)
-query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(AppConnRS(server_hostname, 
-  transcript_hash(
-  client_hello(rc, pkc), 
-  server_hello(rs, pks),
-  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))
-  ),
-  sens_d, 
-  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer))), sens_cipher)).
-
-
-(* Query: Real-server implies app-accepted correspondence.
-   True  = whenever RealServer accepts the modeled legitimate transcript, the app also accepted it.
-   False = there is a trace where RealServer connects but AppConnRS does not occur. *)
-query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(RSAccept(server_hostname,
-  transcript_hash(
-  client_hello(rc, pkc), 
-  server_hello(rs, pks),
-  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))
-  ),
-  sens_d, 
-  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer))), sens_cipher))
-  ==>
-  event(AppConnRS(server_hostname, 
-  transcript_hash(
-  client_hello(rc, pkc), 
-  server_hello(rs, pks),
-  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))
-  ),
-  sens_d, 
-  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer))), sens_cipher))
+    else if cert_issuer = rogue_cert_issuer then
+    (
+      event AppConnMS(
+          hostname, transcript, sensitive_data, cert, ciphertext);
+      out(c, ciphertext)
+    )
+  )
+  else event AppReject(hostname, cert_identity, cert_issuer)
   .
 
+(* Token-chain authenticity and reachability. *)
+query app_sk: skey, claim_pk: pkey, iat: timestamp, exp: timestamp;
+  event(ClaimKeyVerify(pk(app_sk), claim_pk, iat, exp)) ==>
+  event(ClaimKeySign(app_sk, claim_pk, iat, exp)).
+query claim_sk: skey, identity: bitstring, issuer: bitstring,
+      iat: timestamp, exp: timestamp;
+  event(CertClaimVerify(pk(claim_sk), identity, issuer, iat, exp)) ==>
+  event(CertClaimSign(claim_sk, identity, issuer, iat, exp)).
 
-(* Query: Client-side rejection of rogue TLS session.
-   True  = client can reject mismatched issuer/session.
-   False = rejection event never occurs in this model. *)
-query event(AppReject(server_hostname, server_cert_subject_and_san, rogue_cert_issuer)).
-
-
-(* Query: Rogue-server acceptance reachability.
-   True  = there exists a trace where the rogue server accepts/decrypts data under the modeled rogue transcript.
-   False = rogue acceptance/decryption is unreachable in this model. *)
-query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(MSAccept(server_hostname,
-  transcript_hash(
-  client_hello(rc, pkc), 
-  server_hello(rs, pks),
-  gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_cert_issuer)))
-  ),
-  sens_d, 
-  gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_cert_issuer))), sens_cipher)).
-
-(* Query: Client acceptance path reachability.
-   True  = there exists a trace where the app accepts the modeled rogue transcript and sends ciphertext.
-   False = this modeled app-acceptance path is unreachable. *)
-query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(AppConnMS(server_hostname, 
-  transcript_hash(
-  client_hello(rc, pkc), 
-  server_hello(rs, pks),
-  gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_cert_issuer)))
-  ),
-  sens_d, 
-  gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_cert_issuer))), sens_cipher)).
-
-
-(* Query: rogue-server implies app-accepted correspondence.
-   True  = whenever rogueServer accepts the modeled rogue transcript, the app also accepted it.
-   False = there is a trace where rogueServer connects but AppConnRS does not occur. *)
-query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
-  event(MSAccept(server_hostname,
-  transcript_hash(
-  client_hello(rc, pkc), 
-  server_hello(rs, pks),
-  gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_cert_issuer)))
-  ),
-  sens_d, 
-  gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_cert_issuer))), sens_cipher))
-  ==>
-  event(AppConnMS(server_hostname, 
-  transcript_hash(
-  client_hello(rc, pkc), 
-  server_hello(rs, pks),
-  gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_cert_issuer)))
-  ),
-  sens_d, 
-  gen_cert(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)), server_cert_subject_and_san, rogue_cert_issuer), gen_sk_for_id(rogue_cert_issuer))), sens_cipher))
-  .
+query h: bitstring, th: bitstring, data: bitstring,
+      cert: bitstring, ciphertext: bitstring;
+  event(RSAccept(h, th, data, cert, ciphertext)).
+query h: bitstring, th: bitstring, data: bitstring,
+      cert: bitstring, ciphertext: bitstring;
+  event(AppConnRS(h, th, data, cert, ciphertext)).
+query h: bitstring, th: bitstring, data: bitstring,
+      cert: bitstring, ciphertext: bitstring;
+  event(RSAccept(h, th, data, cert, ciphertext)) ==>
+  event(AppConnRS(h, th, data, cert, ciphertext)).
+query event(AppReject(
+    server_hostname, server_cert_subject_and_san, rogue_cert_issuer)).
+query h: bitstring, th: bitstring, data: bitstring,
+      cert: bitstring, ciphertext: bitstring;
+  event(MSAccept(h, th, data, cert, ciphertext)).
+query h: bitstring, th: bitstring, data: bitstring,
+      cert: bitstring, ciphertext: bitstring;
+  event(AppConnMS(h, th, data, cert, ciphertext)).
+query h: bitstring, th: bitstring, data: bitstring,
+      cert: bitstring, ciphertext: bitstring;
+  event(MSAccept(h, th, data, cert, ciphertext)) ==>
+  event(AppConnMS(h, th, data, cert, ciphertext)).
 
 process
   (!RealServer) | (!DNSHijackingRogueServer) | (!LegitimateApp)

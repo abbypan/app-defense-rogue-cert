@@ -1,2 +1,2 @@
 Algorithm,Iterations,Tk_Avg_ms,Tc_Avg_ms,DCP_Avg_ms,Timestamp
-PS384 (RSA 4096),2000,7.48,5.48,8.50,2026-08-04 08:08:33
+PS384 (RSA 4096),2000,13.05,11.53,24.31,2026-08-09 12:56:08

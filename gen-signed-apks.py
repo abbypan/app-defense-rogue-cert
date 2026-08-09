@@ -166,6 +166,12 @@ def main():
         description="Build and sign APKs for es256, es384, rsa3072, and rsa4096 using signing/<variant>/my-app-key."
     )
     parser.add_argument("--build-type", choices=("debug", "release"), default="debug")
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=24,
+        help="Maximum Gradle worker count (default: 24)",
+    )
     parser.add_argument("--skip-build", action="store_true")
     parser.add_argument("--output-dir", default=str(default_output))
     parser.add_argument("--sdk-root", help="Android SDK root containing build-tools/")
@@ -173,6 +179,8 @@ def main():
     parser.add_argument("--apksigner", help="Path to apksigner or apksigner.bat")
     parser.add_argument("--openssl", help="Path to openssl or openssl.exe")
     args = parser.parse_args()
+    if args.workers < 1:
+        parser.error("--workers must be at least 1")
 
     output_dir = Path(args.output_dir).expanduser().resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -189,7 +197,12 @@ def main():
 
         if not args.skip_build:
             task = f":app:assemble{args.build_type[:1].upper()}{args.build_type[1:]}"
-            run_checked(gradle_wrapper(variant_project_dir) + [task], f"Gradle task {task} for {variant}", cwd=variant_project_dir)
+            run_checked(
+                gradle_wrapper(variant_project_dir)
+                + [f"--max-workers={args.workers}", task],
+                f"Gradle task {task} for {variant}",
+                cwd=variant_project_dir,
+            )
 
         unsigned_apk = built_apk(variant_project_dir, args.build_type)
 

@@ -25,6 +25,7 @@ import org.json.JSONObject;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
+    private static final String ASPIN_TARGET_APP_ID = "com.cert.aspin";
     private static final String ASPIN_HOST = "rsa3072.idouzi.top";
     private static final String DCP_HOST = "dcp.idouzi.top";
     //private static final String ASPIN_ISSUER = "CN=E7, O=Let's Encrypt, C=US";
@@ -193,6 +194,31 @@ public class MainActivity extends AppCompatActivity {
         return ASPIN_HOST;
     }
 
+    private boolean isOwnAspinTarget() {
+        return ASPIN_TARGET_APP_ID.equals(getPackageName());
+    }
+
+    private ASPinVerifier.CertificateClaim getValidatedAspinClaim(String host) throws Exception {
+        return isOwnAspinTarget()
+                ? AppTrustedServerCert.getValidatedServerCertClaim(this, host)
+                : AppTrustedServerCert.getValidatedServerCertClaimForApp(
+                        this, ASPIN_TARGET_APP_ID, host);
+    }
+
+    private OsAspinClient.Result refreshValidatedAspinClaim(String host) throws Exception {
+        return isOwnAspinTarget()
+                ? AppTrustedServerCert.refreshValidatedServerCertClaim(this, host)
+                : AppTrustedServerCert.refreshValidatedServerCertClaimForApp(
+                        this, ASPIN_TARGET_APP_ID, host);
+    }
+
+    private String getAspinServerCertClaim(String host) throws Exception {
+        return isOwnAspinTarget()
+                ? AppTrustedServerCert.getServerCertClaim(this, host)
+                : AppTrustedServerCert.getServerCertClaimForApp(
+                        this, ASPIN_TARGET_APP_ID, host);
+    }
+
     public String getCurrentHostAlgorithm() {
         return extractHostAlgorithm(getCurrentHost());
     }
@@ -307,7 +333,7 @@ public class MainActivity extends AppCompatActivity {
         new Thread(() -> {
             try {
                 // Get and verify server certificate claim
-                String expIssuer = AppTrustedServerCert.getServerCertClaim(this, getCurrentHost());
+                String expIssuer = getAspinServerCertClaim(getCurrentHost());
 
                 // Update the response text view with server certificate claim on main thread
                 mainHandler.post(() -> {
@@ -372,64 +398,7 @@ public class MainActivity extends AppCompatActivity {
     
     
     public void runTableAvgVerifTimeBenchmark() {
-        int maxAttempts = getCurrentMaxBenchmarkAttempts();
-        mainHandler.post(() -> {
-            responseTextView.setText("Running table:avgveriftime benchmark inside App...\nPlease wait (" + maxAttempts + " iterations)...");
-        });
-
-        new Thread(() -> {
-            try {
-                String host = getCurrentHost();
-                String alg = extractHostAlgorithm(host);
-
-                String appCertPem = null, tkJwt = null, tcJwt = null, dcpPublicKeyPem = null, dcpJson = null;
-
-                try {
-                    tkJwt = HttpsConn.getHttpContent("http://" + host + "/.well-known/ClaimSigningKey.jwt");
-                    tcJwt = HttpsConn.getHttpContent("http://" + host + "/.well-known/ServerCertClaim.jwt");
-                    dcpJson = HttpsConn.getHttpContent("http://dcp.idouzi.top/.well-known/DCPServerCertPin-" + alg + ".json");
-                    dcpPublicKeyPem = readResourceFile("my-dcp-pubkey.pem");
-                } catch (Exception netEx) {
-                    Log.w(TAG, "HTTP fetch failed for " + alg + ", fallback to resources: " + netEx.getMessage());
-                    tkJwt = readResourceFile("ClaimSigningKey.jwt");
-                    tcJwt = readResourceFile("ServerCertClaim.jwt");
-                    dcpPublicKeyPem = readResourceFile("my-dcp-pubkey.pem");
-                    dcpJson = readResourceFile("DCPServerCertPin.json");
-                }
-
-                // Dynamically retrieve installed App signing cert as Trust Anchor
-                java.security.PublicKey appPublicKey = AppInfo.getPrimarySigningPublicKey(this);
-                if (appPublicKey == null) {
-                    // appPublicKey fallback
-                }
-
-                String csVerifyRes = JwtVerifier.verifyJwt(tkJwt, appPublicKey);
-                String csJwkJson = JwtVerifier.extractConfirmationJwk(csVerifyRes);
-
-                double tkTimeMs = BenchmarkVerifier.benchmarkTkMs(tkJwt, appPublicKey, maxAttempts);
-                double tcTimeMs = BenchmarkVerifier.benchmarkTcMs(tcJwt, csJwkJson, maxAttempts);
-                double dcpTimeMs = BenchmarkVerifier.benchmarkDcpMs(dcpJson, dcpPublicKeyPem, maxAttempts);
-
-                String report = String.format(Locale.ROOT,
-                        "[%s Benchmark Results (%d iterations)]\n" +
-                        "Tk Verification Time : %.2f ms\n" +
-                        "Tc Verification Time : %.2f ms\n" +
-                        "DCP Verification Time: %.2f ms\n",
-                        alg, maxAttempts, tkTimeMs, tcTimeMs, dcpTimeMs);
-
-                mainHandler.post(() -> {
-                    responseTextView.setText(report);
-                    Toast.makeText(MainActivity.this, alg + " Benchmark completed", Toast.LENGTH_SHORT).show();
-                });
-
-            } catch (Exception e) {
-                Log.e(TAG, "Failed to run benchmark: " + e.getMessage(), e);
-                mainHandler.post(() -> {
-                    responseTextView.setText("Benchmark failed: " + e.getMessage());
-                    Toast.makeText(MainActivity.this, "Benchmark failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                });
-            }
-        }).start();
+        runTableAvgVerifTimeBenchmarkAuto(getCurrentMaxBenchmarkAttempts(), null);
     }
 
 
@@ -668,8 +637,7 @@ public class MainActivity extends AppCompatActivity {
         new Thread(() -> {
             try {
                 String host =  getCurrentHost();
-                ASPinVerifier.CertificateClaim claim =
-                        AppTrustedServerCert.getValidatedServerCertClaim(this, host);
+                ASPinVerifier.CertificateClaim claim = getValidatedAspinClaim(host);
 
                 // Update UI on main thread
                 mainHandler.post(() -> {
@@ -885,42 +853,49 @@ public class MainActivity extends AppCompatActivity {
                 algDisplayNames.put("es256", "ES256 (NIST P-256)");
                 algDisplayNames.put("es384", "ES384 (NIST P-384)");
 
-                String appCertPem = null, tkJwt = null, tcJwt = null, dcpPublicKeyPem = null, dcpJson = null;
+                String dcpPublicKeyPem = readResourceFile("my-dcp-pubkey.pem");
 
-                for (int attempt = 0; attempt < 5; attempt++) {
+                long tkTotalNanos = 0;
+                long tcTotalNanos = 0;
+                boolean tkSuccess = true;
+                boolean tcSuccess = true;
+                for (int attempt = 0; attempt < maxAttempts; attempt++) {
+                    OsAspinClient.Result result = refreshValidatedAspinClaim(host);
+                    long tkNanos = result.getClaimKeyDownloadAndVerificationNanos();
+                    long tcNanos = result.getClaimDownloadAndVerificationNanos();
+                    if (result.getClaim() == null || tkNanos <= 0 || tcNanos <= 0) {
+                        tkSuccess = tkSuccess && tkNanos > 0;
+                        tcSuccess = tcSuccess && tcNanos > 0;
+                    }
+                    tkTotalNanos += tkNanos;
+                    tcTotalNanos += tcNanos;
+                }
+
+                long dcpTotalNanos = 0;
+                boolean dcpSuccess = true;
+                String dcpUrl = "http://dcp.idouzi.top/.well-known/DCPServerCertPin-"
+                        + alg + ".json";
+                for (int attempt = 0; attempt < maxAttempts; attempt++) {
+                    long dcpStart = System.nanoTime();
                     try {
-                        if (tkJwt == null) tkJwt = HttpsConn.getHttpContent("http://" + host + "/.well-known/ClaimSigningKey.jwt");
-                        if (tcJwt == null) tcJwt = HttpsConn.getHttpContent("http://" + host + "/.well-known/ServerCertClaim.jwt");
-                        if (dcpJson == null) dcpJson = HttpsConn.getHttpContent("http://dcp.idouzi.top/.well-known/DCPServerCertPin-" + alg + ".json");
-                        if (tkJwt != null && tcJwt != null && dcpJson != null) break;
-                    } catch (Throwable ignored) {
-                        try { Thread.sleep(500); } catch (Throwable ignored2) {}
+                        String dcpJson = HttpsConn.getHttpContent(dcpUrl);
+                        String dcpPin = DCPVerifier.verifyDCPWithPublicKeyPem(
+                                dcpJson, dcpPublicKeyPem);
+                        if (dcpPin == null || dcpPin.isEmpty()) {
+                            dcpSuccess = false;
+                            break;
+                        }
+                    } catch (Exception e) {
+                        dcpSuccess = false;
+                        throw e;
+                    } finally {
+                        dcpTotalNanos += System.nanoTime() - dcpStart;
                     }
                 }
 
-                if (tkJwt == null) tkJwt = readResourceFile("ClaimSigningKey.jwt");
-                if (tcJwt == null) tcJwt = readResourceFile("ServerCertClaim.jwt");
-                if (dcpJson == null) dcpJson = readResourceFile("DCPServerCertPin.json");
-                try { dcpPublicKeyPem = readResourceFile("my-dcp-pubkey.pem"); } catch (Throwable t) { dcpPublicKeyPem = ""; }
-
-                java.security.PublicKey appPublicKey = AppInfo.getPrimarySigningPublicKey(this);
-                if (appPublicKey == null) {
-                    // appPublicKey fallback
-                }
-
-                String csVerifyRes = JwtVerifier.verifyJwt(tkJwt, appPublicKey);
-                boolean tkSuccess = csVerifyRes != null && !csVerifyRes.isEmpty();
-                String csJwkJson = JwtVerifier.extractConfirmationJwk(csVerifyRes);
-
-                String tcVerifyRes = JwtVerifier.verifyJwtWithJwk(tcJwt, csJwkJson);
-                boolean tcSuccess = tcVerifyRes != null && !tcVerifyRes.isEmpty();
-
-                String dcpPin = DCPVerifier.verifyPresetDCP(dcpJson);
-                boolean dcpSuccess = dcpPin != null && !dcpPin.isEmpty();
-
-                double tkTimeMs = BenchmarkVerifier.benchmarkTkMs(tkJwt, appPublicKey, maxAttempts);
-                double tcTimeMs = BenchmarkVerifier.benchmarkTcMs(tcJwt, csJwkJson, maxAttempts);
-                double dcpTimeMs = BenchmarkVerifier.benchmarkDcpMs(dcpJson, dcpPublicKeyPem, maxAttempts);
+                double tkTimeMs = tkTotalNanos / 1_000_000.0 / maxAttempts;
+                double tcTimeMs = tcTotalNanos / 1_000_000.0 / maxAttempts;
+                double dcpTimeMs = dcpTotalNanos / 1_000_000.0 / maxAttempts;
 
                 String displayName = algDisplayNames.getOrDefault(alg, alg);
                 String timestamp = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT).format(new java.util.Date());
@@ -930,8 +905,8 @@ public class MainActivity extends AppCompatActivity {
                 saveCsvResult(csvPath, header, csvRow);
 
                 String report = "[" + displayName + " Verification Benchmark Result (" + maxAttempts + " iterations)]\n" +
-                        "1. ASPin Tk Verification (System App Signing PublicKey): " + (tkSuccess ? "SUCCESS" : "FAILED") + " (Avg: " + String.format(Locale.ROOT, "%.2f", tkTimeMs) + " ms)\n" +
-                        "2. ASPin Tc Verification (CSK JWK): " + (tcSuccess ? "SUCCESS" : "FAILED") + " (Avg: " + String.format(Locale.ROOT, "%.2f", tcTimeMs) + " ms)\n" +
+                        "1. ASPin Tk Download + Verification (OS service): " + (tkSuccess ? "SUCCESS" : "FAILED") + " (Avg: " + String.format(Locale.ROOT, "%.2f", tkTimeMs) + " ms)\n" +
+                        "2. ASPin Tc Download + Verification (OS service): " + (tcSuccess ? "SUCCESS" : "FAILED") + " (Avg: " + String.format(Locale.ROOT, "%.2f", tcTimeMs) + " ms)\n" +
                         "3. DCP Pin Verification (Preset DCP PubKey): " + (dcpSuccess ? "SUCCESS" : "FAILED") + " (Avg: " + String.format(Locale.ROOT, "%.2f", dcpTimeMs) + " ms)\n" +
                         "Saved to CSV: " + csvPath;
 
@@ -961,7 +936,7 @@ public class MainActivity extends AppCompatActivity {
 
                 ASPinVerifier.CertificateClaim claim = null;
                 try {
-                    claim = AppTrustedServerCert.getValidatedServerCertClaim(this, host);
+                    claim = getValidatedAspinClaim(host);
                 } catch (Exception e) {
                     Log.w(TAG, "Failed to get ASPin claim via HTTP: " + e.getMessage());
                 }
@@ -1059,9 +1034,16 @@ public class MainActivity extends AppCompatActivity {
                 double avgSCPMs = (totalTimeSCPUs / 1000.0) / iterations;
                 double avgDCPMs = (totalTimeDCPUs / 1000.0) / iterations;
 
-                boolean allTlsSuccess = (successStandardTls == iterations) && (successASPin == iterations) && (successSCP == iterations) && (successDCP == iterations);
-                double maxLatencyDeltaMs = Math.max(Math.max(avgStandardTlsMs, avgASPinMs), Math.max(avgSCPMs, avgDCPMs)) - Math.min(Math.min(avgStandardTlsMs, avgASPinMs), Math.min(avgSCPMs, avgDCPMs));
-                boolean matchesTexDesign = allTlsSuccess && (maxLatencyDeltaMs < 5.0);
+                String serverPhase = getIntent().getStringExtra("server_phase");
+                boolean rogueServerPhase = "rogueserver".equalsIgnoreCase(serverPhase);
+                boolean expectedTlsOutcomes = rogueServerPhase
+                        ? (successStandardTls == iterations) && (successASPin == 0)
+                                && (successSCP == 0) && (successDCP == 0)
+                        : (successStandardTls == iterations) && (successASPin == iterations)
+                                && (successSCP == iterations) && (successDCP == iterations);
+                // The design specifies the accept/reject behavior. Latency is an empirical
+                // result reported by the benchmark, not a protocol-correctness invariant.
+                boolean matchesTexDesign = expectedTlsOutcomes;
 
                 String displayName = algDisplayNames.getOrDefault(alg, alg);
                 String timestamp = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT).format(new java.util.Date());

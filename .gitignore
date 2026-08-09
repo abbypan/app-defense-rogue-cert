@@ -3,6 +3,8 @@ proverif-passive
 tex
 build/
 apks/
+output/
+tmp/
 __pycache__
 .vscode
 .idea
