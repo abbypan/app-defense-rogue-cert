@@ -29,6 +29,7 @@ def copy_file(source, destination):
 
 def generate_for_algorithm(repo_root, alg):
     signing_dir = repo_root / "signing" / alg
+    app_resources_dir = repo_root / "ASPin" / alg / "app" / "src" / "main" / "resources"
     scp_generator = repo_root / "signing" / "gen_scp_hash.py"
     server_cert = repo_root / "realserver" / "etc" / "cert" / alg / "real-cert.pem"
     alg_well_known_dir = repo_root / "realserver" / "var" / "www" / alg / ".well-known"
@@ -82,6 +83,14 @@ def generate_for_algorithm(repo_root, alg):
     copy_file(
         signing_dir / "ClaimSigningKey.jwt",
         alg_well_known_dir / "ClaimSigningKey.jwt",
+    )
+    copy_file(
+        signing_dir / "ServerCertClaim.jwt",
+        app_resources_dir / "ServerCertClaim.jwt",
+    )
+    copy_file(
+        signing_dir / "ClaimSigningKey.jwt",
+        app_resources_dir / "ClaimSigningKey.jwt",
     )
     copy_file(
         signing_dir / "DCPServerCertPin.json",

@@ -102,7 +102,7 @@ issued_at = next_issued_at("ServerCertClaim.jwt")
 payload = json_encode({
     "subject": subject,
     "san": sans,
-    "issuer": issuer,
+    "issuer": [issuer],
     "iat": issued_at,
     "exp": issued_at + ttl_seconds,
 })
