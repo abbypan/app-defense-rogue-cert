@@ -19,7 +19,7 @@ TEX_FRAGMENTS = (
     r"\subsubsection{CertClaimSign}",
     r"\subsubsection{ClaimKeyVerify}",
     r"\subsubsection{CertClaimVerify}",
-    r"\subsubsection{CertClaimCheck}",
+    r"\subsection{Secure Connection with CertClaimCheck}",
     r"iat_k \leq t_{\mathrm{now}} < exp_k",
     r"iat_c \leq t_{\mathrm{now}} < exp_c",
     r"signature covers $K_{cpub}$, $iat_k$, and $exp_k$",
