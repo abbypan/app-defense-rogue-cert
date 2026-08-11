@@ -58,7 +58,6 @@ protected_header = json_encode({
     "kid": base64.urlsafe_b64encode(
         hashlib.sha256(app_public_key_der).digest()
     ).rstrip(b"=").decode("ascii"),
-    "pubkey": app_public_key_b64,
 })
 
 private_key = jwk.JWK.from_pem(Path("my-app-key.pem").read_bytes(), None)

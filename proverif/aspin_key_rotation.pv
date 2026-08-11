@@ -10,8 +10,10 @@ free rotation_time_0: timestamp.
 const rotation_old_form: bitstring.
 const rotation_dual_form: bitstring.
 const rotation_new_form: bitstring.
+const token_type_key: bitstring.
 free rotation_old_delivery: channel [private].
 free rotation_new_delivery: channel [private].
+free rotation_state_delivery: channel [private].
 
 event KeyTokenPublished(
     bitstring, pkey, pkey, timestamp, timestamp).
@@ -24,6 +26,7 @@ event KeyRotationCutoverVerified(
 event KeyRotationOldReplayRejected(
     pkey, timestamp, timestamp).
 event OldOnlyTokenAcceptedByNewKey(pkey, pkey).
+event HighestIatTransferred(pkey, pkey, bitstring, timestamp).
 
 let RotationServer =
   let sk_old = gen_sk_for_id(app_signing) in
@@ -69,14 +72,15 @@ let RotationServer =
   out(c, token0);
   out(c, token1);
   out(c, token2);
-  (* Private scheduler copies select successful old/new app update traces. *)
-  out(rotation_old_delivery, (pk_old, pk_new, token0, token1));
-  out(rotation_new_delivery, (pk_old, pk_new, token0, token1, token2))
+  (* Private channels carry schedule signals only.  Tokens are always consumed
+   * from attacker-controlled public channel c. *)
+  out(rotation_old_delivery, (pk_old, pk_new));
+  out(rotation_new_delivery, (pk_old, pk_new))
   .
 
 let OldApp =
-  in(rotation_old_delivery,
-     (pk_old: pkey, pk_new: pkey, token0: bitstring, token1: bitstring));
+  in(rotation_old_delivery, (pk_old: pkey, pk_new: pkey));
+  in(c, token0: bitstring);
 
   let jwt(h0: bitstring, p0: bitstring, s0: bitstring) = token0 in
   let (=true) = header_matches(h0, pk_old) in
@@ -85,10 +89,14 @@ let OldApp =
   let exp0 = get_exp(p0) in
   let (=true) = token_fresh(iat0, exp0, rotation_time_0) in
   let (=ttl_three) = derive_ttl(iat0, exp0) in
+  let (=rotation_time_0) = iat0 in
+  let (=succ_t(succ_t(succ_t(rotation_time_0)))) = exp0 in
   let claim_key0 = s2pk(get_content(p0)) in
+  let (=pk(gen_sk_for_id(claim_signing))) = claim_key0 in
   event KeyRotationOldAppVerified(
       pk_old, claim_key0, iat0, exp0);
 
+  in(c, token1: bitstring);
   let jws_dual(
       h_old: bitstring, h_new: bitstring, p1: bitstring,
       sig_old: bitstring, sig_new: bitstring) = token1 in
@@ -98,19 +106,26 @@ let OldApp =
   let exp1 = get_exp(p1) in
   let (=true) = token_fresh(iat1, exp1, iat1) in
   let (=true) = iat_not_older(iat1, iat0) in
+  let (=true) = iat_older(iat0, iat1) in
+  let (=succ_t(rotation_time_0)) = iat1 in
+  let (=succ_t(succ_t(iat1))) = exp1 in
   let claim_key1 = s2pk(get_content(p1)) in
+  let (=pk(gen_sk_for_id(claim_signing))) = claim_key1 in
   event KeyRotationOldAppVerified(
       pk_old, claim_key1, iat1, exp1);
   event DualSigAppKeyVerify(
-      pk_old, pk_new, claim_key1, iat1, exp1)
+      pk_old, pk_new, claim_key1, iat1, exp1);
+  (* Protected OS state is transferred only after the dual-signed transition
+   * has authenticated the old/new signing-key relationship. *)
+  event HighestIatTransferred(pk_old, pk_new, token_type_key, iat1);
+  out(rotation_state_delivery, (pk_old, pk_new, iat1))
   .
 
 let UpdatedApp =
-  in(rotation_new_delivery,
-     (pk_old: pkey, pk_new: pkey, token0: bitstring,
-      token1: bitstring, token2: bitstring));
+  in(rotation_new_delivery, (pk_old: pkey, pk_new: pkey));
 
   (* The updated app selects the new-key signature entry of T'_k. *)
+  in(c, token1: bitstring);
   let jws_dual(
       h_old: bitstring, h_new: bitstring, p1: bitstring,
       sig_old: bitstring, sig_new: bitstring) = token1 in
@@ -119,11 +134,19 @@ let UpdatedApp =
   let iat1 = get_iat(p1) in
   let exp1 = get_exp(p1) in
   let (=true) = token_fresh(iat1, exp1, iat1) in
+  let (=succ_t(rotation_time_0)) = iat1 in
+  let (=succ_t(succ_t(iat1))) = exp1 in
   let claim_key1 = s2pk(get_content(p1)) in
+  let (=pk(gen_sk_for_id(claim_signing))) = claim_key1 in
   event KeyRotationNewAppVerified(
       pk_new, claim_key1, iat1, exp1);
 
+  (* Import the highest-seen T_k state authenticated by the old app identity. *)
+  in(rotation_state_delivery, (=pk_old, =pk_new, transferred_iat: timestamp));
+  let (=iat1) = transferred_iat in
+
   (* The new-key-only T''_k advances highest-seen state. *)
+  in(c, token2: bitstring);
   let jwt(h2: bitstring, p2: bitstring, s2: bitstring) = token2 in
   let (=true) = header_matches(h2, pk_new) in
   let (=true) = jwt_sig_verify(token2, pk_new) in
@@ -131,17 +154,31 @@ let UpdatedApp =
   let exp2 = get_exp(p2) in
   let (=true) = token_fresh(iat2, exp2, iat2) in
   let (=true) = iat_not_older(iat2, iat1) in
+  let (=true) = iat_older(iat1, iat2) in
+  let (=succ_t(iat1)) = iat2 in
+  let (=succ_t(succ_t(iat2))) = exp2 in
   let claim_key2 = s2pk(get_content(p2)) in
+  let (=pk(gen_sk_for_id(claim_signing))) = claim_key2 in
   event KeyRotationCutoverVerified(
       pk_new, claim_key2, iat2, exp2);
 
-  (* Replay old T_k: it is authentic under old key and still fresh, but its iat
-   * is below the protected value carried across the app update. *)
-  let jwt(h0: bitstring, p0: bitstring, s0: bitstring) = token0 in
-  let old_iat = get_iat(p0) in
-  let old_exp = get_exp(p0) in
-  let (=true) = jwt_sig_verify(token0, pk_old) in
+  (* Replay T'_k through its valid new-key signature.  It remains fresh, so the
+   * rejection is caused only by the transferred and then advanced protected
+   * highest-seen state, not by expiration or the old key becoming invalid. *)
+  in(c, replay_token: bitstring);
+  let jws_dual(
+      replay_h_old: bitstring, replay_h_new: bitstring,
+      replay_payload: bitstring, replay_sig_old: bitstring,
+      replay_sig_new: bitstring) = replay_token in
+  let (=true) = header_matches(replay_h_new, pk_new) in
+  let (=true) = jws_dual_verify2(replay_token, pk_new) in
+  let old_iat = get_iat(replay_payload) in
+  let old_exp = get_exp(replay_payload) in
   let (=true) = token_fresh(old_iat, old_exp, iat2) in
+  let (=iat1) = old_iat in
+  let (=exp1) = old_exp in
+  let replay_claim_key = s2pk(get_content(replay_payload)) in
+  let (=claim_key1) = replay_claim_key in
   let (=true) = iat_older(old_iat, iat2) in
   event KeyRotationOldReplayRejected(
       pk_new, old_iat, iat2)
@@ -173,6 +210,8 @@ query new_key: pkey, claim_key: pkey, iat: timestamp, exp: timestamp;
 query new_key: pkey, old_iat: timestamp, highest_iat: timestamp;
   event(KeyRotationOldReplayRejected(
       new_key, old_iat, highest_iat)).
+query old_key: pkey, new_key: pkey, token_type: bitstring, iat: timestamp;
+  event(HighestIatTransferred(old_key, new_key, token_type, iat)).
 query old_key: pkey, new_key: pkey;
   event(OldOnlyTokenAcceptedByNewKey(old_key, new_key)).
 
@@ -193,6 +232,12 @@ query new_key: pkey, old_iat: timestamp, highest_iat: timestamp;
   event(KeyRotationCutoverVerified(
       new_key, pk(gen_sk_for_id(claim_signing)),
       highest_iat, succ_t(succ_t(highest_iat)))).
+query old_key: pkey, new_key: pkey, iat: timestamp;
+  event(HighestIatTransferred(
+      old_key, new_key, token_type_key, iat)) ==>
+  event(DualSigAppKeyVerify(
+      old_key, new_key, pk(gen_sk_for_id(claim_signing)),
+      iat, succ_t(succ_t(iat)))).
 
 process
   RotationServer | OldApp | UpdatedApp | OldOnlySignatureAudit

@@ -68,7 +68,7 @@
         android:background="#fff3e0"
         android:padding="8dp"
         android:layout_marginBottom="16dp"
-        android:hint="Enter expected issuer"
+        android:hint="Authenticated issuer identifier(s)"
         android:inputType="text"
         android:selectAllOnFocus="true" />
 

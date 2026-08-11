@@ -39,6 +39,9 @@ public final class OsAspinClient {
             throws Exception {
         Objects.requireNonNull(context, "context");
         Objects.requireNonNull(hostname, "hostname");
+        if (targetAppId != null && targetAppId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Target app ID must not be empty");
+        }
         Object manager = context.getSystemService(SERVICE_NAME);
         if (manager == null) {
             throw new UnsupportedOperationException(
@@ -63,8 +66,14 @@ public final class OsAspinClient {
         }
 
         Class<?> claimClass = platformClaim.getClass();
+        String returnedHostname = (String) invokeNoArgs(
+                claimClass, platformClaim, "getHostname");
+        if (!ASPinVerifier.sameHostname(hostname, returnedHostname)) {
+            throw new IllegalStateException(
+                    "The OS-level ASPin response is not bound to the requested hostname");
+        }
         ASPinVerifier.CertificateClaim claim = new ASPinVerifier.CertificateClaim(
-                (String) invokeNoArgs(claimClass, platformClaim, "getHostname"),
+                hostname,
                 (String) invokeNoArgs(claimClass, platformClaim, "getSubject"),
                 copyStrings((List<?>) invokeNoArgs(
                         claimClass, platformClaim, "getSubjectAlternativeNames")),

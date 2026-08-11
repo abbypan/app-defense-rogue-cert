@@ -1,75 +1,57 @@
 package com.cert.aspin;
 
-import org.junit.Before;
+import org.json.JSONObject;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.ECPrivateKey;
-import java.security.interfaces.ECPublicKey;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
-import java.util.Date;
+import java.io.File;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import org.json.JSONObject;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import com.cert.aspin.JsonUtils;
-import com.cert.aspin.JwtVerifier;
-
-/**
- * Unit tests for JwtVerifier class
- * Tests JWT token creation and verification functionality
- */
+/** Checks the auxiliary verifier against the OS-level ASPin token schema. */
 public class JwtVerifierTest {
-
     @Test
-    public void main() throws Exception {
-        String alg = "es384";
-      //  String alg = "es256";
-       // String alg = "rsa4096";
-      //  String alg = "rsa3072";
+    public void verifiesCurrentTkAndTcSchema() throws Exception {
+        String variant = new File("..").getCanonicalFile().getName();
+        String appCertificate = JsonUtils.read_file(
+                "../../../signing/" + variant + "/my-app-cert.pem");
+        String tk = JsonUtils.read_file("src/main/resources/ClaimSigningKey.jwt");
+        String tc = JsonUtils.read_file("src/main/resources/ServerCertClaim.jwt");
 
-        String appcert = JsonUtils.read_file("src/main/resources/"+ alg + "/my-app-cert.pem");
-        //String cscert = JsonUtils.read_file("src/main/resources/my-claim-cert.pem");
+        com.nimbusds.jwt.SignedJWT parsedTk = com.nimbusds.jwt.SignedJWT.parse(tk);
+        com.nimbusds.jwt.SignedJWT parsedTc = com.nimbusds.jwt.SignedJWT.parse(tc);
+        assertEquals(Set.of("alg", "kid"), parsedTk.getHeader().getIncludedParams());
+        assertEquals(Set.of("alg", "kid"), parsedTc.getHeader().getIncludedParams());
 
-        String csjson = JsonUtils.read_file("src/main/resources/"+ alg + "/ClaimSigningKey.jwt");
-        //System.out.println(csjson);
+        JSONObject tkPayload = new JSONObject(JwtVerifier.verifyJwtWithCertDetails(
+                tk, appCertificate,
+                parsedTk.getJWTClaimsSet().getIssueTime().getTime()).getPayload());
+        assertEquals(Set.of("cnf", "iat", "exp"), keys(tkPayload));
+        assertTrue(tkPayload.getJSONObject("cnf").has("jwk"));
+        assertTrue(tkPayload.getLong("iat") < tkPayload.getLong("exp"));
 
-        String certclaim = JsonUtils.read_file("src/main/resources/"+ alg + "/ServerCertClaim.jwt");
-        //System.out.println(certclaim);
-
-        //X509Certificate certificate = PemUtils.parseX509Certificate(appcert);
-        
-        // Use the new method for JSON JWT verification
-        String csverifyres = JwtVerifier.verifyJwtWithCert(csjson, appcert);
-        System.out.println("verify csjson -> appcert: " + csverifyres);
-        String cs_jwk = JwtVerifier.extractConfirmationJwk(csverifyres);
-
-
-        //PublicKey publicKey = JwkToPublicKeyConverter.convertJwkToPublicKey(csverifyres);
-        String claimres = JwtVerifier.verifyJwtWithJwk(certclaim, cs_jwk);
-        System.out.println("verify certclaim -> csjwk: " + claimres);
-
-        JSONObject claimjs = new JSONObject(claimres);
-        String host = claimjs.getString("host");
-        String expissuer = claimjs.getString("issuer");
-        assertTrue(claimjs.has("subject"));
-        assertTrue(claimjs.has("san"));
-        assertTrue(claimjs.has("ttl"));
-        System.out.println("host: " + host + ", issuer: " + expissuer);
-
-      //  String csverifyres2 = JwtVerifier.verifyJwtWithCert(csjson, cscert);
-       // System.out.println("verify csjson -> cscert: " + csverifyres2);
-
-
+        String claimJwk = JwtVerifier.extractConfirmationJwk(tkPayload.toString());
+        JSONObject tcPayload = new JSONObject(JwtVerifier.verifyJwtWithJwkDetails(
+                tc, claimJwk,
+                parsedTc.getJWTClaimsSet().getIssueTime().getTime()).getPayload());
+        assertEquals(
+                Set.of("subject", "san", "issuer", "iat", "exp"),
+                keys(tcPayload));
+        assertTrue(tcPayload.getJSONArray("san").length() > 0);
+        assertTrue(tcPayload.getJSONArray("issuer").length() > 0);
+        assertTrue(tcPayload.getLong("iat") < tcPayload.getLong("exp"));
+        assertFalse(tcPayload.has("host"));
+        assertFalse(tcPayload.has("scope"));
+        assertFalse(tcPayload.has("ttl"));
     }
 
-   
+    private static Set<String> keys(JSONObject object) {
+        Set<String> result = new HashSet<>();
+        java.util.Iterator<String> iterator = object.keys();
+        while (iterator.hasNext()) result.add(iterator.next());
+        return result;
+    }
 }

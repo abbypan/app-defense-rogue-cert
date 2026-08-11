@@ -19,25 +19,29 @@ TEX_FRAGMENTS = (
     r"\subsubsection{CertClaimSign}",
     r"\subsubsection{ClaimKeyVerify}",
     r"\subsubsection{CertClaimVerify}",
-    r"\subsection{Secure Connection with CertClaimCheck}",
+    r"\subsection{App-Controlled CertClaimCheck}",
     r"iat_k \leq t_{\mathrm{now}} < exp_k",
     r"iat_c \leq t_{\mathrm{now}} < exp_c",
     r"signature covers $K_{cpub}$, $iat_k$, and $exp_k$",
-    r"signature covers $Claim$, $iat_c$, and $exp_c$",
-    "requested server hostname to be covered by the signed server identity",
+    r"signature covers $Claim=(Subject,SAN,IssuerSet)$, $iat_c$, and $exp_c$",
+    "requires the requested server hostname to be covered by the signed Subject/SAN",
+    r"IssuerId(c)=\mathrm{b64url}(\mathrm{SHA256}(\mathrm{DER}(c.issuer)))",
+    "Concrete DER parsing and SHA-256 are outside the symbolic model",
     "highest issuance time previously accepted",
     r"\mathrm{Cache}[K_{apub}]",
     "For each app-signing-key, requested-hostname, and token-type tuple",
     "keeps $T'_c$ available for at least two complete freshness windows",
     "both $sig_k^{old}$ and $sig_k^{new}$ over the identical transitional payload",
-    r"\caption{ProVerif Outputs for Rogue Certificates with Unexpected Issuer Names}",
+    r"\caption{ProVerif Outputs for Rogue Certificates with Unexpected Issuer Identifiers}",
     r"\caption{ProVerif Outputs for Claim Caching, Migration, Rollback, and Key Rotation}",
     r"For $\neg\,event(E)$",
     r"is also \texttt{true}, but is vacuous",
     r"\texttt{not event(CrossSigningKeyCacheHit(...))}",
     r"\texttt{not event(CrossHostnameCacheHit(...))}",
     r"\texttt{not event(OldOnlyTokenAcceptedByNewKey(...))}",
-    "Separate private phase-delivery channels",
+    "Private channels carry only phase markers",
+    "All verifier inputs come from the public channel",
+    "predecessors of both token types",
 )
 
 NETWORK_MODEL_FRAGMENTS = (
@@ -107,6 +111,9 @@ def check_sources() -> None:
             "iat_older(t, succ_t(t)) = true",
             "token_expired(t, t) = true",
             "jws_dual_sign",
+            "ttl_four",
+            "package_signing_record(bitstring, pkey)",
+            "resolve_platform_key(",
         ),
     )
     require_no_fragments(
@@ -141,11 +148,25 @@ def check_sources() -> None:
             "token_fresh(old_iat, common_exp, new_iat)",
             "iat_older(old_iat, new_iat)",
             "token_expired(exp, exp)",
+            "resolve_platform_key(target_record, target_app_id)",
+            "in(c, jwt(hk:",
+            "in(c, jwt(h0:",
+            "token_fresh(key_iat, key_exp, iat3)",
+            "RollbackRejected(token_type_claim",
+            "RollbackRejected(token_type_key",
         ),
     )
     require_no_fragments(
         ROOT / "aspin_cache.pv",
-        ("let true =", "jwt_verify(", "get_ttl(", "get_scope(", "window_final"),
+        (
+            "let true =",
+            "jwt_verify(",
+            "get_ttl(",
+            "get_scope(",
+            "window_final",
+            "out(migration_key_delivery, token_k)",
+            "out(migration_current_delivery, token0)",
+        ),
     )
     require_fragments(
         ROOT / "aspin_key_rotation.pv",
@@ -156,6 +177,8 @@ def check_sources() -> None:
             "token_fresh(old_iat, old_exp, iat2)",
             "iat_older(old_iat, iat2)",
             "OldOnlyTokenAcceptedByNewKey",
+            "HighestIatTransferred",
+            "in(c, replay_token:",
         ),
     )
     require_no_fragments(
@@ -254,7 +277,25 @@ def check_cache_migration() -> None:
     ):
         require_outcome(lines, (f"not event({invalid}",), "is true.")
 
-    require_outcome(lines, ("not event(RollbackRejected(",), "is false.")
+    require_outcome(
+        lines, ("not event(RollbackRejected(token_type,",), "is false."
+    )
+    require_outcome(
+        lines,
+        (
+            "not event(RollbackRejected(token_type_claim",
+            "migration_time_0[]",
+        ),
+        "is false.",
+    )
+    require_outcome(
+        lines,
+        (
+            "not event(RollbackRejected(token_type_key",
+            "migration_time_0[]",
+        ),
+        "is false.",
+    )
     require_outcome(lines, ("not event(ExpiredTokenRejected(",), "is false.")
     require_outcome(lines, ("not event(EmergencyTokenRevoked(",), "is false.")
     require_outcome(
@@ -320,6 +361,7 @@ def check_key_rotation() -> None:
         "KeyRotationNewAppVerified(",
         "KeyRotationCutoverVerified(",
         "KeyRotationOldReplayRejected(",
+        "HighestIatTransferred(",
     ):
         require_outcome(lines, (f"not event({event}",), "is false.")
     require_outcome(
@@ -328,6 +370,11 @@ def check_key_rotation() -> None:
     require_outcome(
         lines,
         ("event(KeyRotationNewAppVerified(", "==> event(KeyTokenPublished("),
+        "is true.",
+    )
+    require_outcome(
+        lines,
+        ("event(HighestIatTransferred(", "==> event(DualSigAppKeyVerify("),
         "is true.",
     )
     require_outcome(

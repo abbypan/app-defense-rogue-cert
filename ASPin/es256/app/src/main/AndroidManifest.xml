@@ -6,6 +6,11 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
+    <!-- Required by the cross-app benchmark flavor when it names com.cert.aspin. -->
+    <queries>
+        <package android:name="com.cert.aspin" />
+    </queries>
+
     <application
         android:requestLegacyExternalStorage="true"
         android:allowBackup="true"

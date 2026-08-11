@@ -63,10 +63,12 @@ wait_for_device_csv() {
 }
 
 echo "--> Building and signing all algorithm-specific APKs using gen-signed-apks.py..."
-python3 "$SCRIPT_DIR/gen-signed-apks.py" --output-dir "$APKS_DIR"
+python3 "$SCRIPT_DIR/gen-trust-artifacts.py"
+python3 "$SCRIPT_DIR/check-implementation-consistency.py"
+python3 "$SCRIPT_DIR/gen-signed-apks.py" --workers 24 --output-dir "$APKS_DIR"
 
 SUMMARY_CSV="$RESULTS_DIR/table_avgvisittime_summary.csv"
-echo "Algorithm,ServerPhase,Iterations,Host,StandardTLS_Avg_ms,ASPin_Avg_ms,SCP_Avg_ms,DCP_Avg_ms,TLS_Success_Standard,TLS_Success_ASPin,TLS_Success_SCP,TLS_Success_DCP,HTML_Standard,HTML_ASPin,HTML_SCP,HTML_DCP,Matches_TeX_Design,Timestamp" > "$SUMMARY_CSV"
+echo "Algorithm,ServerPhase,Iterations,Host,StandardTLS_Mean_ms,ASPin_Mean_ms,SCP_Mean_ms,DCP_Mean_ms,StandardTLS_P95_ms,StandardTLS_P99_ms,ASPin_P95_ms,ASPin_P99_ms,SCP_P95_ms,SCP_P99_ms,DCP_P95_ms,DCP_P99_ms,TLS_Success_Standard,TLS_Success_ASPin,TLS_Success_SCP,TLS_Success_DCP,HTML_Standard,HTML_ASPin,HTML_SCP,HTML_DCP,Matches_TeX_Design,Timestamp" > "$SUMMARY_CSV"
 
 for ALG in es256 es384 rsa3072 rsa4096; do
     TARGET_APK="$APKS_DIR/ASPin-${ALG}.apk"

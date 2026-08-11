@@ -27,6 +27,7 @@ free curr: timestamp.
 const ttl_one: ttl.
 const ttl_two: ttl.
 const ttl_three: ttl.
+const ttl_four: ttl.
 
 const app_signing: bitstring.
 const other_app_signing: bitstring.
@@ -46,6 +47,18 @@ reduc forall m: bitstring, sk: skey;
       sig_verify(m, sig_sign(m, sk), pk(sk)) = true.
 
 fun gen_sk_for_id(bitstring): skey [private].
+
+(* The caller supplies an app identifier, never a public key.  This private
+ * resolver abstracts the OS/package-manager association between an installed
+ * app identifier and its verified signing certificate.  In the cache model,
+ * App A is signed by other_app_signing and selects target App B, signed by
+ * app_signing. *)
+const caller_app_id: bitstring.
+const target_app_id: bitstring.
+fun package_signing_record(bitstring, pkey): bitstring [private].
+reduc forall app_id: bitstring, signing_key: pkey;
+      resolve_platform_key(
+          package_signing_record(app_id, signing_key), app_id) = signing_key.
 
 (* X.509 and native TLS validation abstraction.  Both issuers are in the
  * uncompromised system trust store; ASPin must reject the unexpected one. *)
@@ -93,7 +106,20 @@ reduc forall t: timestamp;
       token_fresh(t5, succ_t(succ_t(succ_t(t5))), succ_t(t5)) = true;
       forall t6: timestamp;
       token_fresh(
-          t6, succ_t(succ_t(succ_t(t6))), succ_t(succ_t(t6))) = true.
+          t6, succ_t(succ_t(succ_t(t6))), succ_t(succ_t(t6))) = true;
+      forall t7: timestamp;
+      token_fresh(t7, succ_t(succ_t(succ_t(succ_t(t7)))), t7) = true;
+      forall t8: timestamp;
+      token_fresh(
+          t8, succ_t(succ_t(succ_t(succ_t(t8)))), succ_t(t8)) = true;
+      forall t9: timestamp;
+      token_fresh(
+          t9, succ_t(succ_t(succ_t(succ_t(t9)))),
+          succ_t(succ_t(t9))) = true;
+      forall t10: timestamp;
+      token_fresh(
+          t10, succ_t(succ_t(succ_t(succ_t(t10)))),
+          succ_t(succ_t(succ_t(t10)))) = true.
 
 (* ttl is derived from exp - iat; it is not trusted token input. *)
 reduc forall t: timestamp;
@@ -101,7 +127,10 @@ reduc forall t: timestamp;
       forall t2: timestamp;
       derive_ttl(t2, succ_t(succ_t(t2))) = ttl_two;
       forall t3: timestamp;
-      derive_ttl(t3, succ_t(succ_t(succ_t(t3)))) = ttl_three.
+      derive_ttl(t3, succ_t(succ_t(succ_t(t3)))) = ttl_three;
+      forall t4: timestamp;
+      derive_ttl(
+          t4, succ_t(succ_t(succ_t(succ_t(t4))))) = ttl_four.
 
 (* Highest-seen-iat comparisons for the finite lifecycle traces. *)
 reduc forall t: timestamp;

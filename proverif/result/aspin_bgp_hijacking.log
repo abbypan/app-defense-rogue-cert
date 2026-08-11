@@ -193,21 +193,21 @@ Process 0 (that is, the initial process):
 -- Query event(ClaimKeyVerify(pk(app_sk),claim_pk,iat,exp)) ==> event(ClaimKeySign(app_sk,claim_pk,iat,exp)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 157 rules (80 with conclusion selected). Queue: 3 rules.
+200 rules inserted. Base: 159 rules (83 with conclusion selected). Queue: 3 rules.
 Starting query event(ClaimKeyVerify(pk(app_sk),claim_pk,iat,exp)) ==> event(ClaimKeySign(app_sk,claim_pk,iat,exp))
 goal reachable: b-event(ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),curr[],succ_t(curr[]))) -> event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),curr[],succ_t(curr[])))
 RESULT event(ClaimKeyVerify(pk(app_sk),claim_pk,iat,exp)) ==> event(ClaimKeySign(app_sk,claim_pk,iat,exp)) is true.
 -- Query event(CertClaimVerify(pk(claim_sk),identity,issuer,iat,exp)) ==> event(CertClaimSign(claim_sk,identity,issuer,iat,exp)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 162 rules (80 with conclusion selected). Queue: 3 rules.
+200 rules inserted. Base: 165 rules (83 with conclusion selected). Queue: 2 rules.
 Starting query event(CertClaimVerify(pk(claim_sk),identity,issuer,iat,exp)) ==> event(CertClaimSign(claim_sk,identity,issuer,iat,exp))
 goal reachable: b-event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,curr[],succ_t(curr[]))) -> event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,curr[],succ_t(curr[])))
 RESULT event(CertClaimVerify(pk(claim_sk),identity,issuer,iat,exp)) ==> event(CertClaimSign(claim_sk,identity,issuer,iat,exp)) is true.
 -- Query not event(RSAccept(h,th,data,cert_3,ciphertext_3)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 160 rules (80 with conclusion selected). Queue: 1 rules.
+200 rules inserted. Base: 162 rules (83 with conclusion selected). Queue: 3 rules.
 Starting query not event(RSAccept(h,th,data,cert_3,ciphertext_3))
 goal reachable: event(RSAccept(server_hostname,transcript_hash(client_hello(client_random_1,pk(sk_ephemeral_3)),server_hello(server_random_3,pk(sk_ephemeral_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_ephemeral_3,pk(sk_ephemeral_4)),transcript_hash(client_hello(client_random_1,pk(sk_ephemeral_3)),server_hello(server_random_3,pk(sk_ephemeral_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1)))
 Abbreviations:
@@ -1320,7 +1320,7 @@ RESULT not event(RSAccept(h,th,data,cert_3,ciphertext_3)) is false.
 -- Query not event(AppConnRS(h,th,data,cert_3,ciphertext_3)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 160 rules (79 with conclusion selected). Queue: 6 rules.
+200 rules inserted. Base: 162 rules (82 with conclusion selected). Queue: 4 rules.
 Starting query not event(AppConnRS(h,th,data,cert_3,ciphertext_3))
 goal reachable: event(AppConnRS(server_hostname,transcript_hash(client_hello(client_random_1,pk(sk_ephemeral_3)),server_hello(server_random_3,pk(sk_ephemeral_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_ephemeral_3,pk(sk_ephemeral_4)),transcript_hash(client_hello(client_random_1,pk(sk_ephemeral_3)),server_hello(server_random_3,pk(sk_ephemeral_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1)))
 Abbreviations:
@@ -2377,7 +2377,7 @@ RESULT not event(AppConnRS(h,th,data,cert_3,ciphertext_3)) is false.
 -- Query event(RSAccept(h,th,data,cert_3,ciphertext_3)) ==> event(AppConnRS(h,th,data,cert_3,ciphertext_3)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 160 rules (80 with conclusion selected). Queue: 1 rules.
+200 rules inserted. Base: 162 rules (83 with conclusion selected). Queue: 3 rules.
 Starting query event(RSAccept(h,th,data,cert_3,ciphertext_3)) ==> event(AppConnRS(h,th,data,cert_3,ciphertext_3))
 goal reachable: b-event(AppConnRS(server_hostname,transcript_hash(client_hello(client_random_1,pk(sk_ephemeral_3)),server_hello(server_random_3,pk(sk_ephemeral_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_ephemeral_3,pk(sk_ephemeral_4)),transcript_hash(client_hello(client_random_1,pk(sk_ephemeral_3)),server_hello(server_random_3,pk(sk_ephemeral_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1))) -> event(RSAccept(server_hostname,transcript_hash(client_hello(client_random_1,pk(sk_ephemeral_3)),server_hello(server_random_3,pk(sk_ephemeral_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_ephemeral_3,pk(sk_ephemeral_4)),transcript_hash(client_hello(client_random_1,pk(sk_ephemeral_3)),server_hello(server_random_3,pk(sk_ephemeral_4)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1)))
 Abbreviations:
@@ -2390,7 +2390,7 @@ RESULT event(RSAccept(h,th,data,cert_3,ciphertext_3)) ==> event(AppConnRS(h,th,d
 -- Query not event(AppReject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 163 rules (79 with conclusion selected). Queue: 4 rules.
+200 rules inserted. Base: 165 rules (82 with conclusion selected). Queue: 6 rules.
 Starting query not event(AppReject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer))
 goal reachable: event(AppReject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer))
 
@@ -3395,17 +3395,19 @@ RESULT not event(AppReject(server_hostname,server_cert_subject_and_san,rogue_cer
 -- Query not event(MSAccept(h,th,data,cert_3,ciphertext_3)) in process 1.
 Translating the process into Horn clauses...
 Completing...
+200 rules inserted. Base: 162 rules (83 with conclusion selected). Queue: 2 rules.
 Starting query not event(MSAccept(h,th,data,cert_3,ciphertext_3))
 RESULT not event(MSAccept(h,th,data,cert_3,ciphertext_3)) is true.
 -- Query not event(AppConnMS(h,th,data,cert_3,ciphertext_3)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 160 rules (79 with conclusion selected). Queue: 2 rules.
+200 rules inserted. Base: 163 rules (82 with conclusion selected). Queue: 3 rules.
 Starting query not event(AppConnMS(h,th,data,cert_3,ciphertext_3))
 RESULT not event(AppConnMS(h,th,data,cert_3,ciphertext_3)) is true.
 -- Query event(MSAccept(h,th,data,cert_3,ciphertext_3)) ==> event(AppConnMS(h,th,data,cert_3,ciphertext_3)) in process 1.
 Translating the process into Horn clauses...
 Completing...
+200 rules inserted. Base: 162 rules (83 with conclusion selected). Queue: 2 rules.
 Starting query event(MSAccept(h,th,data,cert_3,ciphertext_3)) ==> event(AppConnMS(h,th,data,cert_3,ciphertext_3))
 RESULT event(MSAccept(h,th,data,cert_3,ciphertext_3)) ==> event(AppConnMS(h,th,data,cert_3,ciphertext_3)) is true.
 

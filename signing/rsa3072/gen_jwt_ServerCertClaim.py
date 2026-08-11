@@ -4,11 +4,11 @@ import base64
 import hashlib
 import json
 import os
-import ssl
 import sys
 import time
 from pathlib import Path
 
+from cryptography import x509
 from jwcrypto import jwk, jws
 from jwcrypto.common import json_encode
 
@@ -30,35 +30,32 @@ def pem_public_key_der_b64(path):
     )
 
 
-def x509_name_to_string(name):
-    name_map = {
-        "commonName": "CN",
-        "countryName": "C",
-        "localityName": "L",
-        "organizationName": "O",
-        "organizationalUnitName": "OU",
-        "stateOrProvinceName": "ST",
-    }
-    return ", ".join(
-        name_map.get(key, key) + "=" + value
-        for rdn in reversed(name)
-        for key, value in rdn
-    )
+def issuer_identifier(certificate):
+    """Return a provider-independent identifier for the DER X.500 issuer Name."""
+    issuer_der = certificate.issuer.public_bytes()
+    digest = hashlib.sha256(issuer_der).digest()
+    return "sha256:" + base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
 
 
 def read_cert_claim(server_cert):
-    cert_info = ssl._ssl._test_decode_cert(server_cert)
-    sans = [
-        value
-        for san_type, value in cert_info.get("subjectAltName", [])
-        if san_type == "DNS"
-    ]
+    certificate = x509.load_pem_x509_certificate(Path(server_cert).read_bytes())
+    try:
+        extension = certificate.extensions.get_extension_for_class(
+            x509.SubjectAlternativeName
+        ).value
+        sans = [
+            str(name.value)
+            for name in extension
+            if isinstance(name, (x509.DNSName, x509.IPAddress))
+        ]
+    except x509.ExtensionNotFound:
+        sans = []
     if not sans:
-        raise ValueError("The server certificate must contain at least one DNS SAN")
+        raise ValueError("The server certificate must contain a DNS or IP SAN")
     return (
-        x509_name_to_string(cert_info["subject"]),
+        certificate.subject.rfc4514_string(),
         sans,
-        x509_name_to_string(cert_info["issuer"]),
+        issuer_identifier(certificate),
     )
 
 
@@ -92,7 +89,6 @@ protected_header = json_encode({
     "kid": base64.urlsafe_b64encode(
         hashlib.sha256(claim_public_key_der).digest()
     ).rstrip(b"=").decode("ascii"),
-    "pubkey": claim_public_key_b64,
 })
 
 private_key = jwk.JWK.from_pem(Path("my-claim-key.pem").read_bytes(), None)

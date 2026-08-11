@@ -105,7 +105,7 @@ public class PemUtils {    public static PublicKey parsePublicKey(String publicK
         try {
             // Remove PEM headers and footers
             String privateKeyContent = privateKeyPem
-                    .replaceAll("\\n", "")
+                    .replaceAll("\\s", "")
                     .replace("-----BEGIN PRIVATE KEY-----", "")
                     .replace("-----END PRIVATE KEY-----", "")
                     .replace("-----BEGIN EC PRIVATE KEY-----", "")
@@ -159,7 +159,7 @@ public class PemUtils {    public static PublicKey parsePublicKey(String publicK
         try {
             // Remove PEM headers and footers
             String privateKeyContent = privateKeyPem
-                    .replaceAll("\\n", "")
+                    .replaceAll("\\s", "")
                     .replace("-----BEGIN PRIVATE KEY-----", "")
                     .replace("-----END PRIVATE KEY-----", "")
                     .replace("-----BEGIN RSA PRIVATE KEY-----", "")
@@ -193,7 +193,7 @@ public class PemUtils {    public static PublicKey parsePublicKey(String publicK
             String certificateContent = certificatePem
                     .replace("-----BEGIN CERTIFICATE-----", "")
                     .replace("-----END CERTIFICATE-----", "")
-                    .replaceAll("\\n", "")
+                    .replaceAll("\\s", "")
                     .trim();
 
 

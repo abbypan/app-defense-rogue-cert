@@ -103,10 +103,11 @@ public class HttpsConn {
                 certificate -> DCPVerifier.verifyCertificatePin(certificate, exp_spk));
     }
 
-    private static TrustManager[] getASPinTrustManagers(ASPinVerifier.CertificateClaim claim)
+    private static TrustManager[] getASPinTrustManagers(
+            String host, ASPinVerifier.CertificateClaim claim)
             throws Exception {
         return getSupplementaryTrustManagers(
-                certificate -> ASPinVerifier.verifyCertificate(claim, certificate));
+                certificate -> ASPinVerifier.verifyCertificate(host, claim, certificate));
     }
 
     private interface CertificateCheck {
@@ -249,7 +250,7 @@ public class HttpsConn {
         resolveHost(host);
         URL url = URI.create("https://" + host).toURL();
         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-        TrustManager[] trustManagers = getASPinTrustManagers(authenticatedClaim);
+        TrustManager[] trustManagers = getASPinTrustManagers(host, authenticatedClaim);
         SSLContext sslContext = SSLContext.getInstance("TLS");
         sslContext.init(null, trustManagers, new SecureRandom());
         connection.setSSLSocketFactory(sslContext.getSocketFactory());

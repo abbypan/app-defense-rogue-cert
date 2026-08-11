@@ -28,8 +28,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String ASPIN_TARGET_APP_ID = "com.cert.aspin";
     private static final String ASPIN_HOST = "es256.idouzi.top";
     private static final String DCP_HOST = "dcp.idouzi.top";
-    //private static final String ASPIN_ISSUER = "CN=E7, O=Let's Encrypt, C=US";
-    private static final String ASPIN_ISSUER = "CN=test issuer";
 
     private HttpsConn httpsConn;
    // private AppInfoManager appInfoManager;
@@ -92,9 +90,6 @@ public class MainActivity extends AppCompatActivity {
         // Set initial host display
         updateHostDisplay(ASPIN_HOST);
         updateDCPHostDisplay(DCP_HOST);
-
-        // Set initial expected issuer display
-        updateExpIssuerDisplay(ASPIN_ISSUER);
 
         // Set up button click listeners
         GetHTTPContentButton.setOnClickListener(v -> {
@@ -166,16 +161,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Update the expected issuer display EditText
-     * @param expIssuer The expected issuer to display
-     */
-    public void updateExpIssuerDisplay(String expIssuer) {
-        if (expIssuerTextView != null) {
-            expIssuerTextView.setText(expIssuer);
-        }
-    }
-
     public void updateExpSPKDisplay(String expSPK) {
         if (expSPKTextView != null) {
             expSPKTextView.setText(expSPK);
@@ -199,9 +184,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private ASPinVerifier.CertificateClaim getValidatedAspinClaim(String host) throws Exception {
+        return getValidatedAspinClaimResult(host).getClaim();
+    }
+
+    private OsAspinClient.Result getValidatedAspinClaimResult(String host) throws Exception {
         return isOwnAspinTarget()
-                ? AppTrustedServerCert.getValidatedServerCertClaim(this, host)
-                : AppTrustedServerCert.getValidatedServerCertClaimForApp(
+                ? OsAspinClient.getCertificateClaim(this, host)
+                : OsAspinClient.getCertificateClaimForApp(
                         this, ASPIN_TARGET_APP_ID, host);
     }
 
@@ -250,18 +239,6 @@ public class MainActivity extends AppCompatActivity {
             return host.isEmpty() ? DCP_HOST : host;
         }
         return DCP_HOST;
-    }
-
-    /**
-     * Get the current expected issuer from the EditText
-     * @return The current expected issuer, or default issuer if empty
-     */
-    public String getCurrentExpIssuer() {
-        if (expIssuerTextView != null) {
-            String expIssuer = expIssuerTextView.getText().toString().trim();
-            return expIssuer.isEmpty() ? ASPIN_ISSUER : expIssuer;
-        }
-        return ASPIN_ISSUER;
     }
 
     public String getCurrentExpSPK() {
@@ -412,16 +389,15 @@ public class MainActivity extends AppCompatActivity {
         // Perform benchmark on background thread
         new Thread(() -> {
             try {
-                // Get the JWT and certificate for benchmarking
                 String host = getCurrentHost();
-                String appcert = AppInfo.getPrimarySigningCert(this);
-
-                // Get the JWT token to benchmark
-                HttpsURLConnection csconn = HttpsConn.create_conn("https://" + host + "/.well-known/ClaimSigningKey.jwt");
-                String csjwt = HttpsConn.get_content(csconn);
-
-                // Run benchmark with dynamic iterations
-                String benchmarkResults = BenchmarkVerifier.runVerifyJwtCskBenchmark(csjwt, appcert, maxAttempts);
+                long[] durations = new long[maxAttempts];
+                for (int i = 0; i < maxAttempts; i++) {
+                    durations[i] = refreshValidatedAspinClaim(host)
+                            .getClaimKeyDownloadAndVerificationNanos();
+                }
+                String benchmarkResults = String.format(Locale.ROOT,
+                        "OS-level T_k download and verification: mean %.3f ms over %d refreshes",
+                        meanMillis(durations), maxAttempts);
 
                 // Update the response text view with benchmark results on main thread
                 mainHandler.post(() -> {
@@ -456,24 +432,15 @@ public class MainActivity extends AppCompatActivity {
         // Perform benchmark on background thread
         new Thread(() -> {
             try {
-                // Get the JWT and JWK for benchmarking
                 String host = getCurrentHost();
-                String appcert = AppInfo.getPrimarySigningCert(this);
-
-                // Get the signing key JWT
-                HttpsURLConnection csconn = HttpsConn.create_conn("https://" + host + "/.well-known/ClaimSigningKey.jwt");
-                String csjwt = HttpsConn.get_content(csconn);
-
-                // Verify the signing key JWT to get the JWK
-                String csverifyres = JwtVerifier.verifyJwtWithCert(csjwt, appcert);
-                String cs_jwk = JwtVerifier.extractConfirmationJwk(csverifyres);
-
-                // Get the certificate claim JWT
-                HttpsURLConnection certconn = HttpsConn.create_conn("https://" + host + "/.well-known/ServerCertClaim.jwt");
-                String certclaim = HttpsConn.get_content(certconn);
-
-                // Run benchmark with dynamic iterations
-                String benchmarkResults = BenchmarkVerifier.runVerifyJwtSccBenchmark(certclaim, cs_jwk, maxAttempts);
+                long[] durations = new long[maxAttempts];
+                for (int i = 0; i < maxAttempts; i++) {
+                    durations[i] = refreshValidatedAspinClaim(host)
+                            .getClaimDownloadAndVerificationNanos();
+                }
+                String benchmarkResults = String.format(Locale.ROOT,
+                        "OS-level T_c download and verification: mean %.3f ms over %d refreshes",
+                        meanMillis(durations), maxAttempts);
 
                 // Update the response text view with benchmark results on main thread
                 mainHandler.post(() -> {
@@ -837,6 +804,15 @@ public class MainActivity extends AppCompatActivity {
             runTableAvgVerifTimeBenchmarkAuto(iterations, csvPath);
         } else if ("avgvisittime".equalsIgnoreCase(benchmarkType)) {
             runTableAvgVisitTimeBenchmarkAuto(iterations, csvPath);
+        } else if ("concurrency".equalsIgnoreCase(benchmarkType)) {
+            runConcurrencyBenchmarkAuto(iterations,
+                    intent.getIntExtra("threads", 8), csvPath);
+        } else if ("claimprobe".equalsIgnoreCase(benchmarkType)) {
+            runClaimProbeBenchmarkAuto(csvPath,
+                    intent.getBooleanExtra("expect_success", true),
+                    intent.getStringExtra("probe_label"),
+                    intent.getBooleanExtra("force_refresh", false),
+                    intent.getStringExtra("expected_error"));
         }
     }
 
@@ -855,25 +831,29 @@ public class MainActivity extends AppCompatActivity {
 
                 String dcpPublicKeyPem = readResourceFile("my-dcp-pubkey.pem");
 
-                long tkTotalNanos = 0;
-                long tcTotalNanos = 0;
-                boolean tkSuccess = true;
-                boolean tcSuccess = true;
+                long[] tkDurations = new long[maxAttempts];
+                long[] tcDurations = new long[maxAttempts];
+                long[] totalDurations = new long[maxAttempts];
+                int aspinSuccesses = 0;
                 for (int attempt = 0; attempt < maxAttempts; attempt++) {
+                    long totalStart = System.nanoTime();
                     OsAspinClient.Result result = refreshValidatedAspinClaim(host);
+                    totalDurations[attempt] = System.nanoTime() - totalStart;
                     long tkNanos = result.getClaimKeyDownloadAndVerificationNanos();
                     long tcNanos = result.getClaimDownloadAndVerificationNanos();
                     if (result.getClaim() == null || tkNanos <= 0 || tcNanos <= 0) {
-                        tkSuccess = tkSuccess && tkNanos > 0;
-                        tcSuccess = tcSuccess && tcNanos > 0;
+                        throw new IllegalStateException(
+                                "Incomplete ASPin refresh at attempt " + attempt);
                     }
-                    tkTotalNanos += tkNanos;
-                    tcTotalNanos += tcNanos;
+                    aspinSuccesses++;
+                    tkDurations[attempt] = tkNanos;
+                    tcDurations[attempt] = tcNanos;
                 }
 
-                long dcpTotalNanos = 0;
-                boolean dcpSuccess = true;
-                String dcpUrl = "http://dcp.idouzi.top/.well-known/DCPServerCertPin-"
+                long[] dcpDurations = new long[maxAttempts];
+                int dcpSuccesses = 0;
+                String dcpUrl = "http://" + getDCPHost()
+                        + "/.well-known/DCPServerCertPin-"
                         + alg + ".json";
                 for (int attempt = 0; attempt < maxAttempts; attempt++) {
                     long dcpStart = System.nanoTime();
@@ -882,32 +862,49 @@ public class MainActivity extends AppCompatActivity {
                         String dcpPin = DCPVerifier.verifyDCPWithPublicKeyPem(
                                 dcpJson, dcpPublicKeyPem);
                         if (dcpPin == null || dcpPin.isEmpty()) {
-                            dcpSuccess = false;
-                            break;
+                            throw new IllegalStateException(
+                                    "Empty DCP result at attempt " + attempt);
                         }
-                    } catch (Exception e) {
-                        dcpSuccess = false;
-                        throw e;
+                        dcpSuccesses++;
                     } finally {
-                        dcpTotalNanos += System.nanoTime() - dcpStart;
+                        dcpDurations[attempt] = System.nanoTime() - dcpStart;
                     }
                 }
 
-                double tkTimeMs = tkTotalNanos / 1_000_000.0 / maxAttempts;
-                double tcTimeMs = tcTotalNanos / 1_000_000.0 / maxAttempts;
-                double dcpTimeMs = dcpTotalNanos / 1_000_000.0 / maxAttempts;
+                double tkTimeMs = meanMillis(tkDurations);
+                double tcTimeMs = meanMillis(tcDurations);
+                double totalTimeMs = meanMillis(totalDurations);
+                double totalP50Ms = percentileMillis(totalDurations, 0.50);
+                double totalP95Ms = percentileMillis(totalDurations, 0.95);
+                double totalP99Ms = percentileMillis(totalDurations, 0.99);
+                double dcpTimeMs = meanMillis(dcpDurations);
+                double dcpP50Ms = percentileMillis(dcpDurations, 0.50);
+                double dcpP95Ms = percentileMillis(dcpDurations, 0.95);
+                double dcpP99Ms = percentileMillis(dcpDurations, 0.99);
+                boolean benchmarkPassed =
+                        aspinSuccesses == maxAttempts && dcpSuccesses == maxAttempts;
 
                 String displayName = algDisplayNames.getOrDefault(alg, alg);
                 String timestamp = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT).format(new java.util.Date());
-                String header = "Algorithm,Iterations,Tk_Avg_ms,Tc_Avg_ms,DCP_Avg_ms,Timestamp";
-                String csvRow = String.format(Locale.ROOT, "%s,%d,%.2f,%.2f,%.2f,%s", displayName, maxAttempts, tkTimeMs, tcTimeMs, dcpTimeMs, timestamp);
+                String header = "Algorithm,Iterations,Tk_Mean_ms,Tc_Mean_ms,ASPin_Total_Mean_ms,ASPin_Total_P50_ms,ASPin_Total_P95_ms,ASPin_Total_P99_ms,DCP_Mean_ms,DCP_P50_ms,DCP_P95_ms,DCP_P99_ms,ASPin_Success_Count,DCP_Success_Count,Result,Timestamp";
+                String csvRow = String.format(Locale.ROOT,
+                        "%s,%d,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d,%d,%s,%s",
+                        displayName, maxAttempts, tkTimeMs, tcTimeMs, totalTimeMs,
+                        totalP50Ms, totalP95Ms, totalP99Ms, dcpTimeMs,
+                        dcpP50Ms, dcpP95Ms, dcpP99Ms, aspinSuccesses,
+                        dcpSuccesses, benchmarkPassed ? "PASS" : "FAIL", timestamp);
 
                 saveCsvResult(csvPath, header, csvRow);
 
                 String report = "[" + displayName + " Verification Benchmark Result (" + maxAttempts + " iterations)]\n" +
-                        "1. ASPin Tk Download + Verification (OS service): " + (tkSuccess ? "SUCCESS" : "FAILED") + " (Avg: " + String.format(Locale.ROOT, "%.2f", tkTimeMs) + " ms)\n" +
-                        "2. ASPin Tc Download + Verification (OS service): " + (tcSuccess ? "SUCCESS" : "FAILED") + " (Avg: " + String.format(Locale.ROOT, "%.2f", tcTimeMs) + " ms)\n" +
-                        "3. DCP Pin Verification (Preset DCP PubKey): " + (dcpSuccess ? "SUCCESS" : "FAILED") + " (Avg: " + String.format(Locale.ROOT, "%.2f", dcpTimeMs) + " ms)\n" +
+                        "1. ASPin Tk Download + Verification (OS service): " + aspinSuccesses + "/" + maxAttempts + " (Avg: " + String.format(Locale.ROOT, "%.2f", tkTimeMs) + " ms)\n" +
+                        "2. ASPin Tc Download + Verification (OS service): " + aspinSuccesses + "/" + maxAttempts + " (Avg: " + String.format(Locale.ROOT, "%.2f", tcTimeMs) + " ms)\n" +
+                        "3. Complete ASPin refresh (IPC + Tk + Tc + persistence + cache commit): " +
+                        String.format(Locale.ROOT, "mean %.2f, p50 %.2f, p95 %.2f, p99 %.2f ms\n",
+                                totalTimeMs, totalP50Ms, totalP95Ms, totalP99Ms) +
+                        "4. DCP Pin Verification (Preset DCP PubKey): " + dcpSuccesses + "/" + maxAttempts +
+                        String.format(Locale.ROOT, " (mean %.2f, p50 %.2f, p95 %.2f, p99 %.2f ms)\n",
+                                dcpTimeMs, dcpP50Ms, dcpP95Ms, dcpP99Ms) +
                         "Saved to CSV: " + csvPath;
 
                 mainHandler.post(() -> {
@@ -943,7 +940,8 @@ public class MainActivity extends AppCompatActivity {
 
                 String dcpPin = null;
                 try {
-                    String dcpJson = HttpsConn.getHttpContent("http://dcp.idouzi.top/.well-known/DCPServerCertPin-" + alg + ".json");
+                    String dcpJson = HttpsConn.getHttpContent("http://" + getDCPHost()
+                            + "/.well-known/DCPServerCertPin-" + alg + ".json");
                     dcpPin = DCPVerifier.verifyPresetDCP(dcpJson);
                 } catch (Exception e) {
                     Log.w(TAG, "Failed to get DCP pin via HTTP: " + e.getMessage());
@@ -960,7 +958,10 @@ public class MainActivity extends AppCompatActivity {
                 final String cachedDcpPin = dcpPin;
                 final String cachedScpHash = scpHash;
 
-                long totalTimeStandardTlsUs = 0, totalTimeASPinUs = 0, totalTimeSCPUs = 0, totalTimeDCPUs = 0;
+                long[] standardTlsDurations = new long[iterations];
+                long[] aspinDurations = new long[iterations];
+                long[] scpDurations = new long[iterations];
+                long[] dcpDurations = new long[iterations];
                 int successStandardTls = 0, successASPin = 0, successSCP = 0, successDCP = 0;
                 String htmlStandard = "N/A", htmlASPin = "N/A", htmlSCP = "N/A", htmlDCP = "N/A";
 
@@ -977,7 +978,7 @@ public class MainActivity extends AppCompatActivity {
                     } catch (Throwable e) {
                         if (i == 1) Log.e(TAG, "StandardTLS fail: " + e.getClass().getName() + ": " + e.getMessage(), e);
                     } finally {
-                        totalTimeStandardTlsUs += (System.nanoTime() - t0) / 1000;
+                        standardTlsDurations[i - 1] = System.nanoTime() - t0;
                     }
 
                     long t1 = System.nanoTime();
@@ -993,7 +994,7 @@ public class MainActivity extends AppCompatActivity {
                     } catch (Throwable e) {
                         if (i == 1) Log.e(TAG, "ASPin fail: " + e.getClass().getName() + ": " + e.getMessage(), e);
                     } finally {
-                        totalTimeASPinUs += (System.nanoTime() - t1) / 1000;
+                        aspinDurations[i - 1] = System.nanoTime() - t1;
                     }
 
                     long t2 = System.nanoTime();
@@ -1009,7 +1010,7 @@ public class MainActivity extends AppCompatActivity {
                     } catch (Throwable e) {
                         if (i == 1) Log.e(TAG, "SCP fail: " + e.getClass().getName() + ": " + e.getMessage(), e);
                     } finally {
-                        totalTimeSCPUs += (System.nanoTime() - t2) / 1000;
+                        scpDurations[i - 1] = System.nanoTime() - t2;
                     }
 
                     long t3 = System.nanoTime();
@@ -1025,14 +1026,14 @@ public class MainActivity extends AppCompatActivity {
                     } catch (Throwable e) {
                         if (i == 1) Log.e(TAG, "DCP fail: " + e.getClass().getName() + ": " + e.getMessage(), e);
                     } finally {
-                        totalTimeDCPUs += (System.nanoTime() - t3) / 1000;
+                        dcpDurations[i - 1] = System.nanoTime() - t3;
                     }
                 }
 
-                double avgStandardTlsMs = (totalTimeStandardTlsUs / 1000.0) / iterations;
-                double avgASPinMs = (totalTimeASPinUs / 1000.0) / iterations;
-                double avgSCPMs = (totalTimeSCPUs / 1000.0) / iterations;
-                double avgDCPMs = (totalTimeDCPUs / 1000.0) / iterations;
+                double avgStandardTlsMs = meanMillis(standardTlsDurations);
+                double avgASPinMs = meanMillis(aspinDurations);
+                double avgSCPMs = meanMillis(scpDurations);
+                double avgDCPMs = meanMillis(dcpDurations);
 
                 String serverPhase = getIntent().getStringExtra("server_phase");
                 boolean rogueServerPhase = "rogueserver".equalsIgnoreCase(serverPhase);
@@ -1047,9 +1048,17 @@ public class MainActivity extends AppCompatActivity {
 
                 String displayName = algDisplayNames.getOrDefault(alg, alg);
                 String timestamp = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT).format(new java.util.Date());
-                String header = "Algorithm,Iterations,Host,StandardTLS_Avg_ms,ASPin_Avg_ms,SCP_Avg_ms,DCP_Avg_ms,TLS_Success_Standard,TLS_Success_ASPin,TLS_Success_SCP,TLS_Success_DCP,HTML_Standard,HTML_ASPin,HTML_SCP,HTML_DCP,Matches_TeX_Design,Timestamp";
-                String csvRow = String.format(Locale.ROOT, "%s,%d,%s,%.2f,%.2f,%.2f,%.2f,%d,%d,%d,%d,\"%s\",\"%s\",\"%s\",\"%s\",%s,%s",
+                String header = "Algorithm,Iterations,Host,StandardTLS_Mean_ms,ASPin_Mean_ms,SCP_Mean_ms,DCP_Mean_ms,StandardTLS_P95_ms,StandardTLS_P99_ms,ASPin_P95_ms,ASPin_P99_ms,SCP_P95_ms,SCP_P99_ms,DCP_P95_ms,DCP_P99_ms,TLS_Success_Standard,TLS_Success_ASPin,TLS_Success_SCP,TLS_Success_DCP,HTML_Standard,HTML_ASPin,HTML_SCP,HTML_DCP,Matches_TeX_Design,Timestamp";
+                String csvRow = String.format(Locale.ROOT, "%s,%d,%s,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d,%d,%d,%d,\"%s\",\"%s\",\"%s\",\"%s\",%s,%s",
                         displayName, iterations, host, avgStandardTlsMs, avgASPinMs, avgSCPMs, avgDCPMs,
+                        percentileMillis(standardTlsDurations, 0.95),
+                        percentileMillis(standardTlsDurations, 0.99),
+                        percentileMillis(aspinDurations, 0.95),
+                        percentileMillis(aspinDurations, 0.99),
+                        percentileMillis(scpDurations, 0.95),
+                        percentileMillis(scpDurations, 0.99),
+                        percentileMillis(dcpDurations, 0.95),
+                        percentileMillis(dcpDurations, 0.99),
                         successStandardTls, successASPin, successSCP, successDCP,
                         htmlStandard, htmlASPin, htmlSCP, htmlDCP,
                         matchesTexDesign ? "PASS" : "FAIL", timestamp);
@@ -1071,6 +1080,128 @@ public class MainActivity extends AppCompatActivity {
                 mainHandler.post(() -> responseTextView.setText("Auto benchmark failed: " + e.getMessage()));
             }
         }).start();
+    }
+
+    public void runConcurrencyBenchmarkAuto(int operations, int requestedThreads, String csvPath) {
+        final String host = getCurrentHost();
+        final int threads = Math.max(1, Math.min(requestedThreads, operations));
+        new Thread(() -> {
+            java.util.concurrent.ExecutorService executor =
+                    java.util.concurrent.Executors.newFixedThreadPool(threads);
+            try {
+                getValidatedAspinClaim(host); // Warm the OS cache before measuring cache hits.
+                long[] durations = new long[operations];
+                java.util.concurrent.atomic.AtomicInteger next =
+                        new java.util.concurrent.atomic.AtomicInteger();
+                java.util.concurrent.atomic.AtomicInteger successes =
+                        new java.util.concurrent.atomic.AtomicInteger();
+                java.util.concurrent.CountDownLatch ready =
+                        new java.util.concurrent.CountDownLatch(threads);
+                java.util.concurrent.CountDownLatch start =
+                        new java.util.concurrent.CountDownLatch(1);
+                java.util.List<java.util.concurrent.Future<?>> futures = new java.util.ArrayList<>();
+                for (int worker = 0; worker < threads; worker++) {
+                    futures.add(executor.submit(() -> {
+                        ready.countDown();
+                        start.await();
+                        int index;
+                        while ((index = next.getAndIncrement()) < operations) {
+                            long begin = System.nanoTime();
+                            try {
+                                if (getValidatedAspinClaim(host) != null) {
+                                    successes.incrementAndGet();
+                                }
+                            } finally {
+                                durations[index] = System.nanoTime() - begin;
+                            }
+                        }
+                        return null;
+                    }));
+                }
+                ready.await();
+                long wallStart = System.nanoTime();
+                start.countDown();
+                for (java.util.concurrent.Future<?> future : futures) future.get();
+                long wallNanos = System.nanoTime() - wallStart;
+                double throughput = operations / (wallNanos / 1_000_000_000.0);
+                String timestamp = new java.text.SimpleDateFormat(
+                        "yyyy-MM-dd HH:mm:ss", Locale.ROOT).format(new java.util.Date());
+                boolean passed = successes.get() == operations;
+                String header = "Operations,Threads,Successes,Failures,Mean_ms,P50_ms,P95_ms,P99_ms,Throughput_ops_s,Result,Timestamp";
+                String row = String.format(Locale.ROOT,
+                        "%d,%d,%d,%d,%.3f,%.3f,%.3f,%.3f,%.2f,%s,%s",
+                        operations, threads, successes.get(),
+                        operations - successes.get(), meanMillis(durations),
+                        percentileMillis(durations, 0.50),
+                        percentileMillis(durations, 0.95),
+                        percentileMillis(durations, 0.99), throughput,
+                        passed ? "PASS" : "FAIL", timestamp);
+                saveCsvResult(csvPath, header, row);
+            } catch (Exception e) {
+                Log.e(TAG, "Concurrency benchmark failed", e);
+            } finally {
+                executor.shutdownNow();
+            }
+        }).start();
+    }
+
+    public void runClaimProbeBenchmarkAuto(
+            String csvPath, boolean expectSuccess, String requestedLabel,
+            boolean forceRefresh, String requestedExpectedError) {
+        final String host = getCurrentHost();
+        final String label = requestedLabel == null ? "probe" : requestedLabel;
+        final String expectedError =
+                requestedExpectedError == null ? "" : requestedExpectedError.trim();
+        new Thread(() -> {
+            long start = System.nanoTime();
+            boolean success = false;
+            long tkNanos = 0;
+            long tcNanos = 0;
+            String error = "";
+            try {
+                OsAspinClient.Result result = forceRefresh
+                        ? refreshValidatedAspinClaim(host)
+                        : getValidatedAspinClaimResult(host);
+                success = result.getClaim() != null;
+                tkNanos = result.getClaimKeyDownloadAndVerificationNanos();
+                tcNanos = result.getClaimDownloadAndVerificationNanos();
+            } catch (Exception e) {
+                error = e.getClass().getSimpleName() + ":" + String.valueOf(e.getMessage());
+            }
+            long totalNanos = System.nanoTime() - start;
+            boolean reasonMatch = expectedError.isEmpty()
+                    || error.toLowerCase(Locale.ROOT)
+                            .contains(expectedError.toLowerCase(Locale.ROOT));
+            boolean pass = success == expectSuccess && reasonMatch;
+            String timestamp = new java.text.SimpleDateFormat(
+                    "yyyy-MM-dd HH:mm:ss", Locale.ROOT).format(new java.util.Date());
+            String header = "Label,ForceRefresh,ExpectedSuccess,ObservedSuccess,ExpectedErrorSubstring,ReasonMatch,Total_ms,Tk_ms,Tc_ms,Result,Error,Timestamp";
+            String row = String.format(Locale.ROOT,
+                    "%s,%s,%s,%s,\"%s\",%s,%.3f,%.3f,%.3f,%s,\"%s\",%s",
+                    label.replace(',', '_'), forceRefresh, expectSuccess, success,
+                    expectedError.replace('"', '\'').replace(',', ' '), reasonMatch,
+                    totalNanos / 1_000_000.0, tkNanos / 1_000_000.0,
+                    tcNanos / 1_000_000.0, pass ? "PASS" : "FAIL",
+                    error.replace('"', '\'').replace('\r', ' ').replace('\n', ' '),
+                    timestamp);
+            saveCsvResult(csvPath, header, row);
+        }).start();
+    }
+
+    private static double meanMillis(long[] durations) {
+        if (durations.length == 0) return 0.0;
+        double total = 0.0;
+        for (long duration : durations) total += duration;
+        return total / durations.length / 1_000_000.0;
+    }
+
+    private static double percentileMillis(long[] durations, double percentile) {
+        if (durations.length == 0) return 0.0;
+        long[] sorted = durations.clone();
+        java.util.Arrays.sort(sorted);
+        int index = Math.max(0,
+                Math.min(sorted.length - 1, (int) Math.ceil(percentile * sorted.length) - 1));
+        return sorted[index] / 1_000_000.0;
     }
 
     private void saveCsvResult(String csvPath, String header, String row) {

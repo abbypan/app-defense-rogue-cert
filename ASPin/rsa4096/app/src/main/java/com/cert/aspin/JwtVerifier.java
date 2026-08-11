@@ -21,7 +21,7 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
 /** Verifies the two authenticated JWTs used by ASPin. */
 public final class JwtVerifier {
@@ -138,38 +138,18 @@ public final class JwtVerifier {
         }
 
         Date issueTime = signedJwt.getJWTClaimsSet().getIssueTime();
-        long issueTimeMillis = 0L;
-        if (issueTime != null) {
-            issueTimeMillis = issueTime.getTime();
-        } else {
-            Object iatClaim = signedJwt.getJWTClaimsSet().getClaim("iat");
-            if (iatClaim != null) {
-                issueTimeMillis = positiveLong(iatClaim, "iat") * 1_000L;
-            }
+        if (issueTime == null) {
+            throw new IllegalArgumentException("JWT issue time is required");
         }
-
-        Object ttlValue = signedJwt.getJWTClaimsSet().getClaim("ttl");
-        long ttlSeconds;
-        if (ttlValue != null) {
-            ttlSeconds = positiveLong(ttlValue, "ttl");
-        } else if (issueTimeMillis > 0) {
-            ttlSeconds = Math.max(1L, (expiration.getTime() - issueTimeMillis) / 1_000L);
-        } else {
-            ttlSeconds = 86400L;
+        long issueTimeMillis = issueTime.getTime();
+        if (issueTimeMillis > nowMillis) {
+            throw new IllegalArgumentException("JWT is not yet valid");
         }
-        long ttlMillis;
-        try {
-            ttlMillis = Math.multiplyExact(ttlSeconds, 1_000L);
-        } catch (ArithmeticException e) {
-            throw new IllegalArgumentException("JWT ttl is too large", e);
+        if (expiration.getTime() <= issueTimeMillis) {
+            throw new IllegalArgumentException("JWT requires iat < exp");
         }
-        long ttlDeadline;
-        try {
-            ttlDeadline = Math.addExact(nowMillis, ttlMillis);
-        } catch (ArithmeticException e) {
-            ttlDeadline = Long.MAX_VALUE;
-        }
-        long cacheUntilMillis = Math.min(expiration.getTime(), ttlDeadline);
+        long ttlSeconds = (expiration.getTime() - issueTimeMillis) / 1_000L;
+        long cacheUntilMillis = expiration.getTime();
 
 
         return new VerifiedJwt(
@@ -191,18 +171,11 @@ public final class JwtVerifier {
         if (confirmation == null) {
             throw new IllegalArgumentException("ClaimSigningKey JWT is missing cnf");
         }
-        if (confirmation.has("pubkey")) {
-            return confirmation.optString("pubkey");
-        }
-        org.json.JSONArray x5c = confirmation.optJSONArray("x5c");
-        if (x5c != null && x5c.length() > 0) {
-            return x5c.optString(0);
-        }
         JSONObject jwk = confirmation.optJSONObject("jwk");
         if (jwk != null) {
             return jwk.toString();
         }
-        throw new IllegalArgumentException("ClaimSigningKey JWT is missing cnf.pubkey or cnf.x5c or cnf.jwk");
+        throw new IllegalArgumentException("ClaimSigningKey JWT is missing cnf.jwk");
     }
 
     private static JWSVerifier verifierFor(PublicKey publicKey) throws JOSEException {
@@ -239,64 +212,21 @@ public final class JwtVerifier {
     }
 
     /**
-     * The paper requires the public key carried by each token to equal the
-     * already trusted verification key. The prototype carries that key in x5c.
+     * The protected kid must identify the already selected verification key.
+     * Verification keys are never accepted from a token header.
      */
     private static void verifyHeaderKey(SignedJWT signedJwt, PublicKey trustedPublicKey)
             throws Exception {
-        PublicKey headerPublicKey = null;
-        Object customPubkey = signedJwt.getHeader().getCustomParam("pubkey");
-        if (customPubkey != null) {
-            headerPublicKey = parseKeyFromJwkOrPem(customPubkey.toString());
-        } else {
-            com.nimbusds.jose.util.Base64URL x5tS256 = signedJwt.getHeader().getX509CertSHA256Thumbprint();
-            if (x5tS256 == null) {
-                Object customObj = signedJwt.getHeader().getCustomParam("x5t#S256");
-                if (customObj instanceof String str) {
-                    x5tS256 = new com.nimbusds.jose.util.Base64URL(str);
-                }
-            }
-            if (x5tS256 != null) {
-                return;
-            }
-            com.nimbusds.jose.jwk.JWK headerJwk = signedJwt.getHeader().getJWK();
-            if (headerJwk != null) {
-                headerPublicKey = JwkToPublicKeyConverter.convertJwkToPublicKey(headerJwk);
-            } else {
-                List<com.nimbusds.jose.util.Base64> certificateChain =
-                        signedJwt.getHeader().getX509CertChain();
-                if (certificateChain != null && !certificateChain.isEmpty()) {
-                    String encodedItem = certificateChain.get(0).toString();
-                    headerPublicKey = parseKeyFromJwkOrPem(encodedItem);
-                }
-            }
+        if (!signedJwt.getHeader().getIncludedParams().equals(Set.of("alg", "kid"))) {
+            throw new IllegalArgumentException(
+                    "JWT protected header must contain only alg and kid");
         }
-
-        if (headerPublicKey != null && arePublicKeysEqual(trustedPublicKey, headerPublicKey)) {
-            return;
+        String expectedKid = Base64.getUrlEncoder().withoutPadding().encodeToString(
+                MessageDigest.getInstance("SHA-256").digest(trustedPublicKey.getEncoded()));
+        if (!expectedKid.equals(signedJwt.getHeader().getKeyID())) {
+            throw new IllegalArgumentException(
+                    "JWT kid does not identify the trusted verification key");
         }
-
-        throw new IllegalArgumentException("JWT header verification key does not match trusted key");
-    }
-
-    private static long positiveLong(Object value, String claimName) {
-        final long parsed;
-        if (value instanceof Number number) {
-            parsed = number.longValue();
-        } else if (value instanceof String string) {
-            try {
-                parsed = Long.parseLong(string);
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException(
-                        "JWT " + claimName + " must be an integer", e);
-            }
-        } else {
-            throw new IllegalArgumentException("JWT " + claimName + " is required");
-        }
-        if (parsed <= 0) {
-            throw new IllegalArgumentException("JWT " + claimName + " must be positive");
-        }
-        return parsed;
     }
 
     public static final class VerifiedJwt {
@@ -340,18 +270,4 @@ public final class JwtVerifier {
         }
     }
 
-    private static boolean arePublicKeysEqual(PublicKey k1, PublicKey k2) {
-        if (k1 == null || k2 == null) return false;
-        if (k1.equals(k2)) return true;
-        try {
-            if (MessageDigest.isEqual(k1.getEncoded(), k2.getEncoded())) return true;
-        } catch (Throwable ignored) {}
-        if (k1 instanceof ECPublicKey ec1 && k2 instanceof ECPublicKey ec2) {
-            return ec1.getW().equals(ec2.getW());
-        }
-        if (k1 instanceof RSAPublicKey rsa1 && k2 instanceof RSAPublicKey rsa2) {
-            return rsa1.getModulus().equals(rsa2.getModulus()) && rsa1.getPublicExponent().equals(rsa2.getPublicExponent());
-        }
-        return false;
-    }
 }

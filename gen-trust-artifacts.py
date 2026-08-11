@@ -70,6 +70,11 @@ def generate_for_algorithm(repo_root, alg):
         f"{alg}: generate ServerCertClaim.jwt",
         signing_dir,
     )
+    run_checked(
+        [sys.executable, str(repo_root / "check-trust-artifacts.py"), "--alg", alg],
+        f"{alg}: validate ASPin token schema, trust anchors, and signatures",
+        repo_root,
+    )
 
     print(f"Wrote {signing_dir / 'my-app-cert-scp-hash.txt'}")
     print(f"Wrote {signing_dir / 'DCPServerCertPin.json'}")

@@ -43,11 +43,22 @@ Generate short-lived claim-signing public key tokens ($T_k$) and certificate cla
 python3 ./gen-trust-artifacts.py
 ```
 
+Generation fails unless both compact JWS artifacts use exactly the TeX schema,
+their `kid` values identify the configured app/claim keys, signatures verify,
+the APK signing certificate matches the $T_k$ trust anchor, and the Subject,
+SAN, and DER-derived IssuerId match the source server certificate.
+
 This updates:
 - `ClaimSigningKey.jwt` ($T_k$)
 - `ServerCertClaim.jwt` ($T_c$)
 - `DCPServerCertPin.json` (DCP baseline pin)
 - Synchronizes tokens to `realserver/var/www/<alg>/.well-known/`
+
+The `issuer` array in $T_c$ contains deterministic identifiers of the form
+`sha256:base64url(SHA-256(DER(issuer Name)))`. Generators derive them directly
+from the intended leaf certificate, and the app derives the same value from
+`X500Principal.getEncoded()`. Provider-specific X.500 display strings are not
+part of the comparison.
 
 ---
 
@@ -78,7 +89,7 @@ The platform exposes two query APIs:
 - `getCertificateClaimForApp(targetAppId, hostname)` is the cross-app query.
   App A can request the claim for an installed App B and App B's server
   hostname. Android resolves App B's verified signing key and caches the
-  authenticated `(App B signing key, Subject, SAN, Issuer)` binding; it never
+  authenticated `(App B signing key, Subject, SAN, IssuerSet)` binding; it never
   accepts signing-key material from App A.
 
 The prototype's `refreshCertificateClaim...` methods are forced-refresh
@@ -222,12 +233,19 @@ following:
 Useful preflight commands are:
 
 ```bash
-cd /mnt/code/rogue-cert
+cd /mnt/code/aspin
 adb devices -l
 adb shell service check aspin
 sudo -n true
 systemctl is-active nginx
+python3 ./check-implementation-consistency.py
 ```
+
+The consistency checker validates the current trust artifacts and statically
+checks the two OS API paths, CertClaimCheck semantics, signing schemas,
+public-channel ProVerif lifecycle models, 24-worker APK build setting, and
+benchmark coverage. Each main benchmark runs it automatically after generating
+fresh artifacts.
 
 Do not run the two benchmark scripts in parallel. Both install the same app ID
 (`com.cert.aspin`), rewrite the same result files, and switch the host between
@@ -296,6 +314,52 @@ signing key rather than the caller's key:
 
 - Output: `results/cross_app_target_claim.csv`
 
+### Robustness and Distribution Benchmark
+
+After the two main benchmark runs, collect complete-refresh and tail-latency
+distributions, cached concurrent calls, restart persistence, fail-closed clock
+rollback, and a named-target run between independently signed apps:
+
+```bash
+ASPIN_CONCURRENCY_THREADS=8 BENCHMARK_TIMEOUT_SECONDS=7200 \
+  ./run-robustness-benchmark.sh 2000
+```
+
+The script does not build AOSP or flash a device. It refuses to start unless
+`service list` exposes the OS-level `aspin` service. It builds only the test
+apps, uses 24 Gradle workers, and writes a timestamped directory under
+`results/robustness-*` containing:
+
+- `cold-refresh-<alg>.csv`: four-algorithm end-to-end API/IPC, both token
+  downloads and verifications, persistent anti-rollback write, and cache
+  commit, with ASPin and DCP mean/p50/p95/p99;
+- `cached-{real,rogue}-<alg>.csv`: mean/p95/p99 and acceptance counts for TLS,
+  ASPin, SCP, and DCP against both server profiles;
+- `concurrent-cache-<alg>.csv`: four-algorithm 8-thread cached self-query
+  latency, failures, and throughput;
+- `post-restart-old-{tk,tc}-replay.csv`: after accepting higher-iat tokens and
+  rebooting, independent replay of each still-fresh older token must fail with
+  the anti-rollback reason. `post-restart-current-tokens.csv` then confirms the
+  current pair remains usable;
+- `clock-rollback.csv`: expected fail-closed result after a two-day wall-clock
+  rollback with an explicit `not fresh` reason, followed by `clock-restored.csv`;
+- `cross-app-target-refresh.csv` and `cross-app-concurrent-cache.csv`: forced
+  refresh and cached named-target calls from an app signed independently of the
+  target; and
+- `table_full_refresh_tail.csv`, `table_connection_tail.csv`,
+  `table_concurrency.csv`, and `table_lifecycle.csv`: validated, compact tables
+  produced by `summarize-robustness-results.py` for the Evaluation section.
+
+Set `ASPIN_SKIP_APP_BUILD=1` to reuse already built app APKs. The script still
+regenerates fresh signed trust artifacts, deletes every device-side CSV before
+starting its benchmark, requires exactly one result row, and aborts unless each
+row's correctness field is `PASS`. It requires a rooted userdebug phone for the
+clock test and passwordless `sudo` for switching the dedicated Nginx host.
+
+The two app identities emulate separate signing domains; the result verifies
+the mechanism needed by a cross-vendor deployment but does not claim that two
+external vendors participated in the experiment.
+
 ---
 
 ## 6. ProVerif Formal Verification & Consistency Check
@@ -310,18 +374,30 @@ cd proverif
 
 The ASPin models give the two token payloads the same fields as the paper:
 $T_k=(K_{cpub},iat_k,exp_k)$ and
-$T_c=(Subject,SAN,Issuer,iat_c,exp_c)$. There is no independent token `scope`
+$T_c=(Subject,SAN,IssuerSet,iat_c,exp_c)$. Issuer identifiers are abstract atoms
+in ProVerif; DER parsing and SHA-256 are tested in the implementation rather
+than modeled symbolically. There is no independent token `scope`
 field. The requested hostname is constrained by the signed Subject/SAN server
 identity and by the verified app-signing-key/hostname cache index. The models
 also derive (rather than trust) each TTL, reject `now == exp`, and keep
 highest-seen-`iat` rollback state independent of the cache. The migration model
 checks two-window CA overlap, cross-app/cross-host cache isolation, and emergency
-replacement. The key-rotation model checks the common-payload dual signature and
-rejection of old-key replay after cutover.
+replacement. The key-rotation model checks both protected old/new signatures
+over one common payload, explicit transfer of protected highest-seen state, and
+rejection of a still-fresh transitional-token replay after cutover. Lifecycle
+verifiers read all tokens from the public attacker-controlled channel; private
+channels carry only schedule signals for honest liveness traces.
 
 ### Verify Consistency Across Code, Models, and LaTeX Text
 Verify that the ProVerif models, output logs, Android Java code, Python scripts, and LaTeX paper tables remain 100% aligned:
 
 ```bash
 python3 proverif/check_consistency.py
+```
+
+For a source/artifact/App/benchmark check that does not depend on saved
+ProVerif output logs, run:
+
+```bash
+python3 ./check-implementation-consistency.py
 ```
