@@ -81,7 +81,7 @@ and ASPin connection paths obtain authenticated claims exclusively from the
 OS-level ASPin service; the app does not use a legacy app-local claim path in
 the reported measurements.
 
-The platform exposes two query APIs:
+The OS exposes two query APIs:
 
 - `getCertificateClaim(hostname)` is the self-query. Android derives the
   caller's App ID from its Binder identity and resolves the caller's verified
@@ -116,7 +116,7 @@ manifest. `ASPIN_REPO` is this repository and `AOSP_ROOT` is the destination
 for the Android source tree:
 
 ```bash
-export ASPIN_REPO=/mnt/code/rogue-cert
+export ASPIN_REPO=/mnt/code/aspin
 export AOSP_ROOT=/mnt/code/aosp-main/aosp
 
 mkdir -p "$AOSP_ROOT"
@@ -226,9 +226,9 @@ following:
    Nginx benchmark host.
 5. Keep the device's normally assigned DNS servers; the experiment does not
    require forcing `8.8.8.8` or another public resolver.
-6. `ANDROID_HOME` points to an Android SDK containing `adb`, or the default
-   `/opt/android-sdk` exists. Set `ASPIN_JAVA_HOME` if JDK 17 is installed at a
-   nonstandard path.
+6. `adb` is on `PATH`, and `ANDROID_HOME` points to an Android SDK with
+   Build-Tools; the scripts otherwise use `/opt/android-sdk`. Set
+   `ASPIN_JAVA_HOME` if JDK 17 is installed at a nonstandard path.
 
 Useful preflight commands are:
 
@@ -236,6 +236,8 @@ Useful preflight commands are:
 cd /mnt/code/aspin
 adb devices -l
 adb shell service check aspin
+adb shell 'su 0 id -u'                 # Required by the full robustness run
+adb shell ping -c 1 es256.idouzi.top  # Repeat for the other test hostnames
 sudo -n true
 systemctl is-active nginx
 python3 ./check-implementation-consistency.py
@@ -244,15 +246,21 @@ python3 ./check-implementation-consistency.py
 The consistency checker validates the current trust artifacts and statically
 checks the two OS API paths, CertClaimCheck semantics, signing schemas,
 public-channel ProVerif lifecycle models, 24-worker APK build setting, and
-benchmark coverage. Each main benchmark runs it automatically after generating
-fresh artifacts.
+benchmark coverage. Each focused or full benchmark runs it automatically after
+generating fresh artifacts.
 
-Do not run the two benchmark scripts in parallel. Both install the same app ID
-(`com.cert.aspin`), rewrite the same result files, and switch the host between
-the real and rogue Nginx configurations. Each script rebuilds and signs all
-four algorithm-specific APKs before collecting measurements.
+Do not run any benchmark scripts in parallel. They install the same app ID
+(`com.cert.aspin`), modify the same Nginx deployment, and may overwrite result
+files. Exit traps restore the real-server profile and uninstall the test apps,
+but an interrupted process should still be checked before another run.
 
-### Benchmark 1: Verification Latency (`table:osveriftime`)
+For the complete Evaluation dataset, use the robustness benchmark described
+below; it covers forced-refresh distributions, real/rogue cached connections,
+concurrency, restart persistence, clock rollback, and cross-app target lookup
+in one timestamped run. The two focused scripts are useful when only one paper
+table needs to be repeated.
+
+### Focused Benchmark 1: Verification Latency (`table:osveriftime`)
 Measures the OS service's retrieval-and-verification times for $T_k$ and $T_c$,
 and the DCP baseline pin retrieval-and-verification time, on the Android device (default:
 2,000 iterations):
@@ -269,7 +277,7 @@ Outputs:
 - Evaluation summary:
   `results/table_avgveriftime_summary.csv`
 
-### Benchmark 2: Real & Rogue Server Connection Latencies (`table:osrealvisittime` and `table:osmaliciousvisittime`)
+### Focused Benchmark 2: Real & Rogue Connections (`table:connectiontime`)
 Measures connection setup times against the real server and real-time rejection latencies against a malicious rogue server presenting an unauthorized certificate (default: 2,000 iterations):
 
 ```bash
@@ -300,7 +308,7 @@ CSV, uninstall `com.cert.aspin`, and restore the real-server Nginx
 configuration from their exit trap. They overwrite earlier CSV files with the
 same names, so copy any result set that must be preserved before rerunning.
 
-### Cross-App API Smoke Test
+### Optional Cross-App API Smoke Test
 
 The following test installs App B as `com.cert.aspin`, installs a separately
 signed App A as `com.cert.aspin.caller`, and has App A request
@@ -314,11 +322,11 @@ signing key rather than the caller's key:
 
 - Output: `results/cross_app_target_claim.csv`
 
-### Robustness and Distribution Benchmark
+### Recommended Full Evaluation Benchmark
 
-After the two main benchmark runs, collect complete-refresh and tail-latency
-distributions, cached concurrent calls, restart persistence, fail-closed clock
-rollback, and a named-target run between independently signed apps:
+Collect complete-refresh and tail-latency distributions, cached concurrent
+calls, restart persistence, fail-closed clock rollback, and a named-target run
+between independently signed apps:
 
 ```bash
 ASPIN_CONCURRENCY_THREADS=8 BENCHMARK_TIMEOUT_SECONDS=7200 \
@@ -358,6 +366,11 @@ clock test and passwordless `sudo` for switching the dedicated Nginx host. After
 the lifecycle reboot it waits for both Android boot completion and reachability
 of `ASPIN_NETWORK_CHECK_HOST` (the ES256 test host by default); adjust the bound
 with `ASPIN_NETWORK_WAIT_SECONDS` if Wi-Fi association is slow.
+
+After a successful run, use the four `table_*.csv` files in the timestamped
+directory as the compact inputs for the paper tables. Preserve the whole
+directory, including `environment.txt` and `token-snapshots/`, so the device,
+build fingerprint, parameters, and lifecycle artifacts remain auditable.
 
 If a run is interrupted only after it has accepted v2 and rebooted, preserve
 the timestamped result directory and resume the lifecycle/cross-app phase:
