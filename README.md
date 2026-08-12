@@ -354,7 +354,22 @@ Set `ASPIN_SKIP_APP_BUILD=1` to reuse already built app APKs. The script still
 regenerates fresh signed trust artifacts, deletes every device-side CSV before
 starting its benchmark, requires exactly one result row, and aborts unless each
 row's correctness field is `PASS`. It requires a rooted userdebug phone for the
-clock test and passwordless `sudo` for switching the dedicated Nginx host.
+clock test and passwordless `sudo` for switching the dedicated Nginx host. After
+the lifecycle reboot it waits for both Android boot completion and reachability
+of `ASPIN_NETWORK_CHECK_HOST` (the ES256 test host by default); adjust the bound
+with `ASPIN_NETWORK_WAIT_SECONDS` if Wi-Fi association is slow.
+
+If a run is interrupted only after it has accepted v2 and rebooted, preserve
+the timestamped result directory and resume the lifecycle/cross-app phase:
+
+```bash
+ASPIN_RESUME_AFTER_REBOOT=1 \
+ASPIN_RESUME_RUN_DIR="$PWD/results/robustness-<run-id>" \
+  ./run-robustness-benchmark.sh 2000
+```
+
+Resume mode requires the saved v1/v2 token snapshots and revalidates every
+new CSV before regenerating all four compact summary tables.
 
 The two app identities emulate separate signing domains; the result verifies
 the mechanism needed by a cross-vendor deployment but does not claim that two

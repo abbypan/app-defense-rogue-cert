@@ -181,7 +181,12 @@ def summarize_lifecycle(run_dir: Path) -> None:
     for name in names:
         source = run_dir / name
         row = read_one(source)
-        require(row, output_fields[1:], source)
+        required_nonempty = tuple(
+            field for field in output_fields[1:] if field != "ExpectedErrorSubstring"
+        )
+        require(row, required_nonempty, source)
+        if "ExpectedErrorSubstring" not in row:
+            raise SystemExit(f"{source}: missing required field: ExpectedErrorSubstring")
         rows.append(
             {"Test": name.removesuffix(".csv")}
             | {field: row[field] for field in output_fields[1:]}

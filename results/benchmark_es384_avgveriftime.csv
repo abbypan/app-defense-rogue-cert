@@ -1,2 +1,2 @@
-Algorithm,Iterations,Tk_Avg_ms,Tc_Avg_ms,DCP_Avg_ms,Timestamp
-ES384 (NIST P-384),2000,12.62,11.83,12.49,2026-08-09 23:07:16
+Algorithm,Iterations,Tk_Mean_ms,Tc_Mean_ms,ASPin_Total_Mean_ms,ASPin_Total_P50_ms,ASPin_Total_P95_ms,ASPin_Total_P99_ms,DCP_Mean_ms,DCP_P50_ms,DCP_P95_ms,DCP_P99_ms,ASPin_Success_Count,DCP_Success_Count,Result,Timestamp
+ES384 (NIST P-384),2000,12.424,11.592,34.839,34.286,39.139,44.406,12.115,11.773,14.757,18.495,2000,2000,PASS,2026-08-12 09:30:12

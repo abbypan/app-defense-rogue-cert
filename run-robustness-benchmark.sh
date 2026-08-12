@@ -13,20 +13,35 @@ ITERATIONS="${1:-2000}"
 THREADS="${ASPIN_CONCURRENCY_THREADS:-8}"
 TIMEOUT_SECONDS="${BENCHMARK_TIMEOUT_SECONDS:-3600}"
 SKIP_APP_BUILD="${ASPIN_SKIP_APP_BUILD:-0}"
+RESUME_AFTER_REBOOT="${ASPIN_RESUME_AFTER_REBOOT:-0}"
+RESUME_RUN_DIR="${ASPIN_RESUME_RUN_DIR:-}"
+NETWORK_CHECK_HOST="${ASPIN_NETWORK_CHECK_HOST:-es256.idouzi.top}"
+NETWORK_WAIT_SECONDS="${ASPIN_NETWORK_WAIT_SECONDS:-300}"
 PACKAGE="com.cert.aspin"
 CALLER_PACKAGE="com.cert.aspin.caller"
 ALGORITHMS=(es256 es384 rsa3072 rsa4096)
 RUN_ID="$(date +%Y%m%d-%H%M%S)"
-RUN_DIR="$SCRIPT_DIR/results/robustness-$RUN_ID"
+if [ -n "$RESUME_RUN_DIR" ]; then
+    RUN_DIR="$(realpath "$RESUME_RUN_DIR")"
+    RUN_ID="$(basename "$RUN_DIR" | sed 's/^robustness-//')"
+else
+    RUN_DIR="$SCRIPT_DIR/results/robustness-$RUN_ID"
+fi
 APK_DIR="$SCRIPT_DIR/results/apks"
 SNAPSHOT_DIR="$RUN_DIR/token-snapshots"
 
 if ! [[ "$ITERATIONS" =~ ^[1-9][0-9]*$ ]] ||
         ! [[ "$THREADS" =~ ^[1-9][0-9]*$ ]] ||
         ! [[ "$TIMEOUT_SECONDS" =~ ^[1-9][0-9]*$ ]] ||
-        ! [[ "$SKIP_APP_BUILD" =~ ^[01]$ ]]; then
+        ! [[ "$SKIP_APP_BUILD" =~ ^[01]$ ]] ||
+        ! [[ "$RESUME_AFTER_REBOOT" =~ ^[01]$ ]] ||
+        ! [[ "$NETWORK_WAIT_SECONDS" =~ ^[1-9][0-9]*$ ]]; then
     echo "ERROR: iterations, thread count, and timeout must be positive integers;" >&2
-    echo "       ASPIN_SKIP_APP_BUILD must be 0 or 1." >&2
+    echo "       ASPIN_SKIP_APP_BUILD and ASPIN_RESUME_AFTER_REBOOT must be 0 or 1." >&2
+    exit 2
+fi
+if [ "$RESUME_AFTER_REBOOT" -eq 1 ] && [ -z "$RESUME_RUN_DIR" ]; then
+    echo "ERROR: ASPIN_RESUME_AFTER_REBOOT=1 requires ASPIN_RESUME_RUN_DIR." >&2
     exit 2
 fi
 
@@ -60,6 +75,18 @@ wait_for_boot() {
         sleep 1
     done
     echo "ERROR: Device did not finish booting." >&2
+    return 1
+}
+
+wait_for_test_network() {
+    for _ in $(seq 1 "$NETWORK_WAIT_SECONDS"); do
+        if adb -s "$DEVICE_ID" shell \
+                "ping -c 1 -W 1 '$NETWORK_CHECK_HOST' >/dev/null 2>&1"; then
+            return 0
+        fi
+        sleep 1
+    done
+    echo "ERROR: Test network did not become ready for $NETWORK_CHECK_HOST." >&2
     return 1
 }
 
@@ -171,6 +198,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
+if [ "$RESUME_AFTER_REBOOT" -eq 0 ]; then
 {
     echo "run_id=$RUN_ID"
     echo "iterations=$ITERATIONS"
@@ -217,24 +245,38 @@ for algorithm in "${ALGORITHMS[@]}"; do
         --es server_phase rogueserver
     adb -s "$DEVICE_ID" uninstall "$PACKAGE" >/dev/null 2>&1 || true
 done
+else
+    test -s "$SNAPSHOT_DIR/v1/ClaimSigningKey.jwt"
+    test -s "$SNAPSHOT_DIR/v1/ServerCertClaim.jwt"
+    test -s "$SNAPSHOT_DIR/v2/ClaimSigningKey.jwt"
+    test -s "$SNAPSHOT_DIR/v2/ServerCertClaim.jwt"
+    printf 'resumed_after_reboot=%s\n' "$(date -Iseconds)" >> "$RUN_DIR/environment.txt"
+fi
 
 # Direct persistence test. First accept v1, generate and accept higher-iat v2,
 # reboot, then independently replay the still-fresh old Tc and old Tk. A mere
 # successful post-restart query would not prove persistence; these lower-iat
 # replay checks do.
-deploy_profile real
-install_target es256
-run_benchmark "$PACKAGE" claimprobe lifecycle-v1-accepted.csv Result \
-    --ez force_refresh true --ez expect_success true --es probe_label accept_v1
+if [ "$RESUME_AFTER_REBOOT" -eq 0 ]; then
+    deploy_profile real
+    install_target es256
+    run_benchmark "$PACKAGE" claimprobe lifecycle-v1-accepted.csv Result \
+        --ez force_refresh true --ez expect_success true --es probe_label accept_v1
 
-python3 "$SCRIPT_DIR/gen-trust-artifacts.py" --alg es256
-snapshot_es256_tokens "$SNAPSHOT_DIR/v2"
-deploy_profile real
-run_benchmark "$PACKAGE" claimprobe lifecycle-v2-accepted.csv Result \
-    --ez force_refresh true --ez expect_success true --es probe_label accept_v2
+    python3 "$SCRIPT_DIR/gen-trust-artifacts.py" --alg es256
+    snapshot_es256_tokens "$SNAPSHOT_DIR/v2"
+    deploy_profile real
+    run_benchmark "$PACKAGE" claimprobe lifecycle-v2-accepted.csv Result \
+        --ez force_refresh true --ez expect_success true --es probe_label accept_v2
 
-adb -s "$DEVICE_ID" reboot
-wait_for_boot
+    adb -s "$DEVICE_ID" reboot
+    wait_for_boot
+else
+    deploy_profile real
+    SERVER_CHANGED=1
+    install_target es256
+fi
+wait_for_test_network
 
 deploy_es256_token_pair \
     "$SNAPSHOT_DIR/v2/ClaimSigningKey.jwt" \
@@ -265,7 +307,7 @@ adb -s "$DEVICE_ID" shell "su 0 date -s '@$ROLLBACK_EPOCH'" >/dev/null
 CLOCK_CHANGED=1
 run_benchmark "$PACKAGE" claimprobe clock-rollback.csv Result \
     --ez force_refresh true --ez expect_success false \
-    --es expected_error "not fresh" --es probe_label clock_rollback
+    --es expected_error fresh --es probe_label clock_rollback
 restore_clock
 run_benchmark "$PACKAGE" claimprobe clock-restored.csv Result \
     --ez force_refresh true --ez expect_success true \

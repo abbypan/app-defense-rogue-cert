@@ -1,0 +1,17 @@
+run_id=20260812-091410
+iterations=2000
+threads=8
+device=physical Google Pixel 8
+fingerprint=Android/gsi_arm64/generic_arm64:Baklava/CP2A.260605.016/<anonymized>:userdebug/test-keys
+kernel=Linux localhost 6.1.145-android14-11-gc1de4747ac59-ab14219743 #1 SMP PREEMPT Mon Oct  6 16:50:48 UTC 2025 aarch64 Toybox
+repo_commit=195be9f936c0ba54499c16bbc34863feda11539c
+transport=physical Pixel 8 connected to a local Nginx host
+aosp_build_or_flash=not performed by this script
+aosp_framework_branch=aspin
+aosp_framework_commit=062e15627d5159ea81428ad40dff032592965a32
+aosp_sepolicy_commit=3c05c010b0c69cd3e8bf50ce15461006efd63a16
+flashed_image=gsi-pixel8-arm64-system-aspin.img
+flashed_image_sha256=283a1d45f60dbfda12e23bef6bbc4ff3823702d6a367fee551ab8af34fbc817a
+flash_completed_before_run=true
+resumed_after_reboot=2026-08-12T10:04:16+08:00
+resumed_after_reboot=2026-08-12T10:05:27+08:00
