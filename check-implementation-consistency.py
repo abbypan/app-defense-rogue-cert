@@ -44,7 +44,7 @@ def check_tex():
     abstract = ROOT / "tex" / "paper_abstract-sigconf.tex"
     require(
         abstract,
-        "A complete two-object refresh averages 33.10--40.14\\,ms",
+        "Refreshing both JWS objects averages 33.10--40.14\\,ms",
         "ASPin-minus-TLS sample-mean differences are 0.83--1.46\\,ms",
     )
     require(
