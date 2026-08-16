@@ -9,6 +9,7 @@
     <!-- Required by the cross-app benchmark flavor when it names com.cert.aspin. -->
     <queries>
         <package android:name="com.cert.aspin" />
+        <package android:name="com.cert.aspin.caller" />
     </queries>
 
     <application

@@ -1,5 +1,7 @@
 package com.cert.aspin;
 
+import android.net.http.X509TrustManagerExtensions;
+
 import java.io.BufferedReader;
 import java.io.File;
 //import java.io.InputStream;
@@ -16,6 +18,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -89,34 +92,37 @@ public class HttpsConn {
 
     private static TrustManager[] getSCPTrustManagers(String host, String expectedCertificateHash)
             throws Exception {
-        return getSupplementaryTrustManagers((certificate) -> {
+        return getSupplementaryTrustManagers(host, (chain) -> {
             if (expectedCertificateHash == null || expectedCertificateHash.isBlank()) {
-                SCPVerifier.verifyPresetCertificate(host, certificate);
+                SCPVerifier.verifyPresetCertificate(host, chain[0]);
             } else {
-                SCPVerifier.verifyCertificateHash(certificate, expectedCertificateHash);
+                SCPVerifier.verifyCertificateHash(chain[0], expectedCertificateHash);
             }
         });
     }
 
-    private static TrustManager[] getDCPTrustManagers(String exp_spk) throws Exception {
-        return getSupplementaryTrustManagers(
-                certificate -> DCPVerifier.verifyCertificatePin(certificate, exp_spk));
+    private static TrustManager[] getDCPTrustManagers(String host, String exp_spk) throws Exception {
+        return getSupplementaryTrustManagers(host,
+                chain -> DCPVerifier.verifyCertificatePin(chain[0], exp_spk));
     }
 
     private static TrustManager[] getASPinTrustManagers(
             String host, ASPinVerifier.CertificateClaim claim)
             throws Exception {
-        return getSupplementaryTrustManagers(
-                certificate -> ASPinVerifier.verifyCertificate(host, claim, certificate));
+        return getSupplementaryTrustManagers(host,
+                chain -> ASPinVerifier.verifyCertificate(host, claim, chain));
     }
 
     private interface CertificateCheck {
-        void verify(X509Certificate certificate) throws CertificateException;
+        void verify(X509Certificate[] validatedChain) throws CertificateException;
     }
 
-    private static TrustManager[] getSupplementaryTrustManagers(CertificateCheck check)
+    private static TrustManager[] getSupplementaryTrustManagers(
+            String host, CertificateCheck check)
             throws Exception {
         final X509TrustManager defaultTrustManager = createDefaultTrustManager();
+        final X509TrustManagerExtensions trustManagerExtensions =
+                new X509TrustManagerExtensions(defaultTrustManager);
         return new TrustManager[] { new X509TrustManager() {
             public X509Certificate[] getAcceptedIssuers() {
                 return defaultTrustManager.getAcceptedIssuers();
@@ -127,8 +133,9 @@ public class HttpsConn {
                 if (chain == null || chain.length == 0) {
                     throw new CertificateException("TLS server did not provide a certificate chain");
                 }
-                defaultTrustManager.checkServerTrusted(chain, authType);
-                check.verify(chain[0]);
+                List<X509Certificate> validatedPath = trustManagerExtensions.checkServerTrusted(
+                        chain, authType, host);
+                check.verify(requireValidatedPath(validatedPath));
             }
 
             public void checkClientTrusted(X509Certificate[] chain, String authType)
@@ -136,6 +143,15 @@ public class HttpsConn {
                 defaultTrustManager.checkClientTrusted(chain, authType);
             }
         }};
+    }
+
+    static X509Certificate[] requireValidatedPath(List<X509Certificate> validatedPath)
+            throws CertificateException {
+        if (validatedPath == null || validatedPath.isEmpty()) {
+            throw new CertificateException(
+                    "Native trust manager returned no validated certificate path");
+        }
+        return validatedPath.toArray(X509Certificate[]::new);
     }
 
     // Constructor to initialize trust managers and SSL socket factories
@@ -267,7 +283,7 @@ public class HttpsConn {
 
 
     private static SSLSocketFactory createDCPSslSocketFactory(String host, String exp_spk) throws Exception {
-        TrustManager[] dcpTrustManagers = getDCPTrustManagers(exp_spk);
+        TrustManager[] dcpTrustManagers = getDCPTrustManagers(host, exp_spk);
 
         SSLContext sslContext = SSLContext.getInstance("TLS");
         sslContext.init(null, dcpTrustManagers, new SecureRandom());

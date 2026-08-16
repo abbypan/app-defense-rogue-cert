@@ -15,45 +15,74 @@ ASPIN_NETWORK_MODELS = (
 )
 
 TEX_FRAGMENTS = (
-    r"\subsubsection{ClaimKeySign}",
+    r"\subsubsection{Signing $T_k$}",
     r"\subsubsection{CertClaimSign}",
     r"\subsubsection{ClaimKeyVerify}",
     r"\subsubsection{CertClaimVerify}",
     r"\subsection{App-Controlled CertClaimCheck}",
     r"iat_k \leq t_{\mathrm{now}} < exp_k",
     r"iat_c \leq t_{\mathrm{now}} < exp_c",
-    r"signature covers $K_{cpub}$, $iat_k$, and $exp_k$",
-    r"signature covers $Claim=(Subject,SAN,IssuerSet)$, $iat_c$, and $exp_c$",
-    "requires the requested server hostname to be covered by the signed Subject/SAN",
-    r"IssuerId(c)=\mathrm{b64url}(\mathrm{SHA256}(\mathrm{DER}(c.issuer)))",
-    "Concrete DER parsing and SHA-256 are outside the symbolic model",
+    r"\emph{CertClaimCheck} fails when the protected clock reaches $exp_{eff}$",
+    "signature covers the complete encoded payload",
+    r"complete encoded payload containing Subject, SAN, $IssuerSet$, $iat_c$, and $exp_c$",
+    "requires the requested server hostname to be covered by the signed SAN",
+    r"IssuerId_H(c)=\mathrm{name}(H)",
+    r"H\!\left(\mathrm{DER}(CA(c))\right)",
+    "Concrete certificate-path construction and extraction, DER parsing, hashing, base64url encoding, and differences between the two concrete hostname implementations are outside the symbolic model",
     "highest issuance time previously accepted",
     r"\mathrm{Cache}[K_{apub}]",
-    "For each app-signing-key, requested-hostname, and token-type tuple",
-    "keeps $T'_c$ available for at least two complete freshness windows",
-    "both $sig_k^{old}$ and $sig_k^{new}$ over the identical transitional payload",
-    r"\caption{ProVerif Outputs for Rogue Certificates with Unexpected Issuer Identifiers}",
+    r"H_k[K_{apub},h]",
+    r"H_c[K_{apub},Subject,SAN]",
+    "two \\emph{differently signed} apps may claim the same hostname",
+    "intentionally share one ASPin owner/trust domain",
+    "package identifier adds no cache or anti-rollback partition",
+    "Cross-signing-key, cross-delegated-key, and cross-claim-host reads are unreachable",
+    r"$iat_c^{(1)}<iat_c^{(2)}<iat_c^{(3)}<iat_c^{(4)}$",
+    r"maximum permitted $T_c$ lifetime",
+    r"maximum allowed $exp_c-iat_c$",
+    r"Each overlap JWS is served for its full $L_{\max}$ lifetime",
+    r"$w_2$ & $T_c^{(2)}$ & CurrCert & CurrCA+NewCA",
+    r"$w_3$ & $T_c^{(3)}$ & CurrCert & CurrCA+NewCA",
+    r"$w_4$ & $T_c^{(4)}$ & NewCert & NewCA",
+    r"migration model uses one symbolic step for $L_{\max}$",
+    "it does not extend or republish $T_c^{(2)}$",
+    r"jointly publishes $T_c^{(4)}$ and deploys \emph{NewCert}",
+    r"\emph{overlap} concerns CA identifiers, not cross-cutover validity",
+    "operator staging and advance notice",
+    "operator-staged CA migration",
+    "one OS-level mechanism for retrieval, JWS verification, claim replacement",
+    "private phase markers encode the recommended operator schedule",
+    r"This is an ordering property, not policy rejection",
+    r"dual policy authorizes \emph{NewCA}",
+    r"each full-$L_{\max}$ phase-elapsed event",
+    r"no client phase progression or cache bridge into $w_4$",
+    "both $sig_k^{old}$ and $sig_k^{new}$ over the identical encoded payload",
+    r"\caption{ProVerif Outputs for Rogue Certificates with Unauthorized Issuer CA Identifiers}",
     r"\caption{ProVerif Outputs for Claim Caching, Migration, Rollback, and Key Rotation}",
     r"For $\neg\,event(E)$",
     r"is also \texttt{true}, but is vacuous",
     r"\texttt{not event(CrossSigningKeyCacheHit(...))}",
+    r"\texttt{not event(CrossDelegationCacheHit(...))}",
     r"\texttt{not event(CrossHostnameCacheHit(...))}",
     r"\texttt{not event(OldOnlyTokenAcceptedByNewKey(...))}",
     "Private channels carry only phase markers",
     "All verifier inputs come from the public channel",
-    "predecessors of both token types",
+    "predecessors of both JWS types",
 )
 
 NETWORK_MODEL_FRAGMENTS = (
     "get_iat(",
     "get_exp(",
     "header_matches(",
-    "jwt_sig_verify(",
+    "jws_general_verify(",
     "token_fresh(",
     "derive_ttl(",
     "get_subject_and_san(",
     "get_issuer(",
     "check_host(hostname,",
+    "let connection_time = succ_t(curr) in",
+    "event ClaimFreshAtCheck(hostname)",
+    "event(ClaimFreshAtCheck(",
 )
 
 
@@ -101,11 +130,24 @@ def require_outcome(lines: list[str], terms: tuple[str, ...], outcome: str) -> N
 
 def check_sources() -> None:
     require_fragments(TEX, TEX_FRAGMENTS)
+    require_no_fragments(
+        TEX,
+        (
+            r"$w_0$ & $T_c^{(0)}$",
+            r"CurrCert $\to$ NewCert",
+            r"NewCert cutover occurs earlier while $T_c^{(2)}$ is fresh",
+            "signed contents bind it to its phase",
+            "exploit a migration gap",
+            "and transitions consistently",
+            "authenticated retrieval",
+        ),
+    )
     require_fragments(
         ROOT / "base.pvl",
         (
-            "jwt_payload(bitstring, timestamp, timestamp)",
-            "get_iat(jwt_payload",
+            "jws_payload(bitstring, timestamp, timestamp)",
+            "jws_general_sign(",
+            "get_iat(jws_payload",
             "token_fresh(t, succ_t(t), t) = true",
             "derive_ttl(t, succ_t(t)) = ttl_one",
             "iat_older(t, succ_t(t)) = true",
@@ -113,17 +155,20 @@ def check_sources() -> None:
             "jws_dual_sign",
             "ttl_four",
             "package_signing_record(bitstring, pkey)",
-            "resolve_platform_key(",
+            "resolve_os_key(",
+            "event ClaimFreshAtCheck(bitstring)",
         ),
     )
     require_no_fragments(
         ROOT / "base.pvl",
         (
-            "jwt_payload(bitstring, timestamp, ttl)",
+            "jws_payload(bitstring, timestamp, ttl)",
             "get_scope(",
-            "jwt_verify(",
-            "get_ttl(jwt_payload",
+            "jws_verify(",
+            "get_ttl(jws_payload",
             "token not expired",
+            "fun jws(",
+            "jws_sign(",
         ),
     )
 
@@ -132,25 +177,50 @@ def check_sources() -> None:
         require_fragments(model, NETWORK_MODEL_FRAGMENTS)
         require_no_fragments(
             model,
-            ("let true =", "jwt_verify(", "get_ttl(", "get_scope(", "good_ttl"),
+            ("let true =", "jws_verify(", "get_ttl(", "get_scope(", "good_ttl"),
         )
 
     require_fragments(
         ROOT / "aspin_cache.pv",
         (
-            "cache_entry(app_key, content, iat, exp)",
-            "read_cached_claim(entry, other_key, iat)",
-            "read_cached_claim(entry, app_key, iat)",
+            "claim_key_cache_entry(",
+            "cache_entry(app_key, claim_key, content, iat, exp)",
+            "read_cached_claim(entry, other_key, claim_key, iat)",
+            "entry, app_key, other_claim_key, iat)",
+            "read_cached_claim(entry, app_key, claim_key, iat)",
             "other_hostname, get_migration_identity(result)",
             "check_host(server_hostname, identity0)",
             "MigrationTransitionAvailable(window_overlap_1)",
             "MigrationTransitionAvailable(window_overlap_2)",
+            "MigrationPhaseElapsed(window_overlap_1, iat2)",
+            "MigrationPhaseElapsed(window_overlap_2, iat3)",
+            "MigrationJointCutover(",
+            "MigrationPolicyPairAllowed(",
+            "let token_c_0 = jws_general_sign(",
+            "let token_c_1 = jws_general_sign(",
+            "let token_c_2 = jws_general_sign(",
+            "let token_c_3 = jws_general_sign(",
+            "iat_older(iat0, iat1)",
+            "iat_older(iat1, iat2)",
+            "iat_older(iat2, iat3)",
+            "let exp1 = succ_t(iat1) in",
+            "let exp2 = succ_t(iat2) in",
+            "let (=ttl_one) = derive_ttl(iat1, exp1) in",
+            "let (=ttl_one) = derive_ttl(iat2, exp2) in",
+            "token_expired(exp0, iat1)",
+            "token_expired(exp1, iat2)",
+            "token_expired(exp2, iat3)",
+            "token_expired(exp2, cutover_time)",
+            "let cutover_time = succ_t(iat2) in",
+            "Only paper w4 deploys NewCert.",
+            "transition claim is expired at the boundary and is not used to accept",
+            "same coordinated symbolic w4 transition",
             "token_fresh(old_iat, common_exp, new_iat)",
             "iat_older(old_iat, new_iat)",
             "token_expired(exp, exp)",
-            "resolve_platform_key(target_record, target_app_id)",
-            "in(c, jwt(hk:",
-            "in(c, jwt(h0:",
+            "resolve_os_key(target_record, target_app_id)",
+            "in(c, jws_general(hk:",
+            "in(c, jws_general(h0:",
             "token_fresh(key_iat, key_exp, iat3)",
             "RollbackRejected(token_type_claim",
             "RollbackRejected(token_type_key",
@@ -160,12 +230,21 @@ def check_sources() -> None:
         ROOT / "aspin_cache.pv",
         (
             "let true =",
-            "jwt_verify(",
+            "jws_verify(",
             "get_ttl(",
             "get_scope(",
             "window_final",
             "out(migration_key_delivery, token_k)",
             "out(migration_current_delivery, token0)",
+            "let token0 = jws_general_sign(",
+            "let token1 = jws_general_sign(",
+            "let token2 = jws_general_sign(",
+            "let token3 = jws_general_sign(",
+            "let cutover_time = iat2 in",
+            "bridge_claim_key",
+            "published after that cutover",
+            "let (=succ_t(succ_t(iat1))) = exp1 in",
+            "let (=succ_t(succ_t(iat2))) = exp2 in",
         ),
     )
     require_fragments(
@@ -183,7 +262,7 @@ def check_sources() -> None:
     )
     require_no_fragments(
         ROOT / "aspin_key_rotation.pv",
-        ("let true =", "jwt_verify(", "get_ttl(", "get_scope("),
+        ("let true =", "jws_verify(", "get_ttl(", "get_scope("),
     )
 
 
@@ -193,6 +272,9 @@ def check_common_aspin(lines: list[str]) -> None:
     require_outcome(lines, ("not event(AppReject(",), "is false.")
     require_outcome(
         lines, ("event(RSAccept(", "==> event(AppConnRS("), "is true."
+    )
+    require_outcome(
+        lines, ("event(AppConnRS(", "==> event(ClaimFreshAtCheck("), "is true."
     )
     require_outcome(lines, ("not event(MSAccept(",), "is true.")
     require_outcome(lines, ("not event(AppConnMS(",), "is true.")
@@ -255,27 +337,45 @@ def check_cache_migration() -> None:
         "MigrationNewCertObtained(new_cert_issuer)",
         "MigrationTransitionAvailable(window_overlap_1)",
         "MigrationTransitionAvailable(window_overlap_2)",
+        "MigrationPhaseElapsed(window_overlap_1,succ_t(succ_t(migration_time_0[])))",
+        "MigrationPhaseElapsed(window_overlap_2,succ_t(succ_t(succ_t(migration_time_0[]))))",
     ):
         require_outcome(
             lines,
-            ("event(MigrationCutover(", f"==> event({prerequisite}"),
+            ("event(MigrationJointCutover(", f"==> event({prerequisite}"),
             "is true.",
         )
     require_outcome(
         lines,
         (
-            "event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca))",
-            "event(MigrationClaimCached(window_overlap_2",
+            "event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca))",
+            "==> event(MigrationJointCutover(",
         ),
         "is true.",
     )
     for invalid in (
         "MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_current_ca)",
+        "MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca)",
         "MigrationCertAccepted(window_new_cert,real_cert_issuer,claim_new_ca)",
         "CrossSigningKeyCacheHit(",
+        "CrossDelegationCacheHit(",
         "CrossHostnameCacheHit(",
     ):
         require_outcome(lines, (f"not event({invalid}",), "is true.")
+
+    for incompatible in (
+        "MigrationPolicyPairAllowed(new_cert_issuer,claim_current_ca)",
+        "MigrationPolicyPairAllowed(real_cert_issuer,claim_new_ca)",
+    ):
+        require_outcome(lines, (f"not event({incompatible}",), "is true.")
+    require_outcome(
+        lines,
+        (
+            "not event(MigrationPolicyPairAllowed("
+            "new_cert_issuer,claim_transition_ca))",
+        ),
+        "is false.",
+    )
 
     require_outcome(
         lines, ("not event(RollbackRejected(token_type,",), "is false."
@@ -334,24 +434,23 @@ def check_cache_migration() -> None:
         ("not event(MigrationWindowComplete(window_new_cert))",),
         "is false.",
     )
-    for claim in ("claim_transition_ca", "claim_new_ca"):
-        require_outcome(
-            lines,
-            (
-                "not event(MigrationCertAccepted("
-                f"window_new_cert,new_cert_issuer,{claim}))",
-            ),
-            "is false.",
-        )
-        require_outcome(
-            lines,
-            (
-                "event(MigrationWindowComplete(window_new_cert))",
-                "event(MigrationCertAccepted("
-                f"window_new_cert,new_cert_issuer,{claim}))",
-            ),
-            "is true.",
-        )
+    require_outcome(
+        lines,
+        (
+            "not event(MigrationCertAccepted("
+            "window_new_cert,new_cert_issuer,claim_new_ca))",
+        ),
+        "is false.",
+    )
+    require_outcome(
+        lines,
+        (
+            "event(MigrationWindowComplete(window_new_cert))",
+            "event(MigrationCertAccepted("
+            "window_new_cert,new_cert_issuer,claim_new_ca))",
+        ),
+        "is true.",
+    )
 
 
 def check_key_rotation() -> None:

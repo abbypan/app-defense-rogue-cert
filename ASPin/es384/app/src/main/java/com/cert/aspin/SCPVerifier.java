@@ -17,10 +17,10 @@ public final class SCPVerifier {
 
         static {
         Map<String, String> pins = new HashMap<>();
-        pins.put("es256.idouzi.top", "ce8525034c4ab2ead778cf84b90c914d694565f1ef929ebd9341d6a072ea8672");
-        pins.put("es384.idouzi.top", "7ba0fb371c932c3af188fe46255cb686f937015495714ef5c94ebeb86233a437");
-        pins.put("rsa3072.idouzi.top", "c62b670a0b696a44ffbeea466403b86459f64bef37936094c6af51b7556046ff");
-        pins.put("rsa4096.idouzi.top", "37aec2e5b92c7c6dfe68f34e92f6ccf42309a242f394762d42699dd9bc708b81");
+        pins.put("es256.idouzi.top", "93d6f15964f16503b2f5139acede752a76ea028e97810dc70afcbfbf804b6aa1");
+        pins.put("es384.idouzi.top", "780612e02fba2f0c3344fa8b1b59d4c50781bfe73f66688877ad90b055bfe616");
+        pins.put("rsa3072.idouzi.top", "4955602784ebf828eecd72da45cbae49f8405be951ad4e6425d3024f8bd940be");
+        pins.put("rsa4096.idouzi.top", "70ef20eaafbdefc3dee524a06763708739c445ec9cdd618fe5cb4e11fd258cb2");
         PRESET_CERTIFICATE_HASHES = Collections.unmodifiableMap(pins);
     }
 
@@ -33,7 +33,7 @@ public final class SCPVerifier {
         }
         String pin = PRESET_CERTIFICATE_HASHES.get(host.toLowerCase(Locale.ROOT));
         if (pin == null) {
-            return "ce8525034c4ab2ead778cf84b90c914d694565f1ef929ebd9341d6a072ea8672";
+            return "93d6f15964f16503b2f5139acede752a76ea028e97810dc70afcbfbf804b6aa1";
         }
         return pin;
     }

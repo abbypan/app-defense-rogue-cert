@@ -42,8 +42,8 @@ public class MainActivity extends AppCompatActivity {
     private Button GetAndVerifyDCPButton;
 
     private Button AvgVerifTimeBenchmarkButton;
-    private Button JwtCskBenchmarkButton;
-    private Button JwtSccBenchmarkButton;
+    private Button JwsCskBenchmarkButton;
+    private Button JwsSccBenchmarkButton;
     private Button DCPBenchmarkButton;
 
     private Button httpsDefaultConnectionBenchmarkButton;
@@ -77,8 +77,8 @@ public class MainActivity extends AppCompatActivity {
         GetAndVerifyClaimButton = findViewById(R.id.GetAndVerifyClaimButton);
         GetAndVerifyDCPButton = findViewById(R.id.GetAndVerifyDCPButton);
         AvgVerifTimeBenchmarkButton = findViewById(R.id.AvgVerifTimeBenchmarkButton);
-        JwtCskBenchmarkButton = findViewById(R.id.JwtCskBenchmarkButton);
-        JwtSccBenchmarkButton = findViewById(R.id.JwtSccBenchmarkButton);
+        JwsCskBenchmarkButton = findViewById(R.id.JwsCskBenchmarkButton);
+        JwsSccBenchmarkButton = findViewById(R.id.JwsSccBenchmarkButton);
         DCPBenchmarkButton = findViewById(R.id.DCPBenchmarkButton);
         httpsDefaultConnectionBenchmarkButton = findViewById(R.id.httpsDefaultConnectionBenchmarkButton);
         httpsSCPConnectionBenchmarkButton = findViewById(R.id.httpsSCPConnectionBenchmarkButton);
@@ -114,12 +114,12 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        JwtCskBenchmarkButton.setOnClickListener(v -> {
-            runVerifyJwtCskBenchmark();
+        JwsCskBenchmarkButton.setOnClickListener(v -> {
+            runVerifyJwsCskBenchmark();
         });
 
-        JwtSccBenchmarkButton.setOnClickListener(v -> {
-            runVerifyJwtSccBenchmark();
+        JwsSccBenchmarkButton.setOnClickListener(v -> {
+            runVerifyJwsSccBenchmark();
         });
 
 
@@ -379,7 +379,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void runVerifyJwtCskBenchmark() {
+    public void runVerifyJwsCskBenchmark() {
         // Show loading message
         int maxAttempts = getCurrentMaxBenchmarkAttempts();
         mainHandler.post(() -> {
@@ -422,7 +422,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    public void runVerifyJwtSccBenchmark() {
+    public void runVerifyJwsSccBenchmark() {
         // Show loading message
         int maxAttempts = getCurrentMaxBenchmarkAttempts();
         mainHandler.post(() -> {
@@ -695,7 +695,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    public void runGetJwtCskBenchmark() {
+    public void runGetJwsCskBenchmark() {
         // Show loading message
         int maxAttempts = getCurrentMaxBenchmarkAttempts();
         mainHandler.post(() -> {
@@ -709,7 +709,7 @@ public class MainActivity extends AppCompatActivity {
                 String host = getCurrentHost();
 
                 // Run benchmark with dynamic iterations
-                String benchmarkResults = BenchmarkVerifier.runGetJwtCskBenchmark(host, maxAttempts);
+                String benchmarkResults = BenchmarkVerifier.runGetJwsCskBenchmark(host, maxAttempts);
 
                 // Update the response text view with benchmark results on main thread
                 mainHandler.post(() -> {
@@ -734,7 +734,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    public void runGetJwtSccBenchmark() {
+    public void runGetJwsSccBenchmark() {
         // Show loading message
         int maxAttempts = getCurrentMaxBenchmarkAttempts();
         mainHandler.post(() -> {
@@ -747,7 +747,7 @@ public class MainActivity extends AppCompatActivity {
                 String host = getCurrentHost();
 
                 // Run benchmark with dynamic iterations
-                String benchmarkResults = BenchmarkVerifier.runGetJwtSccBenchmark(host, maxAttempts);
+                String benchmarkResults = BenchmarkVerifier.runGetJwsSccBenchmark(host, maxAttempts);
 
                 // Update the response text view with benchmark results on main thread
                 mainHandler.post(() -> {
@@ -813,6 +813,11 @@ public class MainActivity extends AppCompatActivity {
                     intent.getStringExtra("probe_label"),
                     intent.getBooleanExtra("force_refresh", false),
                     intent.getStringExtra("expected_error"));
+        } else if ("parallelrefresh".equalsIgnoreCase(benchmarkType)) {
+            runParallelRefreshBenchmarkAuto(csvPath,
+                    intent.getStringExtra("second_host"));
+        } else if ("expirybound".equalsIgnoreCase(benchmarkType)) {
+            runDelegationExpiryBoundProbeAuto(csvPath);
         }
     }
 
@@ -1188,6 +1193,108 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
+    public void runParallelRefreshBenchmarkAuto(String csvPath, String requestedSecondHost) {
+        final String firstHost = getCurrentHost();
+        final String secondHost = requestedSecondHost == null
+                ? "es384.idouzi.top" : requestedSecondHost.trim();
+        new Thread(() -> {
+            java.util.concurrent.ExecutorService executor =
+                    java.util.concurrent.Executors.newFixedThreadPool(2);
+            long wallStart = System.nanoTime();
+            try {
+                java.util.concurrent.CountDownLatch ready =
+                        new java.util.concurrent.CountDownLatch(2);
+                java.util.concurrent.CountDownLatch start =
+                        new java.util.concurrent.CountDownLatch(1);
+                java.util.concurrent.Callable<long[]> first = () -> {
+                    ready.countDown(); start.await();
+                    long begin = System.nanoTime();
+                    OsAspinClient.Result result = refreshValidatedAspinClaim(firstHost);
+                    return new long[] {System.nanoTime() - begin,
+                            result.getClaimKeyDownloadAndVerificationNanos()
+                                    + result.getClaimDownloadAndVerificationNanos()};
+                };
+                java.util.concurrent.Callable<long[]> second = () -> {
+                    ready.countDown(); start.await();
+                    long begin = System.nanoTime();
+                    OsAspinClient.Result result = OsAspinClient.refreshCertificateClaimForApp(
+                            this, "com.cert.aspin.caller", secondHost);
+                    return new long[] {System.nanoTime() - begin,
+                            result.getClaimKeyDownloadAndVerificationNanos()
+                                    + result.getClaimDownloadAndVerificationNanos()};
+                };
+                java.util.concurrent.Future<long[]> firstResult = executor.submit(first);
+                java.util.concurrent.Future<long[]> secondResult = executor.submit(second);
+                ready.await();
+                wallStart = System.nanoTime();
+                start.countDown();
+                long[] firstTiming = firstResult.get();
+                long[] secondTiming = secondResult.get();
+                long firstNanos = firstTiming[0];
+                long secondNanos = secondTiming[0];
+                long combinedServiceWorkNanos = firstTiming[1] + secondTiming[1];
+                long wallNanos = System.nanoTime() - wallStart;
+                boolean overlapped = wallNanos < combinedServiceWorkNanos;
+                String header = "FirstHost,SecondHost,First_ms,Second_ms,Wall_ms,"
+                        + "CombinedServiceWork_ms,"
+                        + "OverlapObserved,Result,Timestamp";
+                String timestamp = new java.text.SimpleDateFormat(
+                        "yyyy-MM-dd HH:mm:ss", Locale.ROOT).format(new java.util.Date());
+                String row = String.format(Locale.ROOT,
+                        "%s,%s,%.3f,%.3f,%.3f,%.3f,%s,%s,%s",
+                        firstHost, secondHost, firstNanos / 1_000_000.0,
+                        secondNanos / 1_000_000.0, wallNanos / 1_000_000.0,
+                        combinedServiceWorkNanos / 1_000_000.0,
+                        overlapped, overlapped ? "PASS" : "FAIL", timestamp);
+                saveCsvResult(csvPath, header, row);
+            } catch (Exception e) {
+                Log.e(TAG, "Parallel refresh benchmark failed", e);
+            } finally {
+                executor.shutdownNow();
+            }
+        }).start();
+    }
+
+    public void runDelegationExpiryBoundProbeAuto(String csvPath) {
+        final String host = getCurrentHost();
+        new Thread(() -> {
+            String error = "";
+            boolean pass = false;
+            long effectiveExp = 0;
+            long tkExp = 0;
+            long tcExp = 0;
+            try {
+                tkExp = tokenExpiration(HttpsConn.getHttpContent(
+                        "http://" + host + "/.well-known/ClaimSigningKey.jws"));
+                tcExp = tokenExpiration(HttpsConn.getHttpContent(
+                        "http://" + host + "/.well-known/ServerCertClaim.jws"));
+                OsAspinClient.Result result = refreshValidatedAspinClaim(host);
+                effectiveExp = result.getExpiresAtMillis();
+                pass = effectiveExp == Math.min(tkExp, tcExp);
+            } catch (Exception e) {
+                error = e.getClass().getSimpleName() + ":" + String.valueOf(e.getMessage());
+            }
+            String header = "EffectiveExp_ms,TkExp_ms,TcExp_ms,BoundMatches,Result,Error,Timestamp";
+            String timestamp = new java.text.SimpleDateFormat(
+                    "yyyy-MM-dd HH:mm:ss", Locale.ROOT).format(new java.util.Date());
+            String row = String.format(Locale.ROOT, "%d,%d,%d,%s,%s,\"%s\",%s",
+                    effectiveExp, tkExp, tcExp, pass, pass ? "PASS" : "FAIL",
+                    error.replace('"', '\'').replace(',', ' '), timestamp);
+            saveCsvResult(csvPath, header, row);
+        }).start();
+    }
+
+    private static long tokenExpiration(String token) throws Exception {
+        org.json.JSONObject general = new org.json.JSONObject(token);
+        String encoded = general.getString("payload");
+        byte[] payload = android.util.Base64.decode(encoded,
+                android.util.Base64.URL_SAFE | android.util.Base64.NO_PADDING
+                        | android.util.Base64.NO_WRAP);
+        return Math.multiplyExact(new org.json.JSONObject(
+                new String(payload, java.nio.charset.StandardCharsets.UTF_8)).getLong("exp"),
+                1000L);
+    }
+
     private static double meanMillis(long[] durations) {
         if (durations.length == 0) return 0.0;
         double total = 0.0;
@@ -1206,10 +1313,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void saveCsvResult(String csvPath, String header, String row) {
         try {
-            java.io.File dir = getExternalFilesDir(null);
-            if (dir == null) {
-                dir = getFilesDir();
-            }
+            java.io.File dir = getFilesDir();
             if (dir != null && !dir.exists()) {
                 dir.mkdirs();
             }
@@ -1237,10 +1341,14 @@ public class MainActivity extends AppCompatActivity {
         runTableAvgVisitTimeBenchmarkAuto(getCurrentMaxBenchmarkAttempts(), null);
     }
 
-    private String extractCertFromTkJwt(String tkJwt) {
+    private String extractCertFromTkJws(String tkJws) {
         try {
-            com.nimbusds.jwt.SignedJWT signedJwt = com.nimbusds.jwt.SignedJWT.parse(tkJwt);
-            var chain = signedJwt.getHeader().getX509CertChain();
+            org.json.JSONObject general = new org.json.JSONObject(tkJws);
+            org.json.JSONObject entry = general.getJSONArray("signatures").getJSONObject(0);
+            com.nimbusds.jose.JWSObject signedJws = com.nimbusds.jose.JWSObject.parse(
+                    entry.getString("protected") + "." + general.getString("payload")
+                            + "." + entry.getString("signature"));
+            var chain = signedJws.getHeader().getX509CertChain();
             if (chain != null && !chain.isEmpty()) {
                 return chain.get(0).toString();
             }

@@ -38,7 +38,7 @@ public class JwkToPublicKeyConverter {
         }
 
         try {
-            // Parse the JWK using Nimbus JOSE JWT library
+            // Parse the JWK using the Nimbus JOSE library.
             JWK jwk = JWK.parse(jwkJsonString);
             return convertJwkToPublicKey(jwk);
         } catch (Exception e) {
@@ -148,30 +148,30 @@ public class JwkToPublicKeyConverter {
     }
 
     /**
-     * Extracts JWK from a JWT payload and converts it to PublicKey.
-     * This is useful when the JWK is embedded in a JWT token.
+     * Extracts JWK from a JWS payload and converts it to PublicKey.
+     * This is useful when the JWK is embedded in a JWS object.
      * 
-     * @param jwtPayload The JWT payload as a JSON string
+     * @param jwsPayload The JWS payload as a JSON string
      * @return PublicKey object
-     * @throws Exception if the JWT payload doesn't contain a valid JWK
+     * @throws Exception if the JWS payload doesn't contain a valid JWK
      */
-    public static PublicKey extractJwkFromJwtPayload(String jwtPayload) throws Exception {
-        if (jwtPayload == null || jwtPayload.trim().isEmpty()) {
-            throw new IllegalArgumentException("JWT payload cannot be null or empty");
+    public static PublicKey extractJwkFromJwsPayload(String jwsPayload) throws Exception {
+        if (jwsPayload == null || jwsPayload.trim().isEmpty()) {
+            throw new IllegalArgumentException("JWS payload cannot be null or empty");
         }
 
         try {
-            JSONObject payload = new JSONObject(jwtPayload);
+            JSONObject payload = new JSONObject(jwsPayload);
             
             // Check if the payload contains JWK fields
             if (payload.has("kty") && payload.has("x")) {
                 // This looks like a JWK, convert it directly
                 return convertJwkToPublicKey(payload.toString());
             } else {
-                throw new IllegalArgumentException("JWT payload does not contain a valid JWK");
+                throw new IllegalArgumentException("JWS payload does not contain a valid JWK");
             }
         } catch (Exception e) {
-            throw new Exception("Failed to extract JWK from JWT payload: " + e.getMessage(), e);
+            throw new Exception("Failed to extract JWK from JWS payload: " + e.getMessage(), e);
         }
     }
 

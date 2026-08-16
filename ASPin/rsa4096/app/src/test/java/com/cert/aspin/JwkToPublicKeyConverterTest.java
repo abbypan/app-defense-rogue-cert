@@ -18,8 +18,8 @@ public class JwkToPublicKeyConverterTest {
     @Test
     public void convertsDelegatedKeyFromCurrentTk() throws Exception {
         String variant = new File("..").getCanonicalFile().getName();
-        String token = JsonUtils.read_file("src/main/resources/ClaimSigningKey.jwt");
-        String encodedPayload = token.split("\\.")[1];
+        String token = JsonUtils.read_file("src/main/resources/ClaimSigningKey.jws");
+        String encodedPayload = new JSONObject(token).getString("payload");
         JSONObject payload = new JSONObject(new String(Base64.getUrlDecoder().decode(
                 encodedPayload + "=".repeat((4 - encodedPayload.length() % 4) % 4)),
                 java.nio.charset.StandardCharsets.UTF_8));

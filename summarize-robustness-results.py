@@ -194,6 +194,27 @@ def summarize_lifecycle(run_dir: Path) -> None:
     write_rows(run_dir / "table_lifecycle.csv", output_fields, rows)
 
 
+def validate_additional_probes(run_dir: Path) -> None:
+    parallel = read_one(run_dir / "parallel-cold-refresh.csv")
+    require(
+        parallel,
+        ("First_ms", "Second_ms", "Wall_ms", "CombinedServiceWork_ms",
+         "OverlapObserved"),
+        run_dir / "parallel-cold-refresh.csv",
+    )
+    if parallel["OverlapObserved"].lower() != "true":
+        raise SystemExit("parallel-cold-refresh.csv: refreshes did not overlap")
+
+    expiry = read_one(run_dir / "delegation-expiry.csv")
+    require(
+        expiry,
+        ("EffectiveExp_ms", "TkExp_ms", "TcExp_ms", "BoundMatches"),
+        run_dir / "delegation-expiry.csv",
+    )
+    if expiry["BoundMatches"].lower() != "true":
+        raise SystemExit("delegation-expiry.csv: returned expiration is not min(Tk,Tc)")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("run_dir", type=Path, help="results/robustness-<timestamp>")
@@ -206,6 +227,7 @@ def main() -> None:
     summarize_connections(run_dir)
     summarize_concurrency(run_dir)
     summarize_lifecycle(run_dir)
+    validate_additional_probes(run_dir)
     print(f"Validated robustness run and wrote summary tables under {run_dir}")
 
 

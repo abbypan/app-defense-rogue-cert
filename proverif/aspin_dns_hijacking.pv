@@ -4,9 +4,9 @@ let RealServer =
   let sk_app = gen_sk_for_id(app_signing) in
   let sk_claim = gen_sk_for_id(claim_signing) in
   let token_iat = curr in
-  let token_exp = succ_t(curr) in
+  let token_exp = succ_t(succ_t(curr)) in
 
-  let token_k = jwt_sign(
+  let token_k = jws_general_sign(
       pk2s(pk(sk_app)), pk2s(pk(sk_claim)),
       token_iat, token_exp, sk_app) in
   event ClaimKeySign(
@@ -15,7 +15,7 @@ let RealServer =
 
   let claim = cert_claim(
       server_cert_subject_and_san, real_cert_issuer) in
-  let token_c = jwt_sign(
+  let token_c = jws_general_sign(
       pk2s(pk(sk_claim)), claim, token_iat, token_exp, sk_claim) in
   event CertClaimSign(
       sk_claim, server_cert_subject_and_san, real_cert_issuer,
@@ -74,28 +74,28 @@ let DNSHijackingRogueServer =
   .
 
 let LegitimateApp =
-  (* ClaimKeyVerify: platform-authenticated K_apub, header/kid, signature,
+  (* ClaimKeyVerify: OS-authenticated K_apub, header/kid, signature,
    * iat/exp freshness, and derived ttl. *)
-  in(c, jwt(hk: bitstring, pk_payload: bitstring, sigk: bitstring));
+  in(c, jws_general(hk: bitstring, pk_payload: bitstring, sigk: bitstring));
   let pk_app = pk(gen_sk_for_id(app_signing)) in
   let key_iat = get_iat(pk_payload) in
   let key_exp = get_exp(pk_payload) in
   let (=true) = header_matches(hk, pk_app) in
-  let (=true) = jwt_sig_verify(jwt(hk, pk_payload, sigk), pk_app) in
+  let (=true) = jws_general_verify(jws_general(hk, pk_payload, sigk), pk_app) in
   let (=true) = token_fresh(key_iat, key_exp, curr) in
-  let (=true) = derive_ttl(key_iat, key_exp) = ttl_one in
+  let (=true) = derive_ttl(key_iat, key_exp) = ttl_two in
   let pk_claim = s2pk(get_content(pk_payload)) in
   event ClaimKeyVerify(pk_app, pk_claim, key_iat, key_exp);
 
   (* CertClaimVerify also requires T_c's header key to equal authenticated
    * K_cpub, as required by the construction. *)
-  in(c, jwt(hc: bitstring, claim_payload: bitstring, sigc: bitstring));
+  in(c, jws_general(hc: bitstring, claim_payload: bitstring, sigc: bitstring));
   let claim_iat = get_iat(claim_payload) in
   let claim_exp = get_exp(claim_payload) in
   let (=true) = header_matches(hc, pk_claim) in
-  let (=true) = jwt_sig_verify(jwt(hc, claim_payload, sigc), pk_claim) in
+  let (=true) = jws_general_verify(jws_general(hc, claim_payload, sigc), pk_claim) in
   let (=true) = token_fresh(claim_iat, claim_exp, curr) in
-  let (=true) = derive_ttl(claim_iat, claim_exp) = ttl_one in
+  let (=true) = derive_ttl(claim_iat, claim_exp) = ttl_two in
   let claim = get_content(claim_payload) in
   let claim_identity = get_subject_and_san(claim) in
   let claim_issuer = get_issuer(claim) in
@@ -116,6 +116,10 @@ let LegitimateApp =
   let cert = gen_cert(cert_key, cert_identity, cert_issuer, cert_sig) in
   let server_msg = server_hello(server_random, pk_ephemeral) in
   let transcript = transcript_hash(client_msg, server_msg, cert) in
+  let connection_time = succ_t(curr) in
+  let (=true) = token_fresh(key_iat, key_exp, connection_time) in
+  let (=true) = token_fresh(claim_iat, claim_exp, connection_time) in
+  event ClaimFreshAtCheck(hostname);
   if (check_host(hostname, cert_identity) = true) &&
      (sig_verify(cert_content(cert_key, cert_identity, cert_issuer),
                  cert_sig, pk(gen_sk_for_id(cert_issuer))) = true) &&
@@ -158,6 +162,10 @@ query h: bitstring, th: bitstring, data: bitstring,
 query h: bitstring, th: bitstring, data: bitstring,
       cert: bitstring, ciphertext: bitstring;
   event(AppConnRS(h, th, data, cert, ciphertext)).
+query h: bitstring, th: bitstring, data: bitstring,
+      cert: bitstring, ciphertext: bitstring;
+  event(AppConnRS(h, th, data, cert, ciphertext)) ==>
+  event(ClaimFreshAtCheck(h)).
 query h: bitstring, th: bitstring, data: bitstring,
       cert: bitstring, ciphertext: bitstring;
   event(RSAccept(h, th, data, cert, ciphertext)) ==>

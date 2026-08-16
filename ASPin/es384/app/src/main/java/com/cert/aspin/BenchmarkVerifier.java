@@ -148,11 +148,11 @@ public class BenchmarkVerifier {
     }
 
     /**
-     * Get a formatted summary of the JWT benchmark result
+     * Get a formatted summary of the JWS benchmark result
      */
     public String getSummary() {
         StringBuilder sb = new StringBuilder();
-        sb.append("JWT Benchmark Summary:\n");
+        sb.append("JWS Benchmark Summary:\n");
         sb.append("=====================\n");
         sb.append("Operation: ").append(operation).append("\n");
         sb.append("Attempt: ").append(attemptNumber).append("\n");
@@ -330,7 +330,7 @@ public class BenchmarkVerifier {
     }
 
     /**
-     * Benchmark HTTPS connection creation for ServerCertClaim.jwt
+     * Benchmark HTTPS connection creation for ServerCertClaim.jws
      */
     public static BenchmarkVerifier benchmarkHttpsGetCertClaim(String host, int attemptNumber) {
         BenchmarkVerifier result = new BenchmarkVerifier();
@@ -344,7 +344,7 @@ public class BenchmarkVerifier {
         
         try {
             connectionStartTime = System.nanoTime();
-            HttpsURLConnection con = HttpsConn.create_conn("https://" + host + "/.well-known/ServerCertClaim.jwt");
+            HttpsURLConnection con = HttpsConn.create_conn("https://" + host + "/.well-known/ServerCertClaim.jws");
             String info = HttpsConn.get_content(con);
             connectionEndTime = System.nanoTime();
             result.setParseTimeUs((connectionEndTime - connectionStartTime) / 1_000);
@@ -364,9 +364,9 @@ public class BenchmarkVerifier {
     }
 
     /**
-     * Benchmark HTTPS connection creation for ClaimSigningKey.jwt
+     * Benchmark HTTPS connection creation for ClaimSigningKey.jws
      */
-    public static BenchmarkVerifier benchmarkGetSigningKeyJWT(String host, int attemptNumber) {
+    public static BenchmarkVerifier benchmarkGetSigningKeyJWS(String host, int attemptNumber) {
         BenchmarkVerifier result = new BenchmarkVerifier();
         result.setOperation("createConn");
         result.setAttemptNumber(attemptNumber);
@@ -378,7 +378,7 @@ public class BenchmarkVerifier {
         
         try {
             connectionStartTime = System.nanoTime();
-            HttpsURLConnection con = HttpsConn.create_conn("https://" + host + "/.well-known/ClaimSigningKey.jwt");
+            HttpsURLConnection con = HttpsConn.create_conn("https://" + host + "/.well-known/ClaimSigningKey.jws");
             String info = HttpsConn.get_content(con);
 
             connectionEndTime = System.nanoTime();
@@ -399,13 +399,13 @@ public class BenchmarkVerifier {
     }
 
     /**
-     * Benchmark JWT verification with JWK
+     * Benchmark JWS verification with JWK
      */
-    public static BenchmarkVerifier benchmarkVerifyJwtWithJwk(String token, String jwkJson, int attemptNumber) {
+    public static BenchmarkVerifier benchmarkVerifyJwsWithJwk(String token, String jwkJson, int attemptNumber) {
         BenchmarkVerifier result = new BenchmarkVerifier();
-        result.setOperation("verifyJwtWithJwk");
+        result.setOperation("verifyJwsWithJwk");
         result.setAttemptNumber(attemptNumber);
-        result.setTokenType(token.trim().startsWith("{") ? "JSON" : "Compact");
+        result.setTokenType("General JWS JSON");
         result.setTokenSizeBytes(token.getBytes().length);
         
         long startTime = System.nanoTime();
@@ -418,7 +418,7 @@ public class BenchmarkVerifier {
             result.setParseTimeUs((parseEndTime - parseStartTime) / 1_000);
             
             verificationStartTime = System.nanoTime();
-            String payload = JwtVerifier.verifyJwtWithJwk(token, jwkJson);
+            String payload = JwsVerifier.verifyJwsWithJwk(token, jwkJson);
             verificationEndTime = System.nanoTime();
             result.setVerificationTimeUs((verificationEndTime - verificationStartTime) / 1_000);
             
@@ -451,13 +451,13 @@ public class BenchmarkVerifier {
     }
 
     /**
-     * Benchmark JWT verification with certificate
+     * Benchmark JWS verification with certificate
      */
-    public static BenchmarkVerifier benchmarkVerifyJwtWithCert(String token, String cert, int attemptNumber) {
+    public static BenchmarkVerifier benchmarkVerifyJwsWithCert(String token, String cert, int attemptNumber) {
         BenchmarkVerifier result = new BenchmarkVerifier();
-        result.setOperation("verifyJwtWithCert");
+        result.setOperation("verifyJwsWithCert");
         result.setAttemptNumber(attemptNumber);
-        result.setTokenType(token.trim().startsWith("{") ? "JSON" : "Compact");
+        result.setTokenType("General JWS JSON");
         result.setTokenSizeBytes(token.getBytes().length);
         
         long startTime = System.nanoTime();
@@ -470,7 +470,7 @@ public class BenchmarkVerifier {
             result.setParseTimeUs((parseEndTime - parseStartTime) / 1_000);
             
             verificationStartTime = System.nanoTime();
-            String payload = JwtVerifier.verifyJwtWithCert(token, cert);
+            String payload = JwsVerifier.verifyJwsWithCert(token, cert);
             verificationEndTime = System.nanoTime();
             result.setVerificationTimeUs((verificationEndTime - verificationStartTime) / 1_000);
             
@@ -592,7 +592,7 @@ public class BenchmarkVerifier {
         return calculateBenchmarkStatistics(results);
     }
 
-    public static String runGetJwtSccBenchmark(String host, int iterations) {
+    public static String runGetJwsSccBenchmark(String host, int iterations) {
         List<BenchmarkVerifier> results = new ArrayList<>();
         
         for (int i = 1; i <= iterations; i++) {
@@ -610,11 +610,11 @@ public class BenchmarkVerifier {
         return calculateBenchmarkStatistics(results);
     }
 
-    public static String runGetJwtCskBenchmark(String host, int iterations) {
+    public static String runGetJwsCskBenchmark(String host, int iterations) {
         List<BenchmarkVerifier> results = new ArrayList<>();
         
         for (int i = 1; i <= iterations; i++) {
-            BenchmarkVerifier result = benchmarkGetSigningKeyJWT(host, i);
+            BenchmarkVerifier result = benchmarkGetSigningKeyJWS(host, i);
             results.add(result);
             
             try {
@@ -646,11 +646,11 @@ public class BenchmarkVerifier {
         return calculateBenchmarkStatistics(results);
     }
 
-    public static String runVerifyJwtSccBenchmark(String token, String jwkJson, int iterations) {
+    public static String runVerifyJwsSccBenchmark(String token, String jwkJson, int iterations) {
         List<BenchmarkVerifier> results = new ArrayList<>();
         
         for (int i = 1; i <= iterations; i++) {
-            BenchmarkVerifier result = benchmarkVerifyJwtWithJwk(token, jwkJson, i);
+            BenchmarkVerifier result = benchmarkVerifyJwsWithJwk(token, jwkJson, i);
             results.add(result);
             
             try {
@@ -682,11 +682,11 @@ public class BenchmarkVerifier {
         return calculateBenchmarkStatistics(results);
     }
 
-    public static String runVerifyJwtCskBenchmark(String token, String cert, int iterations) {
+    public static String runVerifyJwsCskBenchmark(String token, String cert, int iterations) {
         List<BenchmarkVerifier> results = new ArrayList<>();
         
         for (int i = 1; i <= iterations; i++) {
-            BenchmarkVerifier result = benchmarkVerifyJwtWithCert(token, cert, i);
+            BenchmarkVerifier result = benchmarkVerifyJwsWithCert(token, cert, i);
             results.add(result);
             
             try {
@@ -735,7 +735,7 @@ public class BenchmarkVerifier {
         double avgVerificationTime = (double) verificationTimeSum / successfulResults.size();
         
         StringBuilder sb = new StringBuilder();
-        sb.append("JWT Verification Benchmark Results\n");
+        sb.append("JWS Verification Benchmark Results\n");
         sb.append("==================================\n");
         sb.append("Total Iterations: ").append(results.size()).append("\n");
         sb.append("Successful: ").append(successfulResults.size()).append("\n");
@@ -758,26 +758,26 @@ public class BenchmarkVerifier {
     // Direct verification timing methods for table:avgveriftime benchmark (excludes download delay)
     // =========================================================================
 
-    public static double benchmarkTkMs(String tkJwt, java.security.PublicKey appPublicKey, int iterations) throws Exception {
+    public static double benchmarkTkMs(String tkJws, java.security.PublicKey appPublicKey, int iterations) throws Exception {
         for (int i = 0; i < 10; i++) {
-            JwtVerifier.verifyJwt(tkJwt, appPublicKey);
+            JwsVerifier.verifyJws(tkJws, appPublicKey);
         }
         long startNs = System.nanoTime();
         for (int i = 0; i < iterations; i++) {
-            JwtVerifier.verifyJwt(tkJwt, appPublicKey);
+            JwsVerifier.verifyJws(tkJws, appPublicKey);
         }
         long totalNs = System.nanoTime() - startNs;
         return (totalNs / 1_000_000.0) / iterations;
     }
 
-    public static double benchmarkTcMs(String tcJwt, String csJwkJson, int iterations) throws Exception {
-        java.security.PublicKey csPublicKey = JwtVerifier.parseKeyFromJwkOrPem(csJwkJson);
+    public static double benchmarkTcMs(String tcJws, String csJwkJson, int iterations) throws Exception {
+        java.security.PublicKey csPublicKey = JwsVerifier.parseKeyFromJwkOrPem(csJwkJson);
         for (int i = 0; i < 10; i++) {
-            JwtVerifier.verifyJwt(tcJwt, csPublicKey);
+            JwsVerifier.verifyJws(tcJws, csPublicKey);
         }
         long startNs = System.nanoTime();
         for (int i = 0; i < iterations; i++) {
-            JwtVerifier.verifyJwt(tcJwt, csPublicKey);
+            JwsVerifier.verifyJws(tcJws, csPublicKey);
         }
         long totalNs = System.nanoTime() - startNs;
         return (totalNs / 1_000_000.0) / iterations;

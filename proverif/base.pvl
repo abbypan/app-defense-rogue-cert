@@ -57,11 +57,15 @@ const caller_app_id: bitstring.
 const target_app_id: bitstring.
 fun package_signing_record(bitstring, pkey): bitstring [private].
 reduc forall app_id: bitstring, signing_key: pkey;
-      resolve_platform_key(
+      resolve_os_key(
           package_signing_record(app_id, signing_key), app_id) = signing_key.
 
-(* X.509 and native TLS validation abstraction.  Both issuers are in the
- * uncompromised system trust store; ASPin must reject the unexpected one. *)
+(* X.509 and native TLS validation abstraction. real_cert_issuer and
+ * rogue_cert_issuer denote the concrete hash-name-tagged identifiers of the
+ * complete direct issuer CA certificates. gen_sk_for_id privately relates each
+ * abstract identifier to its CA signing key; DER extraction and hashing remain
+ * outside the symbolic model. Both CA certificates are in the uncompromised
+ * system trust store; ASPin must reject the unauthorized one. *)
 fun gen_cert(pkey, bitstring, bitstring, bitstring): bitstring [data].
 fun cert_content(pkey, bitstring, bitstring): bitstring [data].
 reduc check_host(server_hostname, server_cert_subject_and_san) = true.
@@ -155,44 +159,46 @@ reduc forall subject_and_san: bitstring, issuer: bitstring;
 reduc forall subject_and_san: bitstring, issuer: bitstring;
       get_issuer(cert_claim(subject_and_san, issuer)) = issuer.
 
-(* JWT/JWS abstraction. T_k signs the delegated key, iat, and exp. T_c signs
- * the certificate claim (including Subject/SAN), iat, and exp. *)
-fun jwt_payload(bitstring, timestamp, timestamp): bitstring [data].
+(* General JWS JSON Serialization abstraction. The single-signature form has
+ * one protected header/signature entry; the transition form below has two
+ * entries over the same payload. T_k signs the delegated key, iat, and exp.
+ * T_c signs the certificate claim (including Subject/SAN), iat, and exp. *)
+fun jws_payload(bitstring, timestamp, timestamp): bitstring [data].
 reduc forall content: bitstring, iat: timestamp, exp: timestamp;
-      get_content(jwt_payload(content, iat, exp)) = content.
+      get_content(jws_payload(content, iat, exp)) = content.
 reduc forall content: bitstring, iat: timestamp, exp: timestamp;
-      get_iat(jwt_payload(content, iat, exp)) = iat.
+      get_iat(jws_payload(content, iat, exp)) = iat.
 reduc forall content: bitstring, iat: timestamp, exp: timestamp;
-      get_exp(jwt_payload(content, iat, exp)) = exp.
+      get_exp(jws_payload(content, iat, exp)) = exp.
 
-fun jwt(bitstring, bitstring, bitstring): bitstring [data].
-fun jwt_tosign(bitstring, bitstring): bitstring.
+fun jws_general(bitstring, bitstring, bitstring): bitstring [data].
+fun jws_tosign(bitstring, bitstring): bitstring.
 reduc forall header: bitstring, payload: bitstring, signature: bitstring;
-      get_jwt_header(jwt(header, payload, signature)) = header.
+      get_jws_general_header(jws_general(header, payload, signature)) = header.
 reduc forall header: bitstring, payload: bitstring, signature: bitstring;
-      get_jwt_payload(jwt(header, payload, signature)) = payload.
+      get_jws_general_payload(jws_general(header, payload, signature)) = payload.
 reduc forall header: bitstring, payload: bitstring, signature: bitstring;
-      get_jwt_sig(jwt(header, payload, signature)) = signature.
+      get_jws_general_sig(jws_general(header, payload, signature)) = signature.
 
 reduc forall header: bitstring, content: bitstring,
              iat: timestamp, exp: timestamp, signing_key: skey;
-      jwt_sign(header, content, iat, exp, signing_key) =
-      jwt(header, jwt_payload(content, iat, exp),
-          sig_sign(jwt_tosign(
-              header, jwt_payload(content, iat, exp)), signing_key)).
+      jws_general_sign(header, content, iat, exp, signing_key) =
+      jws_general(header, jws_payload(content, iat, exp),
+          sig_sign(jws_tosign(
+              header, jws_payload(content, iat, exp)), signing_key)).
 
 (* Signature verification is separate from freshness, header-key matching,
  * server-identity matching, and anti-rollback checks. *)
 reduc forall header: bitstring, content: bitstring,
              iat: timestamp, exp: timestamp, signing_key: skey;
-      jwt_sig_verify(
-          jwt(header, jwt_payload(content, iat, exp),
-              sig_sign(jwt_tosign(
-                  header, jwt_payload(content, iat, exp)), signing_key)),
+      jws_general_verify(
+          jws_general(header, jws_payload(content, iat, exp),
+              sig_sign(jws_tosign(
+                  header, jws_payload(content, iat, exp)), signing_key)),
           pk(signing_key)) = true.
 
-(* General JWS JSON Serialization for the app-signing-key transition.  The
- * two protected headers and signatures authenticate one identical payload. *)
+(* Two-signature General JWS form for an app-signing-key transition. The two
+ * protected headers and signatures authenticate one identical payload. *)
 fun jws_dual(
     bitstring, bitstring, bitstring, bitstring, bitstring): bitstring [data].
 reduc forall h1: bitstring, h2: bitstring, content: bitstring,
@@ -200,33 +206,33 @@ reduc forall h1: bitstring, h2: bitstring, content: bitstring,
              sk1: skey, sk2: skey;
       jws_dual_sign(h1, h2, content, iat, exp, sk1, sk2) =
       jws_dual(
-          h1, h2, jwt_payload(content, iat, exp),
-          sig_sign(jwt_tosign(
-              h1, jwt_payload(content, iat, exp)), sk1),
-          sig_sign(jwt_tosign(
-              h2, jwt_payload(content, iat, exp)), sk2)).
+          h1, h2, jws_payload(content, iat, exp),
+          sig_sign(jws_tosign(
+              h1, jws_payload(content, iat, exp)), sk1),
+          sig_sign(jws_tosign(
+              h2, jws_payload(content, iat, exp)), sk2)).
 
 reduc forall h1: bitstring, h2: bitstring, content: bitstring,
              iat: timestamp, exp: timestamp,
              sk1: skey, sk2: skey;
       jws_dual_verify1(
           jws_dual(
-              h1, h2, jwt_payload(content, iat, exp),
-              sig_sign(jwt_tosign(
-                  h1, jwt_payload(content, iat, exp)), sk1),
-              sig_sign(jwt_tosign(
-                  h2, jwt_payload(content, iat, exp)), sk2)),
+              h1, h2, jws_payload(content, iat, exp),
+              sig_sign(jws_tosign(
+                  h1, jws_payload(content, iat, exp)), sk1),
+              sig_sign(jws_tosign(
+                  h2, jws_payload(content, iat, exp)), sk2)),
           pk(sk1)) = true.
 reduc forall h1: bitstring, h2: bitstring, content: bitstring,
              iat: timestamp, exp: timestamp,
              sk1: skey, sk2: skey;
       jws_dual_verify2(
           jws_dual(
-              h1, h2, jwt_payload(content, iat, exp),
-              sig_sign(jwt_tosign(
-                  h1, jwt_payload(content, iat, exp)), sk1),
-              sig_sign(jwt_tosign(
-                  h2, jwt_payload(content, iat, exp)), sk2)),
+              h1, h2, jws_payload(content, iat, exp),
+              sig_sign(jws_tosign(
+                  h1, jws_payload(content, iat, exp)), sk1),
+              sig_sign(jws_tosign(
+                  h2, jws_payload(content, iat, exp)), sk2)),
           pk(sk2)) = true.
 
 (* Protocol and TLS events. *)
@@ -238,6 +244,7 @@ event CertClaimSign(
     skey, bitstring, bitstring, timestamp, timestamp).
 event CertClaimVerify(
     pkey, bitstring, bitstring, timestamp, timestamp).
+event ClaimFreshAtCheck(bitstring).
 
 event RSAccept(bitstring, bitstring, bitstring, bitstring, bitstring).
 event MSAccept(bitstring, bitstring, bitstring, bitstring, bitstring).

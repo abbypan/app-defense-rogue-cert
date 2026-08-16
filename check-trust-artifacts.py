@@ -20,22 +20,31 @@ ALGORITHMS = {
     "rsa3072": "PS256",
     "rsa4096": "PS384",
 }
-ISSUER_ID = re.compile(r"^sha256:[A-Za-z0-9_-]{43}$")
+ISSUER_ID = re.compile(r"^(sha256|sha384):([A-Za-z0-9_-]+)$")
+ISSUER_DIGEST_LENGTHS = {"sha256": 32, "sha384": 48}
 
 
 def b64url_decode(value):
     return base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
 
 
-def decode_compact(token_path):
+def decode_general(token_path):
     token = token_path.read_text(encoding="utf-8").strip()
-    parts = token.split(".")
-    if len(parts) != 3:
-        raise ValueError(f"{token_path}: expected compact JWS serialization")
+    value = json.loads(token)
+    require_exact_keys(value, ("payload", "signatures"), f"{token_path} JWS")
+    signatures = value["signatures"]
+    if not isinstance(signatures, list) or len(signatures) != 1:
+        raise ValueError(
+            f"{token_path}: ordinary publication requires one General JWS signature"
+        )
+    signature = signatures[0]
+    require_exact_keys(
+        signature, ("protected", "signature"), f"{token_path} JWS signature"
+    )
     return (
         token,
-        json.loads(b64url_decode(parts[0])),
-        json.loads(b64url_decode(parts[1])),
+        json.loads(b64url_decode(signature["protected"])),
+        json.loads(b64url_decode(value["payload"])),
     )
 
 
@@ -97,15 +106,53 @@ def certificate_names(certificate):
     ]
 
 
+def first_pem_certificate(path):
+    certificates = x509.load_pem_x509_certificates(path.read_bytes())
+    if not certificates:
+        raise ValueError(f"{path}: issuer chain contains no certificate")
+    return certificates[0]
+
+
+def issuer_identifier(issuer_certificate, hash_name="sha256"):
+    digest = hashlib.new(
+        hash_name,
+        issuer_certificate.public_bytes(serialization.Encoding.DER),
+    ).digest()
+    return (
+        hash_name
+        + ":"
+        + base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
+    )
+
+
+def validate_issuer_identifier(value, variant):
+    if not isinstance(value, str):
+        raise ValueError(f"{variant}: IssuerId must be a string")
+    match = ISSUER_ID.fullmatch(value)
+    if match is None:
+        raise ValueError(
+            f"{variant}: IssuerId must be hash-name:unpadded-base64url-digest"
+        )
+    hash_name, encoded = match.groups()
+    digest = b64url_decode(encoded)
+    if len(digest) != ISSUER_DIGEST_LENGTHS[hash_name]:
+        raise ValueError(f"{variant}: {hash_name} IssuerId has the wrong digest length")
+    if base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii") != encoded:
+        raise ValueError(f"{variant}: IssuerId digest is not canonical base64url")
+
+
 def validate_variant(repo_root, variant):
     signing_dir = repo_root / "signing" / variant
     server_cert_path = (
         repo_root / "realserver" / "etc" / "cert" / variant / "real-cert.pem"
     )
-    tk_path = signing_dir / "ClaimSigningKey.jwt"
-    tc_path = signing_dir / "ServerCertClaim.jwt"
-    tk, tk_header, tk_payload = decode_compact(tk_path)
-    tc, tc_header, tc_payload = decode_compact(tc_path)
+    issuer_chain_path = (
+        repo_root / "realserver" / "etc" / "cert" / variant / "real-chain.pem"
+    )
+    tk_path = signing_dir / "ClaimSigningKey.jws"
+    tc_path = signing_dir / "ServerCertClaim.jws"
+    tk, tk_header, tk_payload = decode_general(tk_path)
+    tc, tc_header, tc_payload = decode_general(tc_path)
 
     require_exact_keys(tk_header, ("alg", "kid"), f"{variant} T_k header")
     require_exact_keys(tc_header, ("alg", "kid"), f"{variant} T_c header")
@@ -148,14 +195,16 @@ def validate_variant(repo_root, variant):
         raise ValueError(f"{variant}: APK certificate and T_k trust anchor differ")
 
     server_certificate = x509.load_pem_x509_certificate(server_cert_path.read_bytes())
-    expected_issuer = "sha256:" + base64.urlsafe_b64encode(
-        hashlib.sha256(server_certificate.issuer.public_bytes()).digest()
-    ).rstrip(b"=").decode("ascii")
+    issuer_certificate = first_pem_certificate(issuer_chain_path)
+    if server_certificate.issuer != issuer_certificate.subject:
+        raise ValueError(f"{variant}: first chain certificate is not the direct issuer")
+    server_certificate.verify_directly_issued_by(issuer_certificate)
+    expected_issuer = issuer_identifier(issuer_certificate)
     issuers = tc_payload["issuer"]
     if not isinstance(issuers, list) or not issuers:
         raise ValueError(f"{variant}: T_c issuer must be a non-empty IssuerSet")
-    if any(not isinstance(value, str) or not ISSUER_ID.fullmatch(value) for value in issuers):
-        raise ValueError(f"{variant}: malformed DER-derived IssuerId")
+    for value in issuers:
+        validate_issuer_identifier(value, variant)
     if expected_issuer not in issuers:
         raise ValueError(f"{variant}: T_c omits the server certificate IssuerId")
 

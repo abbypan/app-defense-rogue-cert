@@ -5,10 +5,10 @@ let RealServer =
 
 
   let token_iat = curr in
-  let token_exp = succ_t(curr) in
+  let token_exp = succ_t(succ_t(curr)) in
   let header = pk2s(pk(sk_app_signing)) in
   let content = pk2s(pk(sk_claim_signing)) in
-  let token_k = jwt_sign(
+  let token_k = jws_general_sign(
       header, content, token_iat, token_exp, sk_app_signing) in
   event ClaimKeySign(
       sk_app_signing, pk(sk_claim_signing), token_iat, token_exp);
@@ -16,7 +16,7 @@ let RealServer =
 
   let header2 = pk2s(pk(sk_claim_signing)) in
   let content2 = cert_claim(server_cert_subject_and_san, real_cert_issuer) in
-  let token_c = jwt_sign(
+  let token_c = jws_general_sign(
       header2, content2, token_iat, token_exp, sk_claim_signing) in
   event CertClaimSign(
       sk_claim_signing, server_cert_subject_and_san, real_cert_issuer,
@@ -53,10 +53,10 @@ let RealServer =
 
 let MitmServer =
   new sk_rogue_server_temp: skey;
-  in(cs, jwt(hm1: bitstring, plrm1: bitstring, srm1: bitstring));
-  out(cc, jwt(hm1, plrm1, srm1));
-  in(cs, jwt(hm2: bitstring, plrm2: bitstring, srm2: bitstring));
-  out(cc, jwt(hm2, plrm2, srm2));
+  in(cs, jws_general(hm1: bitstring, plrm1: bitstring, srm1: bitstring));
+  out(cc, jws_general(hm1, plrm1, srm1));
+  in(cs, jws_general(hm2: bitstring, plrm2: bitstring, srm2: bitstring));
+  out(cc, jws_general(hm2, plrm2, srm2));
 
   in(cc, client_hello(rand_c, pk_c));
 
@@ -94,28 +94,28 @@ let LegitimateApp =
   new sk_app_temp: skey;
   new random_app: bitstring;
   new sensitive_data: bitstring;
-  in(cc, jwt(h: bitstring, plr: bitstring, sr: bitstring));
+  in(cc, jws_general(h: bitstring, plr: bitstring, sr: bitstring));
   let pk_app_signing = pk(gen_sk_for_id(app_signing)) in
   let key_iat = get_iat(plr) in
   let exp_recv = get_exp(plr) in
   let (=true) = header_matches(h, pk_app_signing) in
-  let (=true) = jwt_sig_verify(jwt(h, plr, sr), pk_app_signing) in
+  let (=true) = jws_general_verify(jws_general(h, plr, sr), pk_app_signing) in
   let (=true) = token_fresh(key_iat, exp_recv, curr) in
-  let (=true) = derive_ttl(key_iat, exp_recv) = ttl_one in
+  let (=true) = derive_ttl(key_iat, exp_recv) = ttl_two in
   let pk1_recv = s2pk(get_content(plr)) in
   event ClaimKeyVerify(
       pk_app_signing, pk1_recv, key_iat, exp_recv);
 
-  in(cc, jwt(h2: bitstring, plr2: bitstring, sr2: bitstring));
+  in(cc, jws_general(h2: bitstring, plr2: bitstring, sr2: bitstring));
   let claim_iat = get_iat(plr2) in
   let content2 = get_content(plr2) in
   let subject_and_san_claim = get_subject_and_san(content2) in
   let issuer_claim = get_issuer(content2) in
   let exp2 = get_exp(plr2) in
   let (=true) = header_matches(h2, pk1_recv) in
-  let (=true) = jwt_sig_verify(jwt(h2, plr2, sr2), pk1_recv) in
+  let (=true) = jws_general_verify(jws_general(h2, plr2, sr2), pk1_recv) in
   let (=true) = token_fresh(claim_iat, exp2, curr) in
-  let (=true) = derive_ttl(claim_iat, exp2) = ttl_one in
+  let (=true) = derive_ttl(claim_iat, exp2) = ttl_two in
   event CertClaimVerify(
       pk1_recv, subject_and_san_claim, issuer_claim, claim_iat, exp2);
 
@@ -133,10 +133,10 @@ let LegitimateApp =
   server_hello(rand_s, pk_recv),
   s_cert)
    in
-
-
-
-
+  let connection_time = succ_t(curr) in
+  let (=true) = token_fresh(key_iat, exp_recv, connection_time) in
+  let (=true) = token_fresh(claim_iat, exp2, connection_time) in
+  event ClaimFreshAtCheck(hostname);
  if  (check_host(hostname, subj_and_san_recv) = true) &&
      (sig_verify(cert_content(cert_pk_recv, subj_and_san_recv, issuer_recv), cert_sig_recv, pk(gen_sk_for_id(issuer_recv))) = true) &&
      (check_issuer(issuer_recv, system_ca_list) = true) &&
@@ -166,9 +166,9 @@ let LegitimateApp =
    - True  = the stated property holds in all executions of this model.
    - False = ProVerif found a counterexample/attack trace. *)
 
-(* Query: JWT claim-signing-key verification reachability.
+(* Query: JWS claim-signing-key verification reachability.
    True  = the app can verify the claim-signing key token_k from app_signing.
-   False = this JWT verification path is unreachable. *)
+   False = this JWS verification path is unreachable. *)
 query iat: timestamp, exp_recv: timestamp;
   event(ClaimKeyVerify(
       pk(gen_sk_for_id(app_signing)), pk(gen_sk_for_id(claim_signing)),
@@ -179,16 +179,16 @@ query iat: timestamp, exp_recv: timestamp;
       gen_sk_for_id(app_signing), pk(gen_sk_for_id(claim_signing)),
       iat, exp_recv)).
 
-(* Query: JWT key-chain authenticity.
+(* Query: JWS key-chain authenticity.
    True  = every verification event has a matching creation event by RealServer.
    False = some verified claim-signing key has no matching creation event. *)
 query app_sk: skey, claim_pk: pkey, iat: timestamp, exp: timestamp;
   event(ClaimKeyVerify(pk(app_sk), claim_pk, iat, exp)) ==>
   event(ClaimKeySign(app_sk, claim_pk, iat, exp)).
 
-(* Query: JWT server-cert-claim verification reachability.
+(* Query: JWS server-cert-claim verification reachability.
    True  = the app can verify the real server certificate claim from claim_signing.
-   False = this JWT server-cert-claim verification path is unreachable. *)
+   False = this JWS server-cert-claim verification path is unreachable. *)
 query iat: timestamp, exp: timestamp;
   event(CertClaimVerify(
       pk(gen_sk_for_id(claim_signing)), server_cert_subject_and_san,
@@ -200,7 +200,7 @@ query iat: timestamp, exp: timestamp;
       real_cert_issuer, iat, exp)).
 
 
-(* Query: JWT server-cert-claim authenticity.
+(* Query: JWS server-cert-claim authenticity.
    True  = every verified cert claim has a matching creation event.
    False = a cert claim can be verified without being legitimately created. *)
 query claim_sk: skey, subject_and_san: bitstring, issuer: bitstring,
@@ -245,6 +245,18 @@ query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: 
   ),
   sens_d,
   gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer))), sens_cipher)).
+
+query  sens_d: bitstring, sens_cipher: bitstring, rc: bitstring, pkc: pkey, rs: bitstring, pks: pkey;
+  event(AppConnRS(server_hostname,
+  transcript_hash(
+  client_hello(rc, pkc),
+  server_hello(rs, pks),
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer)))
+  ),
+  sens_d,
+  gen_cert(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer, sig_sign(cert_content(pk(gen_sk_for_id(real_server)), server_cert_subject_and_san, real_cert_issuer), gen_sk_for_id(real_cert_issuer))), sens_cipher))
+  ==>
+  event(ClaimFreshAtCheck(server_hostname)).
 
 
 (* Query: Real-server implies app-accepted correspondence.

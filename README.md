@@ -43,22 +43,27 @@ Generate short-lived claim-signing public key tokens ($T_k$) and certificate cla
 python3 ./gen-trust-artifacts.py
 ```
 
-Generation fails unless both compact JWS artifacts use exactly the TeX schema,
+Generation fails unless both artifacts use General JWS JSON Serialization and
+exactly the TeX schema (one signature entry for an ordinary publication),
 their `kid` values identify the configured app/claim keys, signatures verify,
 the APK signing certificate matches the $T_k$ trust anchor, and the Subject,
-SAN, and DER-derived IssuerId match the source server certificate.
+SAN, and direct-issuer-CA IssuerId match the source server certificate chain.
 
 This updates:
-- `ClaimSigningKey.jwt` ($T_k$)
-- `ServerCertClaim.jwt` ($T_c$)
+- `ClaimSigningKey.jws` ($T_k$)
+- `ServerCertClaim.jws` ($T_c$)
 - `DCPServerCertPin.json` (DCP baseline pin)
 - Synchronizes tokens to `realserver/var/www/<alg>/.well-known/`
 
 The `issuer` array in $T_c$ contains deterministic identifiers of the form
-`sha256:base64url(SHA-256(DER(issuer Name)))`. Generators derive them directly
-from the intended leaf certificate, and the app derives the same value from
-`X500Principal.getEncoded()`. Provider-specific X.500 display strings are not
-part of the comparison.
+`hash-name:hash-value`. `hash-value` is the unpadded base64url digest of the
+complete DER-encoded CA certificate that directly issued the intended leaf.
+The generators read that CA certificate from the server chain, verify that it
+directly issued the leaf, and publish `sha256` by default; the implementation
+also accepts `sha384`. After native TLS validation, the app extracts the direct
+issuer CA certificate from the received chain, recomputes the digest named by
+each claim entry, and requires one exact match. An absent direct issuer,
+unsupported hash name, malformed encoding, or digest mismatch fails closed.
 
 ---
 
@@ -167,10 +172,22 @@ cp /mnt/code/aosp-main/out/gsi-pixel8-arm64/target/product/generic_arm64/system.
   /mnt/code/aosp-main/out/gsi-pixel8-arm64/target/product/generic_arm64/gsi-pixel8-arm64-system-aspin.img
 ```
 
-Flash the image using the device-specific GSI/fastboot procedure. Flashing can
-erase device data, so it is intentionally not automated here. After booting
-the userdebug image, verify that the service is registered before installing
-the benchmark apps:
+For the Pixel 8 test device used in the paper, reboot to fastbootd and flash the
+logical system partition. The bootloader must already be unlocked. This
+operation replaces the current system image and may require a data wipe if the
+device cannot boot the new GSI; back up the device first:
+
+```bash
+adb reboot fastboot
+# Wait until `fastboot devices` lists the phone as `fastbootd`.
+fastboot getvar is-userspace  # Expected: yes
+fastboot flash system \
+  /mnt/code/aosp-main/out/gsi-pixel8-arm64/target/product/generic_arm64/gsi-pixel8-arm64-system-aspin.img
+fastboot reboot
+```
+
+After booting the userdebug image, verify that the service is registered before
+installing the benchmark apps:
 
 ```bash
 adb wait-for-device
@@ -182,7 +199,8 @@ adb shell service check aspin
 
 ## 4. Web Server (Nginx) Deployment
 
-Deploy the Nginx server configurations for both the legitimate real server and the malicious rogue server.
+Deploy the Nginx server configurations for both the legitimate real server and
+the controlled unauthorized-direct-issuer-CA test server.
 
 The deployment and benchmark scripts recursively copy files from
 `realserver/etc`, `realserver/var`, `rogueserver/etc`, and `rogueserver/var`
@@ -220,10 +238,14 @@ following:
    first device reported in the `device` state.
 2. The device runs the patched userdebug image and reports
    `Service aspin: found`.
-3. The device and Nginx host are reachable over the same benchmark network.
-4. `es256.idouzi.top`, `es384.idouzi.top`, `rsa3072.idouzi.top`,
-   `rsa4096.idouzi.top`, and `dcp.idouzi.top` resolve from the device to the
-   Nginx benchmark host.
+3. The device and Nginx host are reachable over the same benchmark network, or
+   use the recommended ADB reverse transport shown below.
+4. Without ADB reverse, the five test hostnames resolve from the device to the
+   Nginx benchmark host. With ADB reverse, the script temporarily maps them to
+   loopback and restores the device hosts file on exit. Production ASPin calls
+   reject loopback and other special-use DNS answers; the debug-build-only forced-
+   refresh path explicitly permits loopback so this local benchmark can seed the
+   cache. This exception is unavailable on production builds and ordinary calls.
 5. Keep the device's normally assigned DNS servers; the experiment does not
    require forcing `8.8.8.8` or another public resolver.
 6. `adb` is on `PATH`, and `ANDROID_HOME` points to an Android SDK with
@@ -251,14 +273,20 @@ generating fresh artifacts.
 
 Do not run any benchmark scripts in parallel. They install the same app ID
 (`com.cert.aspin`), modify the same Nginx deployment, and may overwrite result
-files. Exit traps restore the real-server profile and uninstall the test apps,
-but an interrupted process should still be checked before another run.
+files. The robustness script takes a non-blocking host lock keyed by the device
+serial number and refuses to start when another robustness run owns that lock.
+Exit traps restore the real-server profile and uninstall the test apps, but an
+interrupted process should still be checked before another run.
 
 For the complete Evaluation dataset, use the robustness benchmark described
-below; it covers forced-refresh distributions, real/rogue cached connections,
-concurrency, restart persistence, clock rollback, and cross-app target lookup
-in one timestamped run. The two focused scripts are useful when only one paper
-table needs to be repeated.
+below; it covers forced-refresh distributions, real/controlled-unauthorized-
+issuer-CA cached connections, concurrency, restart persistence, clock rollback,
+and cross-app target lookup in one timestamped run. It is the authoritative
+path for reproducing the paper tables because it generates a fresh short-lived
+test CA and injects trust only into debug APKs. The focused scripts below are
+diagnostic helpers for legitimate-server paths; do not use their rogue-server
+mode as evidence unless you independently configure a current native-TLS-
+trusted certificate under an unauthorized direct issuer CA certificate.
 
 ### Focused Benchmark 1: Verification Latency (`table:osveriftime`)
 Measures the OS service's retrieval-and-verification times for $T_k$ and $T_c$,
@@ -277,8 +305,10 @@ Outputs:
 - Evaluation summary:
   `results/table_avgveriftime_summary.csv`
 
-### Focused Benchmark 2: Real & Rogue Connections (`table:connectiontime`)
-Measures connection setup times against the real server and real-time rejection latencies against a malicious rogue server presenting an unauthorized certificate (default: 2,000 iterations):
+### Focused Benchmark 2: Connection Diagnostics
+Measures connection setup and policy-check behavior (default: 2,000
+iterations). For the paper's controlled unauthorized-issuer-CA rows, use the full
+benchmark below, which establishes the required native-TLS trust condition:
 
 ```bash
 BENCHMARK_TIMEOUT_SECONDS=7200 \
@@ -329,14 +359,27 @@ calls, restart persistence, fail-closed clock rollback, and a named-target run
 between independently signed apps:
 
 ```bash
+ASPIN_ADB_REVERSE_TRANSPORT=1 ASPIN_GENERATE_ROGUE_CA=1 \
 ASPIN_CONCURRENCY_THREADS=8 BENCHMARK_TIMEOUT_SECONDS=7200 \
+ASPIN_AOSP_FRAMEWORKS_BASE=/mnt/code/aosp-main/aosp/frameworks/base \
+ASPIN_FLASHED_IMAGE=/mnt/code/aosp-main/out/gsi-pixel8-arm64/target/product/generic_arm64/gsi-pixel8-arm64-system-aspin.img \
   ./run-robustness-benchmark.sh 2000
 ```
 
 The script does not build AOSP or flash a device. It refuses to start unless
 `service list` exposes the OS-level `aspin` service. It builds only the test
-apps, uses 24 Gradle workers, and writes a timestamped directory under
-`results/robustness-*` containing:
+apps, uses 24 Gradle workers, writes CSVs to app-private storage, and pulls them
+as root. By default it generates two fresh short-lived benchmark CAs and
+hostname-valid leaves for each configuration. One CA signs the legitimate
+profile and its certificate digest is placed in the generated ASPin policy;
+the other signs the controlled unauthorized-issuer profile. Both CAs are added
+only to debug APKs through an Android network-security configuration; release
+builds contain neither them nor the configuration. Native TLS therefore
+accepts both profiles, while ASPin, SCP, and DCP reject the profile whose direct
+issuer CA certificate is absent from policy. Benchmark CA and leaf certificates
+are retained with the results, but generated CA and leaf private keys are removed
+by the exit trap. A timestamped
+directory under `results/robustness-*` contains:
 
 - `cold-refresh-<alg>.csv`: four-algorithm end-to-end API/IPC, both token
   downloads and verifications, persistent anti-rollback write, and cache
@@ -354,23 +397,32 @@ apps, uses 24 Gradle workers, and writes a timestamped directory under
 - `cross-app-target-refresh.csv` and `cross-app-concurrent-cache.csv`: forced
   refresh and cached named-target calls from an app signed independently of the
   target; and
+- `parallel-cold-refresh.csv`: two different signing-key/hostname contexts
+  refresh concurrently, detecting accidental global serialization around the
+  network path;
+- `delegation-expiry.csv`: publishes a pair whose two expirations differ by one
+  hour and verifies that the OS-returned claim expiration is exactly
+  `min(exp_k, exp_c)`; and
 - `table_full_refresh_tail.csv`, `table_connection_tail.csv`,
   `table_concurrency.csv`, and `table_lifecycle.csv`: validated, compact tables
   produced by `summarize-robustness-results.py` for the Evaluation section.
 
 Set `ASPIN_SKIP_APP_BUILD=1` to reuse already built app APKs. The script still
 regenerates fresh signed trust artifacts, deletes every device-side CSV before
-starting its benchmark, requires exactly one result row, and aborts unless each
-row's correctness field is `PASS`. It requires a rooted userdebug phone for the
+starting its benchmark, forces a fresh legitimate claim before the connection
+preflights, requires exactly one result row, and aborts unless each row's
+correctness field is `PASS`. It requires a rooted userdebug phone for the
 clock test and passwordless `sudo` for switching the dedicated Nginx host. After
-the lifecycle reboot it waits for both Android boot completion and reachability
-of `ASPIN_NETWORK_CHECK_HOST` (the ES256 test host by default); adjust the bound
-with `ASPIN_NETWORK_WAIT_SECONDS` if Wi-Fi association is slow.
+the lifecycle reboot it waits for Android boot completion, the primary user to
+become unlocked, and reachability of `ASPIN_NETWORK_CHECK_HOST` (the ES256 test
+host by default); adjust the bound with `ASPIN_NETWORK_WAIT_SECONDS` if network
+association is slow.
 
 After a successful run, use the four `table_*.csv` files in the timestamped
 directory as the compact inputs for the paper tables. Preserve the whole
 directory, including `environment.txt` and `token-snapshots/`, so the device,
-build fingerprint, parameters, and lifecycle artifacts remain auditable.
+build fingerprint, parameters, AOSP commit/dirty state, flashed-image digest,
+and lifecycle artifacts remain auditable.
 
 If a run is interrupted only after it has accepted v2 and rebooted, preserve
 the timestamped result directory and resume the lifecycle/cross-app phase:
@@ -380,6 +432,20 @@ ASPIN_RESUME_AFTER_REBOOT=1 \
 ASPIN_RESUME_RUN_DIR="$PWD/results/robustness-<run-id>" \
   ./run-robustness-benchmark.sh 2000
 ```
+
+If the four-algorithm distributions completed but execution stopped before v1
+was accepted, resume at the lifecycle phase instead:
+
+```bash
+ASPIN_RESUME_LIFECYCLE=1 \
+ASPIN_RESUME_RUN_DIR="$PWD/results/robustness-<run-id>" \
+  ./run-robustness-benchmark.sh 2000
+```
+
+`ASPIN_EXPIRY_ONLY=1` is a diagnostic recovery mode for regenerating only the
+non-degenerate delegation-expiration probe in an otherwise complete run. The
+normal full benchmark runs this probe after the replay and clock tests because
+it intentionally publishes a newer ES256 pair with unequal lifetimes.
 
 Resume mode requires the saved v1/v2 token snapshots and revalidates every
 new CSV before regenerating all four compact summary tables.
@@ -403,13 +469,19 @@ cd proverif
 The ASPin models give the two token payloads the same fields as the paper:
 $T_k=(K_{cpub},iat_k,exp_k)$ and
 $T_c=(Subject,SAN,IssuerSet,iat_c,exp_c)$. Issuer identifiers are abstract atoms
-in ProVerif; DER parsing and SHA-256 are tested in the implementation rather
+in ProVerif; DER parsing and base64url encoding are tested in the implementation rather
 than modeled symbolically. There is no independent token `scope`
 field. The requested hostname is constrained by the signed Subject/SAN server
-identity and by the verified app-signing-key/hostname cache index. The models
-also derive (rather than trust) each TTL, reject `now == exp`, and keep
+identity. The $T_k$ cache is partitioned by app-signing key and hostname, the
+$T_c$ cache by app-signing key and signed Subject/SAN, and a cached $T_c$ is
+readable only when a fresh hostname-local $T_k$ yields the delegated key that
+authenticated it. The models
+also require both tokens to be fresh when a claim is accepted, bound cached
+claim use by the earlier of `exp_k` and `exp_c`, derive (rather than trust) each
+TTL, reject `now == exp`, and keep
 highest-seen-`iat` rollback state independent of the cache. The migration model
-checks two-window CA overlap, cross-app/cross-host cache isolation, and emergency
+checks two-window CA overlap, cross-signing-identity/cross-delegation/cross-host
+cache isolation, and emergency
 replacement. The key-rotation model checks both protected old/new signatures
 over one common payload, explicit transfer of protected highest-seen state, and
 rejection of a still-fresh transitional-token replay after cutover. Lifecycle

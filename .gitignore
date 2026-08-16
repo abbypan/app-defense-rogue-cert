@@ -11,3 +11,8 @@ __pycache__
 .venv
 review.txt
 review2.txt
+# Generated per benchmark run; only debug manifests/configuration are source.
+ASPin/*/app/src/debug/res/raw/aspin_benchmark_ca.pem
+# Per-run measurement directories are generated artifacts. Curated runs can be
+# force-added when they are intentionally retained as paper evidence.
+results/robustness-*

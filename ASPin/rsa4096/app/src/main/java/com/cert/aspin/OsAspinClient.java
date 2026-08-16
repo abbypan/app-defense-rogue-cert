@@ -72,19 +72,22 @@ public final class OsAspinClient {
             throw new IllegalStateException(
                     "The OS-level ASPin response is not bound to the requested hostname");
         }
+        long issuedAtMillis = ((Number) invokeNoArgs(
+                claimClass, platformClaim, "getIssuedAtMillis")).longValue();
+        long expiresAtMillis = ((Number) invokeNoArgs(
+                claimClass, platformClaim, "getExpiresAtMillis")).longValue();
         ASPinVerifier.CertificateClaim claim = new ASPinVerifier.CertificateClaim(
                 hostname,
                 (String) invokeNoArgs(claimClass, platformClaim, "getSubject"),
                 copyStrings((List<?>) invokeNoArgs(
                         claimClass, platformClaim, "getSubjectAlternativeNames")),
                 copyStrings((List<?>) invokeNoArgs(
-                        claimClass, platformClaim, "getIssuers")));
+                        claimClass, platformClaim, "getIssuers")),
+                expiresAtMillis);
         return new Result(
                 claim,
-                ((Number) invokeNoArgs(
-                        claimClass, platformClaim, "getIssuedAtMillis")).longValue(),
-                ((Number) invokeNoArgs(
-                        claimClass, platformClaim, "getExpiresAtMillis")).longValue(),
+                issuedAtMillis,
+                expiresAtMillis,
                 ((Number) invokeNoArgs(
                         claimClass, platformClaim,
                         "getClaimKeyDownloadAndVerificationNanos")).longValue(),

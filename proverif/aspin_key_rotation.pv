@@ -43,7 +43,7 @@ let RotationServer =
   (* Initial old-key token has a long enough signed window to remain fresh at
    * the modeled replay attempt after cutover. *)
   let exp0 = succ_t(succ_t(succ_t(iat0))) in
-  let token0 = jwt_sign(
+  let token0 = jws_general_sign(
       pk2s(pk_old), content, iat0, exp0, sk_old) in
   event ClaimKeySign(sk_old, claim_key, iat0, exp0);
   event KeyTokenPublished(
@@ -62,7 +62,7 @@ let RotationServer =
 
   (* T''_k: strictly later iat and only the new app-key signature. *)
   let exp2 = succ_t(succ_t(iat2)) in
-  let token2 = jwt_sign(
+  let token2 = jws_general_sign(
       pk2s(pk_new), content, iat2, exp2, sk_new) in
   event ClaimKeySign(sk_new, claim_key, iat2, exp2);
   event KeyTokenPublished(
@@ -82,9 +82,9 @@ let OldApp =
   in(rotation_old_delivery, (pk_old: pkey, pk_new: pkey));
   in(c, token0: bitstring);
 
-  let jwt(h0: bitstring, p0: bitstring, s0: bitstring) = token0 in
+  let jws_general(h0: bitstring, p0: bitstring, s0: bitstring) = token0 in
   let (=true) = header_matches(h0, pk_old) in
-  let (=true) = jwt_sig_verify(token0, pk_old) in
+  let (=true) = jws_general_verify(token0, pk_old) in
   let iat0 = get_iat(p0) in
   let exp0 = get_exp(p0) in
   let (=true) = token_fresh(iat0, exp0, rotation_time_0) in
@@ -147,9 +147,9 @@ let UpdatedApp =
 
   (* The new-key-only T''_k advances highest-seen state. *)
   in(c, token2: bitstring);
-  let jwt(h2: bitstring, p2: bitstring, s2: bitstring) = token2 in
+  let jws_general(h2: bitstring, p2: bitstring, s2: bitstring) = token2 in
   let (=true) = header_matches(h2, pk_new) in
-  let (=true) = jwt_sig_verify(token2, pk_new) in
+  let (=true) = jws_general_verify(token2, pk_new) in
   let iat2 = get_iat(p2) in
   let exp2 = get_exp(p2) in
   let (=true) = token_fresh(iat2, exp2, iat2) in
@@ -190,10 +190,10 @@ let OldOnlySignatureAudit =
   let pk_new = pk(gen_sk_for_id(other_app_signing)) in
   let iat = rotation_time_0 in
   let exp = succ_t(succ_t(succ_t(iat))) in
-  let token = jwt_sign(
+  let token = jws_general_sign(
       pk2s(pk(sk_old)), pk2s(pk(gen_sk_for_id(claim_signing))),
       iat, exp, sk_old) in
-  let (=true) = jwt_sig_verify(token, pk_new) in
+  let (=true) = jws_general_verify(token, pk_new) in
   event OldOnlyTokenAcceptedByNewKey(pk(sk_old), pk_new)
   .
 

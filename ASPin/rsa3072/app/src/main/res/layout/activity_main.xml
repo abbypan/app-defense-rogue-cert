@@ -145,7 +145,7 @@
         android:background="#9C27B0"
         android:textColor="@android:color/white" />
 
-    <!-- JWT Benchmark Buttons -->
+    <!-- JWS Benchmark Buttons -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -153,7 +153,7 @@
         android:layout_marginBottom="8dp">
 
         <Button
-            android:id="@+id/JwtCskBenchmarkButton"
+            android:id="@+id/JwsCskBenchmarkButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -164,7 +164,7 @@
             android:textColor="@android:color/white" />
 
         <Button
-            android:id="@+id/JwtSccBenchmarkButton"
+            android:id="@+id/JwsSccBenchmarkButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
