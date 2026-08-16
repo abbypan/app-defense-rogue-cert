@@ -10,7 +10,7 @@
     to follow android17-release as declared by the default element below.
 
     Patch source heads:
-      frameworks/base  3705ffb537545e1d3bff6af2eff355ff7e3a036f
+      frameworks/base  19605ef3001954709be61f7a60cd788d66df3242
       system/sepolicy  3c05c010b0c69cd3e8bf50ce15461006efd63a16
   -->
 

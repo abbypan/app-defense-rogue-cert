@@ -46,7 +46,7 @@ def require(row: dict[str, str], fields: tuple[str, ...], source: Path) -> None:
 
 def write_rows(path: Path, fields: tuple[str, ...], rows: list[dict[str, str]]) -> None:
     with path.open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.DictWriter(stream, fieldnames=fields)
+        writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 

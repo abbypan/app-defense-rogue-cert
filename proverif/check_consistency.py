@@ -33,7 +33,7 @@ TEX_FRAGMENTS = (
     r"\mathrm{Cache}[K_{apub}]",
     r"H_k[K_{apub},h]",
     r"H_c[K_{apub},Subject,SAN]",
-    "two \\emph{differently signed} apps may claim the same hostname",
+    "one hostname has exactly one ASPin policy owner at any instant",
     "intentionally share one ASPin owner/trust domain",
     "package identifier adds no cache or anti-rollback partition",
     "Cross-signing-key, cross-delegated-key, and cross-claim-host reads are unreachable",
