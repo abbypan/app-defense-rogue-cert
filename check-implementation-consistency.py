@@ -44,9 +44,9 @@ def check_tex():
     abstract = ROOT / "tex" / "paper_abstract-sigconf.tex"
     require(
         abstract,
-        "Refreshing both JWS objects averages 32.25--42.28\\,ms",
-        "ASPin-minus-TLS sample-mean differences are 1.03--1.30\\,ms",
-        "eight-thread cached self-queries sustain 2,578--2,794 queries/s",
+        "Refreshing both JWS objects averages 32.85--43.24\\,ms",
+        "ASPin-minus-TLS sample-mean differences are 0.78--1.50\\,ms",
+        "eight-thread cached self-queries sustain 2,576--2,625 queries/s",
         "data follow only after all three succeed",
     )
     require(
@@ -104,11 +104,11 @@ def check_tex():
         "deleting protected state is invalid",
         r"\emph{CertClaimCheck} fails when the protected clock reaches $exp_{eff}$",
         r"returns the claim together with $exp_{eff}=\min(exp_k,exp_c)$",
-        "a complete two-token refresh averages 32.25--42.28\\,ms",
-        "ASPin-minus-TLS differences between sample means are 1.03--1.30\\,ms",
-        "cache $P_{99}$ of 7.02--8.49\\,ms",
-        "throughput of 2,578--2,794 queries/s",
-        "cross-app measured 7.20\\,ms and 2,760 queries/s",
+        "a complete two-token refresh averages 32.85--43.24\\,ms",
+        "ASPin-minus-TLS differences between sample means are 0.78--1.50\\,ms",
+        "cache $P_{99}$ of 7.46--7.67\\,ms",
+        "throughput of 2,576--2,625 queries/s",
+        "cross-app measured 8.86\\,ms and 2,100 queries/s",
         "a path or claim failure aborts the handshake",
         "verifies the hostname before connection use or data",
         "The app proceeds only after all three checks succeed",
