@@ -2,6 +2,7 @@
 """Check that the ProVerif sources/results implement the current TeX design."""
 
 from pathlib import Path
+import re
 import sys
 
 
@@ -33,29 +34,22 @@ TEX_FRAGMENTS = (
     r"\mathrm{Cache}[K_{apub}]",
     r"H_k[K_{apub},h]",
     r"H_c[K_{apub},Subject,SAN]",
-    "one hostname has exactly one ASPin policy owner at any instant",
     "intentionally share one ASPin owner/trust domain",
     "package identifier adds no cache or anti-rollback partition",
     "Cross-signing-key, cross-delegated-key, and cross-claim-host reads are unreachable",
-    r"$iat_c^{(1)}<iat_c^{(2)}<iat_c^{(3)}<iat_c^{(4)}$",
-    r"maximum permitted $T_c$ lifetime",
-    r"maximum allowed $exp_c-iat_c$",
-    r"Each overlap JWS is served for its full $L_{\max}$ lifetime",
+    r"$iat_c^{(1)}<iat_c^{(2)}<iat_c^{(3)}$",
     r"$w_2$ & $T_c^{(2)}$ & CurrCert & CurrCA+NewCA",
-    r"$w_3$ & $T_c^{(3)}$ & CurrCert & CurrCA+NewCA",
-    r"$w_4$ & $T_c^{(4)}$ & NewCert & NewCA",
+    r"$w_3$ & $T_c^{(3)}$ & NewCert & NewCA",
     r"migration model uses one symbolic step for $L_{\max}$",
-    "it does not extend or republish $T_c^{(2)}$",
-    r"jointly publishes $T_c^{(4)}$ and deploys \emph{NewCert}",
+    r"jointly publishes $T_c^{(3)}$ and deploys \emph{NewCert}",
     r"\emph{overlap} concerns CA identifiers, not cross-cutover validity",
     "operator staging and advance notice",
     "operator-staged CA migration",
     "one OS-level mechanism for retrieval, JWS verification, claim replacement",
-    "private phase markers encode the recommended operator schedule",
     r"This is an ordering property, not policy rejection",
     r"dual policy authorizes \emph{NewCA}",
-    r"each full-$L_{\max}$ phase-elapsed event",
-    r"no client phase progression or cache bridge into $w_4$",
+    r"its full-$L_{\max}$ phase-elapsed event",
+    r"no client phase progression or cache bridge into $w_3$",
     "both $sig_k^{old}$ and $sig_k^{new}$ over the identical encoded payload",
     r"\caption{ProVerif Outputs for Rogue Certificates with Unauthorized Issuer CA Identifiers}",
     r"\caption{ProVerif Outputs for Claim Caching, Migration, Rollback, and Key Rotation}",
@@ -68,6 +62,14 @@ TEX_FRAGMENTS = (
     "Private channels carry only phase markers",
     "All verifier inputs come from the public channel",
     "predecessors of both JWS types",
+)
+
+TEX_PATTERNS = (
+    r"one hostname has exactly one(?: logical )?ASPin policy owner at any instant",
+    r"trusted operator's deployment-profile upper bound on \$T_c\$ lifetime",
+    r"\$exp_c-iat_c\\leq L_\{\\max\}\$",
+    r"overlap publication, the operator sets \$exp_c-iat_c=L_\{\\max\}\$",
+    r"private phase markers encode the trusted operator's compliance with the recommended schedule",
 )
 
 NETWORK_MODEL_FRAGMENTS = (
@@ -96,6 +98,13 @@ def require_fragments(path: Path, fragments: tuple[str, ...]) -> None:
     for fragment in fragments:
         if fragment not in text:
             fail(f"{path.relative_to(ROOT.parent)} is missing: {fragment}")
+
+
+def require_patterns(path: Path, patterns: tuple[str, ...]) -> None:
+    text = path.read_text(encoding="utf-8")
+    for pattern in patterns:
+        if re.search(pattern, text, flags=re.IGNORECASE) is None:
+            fail(f"{path.relative_to(ROOT.parent)} does not match: {pattern}")
 
 
 def require_no_fragments(path: Path, fragments: tuple[str, ...]) -> None:
@@ -130,6 +139,7 @@ def require_outcome(lines: list[str], terms: tuple[str, ...], outcome: str) -> N
 
 def check_sources() -> None:
     require_fragments(TEX, TEX_FRAGMENTS)
+    require_patterns(TEX, TEX_PATTERNS)
     require_no_fragments(
         TEX,
         (
@@ -190,38 +200,33 @@ def check_sources() -> None:
             "read_cached_claim(entry, app_key, claim_key, iat)",
             "other_hostname, get_migration_identity(result)",
             "check_host(server_hostname, identity0)",
-            "MigrationTransitionAvailable(window_overlap_1)",
-            "MigrationTransitionAvailable(window_overlap_2)",
-            "MigrationPhaseElapsed(window_overlap_1, iat2)",
-            "MigrationPhaseElapsed(window_overlap_2, iat3)",
+            "MigrationTransitionAvailable(window_overlap)",
+            "MigrationPhaseElapsed(window_overlap, iat2)",
             "MigrationJointCutover(",
             "MigrationPolicyPairAllowed(",
             "let token_c_0 = jws_general_sign(",
             "let token_c_1 = jws_general_sign(",
             "let token_c_2 = jws_general_sign(",
-            "let token_c_3 = jws_general_sign(",
             "iat_older(iat0, iat1)",
             "iat_older(iat1, iat2)",
-            "iat_older(iat2, iat3)",
             "let exp1 = succ_t(iat1) in",
             "let exp2 = succ_t(iat2) in",
             "let (=ttl_one) = derive_ttl(iat1, exp1) in",
             "let (=ttl_one) = derive_ttl(iat2, exp2) in",
             "token_expired(exp0, iat1)",
             "token_expired(exp1, iat2)",
-            "token_expired(exp2, iat3)",
-            "token_expired(exp2, cutover_time)",
-            "let cutover_time = succ_t(iat2) in",
-            "Only paper w4 deploys NewCert.",
+            "token_expired(exp1, cutover_time)",
+            "let cutover_time = succ_t(iat1) in",
+            "Only paper w3 deploys NewCert.",
             "transition claim is expired at the boundary and is not used to accept",
-            "same coordinated symbolic w4 transition",
+            "same coordinated",
             "token_fresh(old_iat, common_exp, new_iat)",
             "iat_older(old_iat, new_iat)",
             "token_expired(exp, exp)",
             "resolve_os_key(target_record, target_app_id)",
             "in(c, jws_general(hk:",
             "in(c, jws_general(h0:",
-            "token_fresh(key_iat, key_exp, iat3)",
+            "token_fresh(key_iat, key_exp, iat2)",
             "RollbackRejected(token_type_claim",
             "RollbackRejected(token_type_key",
         ),
@@ -245,6 +250,11 @@ def check_sources() -> None:
             "published after that cutover",
             "let (=succ_t(succ_t(iat1))) = exp1 in",
             "let (=succ_t(succ_t(iat2))) = exp2 in",
+            "window_overlap_1",
+            "window_overlap_2",
+            "token_c_3",
+            "paper w4",
+            "Paper w4",
         ),
     )
     require_fragments(
@@ -335,10 +345,8 @@ def check_cache_migration() -> None:
     )
     for prerequisite in (
         "MigrationNewCertObtained(new_cert_issuer)",
-        "MigrationTransitionAvailable(window_overlap_1)",
-        "MigrationTransitionAvailable(window_overlap_2)",
-        "MigrationPhaseElapsed(window_overlap_1,succ_t(succ_t(migration_time_0[])))",
-        "MigrationPhaseElapsed(window_overlap_2,succ_t(succ_t(succ_t(migration_time_0[]))))",
+        "MigrationTransitionAvailable(window_overlap)",
+        "MigrationPhaseElapsed(window_overlap,succ_t(succ_t(migration_time_0[])))",
     ):
         require_outcome(
             lines,
@@ -409,8 +417,7 @@ def check_cache_migration() -> None:
 
     windows = (
         ("window_current", "real_cert_issuer", "claim_current_ca"),
-        ("window_overlap_1", "real_cert_issuer", "claim_transition_ca"),
-        ("window_overlap_2", "real_cert_issuer", "claim_transition_ca"),
+        ("window_overlap", "real_cert_issuer", "claim_transition_ca"),
     )
     for window, issuer, claim in windows:
         require_outcome(

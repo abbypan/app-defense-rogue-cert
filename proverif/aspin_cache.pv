@@ -9,8 +9,7 @@
 
 const new_cert_issuer: bitstring.
 const window_current: bitstring.
-const window_overlap_1: bitstring.
-const window_overlap_2: bitstring.
+const window_overlap: bitstring.
 const window_new_cert: bitstring.
 const claim_current_ca: bitstring.
 const claim_transition_ca: bitstring.
@@ -20,8 +19,7 @@ const token_type_key: bitstring.
 free migration_time_0: timestamp.
 free migration_key_delivery: channel [private].
 free migration_current_delivery: channel [private].
-free migration_overlap_1_delivery: channel [private].
-free migration_overlap_2_delivery: channel [private].
+free migration_overlap_delivery: channel [private].
 free migration_cutover_delivery: channel [private].
 free migration_final_delivery: channel [private].
 
@@ -103,7 +101,7 @@ event MigrationClaimAuthenticated(
 event MigrationNewCertObtained(bitstring).
 event MigrationTransitionAvailable(bitstring).
 event MigrationPhaseElapsed(bitstring, timestamp).
-(* One event represents joint activation of paper T_c^(4) and NewCert. *)
+(* One event represents joint activation of paper T_c^(3) and NewCert. *)
 event MigrationJointCutover(bitstring, bitstring, bitstring).
 event MigrationWindowComplete(bitstring).
 event MigrationCertAccepted(bitstring, bitstring, bitstring).
@@ -116,7 +114,7 @@ event EmergencyReplacementAccepted(bitstring, timestamp).
 event TargetOwnerResolved(bitstring, bitstring, pkey).
 
 let MigrationServer =
-  (* Internal indices 0..3 correspond to paper windows w1..w4. *)
+  (* Internal indices 0..2 correspond to paper windows w1..w3. *)
   let sk_app = gen_sk_for_id(app_signing) in
   let sk_claim = gen_sk_for_id(claim_signing) in
   let app_key = pk(sk_app) in
@@ -124,7 +122,6 @@ let MigrationServer =
   let iat0 = migration_time_0 in
   let iat1 = succ_t(iat0) in
   let iat2 = succ_t(iat1) in
-  let iat3 = succ_t(iat2) in
 
   (* T_k authenticates K_cpub and its validity interval. *)
   let key_exp = succ_t(succ_t(succ_t(succ_t(iat0)))) in
@@ -147,57 +144,41 @@ let MigrationServer =
   out(migration_current_delivery, window_current);
 
   (* Obtain but do not deploy NewCert; paper w2 still deploys CurrCert and
-   * publishes only the dual-issuer CurrCA/NewCA policy. *)
+   * publishes one dual-issuer CurrCA/NewCA staging policy. *)
   event MigrationNewCertObtained(new_cert_issuer);
   (* Phase advance occurs only at the complete modeled L_max boundary. *)
   let (=true) = token_expired(exp0, iat1) in
   (* The model instantiates L_max as one symbolic step.  The paper-w2
-   * publication therefore remains current for one complete maximum
-   * T_c lifetime before paper w3 begins at iat2. *)
+   * publication remains current for one complete maximum T_c lifetime before
+   * joint paper-w3 activation at iat2. *)
   let exp1 = succ_t(iat1) in
   let transition_c_1 = migration_claim(
       server_cert_subject_and_san, claim_transition_ca) in
   let token_c_1 = jws_general_sign(
       pk2s(claim_key), transition_c_1, iat1, exp1, sk_claim) in
   event MigrationClaimPublished(
-      window_overlap_1, app_key, server_cert_subject_and_san,
+      window_overlap, app_key, server_cert_subject_and_san,
       claim_transition_ca, iat1, exp1);
-  event MigrationTransitionAvailable(window_overlap_1);
+  event MigrationTransitionAvailable(window_overlap);
   out(c, token_c_1);
-  out(migration_overlap_1_delivery, window_overlap_1);
+  out(migration_overlap_delivery, window_overlap);
 
-  (* Paper w3 still deploys CurrCert and publishes a distinct, higher-iat
-   * dual-issuer renewal.  It lasts one complete modeled L_max before w4. *)
+  (* Only paper w3 deploys NewCert.  After w2's complete modeled L_max, final
+   * NewCA-only claim publication and NewCert deployment form one coordinated
+   * symbolic transition at iat2, with no intermediate honest window. *)
   let (=true) = token_expired(exp1, iat2) in
-  event MigrationPhaseElapsed(window_overlap_1, iat2);
+  event MigrationPhaseElapsed(window_overlap, iat2);
   let exp2 = succ_t(iat2) in
-  let transition_c_2 = migration_claim(
-      server_cert_subject_and_san, claim_transition_ca) in
-  let token_c_2 = jws_general_sign(
-      pk2s(claim_key), transition_c_2, iat2, exp2, sk_claim) in
-  event MigrationClaimPublished(
-      window_overlap_2, app_key, server_cert_subject_and_san,
-      claim_transition_ca, iat2, exp2);
-  event MigrationTransitionAvailable(window_overlap_2);
-  out(c, token_c_2);
-  out(migration_overlap_2_delivery, window_overlap_2);
-
-  (* Only paper w4 deploys NewCert.  Final NewCA-only claim activation and
-   * NewCert deployment belong to the same coordinated symbolic w4 transition
-   * at iat3; their serialized events expose no intermediate honest window. *)
-  let (=true) = token_expired(exp2, iat3) in
-  event MigrationPhaseElapsed(window_overlap_2, iat3);
-  let exp3 = succ_t(iat3) in
-  let content3 = migration_claim(
+  let content2 = migration_claim(
       server_cert_subject_and_san, claim_new_ca) in
-  let token_c_3 = jws_general_sign(
-      pk2s(claim_key), content3, iat3, exp3, sk_claim) in
+  let token_c_2 = jws_general_sign(
+      pk2s(claim_key), content2, iat2, exp2, sk_claim) in
   event MigrationClaimPublished(
       window_new_cert, app_key, server_cert_subject_and_san,
-      claim_new_ca, iat3, exp3);
+      claim_new_ca, iat2, exp2);
   event MigrationJointCutover(
       window_new_cert, new_cert_issuer, claim_new_ca);
-  out(c, token_c_3);
+  out(c, token_c_2);
   out(migration_cutover_delivery, new_cert_issuer);
   out(migration_final_delivery, window_new_cert)
   .
@@ -224,7 +205,7 @@ let UpdatingVerifier =
   let key_cache = claim_key_cache_entry(
       app_key, server_hostname, claim_key, key_iat, key_exp) in
 
-  (* w0: authenticate, bind, cache, and use CurrCA claim. *)
+  (* Paper w1: authenticate, bind, cache, and use CurrCA claim. *)
   in(migration_current_delivery, =window_current);
   in(c, jws_general(h0: bitstring, p0: bitstring, s0: bitstring));
   let iat0 = get_iat(p0) in
@@ -262,8 +243,8 @@ let UpdatingVerifier =
       window_current, real_cert_issuer, issuers0);
   event MigrationWindowComplete(window_current);
 
-  (* w1: strictly later iat and transitional CurrCA/NewCA claim. *)
-  in(migration_overlap_1_delivery, =window_overlap_1);
+  (* Paper w2: strictly later iat and transitional CurrCA/NewCA claim. *)
+  in(migration_overlap_delivery, =window_overlap);
   in(c, jws_general(h1: bitstring, p1: bitstring, s1: bitstring));
   let iat1 = get_iat(p1) in
   let exp1 = get_exp(p1) in
@@ -283,7 +264,7 @@ let UpdatingVerifier =
   let issuers1 = get_migration_issuers(content1) in
   let (=claim_transition_ca) = issuers1 in
   event MigrationClaimCached(
-      window_overlap_1, app_key, server_hostname, identity1,
+      window_overlap, app_key, server_hostname, identity1,
       issuers1, iat1, exp1);
   event MigrationClaimAuthenticated(
       app_key, identity1, issuers1, iat1, exp1);
@@ -296,16 +277,25 @@ let UpdatingVerifier =
   let (=true) = check_host(
       server_hostname, get_migration_identity(returned1)) in
   event MigrationClaimReturned(
-      window_overlap_1, app_key, server_hostname,
+      window_overlap, app_key, server_hostname,
       get_migration_identity(returned1), issuers1, iat1, exp1);
   let (=true) = issuer_allowed(real_cert_issuer, issuers1) in
   event MigrationCertAccepted(
-      window_overlap_1, real_cert_issuer, issuers1);
-  event MigrationWindowComplete(window_overlap_1);
+      window_overlap, real_cert_issuer, issuers1);
+  event MigrationWindowComplete(window_overlap);
 
-  (* Paper w3: CurrCert remains deployed while the renewed JWS retains the
-   * dual-issuer transition and advances persistent highest iat. *)
-  in(migration_overlap_2_delivery, =window_overlap_2);
+  (* Enter paper w3 only after paper w2's complete modeled L_max.  Its
+   * transition claim is expired at the boundary and is not used to accept
+   * NewCert; coordinated w3 activation makes the final NewCA-only JWS and
+   * NewCert available in the same symbolic phase. *)
+  in(migration_cutover_delivery, =new_cert_issuer);
+  let cutover_time = succ_t(iat1) in
+  let (=true) = token_expired(exp1, cutover_time) in
+  let (=true) = token_fresh(key_iat, key_exp, cutover_time) in
+
+  (* Paper w3: retrieve the NewCA-only claim activated by the same coordinated
+   * transition that enables NewCert. *)
+  in(migration_final_delivery, =window_new_cert);
   in(c, jws_general(h2: bitstring, p2: bitstring, s2: bitstring));
   let iat2 = get_iat(p2) in
   let exp2 = get_exp(p2) in
@@ -323,9 +313,9 @@ let UpdatingVerifier =
   let (=server_cert_subject_and_san) = identity2 in
   let (=true) = check_host(server_hostname, identity2) in
   let issuers2 = get_migration_issuers(content2) in
-  let (=claim_transition_ca) = issuers2 in
+  let (=claim_new_ca) = issuers2 in
   event MigrationClaimCached(
-      window_overlap_2, app_key, server_hostname, identity2,
+      window_new_cert, app_key, server_hostname, identity2,
       issuers2, iat2, exp2);
   event MigrationClaimAuthenticated(
       app_key, identity2, issuers2, iat2, exp2);
@@ -338,62 +328,11 @@ let UpdatingVerifier =
   let (=true) = check_host(
       server_hostname, get_migration_identity(returned2)) in
   event MigrationClaimReturned(
-      window_overlap_2, app_key, server_hostname,
-      get_migration_identity(returned2), issuers2, iat2, exp2);
-  let (=true) = issuer_allowed(real_cert_issuer, issuers2) in
-  event MigrationCertAccepted(
-      window_overlap_2, real_cert_issuer, issuers2);
-  event MigrationWindowComplete(window_overlap_2);
-
-  (* Enter paper w4 only after paper w3's complete modeled L_max.  Its
-   * transition claim is expired at the boundary and is not used to accept
-   * NewCert; coordinated w4 activation makes the final NewCA-only JWS and
-   * NewCert available in the same symbolic phase. *)
-  in(migration_cutover_delivery, =new_cert_issuer);
-  let cutover_time = succ_t(iat2) in
-  let (=true) = token_expired(exp2, cutover_time) in
-  let (=true) = token_fresh(key_iat, key_exp, cutover_time) in
-
-  (* Paper w4: retrieve the NewCA-only claim activated by the same coordinated
-   * transition that enables NewCert. *)
-  in(migration_final_delivery, =window_new_cert);
-  in(c, jws_general(h3: bitstring, p3: bitstring, s3: bitstring));
-  let iat3 = get_iat(p3) in
-  let exp3 = get_exp(p3) in
-  let (=true) = header_matches(h3, claim_key) in
-  let (=true) = jws_general_verify(jws_general(h3, p3, s3), claim_key) in
-  let (=true) = token_fresh(iat3, exp3, iat3) in
-  let (=true) = token_fresh(key_iat, key_exp, iat3) in
-  let (=true) = iat_not_older(iat3, iat2) in
-  let (=true) = iat_older(iat2, iat3) in
-  let (=succ_t(iat2)) = iat3 in
-  let (=ttl_one) = derive_ttl(iat3, exp3) in
-  let (=succ_t(iat3)) = exp3 in
-  let content3 = get_content(p3) in
-  let identity3 = get_migration_identity(content3) in
-  let (=server_cert_subject_and_san) = identity3 in
-  let (=true) = check_host(server_hostname, identity3) in
-  let issuers3 = get_migration_issuers(content3) in
-  let (=claim_new_ca) = issuers3 in
-  event MigrationClaimCached(
-      window_new_cert, app_key, server_hostname, identity3,
-      issuers3, iat3, exp3);
-  event MigrationClaimAuthenticated(
-      app_key, identity3, issuers3, iat3, exp3);
-  let cached_claim_key3 = read_cached_claim_key(
-      key_cache, app_key, server_hostname, iat3) in
-  let cache3 = cache_entry(
-      app_key, claim_key, content3, iat3, exp3) in
-  let returned3 = read_cached_claim(
-      cache3, app_key, cached_claim_key3, iat3) in
-  let (=true) = check_host(
-      server_hostname, get_migration_identity(returned3)) in
-  event MigrationClaimReturned(
       window_new_cert, app_key, server_hostname,
-      get_migration_identity(returned3), issuers3, iat3, exp3);
-  let (=true) = issuer_allowed(new_cert_issuer, issuers3) in
+      get_migration_identity(returned2), issuers2, iat2, exp2);
+  let (=true) = issuer_allowed(new_cert_issuer, issuers2) in
   event MigrationCertAccepted(
-      window_new_cert, new_cert_issuer, issuers3);
+      window_new_cert, new_cert_issuer, issuers2);
   event MigrationWindowComplete(window_new_cert)
   .
 
@@ -585,18 +524,11 @@ query event(MigrationJointCutover(
   event(MigrationNewCertObtained(new_cert_issuer)).
 query event(MigrationJointCutover(
     window_new_cert, new_cert_issuer, claim_new_ca)) ==>
-  event(MigrationTransitionAvailable(window_overlap_1)).
-query event(MigrationJointCutover(
-    window_new_cert, new_cert_issuer, claim_new_ca)) ==>
-  event(MigrationTransitionAvailable(window_overlap_2)).
+  event(MigrationTransitionAvailable(window_overlap)).
 query event(MigrationJointCutover(
     window_new_cert, new_cert_issuer, claim_new_ca)) ==>
   event(MigrationPhaseElapsed(
-      window_overlap_1, succ_t(succ_t(migration_time_0)))).
-query event(MigrationJointCutover(
-    window_new_cert, new_cert_issuer, claim_new_ca)) ==>
-  event(MigrationPhaseElapsed(
-      window_overlap_2, succ_t(succ_t(succ_t(migration_time_0))))).
+      window_overlap, succ_t(succ_t(migration_time_0)))).
 query event(MigrationCertAccepted(
     window_new_cert, new_cert_issuer, claim_new_ca)) ==>
   event(MigrationJointCutover(
@@ -645,27 +577,21 @@ query claim: bitstring, iat: timestamp;
 
 (* Every operational window and legitimate certificate combination is live. *)
 query event(MigrationWindowComplete(window_current)).
-query event(MigrationWindowComplete(window_overlap_1)).
-query event(MigrationWindowComplete(window_overlap_2)).
+query event(MigrationWindowComplete(window_overlap)).
 query event(MigrationWindowComplete(window_new_cert)).
 query event(MigrationCertAccepted(
     window_current, real_cert_issuer, claim_current_ca)).
 query event(MigrationCertAccepted(
-    window_overlap_1, real_cert_issuer, claim_transition_ca)).
-query event(MigrationCertAccepted(
-    window_overlap_2, real_cert_issuer, claim_transition_ca)).
+    window_overlap, real_cert_issuer, claim_transition_ca)).
 query event(MigrationCertAccepted(
     window_new_cert, new_cert_issuer, claim_new_ca)).
 
 query event(MigrationWindowComplete(window_current)) ==>
   event(MigrationCertAccepted(
       window_current, real_cert_issuer, claim_current_ca)).
-query event(MigrationWindowComplete(window_overlap_1)) ==>
+query event(MigrationWindowComplete(window_overlap)) ==>
   event(MigrationCertAccepted(
-      window_overlap_1, real_cert_issuer, claim_transition_ca)).
-query event(MigrationWindowComplete(window_overlap_2)) ==>
-  event(MigrationCertAccepted(
-      window_overlap_2, real_cert_issuer, claim_transition_ca)).
+      window_overlap, real_cert_issuer, claim_transition_ca)).
 query event(MigrationWindowComplete(window_new_cert)) ==>
   event(MigrationCertAccepted(
       window_new_cert, new_cert_issuer, claim_new_ca)).

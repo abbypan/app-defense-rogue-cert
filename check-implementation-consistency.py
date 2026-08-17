@@ -2,6 +2,7 @@
 """Fail when TeX, App, signing, ProVerif, or benchmark semantics drift."""
 
 import hashlib
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -28,6 +29,13 @@ def require(path, *fragments):
             fail(f"{path.relative_to(ROOT)} is missing {fragment!r}")
 
 
+def require_patterns(path, *patterns):
+    value = text(path)
+    for pattern in patterns:
+        if re.search(pattern, value, flags=re.IGNORECASE) is None:
+            fail(f"{path.relative_to(ROOT)} does not match {pattern!r}")
+
+
 def forbid(path, *fragments):
     value = text(path)
     for fragment in fragments:
@@ -44,7 +52,6 @@ def check_tex():
     abstract = ROOT / "tex" / "paper_abstract-sigconf.tex"
     require(
         abstract,
-        "Refreshing both JWS objects averages 32.85--43.24\\,ms",
         "ASPin-minus-TLS sample-mean differences are 0.78--1.50\\,ms",
         "eight-thread cached self-queries sustain 2,576--2,625 queries/s",
         "data follow only after all three succeed",
@@ -70,26 +77,20 @@ def check_tex():
         "only it reaches \\emph{CertClaimCheck}",
         "General JWS JSON Serialization",
         "every ordinary publication has one signature entry",
-        "one hostname has exactly one ASPin policy owner at any instant",
         "the fixed well-known URL carries no owner selector",
         "intentionally share one ASPin owner/trust domain",
         "package identifier adds no cache or anti-rollback partition",
         "Within that owner, at most one fresh canonical Subject/SAN partition may cover the hostname",
-        r"maximum permitted $T_c$ lifetime",
-        r"maximum allowed $exp_c-iat_c$",
-        r"Each overlap JWS is served for its full $L_{\max}$ lifetime",
         r"$w_2$ & $T_c^{(2)}$ & CurrCert & CurrCA+NewCA",
-        r"$w_3$ & $T_c^{(3)}$ & CurrCert & CurrCA+NewCA",
-        r"$w_4$ & $T_c^{(4)}$ & NewCert & NewCA",
+        r"$w_3$ & $T_c^{(3)}$ & NewCert & NewCA",
         r"migration model uses one symbolic step for $L_{\max}$",
-        r"jointly publishes $T_c^{(4)}$ and deploys \emph{NewCert}",
+        r"jointly publishes $T_c^{(3)}$ and deploys \emph{NewCert}",
         r"\emph{overlap} concerns CA identifiers, not cross-cutover validity",
         "operator staging and advance notice",
         "operator-staged CA migration",
         "one OS-level mechanism for retrieval, JWS verification, claim replacement",
-        "private phase markers encode the recommended operator schedule",
         r"This is an ordering property, not policy rejection",
-        r"each full-$L_{\max}$ phase-elapsed event",
+        r"its full-$L_{\max}$ phase-elapsed event",
         "whose delegated public key matches the key that authenticated the cached $T_c$",
         "retrieves and authenticates fresh $T_k$ once and retries $T_c$ exactly once",
         "a second $T_c$ failure rejects the query",
@@ -99,20 +100,20 @@ def check_tex():
         "Native TLS, rather than the OS-level ASPin service, performs certificate hostname validation",
         "expired claims are never returned",
         "a query fails if refresh cannot obtain a fresh pair",
-        r"$w_3$ & $T_c^{(3)}$ & CurrCert & CurrCA+NewCA & second staging interval",
+        r"$w_2$ & $T_c^{(2)}$ & CurrCert & CurrCA+NewCA & $L_{\max}$ staging interval",
         "recovery is future work",
         "deleting protected state is invalid",
         r"\emph{CertClaimCheck} fails when the protected clock reaches $exp_{eff}$",
         r"returns the claim together with $exp_{eff}=\min(exp_k,exp_c)$",
         "a complete two-token refresh averages 32.85--43.24\\,ms",
-        "ASPin-minus-TLS differences between sample means are 0.78--1.50\\,ms",
+        "differences between ASPin and TLS sample means are 0.78--1.50\\,ms",
         "cache $P_{99}$ of 7.46--7.67\\,ms",
         "throughput of 2,576--2,625 queries/s",
         "cross-app measured 8.86\\,ms and 2,100 queries/s",
         "a path or claim failure aborts the handshake",
         "verifies the hostname before connection use or data",
         "The app proceeds only after all three checks succeed",
-        "DCP pin & 854 & 1,142 & 228 & 324",
+        "DCP baseline pin & 854 & 1,142 & 228 & 324",
         "representative app-provisioned DCP systems considered here",
         "Compromising an artifact-only mirror affects availability",
         "not rollback-resistant time",
@@ -120,6 +121,18 @@ def check_tex():
         "serialized response-body bytes, excluding HTTP headers",
         "ASPin, SCP, and DCP then apply their respective supplementary checks",
         r"\textbf{Accepted/config.}",
+    )
+    require_patterns(
+        abstract,
+        r"refreshing both JWS objects averages 32\.85--43\.24\\,ms",
+    )
+    require_patterns(
+        paper,
+        r"one hostname has exactly one(?: logical )?ASPin policy owner at any instant",
+        r"trusted operator's deployment-profile upper bound on \$T_c\$ lifetime",
+        r"\$exp_c-iat_c\\leq L_\{\\max\}\$",
+        r"overlap publication, the operator sets \$exp_c-iat_c=L_\{\\max\}\$",
+        r"private phase markers encode the trusted operator's compliance with the recommended schedule",
     )
     forbid(
         paper,
@@ -371,7 +384,7 @@ def check_proverif():
         "resolve_os_key(target_record, target_app_id)",
         "in(c, jws_general(hk:",
         "in(c, jws_general(h0:",
-        "token_fresh(key_iat, key_exp, iat3)",
+        "token_fresh(key_iat, key_exp, iat2)",
         "token_fresh(key_iat, key_exp, cutover_time)",
         "let exp1 = succ_t(iat1) in",
         "let exp2 = succ_t(iat2) in",
@@ -379,15 +392,13 @@ def check_proverif():
         "let (=ttl_one) = derive_ttl(iat2, exp2) in",
         "token_expired(exp0, iat1)",
         "token_expired(exp1, iat2)",
-        "token_expired(exp2, iat3)",
-        "token_expired(exp2, cutover_time)",
-        "let cutover_time = succ_t(iat2) in",
-        "Only paper w4 deploys NewCert.",
+        "token_expired(exp1, cutover_time)",
+        "let cutover_time = succ_t(iat1) in",
+        "Only paper w3 deploys NewCert.",
         "MigrationJointCutover(",
-        "same coordinated symbolic w4 transition",
+        "same coordinated",
         "MigrationPolicyPairAllowed(",
-        "MigrationPhaseElapsed(window_overlap_1, iat2)",
-        "MigrationPhaseElapsed(window_overlap_2, iat3)",
+        "MigrationPhaseElapsed(window_overlap, iat2)",
         "RollbackRejected(token_type_claim",
         "RollbackRejected(token_type_key",
     )
@@ -399,6 +410,11 @@ def check_proverif():
         "bridge_claim_key",
         "let (=succ_t(succ_t(iat1))) = exp1 in",
         "let (=succ_t(succ_t(iat2))) = exp2 in",
+        "window_overlap_1",
+        "window_overlap_2",
+        "token_c_3",
+        "paper w4",
+        "Paper w4",
         "get_scope(",
     )
     require(
