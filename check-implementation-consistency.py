@@ -54,7 +54,7 @@ def check_tex():
         abstract,
         "ASPin-minus-TLS sample-mean differences are 0.78--1.50\\,ms",
         "eight-thread cached self-queries sustain 2,576--2,625 queries/s",
-        "data follow only after all three succeed",
+        "data are sent only after all three succeed",
     )
     require(
         paper,
@@ -467,6 +467,9 @@ def check_benchmarks():
             "keyDigest(cachedClaimKey.key)",
             "candidate.claimKeyDigest.equals(claimKeyDigest)",
             "prepareHighestSeenUpdateLocked(",
+            "final long commitNowMillis = System.currentTimeMillis()",
+            "ensureFresh(tkTimes, commitNowMillis)",
+            "ensureFresh(tcTimes, commitNowMillis)",
             "ArrayMap<String, RefreshLock> mRefreshLocks",
             "sanMatchesHostname(san, hostname)",
             'Set.of("payload", "signatures")',
