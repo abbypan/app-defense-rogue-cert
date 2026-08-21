@@ -1,0 +1,2 @@
+Algorithm,Iterations,Host,StandardTLS_Mean_ms,ASPin_Mean_ms,SCP_Mean_ms,DCP_Mean_ms,StandardTLS_P95_ms,StandardTLS_P99_ms,ASPin_P95_ms,ASPin_P99_ms,SCP_P95_ms,SCP_P99_ms,DCP_P95_ms,DCP_P99_ms,TLS_Success_Standard,TLS_Success_ASPin,TLS_Success_SCP,TLS_Success_DCP,HTML_Standard,HTML_ASPin,HTML_SCP,HTML_DCP,Matches_TeX_Design,Timestamp
+PS256 (RSA 3072),2000,rsa3072.idouzi.top,71.294,72.749,72.004,71.760,83.758,92.501,84.451,96.344,84.261,93.178,84.498,95.708,2000,2000,2000,2000,"real  rsa3072","real  rsa3072","real  rsa3072","real  rsa3072",PASS,2026-08-21 01:14:43

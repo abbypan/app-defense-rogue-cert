@@ -452,6 +452,24 @@ restore_clock() {
         CLOCK_CHANGED=0
     fi
 }
+synchronize_device_clock() {
+    local host_epoch device_epoch delta
+    host_epoch="$(date +%s)"
+    adb -s "$DEVICE_ID" shell "su 0 settings put global auto_time 0" >/dev/null
+    adb -s "$DEVICE_ID" shell "su 0 date -s '@$host_epoch'" >/dev/null
+    CLOCK_CHANGED=1
+    device_epoch="$(adb -s "$DEVICE_ID" shell date +%s | tr -d '\r')"
+    if ! [[ "$device_epoch" =~ ^[0-9]+$ ]]; then
+        echo "ERROR: Could not read the synchronized device clock." >&2
+        return 1
+    fi
+    delta="$((device_epoch - host_epoch))"
+    if [ "$delta" -lt -2 ] || [ "$delta" -gt 2 ]; then
+        echo "ERROR: Device clock remains ${delta}s from the benchmark host." >&2
+        return 1
+    fi
+    echo "Device clock synchronized to the benchmark host (${delta}s offset)."
+}
 cleanup() {
     set +e
     restore_clock
@@ -472,6 +490,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
+synchronize_device_clock
 generate_benchmark_certificates
 validate_server_certificates
 wait_for_test_network
@@ -623,6 +642,10 @@ if [ "$RESUME_AFTER_REBOOT" -eq 0 ]; then
 
     adb -s "$DEVICE_ID" reboot
     wait_for_boot
+    # Some GSI boots restore an older hardware-clock value before network time
+    # converges. Re-establish the controlled benchmark clock so the replay
+    # probes exercise anti-rollback rather than failing earlier on freshness.
+    synchronize_device_clock
 else
     deploy_profile real
     SERVER_CHANGED=1

@@ -157,6 +157,7 @@ parallelism:
 ```bash
 cd "$AOSP_ROOT"
 OUT_DIR=/mnt/code/aosp-main/out/gsi-pixel8-arm64 \
+BUILD_USERNAME=exp \
 SOONG_NINJA=ninja GOGC=20 GOMEMLIMIT=42GiB \
 build/soong/soong_ui.bash --make-mode \
   TARGET_PRODUCT=gsi_arm64 \

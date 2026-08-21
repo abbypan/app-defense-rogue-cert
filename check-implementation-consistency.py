@@ -52,8 +52,8 @@ def check_tex():
     abstract = ROOT / "tex" / "paper_abstract-sigconf.tex"
     require(
         abstract,
-        "ASPin-minus-TLS sample-mean differences are 0.78--1.50\\,ms",
-        "eight-thread cached self-queries sustain 2,576--2,625 queries/s",
+        "ASPin-minus-TLS sample-mean differences are 0.91--1.58\\,ms",
+        "eight-thread cached self-queries achieved 2,586--2,664 queries/s",
         "data are sent only after all three succeed",
     )
     require(
@@ -105,26 +105,27 @@ def check_tex():
         "deleting protected state is invalid",
         r"\emph{CertClaimCheck} fails when the protected clock reaches $exp_{eff}$",
         r"returns the claim together with $exp_{eff}=\min(exp_k,exp_c)$",
-        "a complete two-token refresh averages 32.85--43.24\\,ms",
-        "differences between ASPin and TLS sample means are 0.78--1.50\\,ms",
-        "cache $P_{99}$ of 7.46--7.67\\,ms",
-        "throughput of 2,576--2,625 queries/s",
-        "cross-app measured 8.86\\,ms and 2,100 queries/s",
+        "a complete two-token refresh averages 33.45--60.49\\,ms",
+        "differences between ASPin and TLS sample means are 0.91--1.58\\,ms",
+        "cache $P_{99}$ of 7.39--8.06\\,ms",
+        "throughput of 2,586--2,664 queries/s",
+        "cross-app cache run had $P_{99}=7.12$\\,ms and 2,736 queries/s",
         "a path or claim failure aborts the handshake",
         "verifies the hostname before connection use or data",
         "The app proceeds only after all three checks succeed",
-        "DCP baseline pin & 854 & 1,142 & 228 & 324",
+        "DCP baseline pin & 854 & 1,142 & 230 & 324",
         "representative app-provisioned DCP systems considered here",
         "Compromising an artifact-only mirror affects availability",
         "not rollback-resistant time",
-        "the bounded claim-key-rotation retry was not exercised",
+        "device tests omitted the bounded claim-key retry, CA migration, app-key rotation, and lineage-state transfer",
+        "lifecycle-transition experiments",
         "serialized response-body bytes, excluding HTTP headers",
         "ASPin, SCP, and DCP then apply their respective supplementary checks",
         r"\textbf{Accepted/config.}",
     )
     require_patterns(
         abstract,
-        r"refreshing both JWS objects averages 32\.85--43\.24\\,ms",
+        r"refreshing both JWS objects averages 33\.45--60\.49\\,ms",
     )
     require_patterns(
         paper,

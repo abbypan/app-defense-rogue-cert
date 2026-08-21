@@ -1,9 +1,0 @@
-Test,ForceRefresh,ExpectedSuccess,ObservedSuccess,ExpectedErrorSubstring,ReasonMatch,Total_ms,Tk_ms,Tc_ms,Result
-lifecycle-v1-accepted,true,true,true,,true,60.965,5.444,49.492,PASS
-lifecycle-v2-accepted,true,true,true,,true,55.311,5.242,43.933,PASS
-post-restart-old-tc-replay,true,false,false,anti-rollback,true,56.064,0.000,0.000,PASS
-post-restart-old-tk-replay,true,false,false,anti-rollback,true,5.361,0.000,0.000,PASS
-post-restart-current-tokens,true,true,true,,true,56.343,4.140,44.351,PASS
-clock-rollback,true,false,false,fresh,true,5.023,0.000,0.000,PASS
-clock-restored,true,true,true,,true,14.091,4.472,1.465,PASS
-cross-app-target-refresh,true,true,true,,true,15.171,2.725,1.244,PASS

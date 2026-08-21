@@ -51,6 +51,12 @@ TEX_FRAGMENTS = (
     r"its full-$L_{\max}$ phase-elapsed event",
     r"no client phase progression or cache bridge into $w_3$",
     "both $sig_k^{old}$ and $sig_k^{new}$ over the identical encoded payload",
+    "OS-authenticated signing-certificate lineage establishes logical owner continuity",
+    "protected state transfers only if transitional $T'_k$ also verifies under the old and new keys",
+    "lineage alone moves no prior state",
+    r"transferred $H_k$",
+    "is the lineage maximum",
+    "Acceptance atomically commits the maximum",
     r"\caption{ProVerif Outputs for Rogue Certificates with Unauthorized Issuer CA Identifiers}",
     r"\caption{ProVerif Outputs for Claim Caching, Migration, Rollback, and Key Rotation}",
     r"For $\neg\,event(E)$",
@@ -58,7 +64,9 @@ TEX_FRAGMENTS = (
     r"\texttt{not event(CrossSigningKeyCacheHit(...))}",
     r"\texttt{not event(CrossDelegationCacheHit(...))}",
     r"\texttt{not event(CrossHostnameCacheHit(...))}",
-    r"\texttt{not event(OldOnlyTokenAcceptedByNewKey(...))}",
+    "old-only and nonmaximum-commit queries",
+    "three-key OS lineage",
+    r"Both $H_k/H_c$ maximum transfers",
     "Private channels carry only phase markers",
     "All verifier inputs come from the public channel",
     "predecessors of both JWS types",
@@ -267,7 +275,18 @@ def check_sources() -> None:
             "iat_older(old_iat, iat2)",
             "OldOnlyTokenAcceptedByNewKey",
             "HighestIatTransferred",
+            "OSSigningLineageAuthenticated",
+            "ProtectedLineageState",
+            "LineageMaximumSelected",
+            "NonMaximumLineageStateCommitted",
+            "ClaimStateOldReplayRejected",
+            "lineage_max(",
+            "token_type_claim",
+            "key_hostname_context",
+            "claim_subject_san_context",
+            "rotation_lineage_delivery",
             "in(c, replay_token:",
+            "in(c, replay_claim_token:",
         ),
     )
     require_no_fragments(
@@ -467,9 +486,29 @@ def check_key_rotation() -> None:
         "KeyRotationNewAppVerified(",
         "KeyRotationCutoverVerified(",
         "KeyRotationOldReplayRejected(",
-        "HighestIatTransferred(",
+        "ClaimStateOldReplayRejected(",
+        "OSSigningLineageAuthenticated(",
     ):
         require_outcome(lines, (f"not event({event}",), "is false.")
+    for token_type, context in (
+        ("token_type_key", "key_hostname_context"),
+        ("token_type_claim", "claim_subject_san_context"),
+    ):
+        require_outcome(
+            lines,
+            ("not event(LineageMaximumSelected(", token_type, context),
+            "is false.",
+        )
+        require_outcome(
+            lines,
+            ("not event(HighestIatTransferred(", token_type, context),
+            "is false.",
+        )
+        require_outcome(
+            lines,
+            ("not event(NonMaximumLineageStateCommitted(", token_type, context),
+            "is true.",
+        )
     require_outcome(
         lines, ("not event(OldOnlyTokenAcceptedByNewKey(",), "is true."
     )
@@ -480,9 +519,37 @@ def check_key_rotation() -> None:
     )
     require_outcome(
         lines,
-        ("event(HighestIatTransferred(", "==> event(DualSigAppKeyVerify("),
+        ("event(CertClaimVerify(", "==> event(CertClaimSign("),
         "is true.",
     )
+    require_outcome(
+        lines,
+        (
+            "event(ProtectedLineageState(pk(gen_sk_for_id(app_signing))",
+            "==> event(CertClaimVerify(",
+        ),
+        "is true.",
+    )
+    require_outcome(
+        lines,
+        (
+            "event(ClaimStateOldReplayRejected(",
+            "==> event(HighestIatTransferred(",
+        ),
+        "is true.",
+    )
+    for prerequisite in (
+        "OSSigningLineageAuthenticated(",
+        "LineageMaximumSelected(",
+        "ProtectedLineageState(ancestor_key",
+        "ProtectedLineageState(old_key",
+        "DualSigAppKeyVerify(",
+    ):
+        require_outcome(
+            lines,
+            ("event(HighestIatTransferred(", f"==> event({prerequisite}"),
+            "is true.",
+        )
     require_outcome(
         lines,
         ("event(KeyRotationCutoverVerified(", "==> event(KeyTokenPublished("),

@@ -1,2 +1,0 @@
-Algorithm,Iterations,Host,StandardTLS_Mean_ms,ASPin_Mean_ms,SCP_Mean_ms,DCP_Mean_ms,StandardTLS_P95_ms,StandardTLS_P99_ms,ASPin_P95_ms,ASPin_P99_ms,SCP_P95_ms,SCP_P99_ms,DCP_P95_ms,DCP_P99_ms,TLS_Success_Standard,TLS_Success_ASPin,TLS_Success_SCP,TLS_Success_DCP,HTML_Standard,HTML_ASPin,HTML_SCP,HTML_DCP,Matches_TeX_Design,Timestamp
-PS384 (RSA 4096),2000,rsa4096.idouzi.top,66.689,26.362,21.539,19.877,75.256,89.151,34.148,61.962,29.599,52.851,25.329,41.101,2000,0,0,0,"rogue  rsa4096","N/A","N/A","N/A",PASS,2026-08-17 14:42:25
