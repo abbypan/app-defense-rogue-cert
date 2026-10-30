@@ -1,0 +1,8 @@
+{
+  "ssh_alias": "hk",
+  "remote_dir": "/opt/aspin-experiment/public-cross-20261029T014131Z-e6daf0",
+  "origin_unit": "aspin-origin-public-cross-20261029T014131Z-e6daf0",
+  "front_unit": "aspin-sni-20261028T123817Z-e4a617c8",
+  "hostname": "cross.idouzi.top",
+  "sni_config_directory": "/opt/aspin-experiment/20261028T123817Z-e4a617c8"
+}

@@ -5,10 +5,19 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
 VARIANTS = ("es256", "es384", "rsa3072", "rsa4096")
+MODES = {
+    "primary": ("debug", ""),
+    "scp": ("scpBenchmark", "-scp"),
+    "dcp": ("dcpBenchmark", "-dcp"),
+    "compatible": ("compatibilityBenchmark", "-compatible"),
+    "public-primary": ("publicCrossPrimary", "-public-primary"),
+    "public-compatible": ("publicCrossCompatible", "-public-compatible"),
+}
 
 
 def run_checked(command, description, cwd=None):
@@ -158,6 +167,31 @@ def built_apk(project_dir, build_type, explicit_apk=None):
     raise SystemExit(f"Cannot find built APK in {apk_dir}. Run without --skip-build first.")
 
 
+def build_api_callers(repo_root, output_dir, workers, zipalign, apksigner):
+    """Sign the same caller code with either test identity, never archive keys."""
+    project = repo_root / "ASPin" / "es256"
+    run_checked(gradle_wrapper(project) + ["--no-daemon", f"--max-workers={workers}",
+                ":app:assembleCrossAppCaller"], "Build cached-API caller", cwd=project)
+    with tempfile.TemporaryDirectory(prefix="aspin-api-callers-") as temporary:
+        aligned = Path(temporary) / "caller-aligned.apk"
+        run_checked([str(zipalign), "-p", "-f", "4",
+                     str(built_apk(project, "crossAppCaller")), str(aligned)],
+                    "Align cached-API caller")
+        for variant in ("es256", "es384"):
+            signing = repo_root / "signing" / variant
+            key = signing / "my-app-key.pk8"
+            if not key.exists():
+                key = Path(temporary) / (variant + ".pk8")
+                convert_pem_to_pk8(resolve_tool("openssl", search_android_sdk=False),
+                                   signing / "my-app-key.pem", key)
+            target = output_dir / ("ASPin-caller-" + variant + ".apk")
+            run_checked([str(apksigner), "sign", "--key", str(key), "--cert",
+                         str(signing / "my-app-cert.pem"), "--out", str(target), str(aligned)],
+                        "Sign cached-API caller with " + variant)
+            run_checked([str(apksigner), "verify", "--verbose", str(target)],
+                        "Verify cached-API caller " + variant)
+
+
 def main():
     repo_root = Path(__file__).resolve().parent
     default_output = repo_root / "results" / "apks"
@@ -165,7 +199,18 @@ def main():
     parser = argparse.ArgumentParser(
         description="Build and sign APKs for es256, es384, rsa3072, and rsa4096 using signing/<variant>/my-app-key."
     )
-    parser.add_argument("--build-type", choices=("debug", "release"), default="debug")
+    parser.add_argument(
+        "--mode",
+        action="append",
+        choices=tuple(MODES),
+        help="APK experiment mode. Repeat for multiple modes; defaults to primary.",
+    )
+    parser.add_argument(
+        "--variant",
+        action="append",
+        choices=VARIANTS,
+        help="Algorithm variant to build. Repeat for multiple variants; defaults to all.",
+    )
     parser.add_argument(
         "--workers",
         type=int,
@@ -173,6 +218,8 @@ def main():
         help="Maximum Gradle worker count (default: 24)",
     )
     parser.add_argument("--skip-build", action="store_true")
+    parser.add_argument("--build-callers", action="store_true",
+                        help="Also build ES256/ES384-signed callers for the full cached API matrix")
     parser.add_argument("--output-dir", default=str(default_output))
     parser.add_argument("--sdk-root", help="Android SDK root containing build-tools/")
     parser.add_argument("--zipalign", help="Path to zipalign or zipalign.exe")
@@ -189,22 +236,15 @@ def main():
     apksigner = resolve_tool("apksigner", args.apksigner, args.sdk_root)
     openssl = None
 
-    for variant in VARIANTS:
+    modes = args.mode or ["primary"]
+    variants = args.variant or VARIANTS
+    if any(mode.startswith("public-") for mode in modes) and tuple(variants) != ("es256",):
+        parser.error("The public cross-CA test APKs require --variant es256")
+    for variant in variants:
         variant_project_dir = repo_root / "ASPin" / variant
         if not variant_project_dir.is_dir():
             print(f"Skipping missing variant project directory: {variant_project_dir}")
             continue
-
-        if not args.skip_build:
-            task = f":app:assemble{args.build_type[:1].upper()}{args.build_type[1:]}"
-            run_checked(
-                gradle_wrapper(variant_project_dir)
-                + [f"--max-workers={args.workers}", task],
-                f"Gradle task {task} for {variant}",
-                cwd=variant_project_dir,
-            )
-
-        unsigned_apk = built_apk(variant_project_dir, args.build_type)
 
         signing_dir = repo_root / "signing" / variant
         key = signing_dir / "my-app-key.pk8"
@@ -216,46 +256,61 @@ def main():
         if not cert.exists():
             raise SystemExit(f"Missing certificate for {variant}: {cert}")
 
-        aligned_apk = output_dir / f"ASPin-{variant}-aligned.apk"
-        signed_apk = output_dir / f"ASPin-{variant}.apk"
         pk8_key = output_dir / f"{variant}-my-app-key.pk8"
+        if key.exists():
+            pk8_key = key
+        else:
+            if openssl is None:
+                openssl = resolve_tool("openssl", args.openssl, search_android_sdk=False)
+            convert_pem_to_pk8(openssl, pem_key, pk8_key)
 
         try:
-            if key.exists():
-                pk8_key = key
-            else:
-                if openssl is None:
-                    openssl = resolve_tool("openssl", args.openssl, search_android_sdk=False)
-                convert_pem_to_pk8(openssl, pem_key, pk8_key)
+            for mode in modes:
+                build_type, suffix = MODES[mode]
+                if not args.skip_build:
+                    task = f":app:assemble{build_type[:1].upper()}{build_type[1:]}"
+                    run_checked(
+                        gradle_wrapper(variant_project_dir)
+                        + [f"--max-workers={args.workers}", task],
+                        f"Gradle task {task} for {variant} ({mode})",
+                        cwd=variant_project_dir,
+                    )
 
-            run_checked(
-                [str(zipalign), "-p", "-f", "4", str(unsigned_apk), str(aligned_apk)],
-                f"zipalign for {variant}",
-            )
-            run_checked(
-                [
-                    str(apksigner),
-                    "sign",
-                    "--key",
-                    str(pk8_key),
-                    "--cert",
-                    str(cert),
-                    "--out",
-                    str(signed_apk),
-                    str(aligned_apk),
-                ],
-                f"APK signing for {variant} using signing/{variant}/my-app-key",
-            )
-            run_checked(
-                [str(apksigner), "verify", "--verbose", "--print-certs", str(signed_apk)],
-                f"APK verification for {variant}",
-            )
+                unsigned_apk = built_apk(variant_project_dir, build_type)
+                aligned_apk = output_dir / f"ASPin-{variant}{suffix}-aligned.apk"
+                signed_apk = output_dir / f"ASPin-{variant}{suffix}.apk"
+                try:
+                    run_checked(
+                        [str(zipalign), "-p", "-f", "4", str(unsigned_apk), str(aligned_apk)],
+                        f"zipalign for {variant} ({mode})",
+                    )
+                    run_checked(
+                        [
+                            str(apksigner),
+                            "sign",
+                            "--key",
+                            str(pk8_key),
+                            "--cert",
+                            str(cert),
+                            "--out",
+                            str(signed_apk),
+                            str(aligned_apk),
+                        ],
+                        f"APK signing for {variant} ({mode})",
+                    )
+                    run_checked(
+                        [str(apksigner), "verify", "--verbose", "--print-certs", str(signed_apk)],
+                        f"APK verification for {variant} ({mode})",
+                    )
+                finally:
+                    aligned_apk.unlink(missing_ok=True)
+                print(f"--> Built and signed {variant} {mode} APK: {signed_apk}")
         finally:
-            aligned_apk.unlink(missing_ok=True)
             if pk8_key != key:
                 pk8_key.unlink(missing_ok=True)
 
-        print(f"--> Successfully built and signed {variant} APK: {signed_apk}")
+    if args.build_callers:
+        build_api_callers(repo_root, output_dir, args.workers, zipalign, apksigner)
 
 
 if __name__ == "__main__":

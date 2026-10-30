@@ -1,0 +1,161 @@
+(* Primary-mode co-hosting during app-signing-key rotation. General T_k lists
+ * have no length bound. The honest transition puts new/old signatures third
+ * and fourth, after unrelated co-host signatures. State transfer requires
+ * both signatures over ONE payload, fresh T_k/T_c, and an independent trusted
+ * OS lineage; co-signing without that lineage is explicitly refused.
+ * The existing rotation model covers the full initial/transition/cutover and
+ * replay sequence. Here two concrete state contexts audit the H_k/H_c merge. *)
+
+const mr_cohost_one: bitstring.
+const mr_cohost_two: bitstring.
+const mr_with_lineage: bitstring.
+const mr_cosign_only: bitstring.
+const mr_key_type: bitstring.
+const mr_claim_type: bitstring.
+free mr_context: channel [private].
+
+reduc forall t: timestamp; mr_state_max(t, succ_t(t)) = succ_t(t);
+      forall t: timestamp; mr_state_max(succ_t(t), t) = succ_t(t).
+
+event MultiSigRotationSigned(pkey, bitstring).
+event MultiSigRotationVerified(pkey, bitstring).
+event MultiSigRotationArrayVerified(pkey, pkey, jws_signature_list).
+event MultiSigLineage(bitstring, pkey, pkey).
+event MultiSigState(pkey, bitstring, bitstring, timestamp).
+event MultiSigPairVerified(bitstring, pkey, pkey, bitstring).
+event MultiSigTransferred(bitstring, pkey, pkey, bitstring, timestamp, timestamp).
+event MultiSigCoHostedTransfer(pkey, pkey, jws_signature_list).
+event MultiSigNoLineageRefused(bitstring).
+event MultiSigNonMaximumCommit(bitstring).
+
+let MultiSigRotationPublisher =
+  let old = gen_sk_for_id(app_signing) in
+  let current = gen_sk_for_id(other_app_signing) in
+  let one = gen_sk_for_id(mr_cohost_one) in
+  let two = gen_sk_for_id(mr_cohost_two) in
+  let claim = gen_sk_for_id(claim_signing) in
+  let iat = succ_t(curr) in
+  let exp = succ_t(succ_t(iat)) in
+  let payload = jws_payload(pk2s(pk(claim)), iat, exp) in
+  event MultiSigRotationSigned(pk(old), payload);
+  event MultiSigRotationSigned(pk(current), payload);
+  let entries = jws_signature_cons(jws_sign_entry(pk2s(pk(one)), payload, one),
+      jws_signature_cons(jws_sign_entry(pk2s(pk(two)), payload, two),
+      jws_signature_cons(jws_sign_entry(pk2s(pk(current)), payload, current),
+      jws_signature_cons(jws_sign_entry(pk2s(pk(old)), payload, old), jws_no_signatures)))) in
+  out(c, jws_signature_array(payload, entries));
+  event CertClaimSign(claim, server_cert_subject_and_san, real_cert_issuer, iat, exp);
+  out(c, jws_general_sign(pk2s(pk(claim)),
+      cert_claim(server_cert_subject_and_san, real_cert_issuer), iat, exp, claim));
+  (* Even knowing unrelated co-host keys grants no old/new root authority. *)
+  out(c, one); out(c, two).
+
+let MultiSigTrustedContexts =
+  let old = pk(gen_sk_for_id(app_signing)) in
+  let current = pk(gen_sk_for_id(other_app_signing)) in
+  event MultiSigState(old, mr_key_type, server_hostname, curr);
+  event MultiSigState(current, mr_key_type, server_hostname, succ_t(curr));
+  event MultiSigState(old, mr_claim_type, server_cert_subject_and_san, succ_t(curr));
+  event MultiSigState(current, mr_claim_type, server_cert_subject_and_san, curr);
+  (
+    event MultiSigLineage(mr_with_lineage, old, current);
+    out(mr_context, (mr_with_lineage, old, current,
+        curr, succ_t(curr), succ_t(curr), curr))
+  ) |
+  out(mr_context, (mr_cosign_only, old, current,
+      curr, succ_t(curr), succ_t(curr), curr)).
+
+let MultiSigRotationVerifier =
+  in(mr_context, (context: bitstring, old: pkey, current: pkey,
+      old_hk: timestamp, new_hk: timestamp, old_hc: timestamp, new_hc: timestamp));
+  in(c, tk: bitstring);
+  let jws_signature_array(payload: bitstring, entries: jws_signature_list) = tk in
+  new current_reply: channel;
+  out(jws_signature_scan, (payload, entries, current, current_reply));
+  in(current_reply, (=true));
+  event MultiSigRotationVerified(current, payload);
+  new old_reply: channel;
+  out(jws_signature_scan, (payload, entries, old, old_reply));
+  in(old_reply, (=true));
+  event MultiSigRotationVerified(old, payload);
+  event MultiSigRotationArrayVerified(old, current, entries);
+  let kiat = get_iat(payload) in
+  let kexp = get_exp(payload) in
+  let delegated = s2pk(get_content(payload)) in
+  let now = succ_t(curr) in
+  let (=true) = token_fresh(kiat, kexp, now) in
+  in(c, tc: bitstring);
+  let jws_general(hc: bitstring, pc: bitstring, sc: bitstring) = tc in
+  let (=true) = header_matches(hc, delegated) in
+  let (=true) = jws_general_verify(tc, delegated) in
+  let ciat = get_iat(pc) in
+  let cexp = get_exp(pc) in
+  let (=true) = token_fresh(ciat, cexp, now) in
+  let (=cert_claim(server_cert_subject_and_san, real_cert_issuer)) = get_content(pc) in
+  event CertClaimVerify(delegated, server_cert_subject_and_san, real_cert_issuer, ciat, cexp);
+  let hk = mr_state_max(old_hk, new_hk) in
+  let hc_highest = mr_state_max(old_hc, new_hc) in
+  let (=true) = iat_not_older(kiat, hk) in
+  let (=true) = iat_not_older(ciat, hc_highest) in
+  event MultiSigPairVerified(context, old, current, payload);
+  if context = mr_with_lineage then
+  (
+    event MultiSigTransferred(context, old, current, payload, hk, hc_highest);
+    event MultiSigCoHostedTransfer(old, current, entries);
+    if hk <> succ_t(curr) then event MultiSigNonMaximumCommit(mr_key_type)
+    else if hc_highest <> succ_t(curr) then event MultiSigNonMaximumCommit(mr_claim_type)
+  )
+  else event MultiSigNoLineageRefused(context).
+
+query key: pkey, payload: bitstring;
+  event(MultiSigRotationVerified(key, payload)) ==>
+  event(MultiSigRotationSigned(key, payload)).
+query claim_sk: skey, identity: bitstring, issuers: bitstring,
+      iat: timestamp, exp: timestamp;
+  event(CertClaimVerify(pk(claim_sk), identity, issuers, iat, exp)) ==>
+  event(CertClaimSign(claim_sk, identity, issuers, iat, exp)).
+query event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),
+    server_cert_subject_and_san, real_cert_issuer,
+    succ_t(curr), succ_t(succ_t(succ_t(curr))))).
+query first: bitstring, second: bitstring, third: bitstring, fourth: bitstring;
+  event(MultiSigCoHostedTransfer(pk(gen_sk_for_id(app_signing)),
+      pk(gen_sk_for_id(other_app_signing)),
+      jws_signature_cons(jws_signature_entry(pk2s(pk(gen_sk_for_id(mr_cohost_one))), first),
+      jws_signature_cons(jws_signature_entry(pk2s(pk(gen_sk_for_id(mr_cohost_two))), second),
+      jws_signature_cons(jws_signature_entry(pk2s(pk(gen_sk_for_id(other_app_signing))), third),
+      jws_signature_cons(jws_signature_entry(pk2s(pk(gen_sk_for_id(app_signing))), fourth),
+          jws_no_signatures)))))).
+query context: bitstring, old: pkey, current: pkey, payload: bitstring,
+      hk: timestamp, hc: timestamp;
+  event(MultiSigTransferred(context, old, current, payload, hk, hc)) ==>
+  event(MultiSigLineage(context, old, current)).
+query context: bitstring, old: pkey, current: pkey, payload: bitstring,
+      hk: timestamp, hc: timestamp;
+  event(MultiSigTransferred(context, old, current, payload, hk, hc)) ==>
+  event(MultiSigRotationVerified(old, payload)) &&
+  event(MultiSigRotationVerified(current, payload)) &&
+  event(MultiSigPairVerified(context, old, current, payload)).
+query context: bitstring, old: pkey, current: pkey, payload: bitstring,
+      hk: timestamp, hc: timestamp;
+  event(MultiSigTransferred(context, old, current, payload, hk, hc)) ==>
+  event(MultiSigState(old, mr_key_type, server_hostname, curr)) &&
+  event(MultiSigState(current, mr_key_type, server_hostname, succ_t(curr))) &&
+  event(MultiSigState(old, mr_claim_type, server_cert_subject_and_san, succ_t(curr))) &&
+  event(MultiSigState(current, mr_claim_type, server_cert_subject_and_san, curr)).
+query payload: bitstring;
+  event(MultiSigTransferred(mr_with_lineage, pk(gen_sk_for_id(app_signing)),
+      pk(gen_sk_for_id(other_app_signing)), payload, succ_t(curr), succ_t(curr))).
+query old: pkey, current: pkey, payload: bitstring;
+  event(MultiSigPairVerified(mr_cosign_only, old, current, payload)).
+query event(MultiSigNoLineageRefused(mr_cosign_only)).
+query old: pkey, current: pkey, payload: bitstring, hk: timestamp, hc: timestamp;
+  event(MultiSigTransferred(mr_cosign_only, old, current, payload, hk, hc)).
+query context: bitstring, old: pkey, current: pkey, payload: bitstring,
+      hk: timestamp, hc: timestamp;
+  event(MultiSigTransferred(context, old, current, payload, hk, hc)) ==>
+  hk = succ_t(curr) && hc = succ_t(curr).
+query kind: bitstring; event(MultiSigNonMaximumCommit(kind)).
+
+process
+  MultiSigRotationPublisher | MultiSigTrustedContexts |
+  !MultiSigRotationVerifier | !GeneralJwsSignatureScanner

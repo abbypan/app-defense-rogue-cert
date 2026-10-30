@@ -226,9 +226,10 @@ Process 0 (that is, the initial process):
 )
 
 -- Query not event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),iat,exp_recv_1)) in process 1.
+select jws_array_member(*entry,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 153 rules (82 with conclusion selected). Queue: 10 rules.
+200 rules inserted. Base: 173 rules (91 with conclusion selected). Queue: 11 rules.
 Starting query not event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),iat,exp_recv_1))
 goal reachable: event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),curr[],succ_t(succ_t(curr[]))))
 
@@ -613,9 +614,10 @@ The event ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_s
 A trace has been found.
 RESULT not event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),iat,exp_recv_1)) is false.
 -- Query not event(ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),iat,exp_recv_1)) in process 1.
+select jws_array_member(*entry,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 151 rules (82 with conclusion selected). Queue: 10 rules.
+200 rules inserted. Base: 174 rules (93 with conclusion selected). Queue: 11 rules.
 Starting query not event(ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),iat,exp_recv_1))
 goal reachable: event(ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),curr[],succ_t(succ_t(curr[]))))
 
@@ -805,16 +807,18 @@ The event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing
 A trace has been found.
 RESULT not event(ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),iat,exp_recv_1)) is false.
 -- Query event(ClaimKeyVerify(pk(app_sk),claim_pk,iat,exp)) ==> event(ClaimKeySign(app_sk,claim_pk,iat,exp)) in process 1.
+select jws_array_member(*entry,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 155 rules (82 with conclusion selected). Queue: 13 rules.
+200 rules inserted. Base: 175 rules (91 with conclusion selected). Queue: 13 rules.
 Starting query event(ClaimKeyVerify(pk(app_sk),claim_pk,iat,exp)) ==> event(ClaimKeySign(app_sk,claim_pk,iat,exp))
 goal reachable: b-event(ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),curr[],succ_t(succ_t(curr[])))) -> event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),curr[],succ_t(succ_t(curr[]))))
 RESULT event(ClaimKeyVerify(pk(app_sk),claim_pk,iat,exp)) ==> event(ClaimKeySign(app_sk,claim_pk,iat,exp)) is true.
 -- Query not event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,iat,exp)) in process 1.
+select jws_array_member(*entry,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 155 rules (82 with conclusion selected). Queue: 13 rules.
+200 rules inserted. Base: 172 rules (90 with conclusion selected). Queue: 13 rules.
 Starting query not event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,iat,exp))
 goal reachable: event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,curr[],succ_t(succ_t(curr[]))))
 
@@ -1378,9 +1382,10 @@ The event CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_a
 A trace has been found.
 RESULT not event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,iat,exp)) is false.
 -- Query not event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,iat,exp)) in process 1.
+select jws_array_member(*entry,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 151 rules (82 with conclusion selected). Queue: 10 rules.
+200 rules inserted. Base: 174 rules (93 with conclusion selected). Queue: 11 rules.
 Starting query not event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,iat,exp))
 goal reachable: event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,curr[],succ_t(succ_t(curr[]))))
 
@@ -1581,23 +1586,26 @@ The event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san
 A trace has been found.
 RESULT not event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,iat,exp)) is false.
 -- Query event(CertClaimVerify(pk(claim_sk),subject_and_san,issuer,iat,exp)) ==> event(CertClaimSign(claim_sk,subject_and_san,issuer,iat,exp)) in process 1.
+select jws_array_member(*entry,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 157 rules (81 with conclusion selected). Queue: 18 rules.
+200 rules inserted. Base: 179 rules (90 with conclusion selected). Queue: 18 rules.
 Starting query event(CertClaimVerify(pk(claim_sk),subject_and_san,issuer,iat,exp)) ==> event(CertClaimSign(claim_sk,subject_and_san,issuer,iat,exp))
 goal reachable: b-event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,curr[],succ_t(succ_t(curr[])))) -> event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,curr[],succ_t(succ_t(curr[]))))
 RESULT event(CertClaimVerify(pk(claim_sk),subject_and_san,issuer,iat,exp)) ==> event(CertClaimSign(claim_sk,subject_and_san,issuer,iat,exp)) is true.
 -- Query event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,iat,exp)) ==> event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,iat,exp)) in process 1.
+select jws_array_member(*entry,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 157 rules (81 with conclusion selected). Queue: 18 rules.
+200 rules inserted. Base: 179 rules (90 with conclusion selected). Queue: 18 rules.
 Starting query event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,iat,exp)) ==> event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,iat,exp))
 goal reachable: b-event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,curr[],succ_t(succ_t(curr[])))) -> event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,curr[],succ_t(succ_t(curr[]))))
 RESULT event(CertClaimVerify(pk(gen_sk_for_id(claim_signing)),server_cert_subject_and_san,real_cert_issuer,iat,exp)) ==> event(CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,iat,exp)) is true.
 -- Query not event(RSAccept(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) in process 1.
+select jws_array_member(*entry,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 152 rules (81 with conclusion selected). Queue: 10 rules.
+200 rules inserted. Base: 174 rules (92 with conclusion selected). Queue: 10 rules.
 Starting query not event(RSAccept(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2))
 goal reachable: event(RSAccept(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1)))
 Abbreviations:
@@ -2766,9 +2774,10 @@ The event RSAccept(server_hostname,transcript_hash(client_hello(random_app_2,pk(
 A trace has been found.
 RESULT not event(RSAccept(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) is false.
 -- Query not event(AppConnRS(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) in process 1.
+select jws_array_member(*entry,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 155 rules (81 with conclusion selected). Queue: 16 rules.
+200 rules inserted. Base: 175 rules (90 with conclusion selected). Queue: 15 rules.
 Starting query not event(AppConnRS(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2))
 goal reachable: event(AppConnRS(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1)))
 Abbreviations:
@@ -3881,9 +3890,10 @@ The event AppConnRS(server_hostname,transcript_hash(client_hello(random_app_2,pk
 A trace has been found.
 RESULT not event(AppConnRS(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) is false.
 -- Query event(AppConnRS(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) ==> event(ClaimFreshAtCheck(server_hostname)) in process 1.
+select jws_array_member(*entry,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 149 rules (81 with conclusion selected). Queue: 16 rules.
+200 rules inserted. Base: 175 rules (90 with conclusion selected). Queue: 15 rules.
 Starting query event(AppConnRS(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) ==> event(ClaimFreshAtCheck(server_hostname))
 goal reachable: b-event(ClaimFreshAtCheck(server_hostname)) -> event(AppConnRS(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1)))
 Abbreviations:
@@ -3894,9 +3904,10 @@ sk_real_server_temp_1 = sk_real_server_temp[pk_c = pk(sk_app_temp_1),rand_c = ra
 sensitive_data_1 = sensitive_data[!1 = @sid]
 RESULT event(AppConnRS(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) ==> event(ClaimFreshAtCheck(server_hostname)) is true.
 -- Query event(RSAccept(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) ==> event(AppConnRS(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) in process 1.
+select jws_array_member(*entry,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 150 rules (81 with conclusion selected). Queue: 10 rules.
+200 rules inserted. Base: 174 rules (92 with conclusion selected). Queue: 10 rules.
 Starting query event(RSAccept(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) ==> event(AppConnRS(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2))
 goal reachable: b-event(AppConnRS(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1))) -> event(RSAccept(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1)))
 Abbreviations:
@@ -3907,9 +3918,10 @@ sk_real_server_temp_1 = sk_real_server_temp[pk_c = pk(sk_app_temp_1),rand_c = ra
 sensitive_data_1 = sensitive_data[!1 = @sid]
 RESULT event(RSAccept(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) ==> event(AppConnRS(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) is true.
 -- Query not event(AppReject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer)) in process 1.
+select jws_array_member(*entry,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 160 rules (80 with conclusion selected). Queue: 20 rules.
+200 rules inserted. Base: 177 rules (90 with conclusion selected). Queue: 18 rules.
 Starting query not event(AppReject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer))
 goal reachable: event(AppReject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer))
 
@@ -7022,33 +7034,38 @@ The event AppReject(server_hostname,server_cert_subject_and_san,rogue_cert_issue
 A trace has been found.
 RESULT not event(AppReject(server_hostname,server_cert_subject_and_san,rogue_cert_issuer)) is false.
 -- Query not event(MSAccept(server_hostname,th_2,sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) in process 1.
+select jws_array_member(*entry,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 152 rules (81 with conclusion selected). Queue: 10 rules.
+200 rules inserted. Base: 174 rules (92 with conclusion selected). Queue: 10 rules.
 Starting query not event(MSAccept(server_hostname,th_2,sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2))
 RESULT not event(MSAccept(server_hostname,th_2,sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) is true.
 -- Query not event(MSConnRS(server_hostname,th_2,sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) in process 1.
+select jws_array_member(*entry,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 152 rules (81 with conclusion selected). Queue: 10 rules.
+200 rules inserted. Base: 174 rules (92 with conclusion selected). Queue: 10 rules.
 Starting query not event(MSConnRS(server_hostname,th_2,sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2))
 RESULT not event(MSConnRS(server_hostname,th_2,sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) is true.
 -- Query not event(AppConnMS(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) in process 1.
+select jws_array_member(*entry,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 157 rules (81 with conclusion selected). Queue: 16 rules.
+200 rules inserted. Base: 176 rules (90 with conclusion selected). Queue: 14 rules.
 Starting query not event(AppConnMS(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2))
 RESULT not event(AppConnMS(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) is true.
 -- Query event(MSAccept(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) ==> event(AppConnMS(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) in process 1.
+select jws_array_member(*entry,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 150 rules (81 with conclusion selected). Queue: 10 rules.
+200 rules inserted. Base: 173 rules (92 with conclusion selected). Queue: 10 rules.
 Starting query event(MSAccept(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) ==> event(AppConnMS(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2))
 RESULT event(MSAccept(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) ==> event(AppConnMS(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sens_cipher_2)) is true.
 -- Query event(RSAccept(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) ==> event(MSConnRS(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) in process 1.
+select jws_array_member(*entry,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 152 rules (81 with conclusion selected). Queue: 10 rules.
+200 rules inserted. Base: 174 rules (92 with conclusion selected). Queue: 10 rules.
 Starting query event(RSAccept(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2)) ==> event(MSConnRS(server_hostname,transcript_hash(client_hello(rc,pkc),server_hello(rs,pks),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sens_d_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sens_cipher_2))
 goal reachable: event(RSAccept(server_hostname,transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),sensitive_data_1,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),enc_data(session_key(client_shared_secret(sk_app_temp_1,pk(sk_real_server_temp_1)),transcript_hash(client_hello(random_app_1,pk(sk_app_temp_1)),server_hello(random_real_server_1,pk(sk_real_server_temp_1)),gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))))),sensitive_data_1)))
 Abbreviations:

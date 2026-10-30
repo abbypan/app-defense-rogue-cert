@@ -1,0 +1,465 @@
+{
+  "state": "complete",
+  "created_utc": "2026-10-29T04:14:30.389459+00:00",
+  "run_id": "a10123db8abe1",
+  "cases": [
+    {
+      "file": "a10123db8abe1-primary-es256-prime.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-es256-cached-probe.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-es256-cache-1t.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-es256-cache-8t.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-es384-prime.csv",
+      "mode": "primary",
+      "algorithm": "es384",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-es384-cached-probe.csv",
+      "mode": "primary",
+      "algorithm": "es384",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-es384-cache-1t.csv",
+      "mode": "primary",
+      "algorithm": "es384",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-es384-cache-8t.csv",
+      "mode": "primary",
+      "algorithm": "es384",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-rsa3072-prime.csv",
+      "mode": "primary",
+      "algorithm": "rsa3072",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-rsa3072-cached-probe.csv",
+      "mode": "primary",
+      "algorithm": "rsa3072",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-rsa3072-cache-1t.csv",
+      "mode": "primary",
+      "algorithm": "rsa3072",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-rsa3072-cache-8t.csv",
+      "mode": "primary",
+      "algorithm": "rsa3072",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-rsa4096-prime.csv",
+      "mode": "primary",
+      "algorithm": "rsa4096",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-rsa4096-cached-probe.csv",
+      "mode": "primary",
+      "algorithm": "rsa4096",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-rsa4096-cache-1t.csv",
+      "mode": "primary",
+      "algorithm": "rsa4096",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-rsa4096-cache-8t.csv",
+      "mode": "primary",
+      "algorithm": "rsa4096",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-cross-target-prime.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-cross-cache-1t.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-cross-cache-8t.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-parallel-host-refresh.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "parallelrefresh",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-earlier-accepted.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-higher-accepted.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-reboot-old-tc.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-reboot-old-tk.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-reboot-current.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-clock-rollback-600s.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-primary-clock-restored.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-es256-prime.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-es256-cached-probe.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-es256-cache-1t.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-es256-cache-8t.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-es384-prime.csv",
+      "mode": "compat",
+      "algorithm": "es384",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-es384-cached-probe.csv",
+      "mode": "compat",
+      "algorithm": "es384",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-es384-cache-1t.csv",
+      "mode": "compat",
+      "algorithm": "es384",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-es384-cache-8t.csv",
+      "mode": "compat",
+      "algorithm": "es384",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-rsa3072-prime.csv",
+      "mode": "compat",
+      "algorithm": "rsa3072",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-rsa3072-cached-probe.csv",
+      "mode": "compat",
+      "algorithm": "rsa3072",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-rsa3072-cache-1t.csv",
+      "mode": "compat",
+      "algorithm": "rsa3072",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-rsa3072-cache-8t.csv",
+      "mode": "compat",
+      "algorithm": "rsa3072",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-rsa4096-prime.csv",
+      "mode": "compat",
+      "algorithm": "rsa4096",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-rsa4096-cached-probe.csv",
+      "mode": "compat",
+      "algorithm": "rsa4096",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-rsa4096-cache-1t.csv",
+      "mode": "compat",
+      "algorithm": "rsa4096",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-rsa4096-cache-8t.csv",
+      "mode": "compat",
+      "algorithm": "rsa4096",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-cross-target-prime.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-cross-cache-1t.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-cross-cache-8t.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-parallel-host-refresh.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "parallelrefresh",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-earlier-accepted.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-higher-accepted.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-reboot-old-tc.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-reboot-old-tk.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-reboot-current.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-clock-rollback-600s.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    },
+    {
+      "file": "a10123db8abe1-compat-clock-restored.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS"
+    }
+  ],
+  "clock_rollback_seconds": 600,
+  "runner_sha256": "6d7b8c1a7298ddebc08d1ba53c16045460d3a24c6e172c09c3c82e71a04b809a",
+  "apk_sha256": {
+    "ASPin-rsa4096.apk": "3aa395ec513621396b38a4717d3d29bfe5d52b3a6a0603a15d17225f3b781c3a",
+    "ASPin-rsa3072-compatible.apk": "39a01fbc0dd99af43aaa8ea57bddb3aff54986cc7af28b9974bc4b6c54d1224e",
+    "ASPin-es384.apk": "acbf481ee0f7cf1dea1d82de23b1d6fb700bf67d610ca45a715115504e70ff27",
+    "ASPin-rsa4096-scp.apk": "c8cc9973a2d3c23f410b8483cee2a1db1298f0085c4df138eaa51cefb827a152",
+    "ASPin-es256-compatible.apk": "d7bfbad01bf27e7a0edc82d5652621ffe552ab20aac367d9850a36fff18569ad",
+    "ASPin-es384-dcp.apk": "53dfa2f366f75d5d1fe940533dd2cade8d4dfc7c6a15813c01eb4dcdee96b68a",
+    "ASPin-rsa3072-dcp.apk": "a49ac7520874588c59f178fa66a5a50c2298a5d584234ec33c5d076d9282bd0e",
+    "ASPin-es256.apk": "822bb8f9df0e511667d54b8267e496155970ad41bac3bfa522a0ecbc0a711b71",
+    "ASPin-rsa4096-dcp.apk": "475ef5b65c26366652393741ca9e5b83f50b129e33f1c1b2fcfc01935fd10ae6",
+    "ASPin-es256-scp.apk": "055ea196a5ed102f350ef6e4e32c5c05b1682f11172198bdcb9da2b3adc028a2",
+    "ASPin-es256-dcp.apk": "dfc837630d2f59fb6958f3bfb4c8ba4ef059ac5e857e91c80a438f523a946a79",
+    "ASPin-rsa3072.apk": "37af20c67c16765b6d9a436e8b136f74deadc02cf398d3ad8bcba0642824009a",
+    "ASPin-es256-compatible-rotated-root.apk": "7c339cea3576fe33b8a33e44469b9ff0d4654ee58f12a945b33d7a8dcf8481ba",
+    "ASPin-es384-scp.apk": "39d436ab4902d0f95f8e3e94b4d7848c77bc74802674d8c40bc93230f9d3b366",
+    "ASPin-es384-compatible.apk": "63c8d5abeb7f8b1a1361bfb06931a725fab8be9500488f8c8c5555d6d3fe108f",
+    "ASPin-rsa4096-compatible.apk": "d48b23957d8ab284e6eae1952e1188cca3bfe4c7f665e9e77dcaa6daa3506681",
+    "ASPin-rsa3072-scp.apk": "4c818268ee7e112ca96eab81ccb847757093432911dd24c71b8b5f5959971182"
+  },
+  "transport": "device Internet -> public-CA hk:443",
+  "cache_timing_scope": "local OS API calls after Internet policy authentication",
+  "device_fingerprint": "Android/gsi_arm64/generic_arm64:Baklava/CP2A.260605.016/eng.exp:userdebug/test-keys",
+  "server_since": "2026-10-29T04:13:27Z",
+  "finished_utc": "2026-10-29T04:28:51.293060+00:00"
+}

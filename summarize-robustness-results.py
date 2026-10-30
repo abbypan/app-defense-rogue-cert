@@ -15,14 +15,6 @@ ALGORITHM_LABELS = {
     "rsa3072": "PS256",
     "rsa4096": "PS384",
 }
-SCHEMES = {
-    "TLS": ("StandardTLS", "TLS_Success_Standard"),
-    "ASPin": ("ASPin", "TLS_Success_ASPin"),
-    "SCP": ("SCP", "TLS_Success_SCP"),
-    "DCP": ("DCP", "TLS_Success_DCP"),
-}
-
-
 def read_one(path: Path, result_column: str = "Result") -> dict[str, str]:
     if not path.is_file():
         raise SystemExit(f"Missing benchmark result: {path}")
@@ -36,6 +28,22 @@ def read_one(path: Path, result_column: str = "Result") -> dict[str, str]:
             f"{path}: {result_column}={row.get(result_column)!r}, expected 'PASS'"
         )
     return row
+
+
+def read_all(path: Path, result_column: str = "Result") -> list[dict[str, str]]:
+    if not path.is_file():
+        raise SystemExit(f"Missing benchmark result: {path}")
+    with path.open(newline="", encoding="utf-8") as stream:
+        rows = list(csv.DictReader(stream))
+    if not rows:
+        raise SystemExit(f"{path}: expected at least one result row")
+    for index, row in enumerate(rows, start=1):
+        if row.get(result_column) != "PASS":
+            raise SystemExit(
+                f"{path}: row {index} has {result_column}="
+                f"{row.get(result_column)!r}, expected 'PASS'"
+            )
+    return rows
 
 
 def require(row: dict[str, str], fields: tuple[str, ...], source: Path) -> None:
@@ -54,29 +62,29 @@ def write_rows(path: Path, fields: tuple[str, ...], rows: list[dict[str, str]]) 
 def summarize_refresh(run_dir: Path) -> None:
     output_fields = (
         "Algorithm",
+        "Mode",
+        "Scheme",
         "Iterations",
         "Tk_Mean_ms",
         "Tc_Mean_ms",
-        "ASPin_Total_Mean_ms",
-        "ASPin_Total_P50_ms",
-        "ASPin_Total_P95_ms",
-        "ASPin_Total_P99_ms",
-        "DCP_Mean_ms",
-        "DCP_P50_ms",
-        "DCP_P95_ms",
-        "DCP_P99_ms",
-        "ASPin_Success_Count",
-        "DCP_Success_Count",
+        "Total_Mean_ms",
+        "Total_P50_ms",
+        "Total_P95_ms",
+        "Total_P99_ms",
+        "Success_Count",
     )
     rows: list[dict[str, str]] = []
+    # Historical DCP records remain historical; do not relabel them as K_s runs.
+    modes = ("primary", "compatible") if (run_dir / "cold-refresh-compatible-es256.csv").exists() else ("primary", "dcp")
     for algorithm in ALGORITHMS:
-        source = run_dir / f"cold-refresh-{algorithm}.csv"
-        row = read_one(source)
-        require(row, output_fields[1:], source)
-        rows.append(
-            {"Algorithm": ALGORITHM_LABELS[algorithm]}
-            | {field: row[field] for field in output_fields[1:]}
-        )
+        for mode in modes:
+            source = run_dir / f"cold-refresh-{mode}-{algorithm}.csv"
+            row = read_one(source)
+            require(row, output_fields[1:], source)
+            rows.append(
+                {"Algorithm": ALGORITHM_LABELS[algorithm]}
+                | {field: row[field] for field in output_fields[1:]}
+            )
     write_rows(run_dir / "table_full_refresh_tail.csv", output_fields, rows)
 
 
@@ -94,29 +102,36 @@ def summarize_connections(run_dir: Path) -> None:
     rows: list[dict[str, str]] = []
     for phase, phase_label in (("real", "Real"), ("rogue", "Rogue")):
         for algorithm in ALGORITHMS:
-            source = run_dir / f"cached-{phase}-{algorithm}.csv"
-            row = read_one(source, "Matches_TeX_Design")
-            require(row, ("Iterations",), source)
-            for scheme, (prefix, success_field) in SCHEMES.items():
-                required = (
-                    f"{prefix}_Mean_ms",
-                    f"{prefix}_P95_ms",
-                    f"{prefix}_P99_ms",
-                    success_field,
-                )
-                require(row, required, source)
-                rows.append(
-                    {
-                        "Phase": phase_label,
-                        "Algorithm": ALGORITHM_LABELS[algorithm],
-                        "Scheme": scheme,
-                        "Iterations": row["Iterations"],
-                        "Mean_ms": row[f"{prefix}_Mean_ms"],
-                        "P95_ms": row[f"{prefix}_P95_ms"],
-                        "P99_ms": row[f"{prefix}_P99_ms"],
-                        "Successes": row[success_field],
-                    }
-                )
+            for mode in ("primary", "scp", "dcp"):
+                source = run_dir / f"cached-{phase}-{mode}-{algorithm}.csv"
+                for row in read_all(source):
+                    require(
+                        row,
+                        ("Scheme", "Iterations", "Mean_ms", "P95_ms", "P99_ms",
+                         "Success_Count"),
+                        source,
+                    )
+                    scheme = row["Scheme"]
+                    if scheme == "Native-TLS":
+                        scheme = "TLS"
+                    elif scheme == "ASPin-primary":
+                        scheme = "ASPin"
+                    elif scheme == "SCP-NSC":
+                        scheme = "SCP"
+                    elif scheme == "DCP-compatible-NSC":
+                        scheme = "DCP-compatible"
+                    rows.append(
+                        {
+                            "Phase": phase_label,
+                            "Algorithm": ALGORITHM_LABELS[algorithm],
+                            "Scheme": scheme,
+                            "Iterations": row["Iterations"],
+                            "Mean_ms": row["Mean_ms"],
+                            "P95_ms": row["P95_ms"],
+                            "P99_ms": row["P99_ms"],
+                            "Successes": row["Success_Count"],
+                        }
+                    )
     write_rows(run_dir / "table_connection_tail.csv", output_fields, rows)
 
 

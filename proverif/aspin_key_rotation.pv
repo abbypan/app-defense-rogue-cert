@@ -1,7 +1,7 @@
 (*
  * App-signing-key rotation using General JWS JSON Serialization.
- * T'_k contains old-key and new-key signatures over one identical payload.
- * T''_k is later and new-key-only.  A trusted OS lineage containing an
+ * T_k^(1) is old-key-only, T_k^(2) contains old-key and new-key signatures
+ * over one identical payload, and T_k^(3) is later and new-key-only.  A trusted OS lineage containing an
  * ancestor, the old key, and the new key gates state transfer.  The model
  * selects the maximum protected H_k and H_c value across the pre-transition
  * lineage entries, separately for a hostname and a Subject/SAN context.  Old
@@ -83,7 +83,7 @@ let RotationServer =
   event KeyTokenPublished(
       rotation_old_form, pk_old, claim_key, iat0, exp0);
 
-  (* T'_k: two signatures, two protected kid values, one common payload. *)
+  (* T_k^(2): two signatures, two protected kid values, one common payload. *)
   let exp1 = succ_t(succ_t(iat1)) in
   let token1 = jws_dual_sign(
       pk2s(pk_old), pk2s(pk_new), content, iat1, exp1, sk_old, sk_new) in
@@ -94,7 +94,7 @@ let RotationServer =
   event KeyTokenPublished(
       rotation_dual_form, pk_new, claim_key, iat1, exp1);
 
-  (* T''_k: strictly later iat and only the new app-key signature. *)
+  (* T_k^(3): strictly later iat and only the new app-key signature. *)
   let exp2 = succ_t(succ_t(iat2)) in
   let token2 = jws_general_sign(
       pk2s(pk_new), content, iat2, exp2, sk_new) in
@@ -214,13 +214,17 @@ let OldApp =
 let UpdatedApp =
   in(rotation_new_delivery, (pk_old: pkey, pk_new: pkey));
 
-  (* The updated app selects the new-key signature entry of T'_k. *)
+  (* The updated app selects the new-key signature entry of T_k^(2). *)
   in(c, token1: bitstring);
   let jws_dual(
       h_old: bitstring, h_new: bitstring, p1: bitstring,
       sig_old: bitstring, sig_new: bitstring) = token1 in
   let (=true) = header_matches(h_new, pk_new) in
   let (=true) = jws_dual_verify2(token1, pk_new) in
+  (* Prior-state transfer additionally authenticates the old signature on this
+   * very same General JWS payload; a separate old installation is not enough. *)
+  let (=true) = header_matches(h_old, pk_old) in
+  let (=true) = jws_dual_verify1(token1, pk_old) in
   let iat1 = get_iat(p1) in
   let exp1 = get_exp(p1) in
   let (=true) = token_fresh(iat1, exp1, iat1) in
@@ -258,7 +262,7 @@ let UpdatedApp =
       token_type_claim, claim_subject_san_context,
       ancestor_hc_iat, old_hc_iat, claim_lineage_max);
 
-  (* The new-key-only T''_k advances highest-seen state. *)
+  (* The new-key-only T_k^(3) advances highest-seen state. *)
   in(c, token2: bitstring);
   let jws_general(h2: bitstring, p2: bitstring, s2: bitstring) = token2 in
   let (=true) = header_matches(h2, pk_new) in
@@ -275,7 +279,7 @@ let UpdatedApp =
   event KeyRotationCutoverVerified(
       pk_new, claim_key2, iat2, exp2);
 
-  (* Replay T'_k through its valid new-key signature.  It remains fresh, so the
+  (* Replay T_k^(2) through its valid new-key signature.  It remains fresh, so the
    * rejection is caused only by the transferred and then advanced protected
    * highest-seen state, not by expiration or the old key becoming invalid. *)
   in(c, replay_token: bitstring);

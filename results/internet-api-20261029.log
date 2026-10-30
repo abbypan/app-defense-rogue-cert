@@ -1,0 +1,75 @@
+a78ef2384ebbb-primary-es256-prime
+Traceback (most recent call last):
+  File "/mnt/code/aspin/run-remote-api-robustness.py", line 247, in <module>
+    main()
+    ~~~~^^
+  File "/mnt/code/aspin/run-remote-api-robustness.py", line 203, in main
+    observe(mode, algorithm + "-prime", force=True, algorithm=algorithm)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/code/aspin/run-remote-api-robustness.py", line 141, in observe
+    adb("logcat", "-c"); adb(*command)
+                         ~~~^^^^^^^^^^
+  File "/mnt/code/aspin/run-remote-api-robustness.py", line 68, in adb
+    def adb(*values, check=True): return run(["adb", "-s", args.device, *values], check)
+                                         ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/code/aspin/run-remote-api-robustness.py", line 38, in run
+    return subprocess.run(list(map(str, command)), check=check, capture_output=True, text=True).stdout
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['adb', '-s', '3A201FDJH000GP', 'shell', 'am', 'start', '-S', '-W', '-n', 'com.cert.aspin/com.cert.aspin.MainActivity', '--es', 'benchmark_type', 'claimprobe', '--es', 'output_csv', '/data/user/0/com.cert.aspin/files/a78ef2384ebbb-primary-es256-prime.csv', '--es', 'probe_label', 'a78ef2384ebbb-primary-es256-prime', '--ez', 'expect_success', 'true', '--ez', 'force_refresh', 'true', '--es', 'expected_error', '']' returned non-zero exit status 255.
+a10123db8abe1-primary-es256-prime
+a10123db8abe1-primary-es256-cached-probe
+a10123db8abe1-primary-es256-cache-1t
+a10123db8abe1-primary-es256-cache-8t
+a10123db8abe1-primary-es384-prime
+a10123db8abe1-primary-es384-cached-probe
+a10123db8abe1-primary-es384-cache-1t
+a10123db8abe1-primary-es384-cache-8t
+a10123db8abe1-primary-rsa3072-prime
+a10123db8abe1-primary-rsa3072-cached-probe
+a10123db8abe1-primary-rsa3072-cache-1t
+a10123db8abe1-primary-rsa3072-cache-8t
+a10123db8abe1-primary-rsa4096-prime
+a10123db8abe1-primary-rsa4096-cached-probe
+a10123db8abe1-primary-rsa4096-cache-1t
+a10123db8abe1-primary-rsa4096-cache-8t
+a10123db8abe1-primary-cross-target-prime
+a10123db8abe1-primary-cross-cache-1t
+a10123db8abe1-primary-cross-cache-8t
+a10123db8abe1-primary-parallel-host-refresh
+a10123db8abe1-primary-earlier-accepted
+a10123db8abe1-primary-higher-accepted
+a10123db8abe1-primary-reboot-old-tc
+a10123db8abe1-primary-reboot-old-tk
+a10123db8abe1-primary-reboot-current
+a10123db8abe1-primary-clock-rollback-600s
+a10123db8abe1-primary-clock-restored
+a10123db8abe1-compat-es256-prime
+a10123db8abe1-compat-es256-cached-probe
+a10123db8abe1-compat-es256-cache-1t
+a10123db8abe1-compat-es256-cache-8t
+a10123db8abe1-compat-es384-prime
+a10123db8abe1-compat-es384-cached-probe
+a10123db8abe1-compat-es384-cache-1t
+a10123db8abe1-compat-es384-cache-8t
+a10123db8abe1-compat-rsa3072-prime
+a10123db8abe1-compat-rsa3072-cached-probe
+a10123db8abe1-compat-rsa3072-cache-1t
+a10123db8abe1-compat-rsa3072-cache-8t
+a10123db8abe1-compat-rsa4096-prime
+a10123db8abe1-compat-rsa4096-cached-probe
+a10123db8abe1-compat-rsa4096-cache-1t
+a10123db8abe1-compat-rsa4096-cache-8t
+a10123db8abe1-compat-cross-target-prime
+a10123db8abe1-compat-cross-cache-1t
+a10123db8abe1-compat-cross-cache-8t
+a10123db8abe1-compat-parallel-host-refresh
+a10123db8abe1-compat-earlier-accepted
+a10123db8abe1-compat-higher-accepted
+a10123db8abe1-compat-reboot-old-tc
+a10123db8abe1-compat-reboot-old-tk
+a10123db8abe1-compat-reboot-current
+a10123db8abe1-compat-clock-rollback-600s
+a10123db8abe1-compat-clock-restored

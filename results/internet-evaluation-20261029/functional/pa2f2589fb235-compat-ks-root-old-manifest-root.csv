@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+pa2f2589fb235-compat-ks-root-old-manifest-root,com.cert.aspin,self,,protected,true,true,two-token-refresh,1793246844764,1793246843000,1793250443000,393.750936,88.495239,491.192953,675.944784,true,true,accepted,accepted,PASS,"",""

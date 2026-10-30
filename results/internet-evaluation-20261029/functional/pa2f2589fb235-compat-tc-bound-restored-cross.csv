@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+pa2f2589fb235-compat-tc-bound-restored-cross,com.cert.aspin.caller,cross,com.cert.aspin,protected,false,true,hot,1793246668395,1793246658000,1793250258000,0.000000,0.000000,4.270712,207.048788,true,true,accepted,accepted,PASS,"",""

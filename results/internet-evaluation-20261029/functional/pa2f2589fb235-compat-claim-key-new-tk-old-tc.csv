@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+pa2f2589fb235-compat-claim-key-new-tk-old-tc,com.cert.aspin,self,,protected,true,false,none,1793246823325,0,0,0.000000,0.000000,202.679687,202.787312,false,false,lookup_refused,lookup_refused,PASS,"java.lang.IllegalStateException","ASPin validation failed: No General JWS signature matches trusted key"

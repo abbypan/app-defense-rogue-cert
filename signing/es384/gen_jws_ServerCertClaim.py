@@ -13,6 +13,9 @@ from cryptography.hazmat.primitives import serialization
 from jwcrypto import jwk, jws
 from jwcrypto.common import json_encode
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from issuer_policy import direct_issuer_certificates
+
 
 ALGORITHMS = {
     "es256": "ES256",
@@ -49,15 +52,14 @@ def issuer_identifier(issuer_certificate, hash_name):
     return f"{hash_name}:{value}"
 
 
-def read_cert_claim(server_cert, issuer_chain, hash_name):
+def read_cert_claim(server_cert, issuer_chains, hash_name):
     certificate = x509.load_pem_x509_certificate(Path(server_cert).read_bytes())
-    chain = x509.load_pem_x509_certificates(Path(issuer_chain).read_bytes())
-    if not chain:
-        raise ValueError("The issuer chain must contain the leaf's direct issuer CA certificate")
-    issuer_certificate = chain[0]
-    if certificate.issuer != issuer_certificate.subject:
-        raise ValueError("The first issuer-chain certificate is not the leaf's direct issuer")
-    certificate.verify_directly_issued_by(issuer_certificate)
+    chain = [
+        candidate
+        for bundle in issuer_chains
+        for candidate in x509.load_pem_x509_certificates(Path(bundle).read_bytes())
+    ]
+    issuer_certificates = direct_issuer_certificates(certificate, chain)
     try:
         extension = certificate.extensions.get_extension_for_class(
             x509.SubjectAlternativeName
@@ -74,7 +76,8 @@ def read_cert_claim(server_cert, issuer_chain, hash_name):
     return (
         certificate.subject.rfc4514_string(),
         sans,
-        issuer_identifier(issuer_certificate, hash_name),
+        [issuer_identifier(issuer_certificate, hash_name)
+         for issuer_certificate in issuer_certificates],
     )
 
 
@@ -127,13 +130,15 @@ protected_header = json_encode({
 
 private_key = jwk.JWK.from_pem(Path("my-claim-key.pem").read_bytes(), None)
 issuer_hash_name = os.environ.get("ASPIN_ISSUER_HASH", "sha256").lower()
-subject, sans, issuer = read_cert_claim(sys.argv[1], sys.argv[2], issuer_hash_name)
+if len(sys.argv) < 3:
+    raise SystemExit("Usage: gen_jws_ServerCertClaim.py LEAF CHAIN [ALTERNATE_CHAIN ...]")
+subject, sans, issuers = read_cert_claim(sys.argv[1], sys.argv[2:], issuer_hash_name)
 
 issued_at = next_issued_at("ServerCertClaim.jws")
 payload = json_encode({
     "subject": subject,
     "san": sans,
-    "issuer": [issuer],
+    "issuer": issuers,
     "iat": issued_at,
     "exp": issued_at + ttl_seconds,
 })

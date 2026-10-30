@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import argparse
-import re
 import shutil
 import subprocess
 import sys
@@ -28,54 +27,39 @@ def copy_file(source, destination):
     print(f"Copied {source} -> {destination}")
 
 
-def update_scp_verifier_sources(repo_root):
-    pins = {}
-    for alg in DEFAULT_ALGORITHMS:
-        pin_path = repo_root / "signing" / alg / "my-app-cert-scp-hash.txt"
-        require_file(pin_path, f"{alg} SCP certificate hash")
-        pin = pin_path.read_text(encoding="utf-8").strip().lower()
-        if not re.fullmatch(r"[0-9a-f]{64}", pin):
-            raise SystemExit(f"Invalid SHA-256 SCP certificate hash: {pin_path}")
-        pins[alg] = pin
-
-    for variant in DEFAULT_ALGORITHMS:
-        source_path = (
-            repo_root
-            / "ASPin"
-            / variant
-            / "app"
-            / "src"
-            / "main"
-            / "java"
-            / "com"
-            / "cert"
-            / "aspin"
-            / "SCPVerifier.java"
-        )
-        require_file(source_path, f"{variant} SCP verifier")
-        source = source_path.read_text(encoding="utf-8")
-        updated = source
-        for alg, pin in pins.items():
-            pattern = (
-                rf'(pins\.put\("{re.escape(alg)}\.idouzi\.top", ")'
-                rf'[0-9a-f]{{64}}("\);)'
-            )
-            updated, replacements = re.subn(pattern, rf"\g<1>{pin}\g<2>", updated)
-            if replacements != 1:
-                raise SystemExit(
-                    f"Expected one {alg} SCP pin in {source_path}, found {replacements}"
-                )
-        updated, replacements = re.subn(
-            r'(return ")[0-9a-f]{64}(";)',
-            rf"\g<1>{pins['es256']}\g<2>",
-            updated,
-        )
-        if replacements != 1:
-            raise SystemExit(
-                f"Expected one default SCP pin in {source_path}, found {replacements}"
-            )
-        source_path.write_text(updated, encoding="utf-8")
-        print(f"Updated SCP pins in {source_path}")
+def write_nsc_experiment_configs(repo_root, alg, scp_pin):
+    app_source = repo_root / "ASPin" / alg / "app" / "src"
+    scp_config = app_source / "scpBenchmark" / "res" / "xml" / "network_security_config.xml"
+    dcp_config = app_source / "dcpBenchmark" / "res" / "xml" / "network_security_config.xml"
+    common = f"""        <domain includeSubdomains=\"false\">{alg}.idouzi.top</domain>
+        <trust-anchors>
+            <certificates src=\"system\" />
+            <certificates src=\"@raw/aspin_benchmark_ca\" />
+        </trust-anchors>"""
+    scp_config.parent.mkdir(parents=True, exist_ok=True)
+    scp_config.write_text(
+        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+        "<network-security-config>\n"
+        "    <domain-config cleartextTrafficPermitted=\"false\">\n"
+        f"{common}\n"
+        "        <pin-set>\n"
+        f"            <pin digest=\"SHA-256\">{scp_pin}</pin>\n"
+        "        </pin-set>\n"
+        "    </domain-config>\n"
+        "</network-security-config>\n",
+        encoding="utf-8",
+    )
+    dcp_config.parent.mkdir(parents=True, exist_ok=True)
+    dcp_config.write_text(
+        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+        "<network-security-config>\n"
+        "    <domain-config cleartextTrafficPermitted=\"false\">\n"
+        f"{common}\n"
+        "        <dynamic-pin-set />\n"
+        "    </domain-config>\n"
+        "</network-security-config>\n",
+        encoding="utf-8",
+    )
 
 
 def generate_for_algorithm(repo_root, alg):
@@ -85,11 +69,12 @@ def generate_for_algorithm(repo_root, alg):
     server_cert = repo_root / "realserver" / "etc" / "cert" / alg / "real-cert.pem"
     issuer_chain = repo_root / "realserver" / "etc" / "cert" / alg / "real-chain.pem"
     alg_well_known_dir = repo_root / "realserver" / "var" / "www" / alg / ".well-known"
-    dcp_well_known_dir = repo_root / "realserver" / "var" / "www" / "dcp" / ".well-known"
-
-    require_file(signing_dir / "gen_dcp.py", "DCP generator")
     require_file(scp_generator, "SCP hash generator")
     require_file(signing_dir / "gen_jws_ClaimSigningKey.py", "ClaimSigningKey JWS generator")
+    require_file(
+        repo_root / "signing" / "gen_compat_ClaimSigningKey.py",
+        "compatible-mode ClaimSigningKey JWS generator",
+    )
     require_file(signing_dir / "gen_jws_ServerCertClaim.py", "ServerCertClaim JWS generator")
     require_file(server_cert, "server certificate")
     require_file(issuer_chain, "server issuer chain")
@@ -109,14 +94,23 @@ def generate_for_algorithm(repo_root, alg):
         signing_dir,
     )
     run_checked(
-        [sys.executable, "gen_dcp.py", str(server_cert)],
-        f"{alg}: generate DCPServerCertPin.json",
+        [sys.executable, "gen_jws_ClaimSigningKey.py"],
+        f"{alg}: generate app-signing-key-rooted ClaimSigningKey JWS",
+        signing_dir,
+    )
+    copy_file(
+        signing_dir / "ClaimSigningKey.jws",
+        signing_dir / "ClaimSigningKey.primary.jws",
+    )
+    run_checked(
+        [sys.executable, str(repo_root / "signing" / "gen_compat_ClaimSigningKey.py")],
+        f"{alg}: generate manifest-key-rooted compatible ClaimSigningKey JWS",
         signing_dir,
     )
     run_checked(
-        [sys.executable, "gen_jws_ClaimSigningKey.py"],
-        f"{alg}: generate ClaimSigningKey.jws",
-        signing_dir,
+        [sys.executable, str(repo_root / "signing" / "gen_dcp_policy.py"), "--alg", alg,
+         "--output", str(signing_dir / "DCPServerCertPin.jws")],
+        f"{alg}: generate independently signed NSC DCP leaf-pin policy", signing_dir,
     )
     run_checked(
         [
@@ -135,29 +129,40 @@ def generate_for_algorithm(repo_root, alg):
     )
 
     print(f"Wrote {signing_dir / 'my-app-cert-scp-hash.txt'}")
-    print(f"Wrote {signing_dir / 'DCPServerCertPin.json'}")
-    print(f"Wrote {signing_dir / 'ClaimSigningKey.jws'}")
+    scp_pin = (signing_dir / "my-app-cert-scp-hash.txt").read_text(
+        encoding="ascii"
+    ).strip()
+    write_nsc_experiment_configs(repo_root, alg, scp_pin)
+
+    print(f"Wrote {signing_dir / 'ClaimSigningKey.primary.jws'}")
+    print(f"Wrote {signing_dir / 'ClaimSigningKey.compat.jws'}")
     print(f"Wrote {signing_dir / 'ServerCertClaim.jws'}")
 
     copy_file(
         signing_dir / "ServerCertClaim.jws",
         alg_well_known_dir / "ServerCertClaim.jws",
     )
+    copy_file(signing_dir / "DCPServerCertPin.jws",
+              alg_well_known_dir / "DCPServerCertPin.jws")
     copy_file(
-        signing_dir / "ClaimSigningKey.jws",
+        signing_dir / "ClaimSigningKey.primary.jws",
         alg_well_known_dir / "ClaimSigningKey.jws",
+    )
+    copy_file(
+        signing_dir / "ClaimSigningKey.primary.jws",
+        alg_well_known_dir / "ClaimSigningKey.primary.jws",
+    )
+    copy_file(
+        signing_dir / "ClaimSigningKey.compat.jws",
+        alg_well_known_dir / "ClaimSigningKey.compat.jws",
     )
     copy_file(
         signing_dir / "ServerCertClaim.jws",
         app_resources_dir / "ServerCertClaim.jws",
     )
     copy_file(
-        signing_dir / "ClaimSigningKey.jws",
+        signing_dir / "ClaimSigningKey.primary.jws",
         app_resources_dir / "ClaimSigningKey.jws",
-    )
-    copy_file(
-        signing_dir / "DCPServerCertPin.json",
-        dcp_well_known_dir / f"DCPServerCertPin-{alg}.json",
     )
 
 
@@ -165,7 +170,7 @@ def main():
     repo_root = Path(__file__).resolve().parent
 
     parser = argparse.ArgumentParser(
-        description="Generate DCPServerCertPin.json, ClaimSigningKey.jws, and ServerCertClaim.jws."
+        description="Generate NSC SCP pins and primary/compatible ASPin JWS artifacts."
     )
     parser.add_argument(
         "--alg",
@@ -179,7 +184,6 @@ def main():
 
     for alg in algorithms:
         generate_for_algorithm(repo_root, alg)
-    update_scp_verifier_sources(repo_root)
 
 
 if __name__ == "__main__":

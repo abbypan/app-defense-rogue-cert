@@ -1,0 +1,2152 @@
+File "aspin_cross_app.pv", line 56, characters 49-50:
+Warning: identifier cs rebound.
+Process 0 (that is, the initial process):
+(
+    {1}let root_sk: skey = gen_sk_for_id(app_signing) in
+    {2}let claim_sk: skey = gen_sk_for_id(claim_signing) in
+    {3}let exp: timestamp = succ_t(succ_t(curr)) in
+    {4}event CrossAppDelegationPublished(pk(root_sk),pk(claim_sk));
+    {5}out(c, jws_general_sign(pk2s(pk(root_sk)),pk2s(pk(claim_sk)),curr,exp,root_sk));
+    {6}out(c, jws_general_sign(pk2s(pk(claim_sk)),cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,exp,claim_sk));
+    {7}out(c, gen_sk_for_id(other_app_signing))
+) | (
+    {8}!
+    {9}let caller_record: bitstring = package_signing_record(caller_app_id,pk(gen_sk_for_id(other_app_signing))) in
+    {10}let caller_root: pkey = resolve_os_key(caller_record,caller_app_id) in
+    {11}let record: bitstring = package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))) in
+    {12}let root: pkey = resolve_os_key(record,target_app_id) in
+    {13}if (caller_root ≠ root) then
+    {14}event CrossAppResolved(caller_app_id,target_app_id,root);
+    {15}in(c, tk: bitstring);
+    {16}let jws_general(hk: bitstring,kp: bitstring,ks: bitstring) = tk in
+    {17}let =true = header_matches(hk,root) in
+    {18}let =true = jws_general_verify(tk,root) in
+    {19}let kiat: timestamp = get_iat(kp) in
+    {20}let kexp: timestamp = get_exp(kp) in
+    {21}let delegated: pkey = s2pk(get_content(kp)) in
+    {22}in(c, tc: bitstring);
+    {23}let jws_general(hc: bitstring,cp: bitstring,cs_1: bitstring) = tc in
+    {24}let =true = header_matches(hc,delegated) in
+    {25}let =true = jws_general_verify(tc,delegated) in
+    {26}let ciat: timestamp = get_iat(cp) in
+    {27}let cexp: timestamp = get_exp(cp) in
+    {28}let claim: bitstring = get_content(cp) in
+    {29}let identity: bitstring = get_subject_and_san(claim) in
+    {30}let =true = check_host(server_hostname,identity) in
+    {31}let authorized: bitstring = get_issuer(claim) in
+    {32}let now: timestamp = succ_t(curr) in
+    {33}let =true = token_fresh(kiat,kexp,now) in
+    {34}let =true = token_fresh(ciat,cexp,now) in
+    {35}event CrossAppPolicy(caller_app_id,target_app_id,root,delegated);
+    {36}new nonce: bitstring;
+    {37}out(c, nonce);
+    {38}in(c, (certificate: bitstring,possession: bitstring));
+    {39}let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+    {40}let =true = check_host(server_hostname,cert_host) in
+    {41}let =true = check_issuer(issuer,system_ca_list) in
+    {42}let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+    {43}let =true = sig_verify((nonce,certificate),possession,leaf) in
+    {44}event CrossAppNativeValid(issuer);
+    {45}if (issuer = authorized) then
+        {46}event CrossAppConnected(caller_app_id,target_app_id,root,issuer);
+        {47}event CrossAppData(caller_app_id,target_app_id,root,issuer)
+    else
+        {48}event CrossAppIssuerRejected
+) | (
+    {49}!
+    {50}let server_id: bitstring = real_server in
+    {51}let issuer_1: bitstring = real_cert_issuer in
+    {52}let leaf_sk: skey = gen_sk_for_id(server_id) in
+    {53}let certificate_1: bitstring = gen_cert(pk(leaf_sk),server_cert_subject_and_san,issuer_1,sig_sign(cert_content(pk(leaf_sk),server_cert_subject_and_san,issuer_1),gen_sk_for_id(issuer_1))) in
+    {54}in(c, nonce_1: bitstring);
+    {55}out(c, (certificate_1,sig_sign((nonce_1,certificate_1),leaf_sk)))
+) | (
+    {56}!
+    {57}let server_id_1: bitstring = rogue_server in
+    {58}let issuer_2: bitstring = rogue_cert_issuer in
+    {59}let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+    {60}let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+    {61}in(c, nonce_2: bitstring);
+    {62}out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+) | (
+    {63}event CrossAppTargetRefused(target_unavailable)
+)
+
+--  Process 1 (that is, process 0, with let moved downwards):
+(
+    {2}let claim_sk: skey = gen_sk_for_id(claim_signing) in
+    {1}let root_sk: skey = gen_sk_for_id(app_signing) in
+    {4}event CrossAppDelegationPublished(pk(root_sk),pk(claim_sk));
+    {3}let exp: timestamp = succ_t(succ_t(curr)) in
+    {5}out(c, jws_general_sign(pk2s(pk(root_sk)),pk2s(pk(claim_sk)),curr,exp,root_sk));
+    {6}out(c, jws_general_sign(pk2s(pk(claim_sk)),cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,exp,claim_sk));
+    {7}out(c, gen_sk_for_id(other_app_signing))
+) | (
+    {8}!
+    {9}let caller_record: bitstring = package_signing_record(caller_app_id,pk(gen_sk_for_id(other_app_signing))) in
+    {10}let caller_root: pkey = resolve_os_key(caller_record,caller_app_id) in
+    {11}let record: bitstring = package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))) in
+    {12}let root: pkey = resolve_os_key(record,target_app_id) in
+    {13}if (caller_root ≠ root) then
+    {14}event CrossAppResolved(caller_app_id,target_app_id,root);
+    {15}in(c, tk: bitstring);
+    {16}let jws_general(hk: bitstring,kp: bitstring,ks: bitstring) = tk in
+    {17}let =true = header_matches(hk,root) in
+    {18}let =true = jws_general_verify(tk,root) in
+    {19}let kiat: timestamp = get_iat(kp) in
+    {20}let kexp: timestamp = get_exp(kp) in
+    {21}let delegated: pkey = s2pk(get_content(kp)) in
+    {22}in(c, tc: bitstring);
+    {23}let jws_general(hc: bitstring,cp: bitstring,cs_1: bitstring) = tc in
+    {24}let =true = header_matches(hc,delegated) in
+    {25}let =true = jws_general_verify(tc,delegated) in
+    {26}let ciat: timestamp = get_iat(cp) in
+    {27}let cexp: timestamp = get_exp(cp) in
+    {28}let claim: bitstring = get_content(cp) in
+    {29}let identity: bitstring = get_subject_and_san(claim) in
+    {30}let =true = check_host(server_hostname,identity) in
+    {31}let authorized: bitstring = get_issuer(claim) in
+    {32}let now: timestamp = succ_t(curr) in
+    {33}let =true = token_fresh(kiat,kexp,now) in
+    {34}let =true = token_fresh(ciat,cexp,now) in
+    {35}event CrossAppPolicy(caller_app_id,target_app_id,root,delegated);
+    {36}new nonce: bitstring;
+    {37}out(c, nonce);
+    {38}in(c, (certificate: bitstring,possession: bitstring));
+    {39}let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+    {40}let =true = check_host(server_hostname,cert_host) in
+    {41}let =true = check_issuer(issuer,system_ca_list) in
+    {42}let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+    {43}let =true = sig_verify((nonce,certificate),possession,leaf) in
+    {44}event CrossAppNativeValid(issuer);
+    {45}if (issuer = authorized) then
+        {46}event CrossAppConnected(caller_app_id,target_app_id,root,issuer);
+        {47}event CrossAppData(caller_app_id,target_app_id,root,issuer)
+    else
+        {48}event CrossAppIssuerRejected
+) | (
+    {49}!
+    {54}in(c, nonce_1: bitstring);
+    {50}let server_id: bitstring = real_server in
+    {52}let leaf_sk: skey = gen_sk_for_id(server_id) in
+    {51}let issuer_1: bitstring = real_cert_issuer in
+    {53}let certificate_1: bitstring = gen_cert(pk(leaf_sk),server_cert_subject_and_san,issuer_1,sig_sign(cert_content(pk(leaf_sk),server_cert_subject_and_san,issuer_1),gen_sk_for_id(issuer_1))) in
+    {55}out(c, (certificate_1,sig_sign((nonce_1,certificate_1),leaf_sk)))
+) | (
+    {56}!
+    {61}in(c, nonce_2: bitstring);
+    {57}let server_id_1: bitstring = rogue_server in
+    {59}let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+    {58}let issuer_2: bitstring = rogue_cert_issuer in
+    {60}let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+    {62}out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+) | (
+    {63}event CrossAppTargetRefused(target_unavailable)
+)
+
+-- Query event(CrossAppData(caller,target,root_1,issuer_3)) ==> event(CrossAppConnected(caller,target,root_1,issuer_3)) && event(CrossAppResolved(caller,target,root_1)) && event(CrossAppPolicy(caller,target,root_1,delegated_1)) && event(CrossAppNativeValid(issuer_3)) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (75 with conclusion selected). Queue: 156 rules.
+400 rules inserted. Base: 375 rules (84 with conclusion selected). Queue: 193 rules.
+600 rules inserted. Base: 545 rules (88 with conclusion selected). Queue: 61 rules.
+800 rules inserted. Base: 613 rules (89 with conclusion selected). Queue: 140 rules.
+Starting query event(CrossAppData(caller,target,root_1,issuer_3)) ==> event(CrossAppConnected(caller,target,root_1,issuer_3)) && event(CrossAppResolved(caller,target,root_1)) && event(CrossAppPolicy(caller,target,root_1,delegated_1)) && event(CrossAppNativeValid(issuer_3))
+goal reachable: b-event(CrossAppConnected(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),real_cert_issuer)) && b-event(CrossAppNativeValid(real_cert_issuer)) && b-event(CrossAppPolicy(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)))) && b-event(CrossAppResolved(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)))) -> event(CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),real_cert_issuer))
+RESULT event(CrossAppData(caller,target,root_1,issuer_3)) ==> event(CrossAppConnected(caller,target,root_1,issuer_3)) && event(CrossAppResolved(caller,target,root_1)) && event(CrossAppPolicy(caller,target,root_1,delegated_1)) && event(CrossAppNativeValid(issuer_3)) is true.
+-- Query event(CrossAppPolicy(caller,target,root_1,delegated_1)) ==> event(CrossAppDelegationPublished(root_1,delegated_1)) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (75 with conclusion selected). Queue: 108 rules.
+400 rules inserted. Base: 314 rules (88 with conclusion selected). Queue: 65 rules.
+600 rules inserted. Base: 342 rules (90 with conclusion selected). Queue: 165 rules.
+800 rules inserted. Base: 453 rules (90 with conclusion selected). Queue: 68 rules.
+Starting query event(CrossAppPolicy(caller,target,root_1,delegated_1)) ==> event(CrossAppDelegationPublished(root_1,delegated_1))
+goal reachable: b-event(CrossAppDelegationPublished(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)))) -> event(CrossAppPolicy(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing))))
+RESULT event(CrossAppPolicy(caller,target,root_1,delegated_1)) ==> event(CrossAppDelegationPublished(root_1,delegated_1)) is true.
+-- Query not event(CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),real_cert_issuer)) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (75 with conclusion selected). Queue: 156 rules.
+400 rules inserted. Base: 375 rules (84 with conclusion selected). Queue: 193 rules.
+600 rules inserted. Base: 545 rules (88 with conclusion selected). Queue: 61 rules.
+800 rules inserted. Base: 613 rules (89 with conclusion selected). Queue: 140 rules.
+Starting query not event(CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),real_cert_issuer))
+goal reachable: event(CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),real_cert_issuer))
+
+Derivation:
+Abbreviations:
+nonce_3 = nonce[tc = jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))),tk = jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))),!1 = @sid]
+
+1. The message jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))) may be sent to the attacker at output {5}.
+attacker(jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing)))).
+
+2. By 1, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+Using the function 3-proj-jws_general the attacker may obtain sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing)).
+attacker(sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+
+3. The attacker initially knows curr[].
+attacker(curr[]).
+
+4. By 3, the attacker may know curr[].
+Using the function succ_t the attacker may obtain succ_t(curr[]).
+attacker(succ_t(curr[])).
+
+5. By 4, the attacker may know succ_t(curr[]).
+Using the function succ_t the attacker may obtain succ_t(succ_t(curr[])).
+attacker(succ_t(succ_t(curr[]))).
+
+6. By 1, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+Using the function 2-proj-jws_general the attacker may obtain jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))).
+attacker(jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))).
+
+7. By 6, the attacker may know jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))).
+Using the function 1-proj-jws_payload the attacker may obtain pk2s(pk(gen_sk_for_id(claim_signing))).
+attacker(pk2s(pk(gen_sk_for_id(claim_signing)))).
+
+8. By 7, the attacker may know pk2s(pk(gen_sk_for_id(claim_signing))).
+By 3, the attacker may know curr[].
+By 5, the attacker may know succ_t(succ_t(curr[])).
+Using the function jws_payload the attacker may obtain jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))).
+attacker(jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))).
+
+9. By 1, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+Using the function 1-proj-jws_general the attacker may obtain pk2s(pk(gen_sk_for_id(app_signing))).
+attacker(pk2s(pk(gen_sk_for_id(app_signing)))).
+
+10. By 9, the attacker may know pk2s(pk(gen_sk_for_id(app_signing))).
+By 8, the attacker may know jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))).
+By 2, the attacker may know sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing)).
+Using the function jws_general the attacker may obtain jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+attacker(jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing)))).
+
+11. The message jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))) may be sent to the attacker at output {6}.
+attacker(jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing)))).
+
+12. By 11, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))).
+Using the function 3-proj-jws_general the attacker may obtain sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing)).
+attacker(sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))).
+
+13. Using the function real_cert_issuer the attacker may obtain real_cert_issuer.
+attacker(real_cert_issuer).
+
+14. Using the function server_cert_subject_and_san the attacker may obtain server_cert_subject_and_san.
+attacker(server_cert_subject_and_san).
+
+15. By 14, the attacker may know server_cert_subject_and_san.
+By 13, the attacker may know real_cert_issuer.
+Using the function cert_claim the attacker may obtain cert_claim(server_cert_subject_and_san,real_cert_issuer).
+attacker(cert_claim(server_cert_subject_and_san,real_cert_issuer)).
+
+16. By 15, the attacker may know cert_claim(server_cert_subject_and_san,real_cert_issuer).
+By 3, the attacker may know curr[].
+By 5, the attacker may know succ_t(succ_t(curr[])).
+Using the function jws_payload the attacker may obtain jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))).
+attacker(jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))).
+
+17. By 7, the attacker may know pk2s(pk(gen_sk_for_id(claim_signing))).
+By 16, the attacker may know jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))).
+By 12, the attacker may know sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing)).
+Using the function jws_general the attacker may obtain jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))).
+attacker(jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing)))).
+
+18. The message jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))) that the attacker may have by 10 may be received at input {15}.
+The message jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))) that the attacker may have by 17 may be received at input {22}.
+So the message nonce_3 may be sent to the attacker at output {37}.
+attacker(nonce_3).
+
+19. The message nonce_3 that the attacker may have by 18 may be received at input {54}.
+So the message (gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server))) may be sent to the attacker at output {55}.
+attacker((gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server)))).
+
+20. By 19, the attacker may know (gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server))).
+Using the function 2-proj-2-tuple the attacker may obtain sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server)).
+attacker(sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server))).
+
+21. The attacker has some term nonce_4.
+attacker(nonce_4).
+
+22. The message nonce_4 that the attacker may have by 21 may be received at input {54}.
+So the message (gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sig_sign((nonce_4,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server))) may be sent to the attacker at output {55}.
+attacker((gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sig_sign((nonce_4,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server)))).
+
+23. By 22, the attacker may know (gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sig_sign((nonce_4,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server))).
+Using the function 1-proj-2-tuple the attacker may obtain gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))).
+attacker(gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))).
+
+24. By 23, the attacker may know gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))).
+Using the function 4-proj-gen_cert the attacker may obtain sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)).
+attacker(sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))).
+
+25. By 23, the attacker may know gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))).
+Using the function 1-proj-gen_cert the attacker may obtain pk(gen_sk_for_id(real_server)).
+attacker(pk(gen_sk_for_id(real_server))).
+
+26. By 25, the attacker may know pk(gen_sk_for_id(real_server)).
+By 14, the attacker may know server_cert_subject_and_san.
+By 13, the attacker may know real_cert_issuer.
+By 24, the attacker may know sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)).
+Using the function gen_cert the attacker may obtain gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))).
+attacker(gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))).
+
+27. By 26, the attacker may know gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))).
+By 20, the attacker may know sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server)).
+Using the function 2-tuple the attacker may obtain (gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server))).
+attacker((gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server)))).
+
+28. The message jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))) that the attacker may have by 10 may be received at input {15}.
+The message jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))) that the attacker may have by 17 may be received at input {22}.
+The message (gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server))) that the attacker may have by 27 may be received at input {38}.
+So event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),real_cert_issuer) may be executed at {47}.
+event(CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),real_cert_issuer)).
+
+29. By 28, event(CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),real_cert_issuer)).
+The goal is reached, represented in the following fact:
+event(CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),real_cert_issuer)).
+
+
+Initial state
+
+Additional knowledge of the attacker:
+c
+cc
+cs
+succ_t(succ_t(curr))
+succ_t(curr)
+curr
+a
+server_cert_subject_and_san
+real_cert_issuer
+--------------------------------------------------------------
+New processes:
+    (
+        let claim_sk: skey = gen_sk_for_id(claim_signing) in
+        let root_sk: skey = gen_sk_for_id(app_signing) in
+        event CrossAppDelegationPublished(pk(root_sk),pk(claim_sk));
+        let exp: timestamp = succ_t(succ_t(curr)) in
+        out(c, jws_general_sign(pk2s(pk(root_sk)),pk2s(pk(claim_sk)),curr,exp,root_sk));
+        out(c, jws_general_sign(pk2s(pk(claim_sk)),cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,exp,claim_sk));
+        out(c, gen_sk_for_id(other_app_signing))
+    ) | (
+        !
+        let caller_record: bitstring = package_signing_record(caller_app_id,pk(gen_sk_for_id(other_app_signing))) in
+        let caller_root: pkey = resolve_os_key(caller_record,caller_app_id) in
+        let record: bitstring = package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))) in
+        let root: pkey = resolve_os_key(record,target_app_id) in
+        if (caller_root ≠ root) then
+        event CrossAppResolved(caller_app_id,target_app_id,root);
+        in(c, tk: bitstring);
+        let jws_general(hk: bitstring,kp: bitstring,ks: bitstring) = tk in
+        let =true = header_matches(hk,root) in
+        let =true = jws_general_verify(tk,root) in
+        let kiat: timestamp = get_iat(kp) in
+        let kexp: timestamp = get_exp(kp) in
+        let delegated: pkey = s2pk(get_content(kp)) in
+        in(c, tc: bitstring);
+        let jws_general(hc: bitstring,cp: bitstring,cs_1: bitstring) = tc in
+        let =true = header_matches(hc,delegated) in
+        let =true = jws_general_verify(tc,delegated) in
+        let ciat: timestamp = get_iat(cp) in
+        let cexp: timestamp = get_exp(cp) in
+        let claim: bitstring = get_content(cp) in
+        let identity: bitstring = get_subject_and_san(claim) in
+        let =true = check_host(server_hostname,identity) in
+        let authorized: bitstring = get_issuer(claim) in
+        let now: timestamp = succ_t(curr) in
+        let =true = token_fresh(kiat,kexp,now) in
+        let =true = token_fresh(ciat,cexp,now) in
+        event CrossAppPolicy(caller_app_id,target_app_id,root,delegated);
+        new nonce: bitstring;
+        out(c, nonce);
+        in(c, (certificate: bitstring,possession: bitstring));
+        let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+        let =true = check_host(server_hostname,cert_host) in
+        let =true = check_issuer(issuer,system_ca_list) in
+        let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+        let =true = sig_verify((nonce,certificate),possession,leaf) in
+        event CrossAppNativeValid(issuer);
+        if (issuer = authorized) then
+            event CrossAppConnected(caller_app_id,target_app_id,root,issuer);
+            event CrossAppData(caller_app_id,target_app_id,root,issuer)
+        else
+            event CrossAppIssuerRejected
+    ) | (
+        !
+        in(c, nonce_1: bitstring);
+        let server_id: bitstring = real_server in
+        let leaf_sk: skey = gen_sk_for_id(server_id) in
+        let issuer_1: bitstring = real_cert_issuer in
+        let certificate_1: bitstring = gen_cert(pk(leaf_sk),server_cert_subject_and_san,issuer_1,sig_sign(cert_content(pk(leaf_sk),server_cert_subject_and_san,issuer_1),gen_sk_for_id(issuer_1))) in
+        out(c, (certificate_1,sig_sign((nonce_1,certificate_1),leaf_sk)))
+    ) | (
+        !
+        in(c, nonce_2: bitstring);
+        let server_id_1: bitstring = rogue_server in
+        let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+        let issuer_2: bitstring = rogue_cert_issuer in
+        let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+        out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+    ) | (
+        event CrossAppTargetRefused(target_unavailable)
+    )
+
+--------------------------------------------------------------
+1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction |
+
+5th process: event CrossAppTargetRefused(target_unavailable) executed
+
+5th process: Reduction 0
+
+4th process: Reduction ! 0 copy(ies)
+
+3rd process: Reduction ! 2 copy(ies)
+
+4th process: Beginning of process CrossAppServer
+
+3rd process: Beginning of process CrossAppServer
+
+2nd process: Reduction ! 1 copy(ies)
+
+2nd process: Beginning of process CrossAppVerifier
+
+2nd process: let caller_record: bitstring = package_signing_record(caller_app_id,pk(gen_sk_for_id(other_app_signing))) succeeds
+
+2nd process: let caller_root: pkey = pk(gen_sk_for_id(other_app_signing)) succeeds
+
+2nd process: let record: bitstring = package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))) succeeds
+
+2nd process: let root: pkey = pk(gen_sk_for_id(app_signing)) succeeds
+
+2nd process: if (pk(gen_sk_for_id(other_app_signing)) ≠ pk(gen_sk_for_id(app_signing))) succeeds
+
+2nd process: event CrossAppResolved(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing))) executed
+
+1st process: Beginning of process CrossAppPublisher
+
+1st process: let claim_sk: skey = gen_sk_for_id(claim_signing) succeeds
+
+1st process: let root_sk: skey = gen_sk_for_id(app_signing) succeeds
+
+1st process: event CrossAppDelegationPublished(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing))) executed
+
+1st process: let exp: timestamp = succ_t(succ_t(curr)) succeeds
+
+1st process: out(c, jws_general(~M,jws_payload(~M_1,~M_2,~M_3),~M_4)) with ~M = pk2s(pk(gen_sk_for_id(app_signing))), ~M_1 = pk2s(pk(gen_sk_for_id(claim_signing))), ~M_2 = curr, ~M_3 = succ_t(succ_t(curr)), ~M_4 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(app_signing)) done
+
+Additional knowledge of the attacker:
+~M_4 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(app_signing))
+~M_1 = pk2s(pk(gen_sk_for_id(claim_signing)))
+~M = pk2s(pk(gen_sk_for_id(app_signing)))
+--------------------------------------------------------------
+1st process: out(c, jws_general(~M_5,jws_payload(cert_claim(~M_6,~M_7),~M_8,~M_9),~M_10)) with ~M_5 = pk2s(pk(gen_sk_for_id(claim_signing))), ~M_6 = server_cert_subject_and_san, ~M_7 = real_cert_issuer, ~M_8 = curr, ~M_9 = succ_t(succ_t(curr)), ~M_10 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(claim_signing)) done
+
+Additional knowledge of the attacker:
+~M_10 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(claim_signing))
+--------------------------------------------------------------
+1st process: out(c, ~M_11) with ~M_11 = gen_sk_for_id(other_app_signing) done
+
+Additional knowledge of the attacker:
+~M_11 = gen_sk_for_id(other_app_signing)
+--------------------------------------------------------------
+1st process: Reduction 0
+
+New processes:
+(
+    in(c, tk: bitstring);
+    let jws_general(hk: bitstring,kp: bitstring,ks: bitstring) = tk in
+    let =true = header_matches(hk,pk(gen_sk_for_id(app_signing))) in
+    let =true = jws_general_verify(tk,pk(gen_sk_for_id(app_signing))) in
+    let kiat: timestamp = get_iat(kp) in
+    let kexp: timestamp = get_exp(kp) in
+    let delegated: pkey = s2pk(get_content(kp)) in
+    in(c, tc: bitstring);
+    let jws_general(hc: bitstring,cp: bitstring,cs_1: bitstring) = tc in
+    let =true = header_matches(hc,delegated) in
+    let =true = jws_general_verify(tc,delegated) in
+    let ciat: timestamp = get_iat(cp) in
+    let cexp: timestamp = get_exp(cp) in
+    let claim: bitstring = get_content(cp) in
+    let identity: bitstring = get_subject_and_san(claim) in
+    let =true = check_host(server_hostname,identity) in
+    let authorized: bitstring = get_issuer(claim) in
+    let now: timestamp = succ_t(curr) in
+    let =true = token_fresh(kiat,kexp,now) in
+    let =true = token_fresh(ciat,cexp,now) in
+    event CrossAppPolicy(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),delegated);
+    new nonce: bitstring;
+    out(c, nonce);
+    in(c, (certificate: bitstring,possession: bitstring));
+    let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+    let =true = check_host(server_hostname,cert_host) in
+    let =true = check_issuer(issuer,system_ca_list) in
+    let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+    let =true = sig_verify((nonce,certificate),possession,leaf) in
+    event CrossAppNativeValid(issuer);
+    if (issuer = authorized) then
+        event CrossAppConnected(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer);
+        event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer)
+    else
+        event CrossAppIssuerRejected
+) | (
+    in(c, nonce_1: bitstring);
+    let server_id: bitstring = real_server in
+    let leaf_sk: skey = gen_sk_for_id(server_id) in
+    let issuer_1: bitstring = real_cert_issuer in
+    let certificate_1: bitstring = gen_cert(pk(leaf_sk),server_cert_subject_and_san,issuer_1,sig_sign(cert_content(pk(leaf_sk),server_cert_subject_and_san,issuer_1),gen_sk_for_id(issuer_1))) in
+    out(c, (certificate_1,sig_sign((nonce_1,certificate_1),leaf_sk)))
+) | (
+    in(c, nonce_1: bitstring);
+    let server_id: bitstring = real_server in
+    let leaf_sk: skey = gen_sk_for_id(server_id) in
+    let issuer_1: bitstring = real_cert_issuer in
+    let certificate_1: bitstring = gen_cert(pk(leaf_sk),server_cert_subject_and_san,issuer_1,sig_sign(cert_content(pk(leaf_sk),server_cert_subject_and_san,issuer_1),gen_sk_for_id(issuer_1))) in
+    out(c, (certificate_1,sig_sign((nonce_1,certificate_1),leaf_sk)))
+)
+
+--------------------------------------------------------------
+1st process: in(c, tk: bitstring) done with message jws_general(~M,jws_payload(~M_1,curr,succ_t(succ_t(curr))),~M_4) = jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(app_signing)))
+
+1st process: let jws_general(hk: bitstring,kp: bitstring,ks: bitstring) = jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(app_signing))) succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let kiat: timestamp = curr succeeds
+
+1st process: let kexp: timestamp = succ_t(succ_t(curr)) succeeds
+
+1st process: let delegated: pkey = pk(gen_sk_for_id(claim_signing)) succeeds
+
+New processes:
+(
+    in(c, tc: bitstring);
+    let jws_general(hc: bitstring,cp: bitstring,cs_1: bitstring) = tc in
+    let =true = header_matches(hc,pk(gen_sk_for_id(claim_signing))) in
+    let =true = jws_general_verify(tc,pk(gen_sk_for_id(claim_signing))) in
+    let ciat: timestamp = get_iat(cp) in
+    let cexp: timestamp = get_exp(cp) in
+    let claim: bitstring = get_content(cp) in
+    let identity: bitstring = get_subject_and_san(claim) in
+    let =true = check_host(server_hostname,identity) in
+    let authorized: bitstring = get_issuer(claim) in
+    let now: timestamp = succ_t(curr) in
+    let =true = token_fresh(curr,succ_t(succ_t(curr)),now) in
+    let =true = token_fresh(ciat,cexp,now) in
+    event CrossAppPolicy(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)));
+    new nonce: bitstring;
+    out(c, nonce);
+    in(c, (certificate: bitstring,possession: bitstring));
+    let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+    let =true = check_host(server_hostname,cert_host) in
+    let =true = check_issuer(issuer,system_ca_list) in
+    let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+    let =true = sig_verify((nonce,certificate),possession,leaf) in
+    event CrossAppNativeValid(issuer);
+    if (issuer = authorized) then
+        event CrossAppConnected(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer);
+        event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer)
+    else
+        event CrossAppIssuerRejected
+) | (
+    in(c, nonce_1: bitstring);
+    let server_id: bitstring = real_server in
+    let leaf_sk: skey = gen_sk_for_id(server_id) in
+    let issuer_1: bitstring = real_cert_issuer in
+    let certificate_1: bitstring = gen_cert(pk(leaf_sk),server_cert_subject_and_san,issuer_1,sig_sign(cert_content(pk(leaf_sk),server_cert_subject_and_san,issuer_1),gen_sk_for_id(issuer_1))) in
+    out(c, (certificate_1,sig_sign((nonce_1,certificate_1),leaf_sk)))
+) | (
+    in(c, nonce_1: bitstring);
+    let server_id: bitstring = real_server in
+    let leaf_sk: skey = gen_sk_for_id(server_id) in
+    let issuer_1: bitstring = real_cert_issuer in
+    let certificate_1: bitstring = gen_cert(pk(leaf_sk),server_cert_subject_and_san,issuer_1,sig_sign(cert_content(pk(leaf_sk),server_cert_subject_and_san,issuer_1),gen_sk_for_id(issuer_1))) in
+    out(c, (certificate_1,sig_sign((nonce_1,certificate_1),leaf_sk)))
+)
+
+--------------------------------------------------------------
+1st process: in(c, tc: bitstring) done with message jws_general(~M_1,jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr))),~M_10) = jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(claim_signing)))
+
+1st process: let jws_general(hc: bitstring,cp: bitstring,cs_1: bitstring) = jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(claim_signing))) succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let ciat: timestamp = curr succeeds
+
+1st process: let cexp: timestamp = succ_t(succ_t(curr)) succeeds
+
+1st process: let claim: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
+
+1st process: let identity: bitstring = server_cert_subject_and_san succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let authorized: bitstring = real_cert_issuer succeeds
+
+1st process: let now: timestamp = succ_t(curr) succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: event CrossAppPolicy(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing))) executed
+
+1st process: new nonce: bitstring creating nonce_5
+
+1st process: out(c, ~M_12) with ~M_12 = nonce_5 done
+
+Additional knowledge of the attacker:
+~M_12 = nonce_5
+--------------------------------------------------------------
+New processes:
+(
+    in(c, (certificate: bitstring,possession: bitstring));
+    let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+    let =true = check_host(server_hostname,cert_host) in
+    let =true = check_issuer(issuer,system_ca_list) in
+    let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+    let =true = sig_verify((nonce_5,certificate),possession,leaf) in
+    event CrossAppNativeValid(issuer);
+    if (issuer = real_cert_issuer) then
+        event CrossAppConnected(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer);
+        event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer)
+    else
+        event CrossAppIssuerRejected
+) | (
+    in(c, nonce_1: bitstring);
+    let server_id: bitstring = real_server in
+    let leaf_sk: skey = gen_sk_for_id(server_id) in
+    let issuer_1: bitstring = real_cert_issuer in
+    let certificate_1: bitstring = gen_cert(pk(leaf_sk),server_cert_subject_and_san,issuer_1,sig_sign(cert_content(pk(leaf_sk),server_cert_subject_and_san,issuer_1),gen_sk_for_id(issuer_1))) in
+    out(c, (certificate_1,sig_sign((nonce_1,certificate_1),leaf_sk)))
+) | (
+    in(c, nonce_1: bitstring);
+    let server_id: bitstring = real_server in
+    let leaf_sk: skey = gen_sk_for_id(server_id) in
+    let issuer_1: bitstring = real_cert_issuer in
+    let certificate_1: bitstring = gen_cert(pk(leaf_sk),server_cert_subject_and_san,issuer_1,sig_sign(cert_content(pk(leaf_sk),server_cert_subject_and_san,issuer_1),gen_sk_for_id(issuer_1))) in
+    out(c, (certificate_1,sig_sign((nonce_1,certificate_1),leaf_sk)))
+)
+
+--------------------------------------------------------------
+2nd process: in(c, nonce_1: bitstring) done with message a
+
+2nd process: let server_id: bitstring = real_server succeeds
+
+2nd process: let leaf_sk: skey = gen_sk_for_id(real_server) succeeds
+
+2nd process: let issuer_1: bitstring = real_cert_issuer succeeds
+
+2nd process: let certificate_1: bitstring = gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))) succeeds
+
+2nd process: out(c, (gen_cert(~M_13,~M_14,~M_15,~M_16),~M_17)) with ~M_13 = pk(gen_sk_for_id(real_server)), ~M_14 = server_cert_subject_and_san, ~M_15 = real_cert_issuer, ~M_16 = sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)), ~M_17 = sig_sign((a,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server)) done
+
+Additional knowledge of the attacker:
+~M_17 = sig_sign((a,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server))
+~M_16 = sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))
+~M_13 = pk(gen_sk_for_id(real_server))
+--------------------------------------------------------------
+2nd process: Reduction 0
+
+New processes:
+(
+    in(c, (certificate: bitstring,possession: bitstring));
+    let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+    let =true = check_host(server_hostname,cert_host) in
+    let =true = check_issuer(issuer,system_ca_list) in
+    let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+    let =true = sig_verify((nonce_5,certificate),possession,leaf) in
+    event CrossAppNativeValid(issuer);
+    if (issuer = real_cert_issuer) then
+        event CrossAppConnected(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer);
+        event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer)
+    else
+        event CrossAppIssuerRejected
+) | (
+    in(c, nonce_1: bitstring);
+    let server_id: bitstring = real_server in
+    let leaf_sk: skey = gen_sk_for_id(server_id) in
+    let issuer_1: bitstring = real_cert_issuer in
+    let certificate_1: bitstring = gen_cert(pk(leaf_sk),server_cert_subject_and_san,issuer_1,sig_sign(cert_content(pk(leaf_sk),server_cert_subject_and_san,issuer_1),gen_sk_for_id(issuer_1))) in
+    out(c, (certificate_1,sig_sign((nonce_1,certificate_1),leaf_sk)))
+)
+
+--------------------------------------------------------------
+2nd process: in(c, nonce_1: bitstring) done with message ~M_12 = nonce_5
+
+2nd process: let server_id: bitstring = real_server succeeds
+
+2nd process: let leaf_sk: skey = gen_sk_for_id(real_server) succeeds
+
+2nd process: let issuer_1: bitstring = real_cert_issuer succeeds
+
+2nd process: let certificate_1: bitstring = gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))) succeeds
+
+2nd process: out(c, (gen_cert(~M_18,~M_19,~M_20,~M_21),~M_22)) with ~M_18 = pk(gen_sk_for_id(real_server)), ~M_19 = server_cert_subject_and_san, ~M_20 = real_cert_issuer, ~M_21 = sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)), ~M_22 = sig_sign((nonce_5,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server)) done
+
+Additional knowledge of the attacker:
+~M_22 = sig_sign((nonce_5,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server))
+--------------------------------------------------------------
+2nd process: Reduction 0
+
+New processes:
+    in(c, (certificate: bitstring,possession: bitstring));
+    let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+    let =true = check_host(server_hostname,cert_host) in
+    let =true = check_issuer(issuer,system_ca_list) in
+    let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+    let =true = sig_verify((nonce_5,certificate),possession,leaf) in
+    event CrossAppNativeValid(issuer);
+    if (issuer = real_cert_issuer) then
+        event CrossAppConnected(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer);
+        event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer)
+    else
+        event CrossAppIssuerRejected
+
+--------------------------------------------------------------
+1st process: in(c, (certificate: bitstring,possession: bitstring)) done with message (gen_cert(~M_13,server_cert_subject_and_san,real_cert_issuer,~M_16),~M_22) = (gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))),sig_sign((nonce_5,gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer)))),gen_sk_for_id(real_server)))
+
+1st process: let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = gen_cert(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(real_server)),server_cert_subject_and_san,real_cert_issuer),gen_sk_for_id(real_cert_issuer))) succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: event CrossAppNativeValid(real_cert_issuer) executed
+
+1st process: if (real_cert_issuer = real_cert_issuer) succeeds
+
+1st process: event CrossAppConnected(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),real_cert_issuer) executed
+
+1st process: event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),real_cert_issuer) executed; it is a goal
+
+New processes:
+    0
+
+--------------------------------------------------------------
+The event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),real_cert_issuer) is executed at {47} in copy a_1.
+A trace has been found.
+RESULT not event(CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),real_cert_issuer)) is false.
+-- Query not event(CrossAppIssuerRejected) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (75 with conclusion selected). Queue: 156 rules.
+400 rules inserted. Base: 375 rules (84 with conclusion selected). Queue: 193 rules.
+600 rules inserted. Base: 545 rules (88 with conclusion selected). Queue: 61 rules.
+800 rules inserted. Base: 613 rules (89 with conclusion selected). Queue: 140 rules.
+Starting query not event(CrossAppIssuerRejected)
+goal reachable: event(CrossAppIssuerRejected)
+
+Derivation:
+Abbreviations:
+nonce_3 = nonce[tc = jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))),tk = jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))),!1 = @sid]
+
+1. The message jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))) may be sent to the attacker at output {5}.
+attacker(jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing)))).
+
+2. By 1, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+Using the function 3-proj-jws_general the attacker may obtain sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing)).
+attacker(sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+
+3. The attacker initially knows curr[].
+attacker(curr[]).
+
+4. By 3, the attacker may know curr[].
+Using the function succ_t the attacker may obtain succ_t(curr[]).
+attacker(succ_t(curr[])).
+
+5. By 4, the attacker may know succ_t(curr[]).
+Using the function succ_t the attacker may obtain succ_t(succ_t(curr[])).
+attacker(succ_t(succ_t(curr[]))).
+
+6. By 1, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+Using the function 2-proj-jws_general the attacker may obtain jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))).
+attacker(jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))).
+
+7. By 6, the attacker may know jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))).
+Using the function 1-proj-jws_payload the attacker may obtain pk2s(pk(gen_sk_for_id(claim_signing))).
+attacker(pk2s(pk(gen_sk_for_id(claim_signing)))).
+
+8. By 7, the attacker may know pk2s(pk(gen_sk_for_id(claim_signing))).
+By 3, the attacker may know curr[].
+By 5, the attacker may know succ_t(succ_t(curr[])).
+Using the function jws_payload the attacker may obtain jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))).
+attacker(jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))).
+
+9. By 1, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+Using the function 1-proj-jws_general the attacker may obtain pk2s(pk(gen_sk_for_id(app_signing))).
+attacker(pk2s(pk(gen_sk_for_id(app_signing)))).
+
+10. By 9, the attacker may know pk2s(pk(gen_sk_for_id(app_signing))).
+By 8, the attacker may know jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))).
+By 2, the attacker may know sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing)).
+Using the function jws_general the attacker may obtain jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+attacker(jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing)))).
+
+11. The message jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))) may be sent to the attacker at output {6}.
+attacker(jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing)))).
+
+12. By 11, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))).
+Using the function 3-proj-jws_general the attacker may obtain sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing)).
+attacker(sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))).
+
+13. Using the function real_cert_issuer the attacker may obtain real_cert_issuer.
+attacker(real_cert_issuer).
+
+14. Using the function server_cert_subject_and_san the attacker may obtain server_cert_subject_and_san.
+attacker(server_cert_subject_and_san).
+
+15. By 14, the attacker may know server_cert_subject_and_san.
+By 13, the attacker may know real_cert_issuer.
+Using the function cert_claim the attacker may obtain cert_claim(server_cert_subject_and_san,real_cert_issuer).
+attacker(cert_claim(server_cert_subject_and_san,real_cert_issuer)).
+
+16. By 15, the attacker may know cert_claim(server_cert_subject_and_san,real_cert_issuer).
+By 3, the attacker may know curr[].
+By 5, the attacker may know succ_t(succ_t(curr[])).
+Using the function jws_payload the attacker may obtain jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))).
+attacker(jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))).
+
+17. By 7, the attacker may know pk2s(pk(gen_sk_for_id(claim_signing))).
+By 16, the attacker may know jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))).
+By 12, the attacker may know sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing)).
+Using the function jws_general the attacker may obtain jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))).
+attacker(jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing)))).
+
+18. The message jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))) that the attacker may have by 10 may be received at input {15}.
+The message jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))) that the attacker may have by 17 may be received at input {22}.
+So the message nonce_3 may be sent to the attacker at output {37}.
+attacker(nonce_3).
+
+19. The message nonce_3 that the attacker may have by 18 may be received at input {61}.
+So the message (gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))) may be sent to the attacker at output {62}.
+attacker((gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)))).
+
+20. By 19, the attacker may know (gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))).
+Using the function 2-proj-2-tuple the attacker may obtain sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)).
+attacker(sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))).
+
+21. The attacker has some term nonce_4.
+attacker(nonce_4).
+
+22. The message nonce_4 that the attacker may have by 21 may be received at input {61}.
+So the message (gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_4,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))) may be sent to the attacker at output {62}.
+attacker((gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_4,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)))).
+
+23. By 22, the attacker may know (gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_4,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))).
+Using the function 1-proj-2-tuple the attacker may obtain gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))).
+attacker(gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))).
+
+24. By 23, the attacker may know gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))).
+Using the function 4-proj-gen_cert the attacker may obtain sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)).
+attacker(sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))).
+
+25. Using the function rogue_cert_issuer the attacker may obtain rogue_cert_issuer.
+attacker(rogue_cert_issuer).
+
+26. By 23, the attacker may know gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))).
+Using the function 1-proj-gen_cert the attacker may obtain pk(gen_sk_for_id(rogue_server)).
+attacker(pk(gen_sk_for_id(rogue_server))).
+
+27. By 26, the attacker may know pk(gen_sk_for_id(rogue_server)).
+By 14, the attacker may know server_cert_subject_and_san.
+By 25, the attacker may know rogue_cert_issuer.
+By 24, the attacker may know sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)).
+Using the function gen_cert the attacker may obtain gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))).
+attacker(gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))).
+
+28. By 27, the attacker may know gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))).
+By 20, the attacker may know sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)).
+Using the function 2-tuple the attacker may obtain (gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))).
+attacker((gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)))).
+
+29. The message jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))) that the attacker may have by 10 may be received at input {15}.
+The message jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))) that the attacker may have by 17 may be received at input {22}.
+The message (gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))) that the attacker may have by 28 may be received at input {38}.
+We have real_cert_issuer ≠ rogue_cert_issuer.
+So event CrossAppIssuerRejected may be executed at {48}.
+event(CrossAppIssuerRejected).
+
+30. By 29, event(CrossAppIssuerRejected).
+The goal is reached, represented in the following fact:
+event(CrossAppIssuerRejected).
+
+
+Initial state
+
+Additional knowledge of the attacker:
+c
+cc
+cs
+succ_t(succ_t(curr))
+succ_t(curr)
+curr
+a
+rogue_cert_issuer
+server_cert_subject_and_san
+real_cert_issuer
+--------------------------------------------------------------
+New processes:
+    (
+        let claim_sk: skey = gen_sk_for_id(claim_signing) in
+        let root_sk: skey = gen_sk_for_id(app_signing) in
+        event CrossAppDelegationPublished(pk(root_sk),pk(claim_sk));
+        let exp: timestamp = succ_t(succ_t(curr)) in
+        out(c, jws_general_sign(pk2s(pk(root_sk)),pk2s(pk(claim_sk)),curr,exp,root_sk));
+        out(c, jws_general_sign(pk2s(pk(claim_sk)),cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,exp,claim_sk));
+        out(c, gen_sk_for_id(other_app_signing))
+    ) | (
+        !
+        let caller_record: bitstring = package_signing_record(caller_app_id,pk(gen_sk_for_id(other_app_signing))) in
+        let caller_root: pkey = resolve_os_key(caller_record,caller_app_id) in
+        let record: bitstring = package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))) in
+        let root: pkey = resolve_os_key(record,target_app_id) in
+        if (caller_root ≠ root) then
+        event CrossAppResolved(caller_app_id,target_app_id,root);
+        in(c, tk: bitstring);
+        let jws_general(hk: bitstring,kp: bitstring,ks: bitstring) = tk in
+        let =true = header_matches(hk,root) in
+        let =true = jws_general_verify(tk,root) in
+        let kiat: timestamp = get_iat(kp) in
+        let kexp: timestamp = get_exp(kp) in
+        let delegated: pkey = s2pk(get_content(kp)) in
+        in(c, tc: bitstring);
+        let jws_general(hc: bitstring,cp: bitstring,cs_1: bitstring) = tc in
+        let =true = header_matches(hc,delegated) in
+        let =true = jws_general_verify(tc,delegated) in
+        let ciat: timestamp = get_iat(cp) in
+        let cexp: timestamp = get_exp(cp) in
+        let claim: bitstring = get_content(cp) in
+        let identity: bitstring = get_subject_and_san(claim) in
+        let =true = check_host(server_hostname,identity) in
+        let authorized: bitstring = get_issuer(claim) in
+        let now: timestamp = succ_t(curr) in
+        let =true = token_fresh(kiat,kexp,now) in
+        let =true = token_fresh(ciat,cexp,now) in
+        event CrossAppPolicy(caller_app_id,target_app_id,root,delegated);
+        new nonce: bitstring;
+        out(c, nonce);
+        in(c, (certificate: bitstring,possession: bitstring));
+        let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+        let =true = check_host(server_hostname,cert_host) in
+        let =true = check_issuer(issuer,system_ca_list) in
+        let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+        let =true = sig_verify((nonce,certificate),possession,leaf) in
+        event CrossAppNativeValid(issuer);
+        if (issuer = authorized) then
+            event CrossAppConnected(caller_app_id,target_app_id,root,issuer);
+            event CrossAppData(caller_app_id,target_app_id,root,issuer)
+        else
+            event CrossAppIssuerRejected
+    ) | (
+        !
+        in(c, nonce_1: bitstring);
+        let server_id: bitstring = real_server in
+        let leaf_sk: skey = gen_sk_for_id(server_id) in
+        let issuer_1: bitstring = real_cert_issuer in
+        let certificate_1: bitstring = gen_cert(pk(leaf_sk),server_cert_subject_and_san,issuer_1,sig_sign(cert_content(pk(leaf_sk),server_cert_subject_and_san,issuer_1),gen_sk_for_id(issuer_1))) in
+        out(c, (certificate_1,sig_sign((nonce_1,certificate_1),leaf_sk)))
+    ) | (
+        !
+        in(c, nonce_2: bitstring);
+        let server_id_1: bitstring = rogue_server in
+        let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+        let issuer_2: bitstring = rogue_cert_issuer in
+        let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+        out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+    ) | (
+        event CrossAppTargetRefused(target_unavailable)
+    )
+
+--------------------------------------------------------------
+1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction |
+
+5th process: event CrossAppTargetRefused(target_unavailable) executed
+
+5th process: Reduction 0
+
+4th process: Reduction ! 2 copy(ies)
+
+5th process: Beginning of process CrossAppServer
+
+4th process: Beginning of process CrossAppServer
+
+3rd process: Reduction ! 0 copy(ies)
+
+2nd process: Reduction ! 1 copy(ies)
+
+2nd process: Beginning of process CrossAppVerifier
+
+2nd process: let caller_record: bitstring = package_signing_record(caller_app_id,pk(gen_sk_for_id(other_app_signing))) succeeds
+
+2nd process: let caller_root: pkey = pk(gen_sk_for_id(other_app_signing)) succeeds
+
+2nd process: let record: bitstring = package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))) succeeds
+
+2nd process: let root: pkey = pk(gen_sk_for_id(app_signing)) succeeds
+
+2nd process: if (pk(gen_sk_for_id(other_app_signing)) ≠ pk(gen_sk_for_id(app_signing))) succeeds
+
+2nd process: event CrossAppResolved(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing))) executed
+
+1st process: Beginning of process CrossAppPublisher
+
+1st process: let claim_sk: skey = gen_sk_for_id(claim_signing) succeeds
+
+1st process: let root_sk: skey = gen_sk_for_id(app_signing) succeeds
+
+1st process: event CrossAppDelegationPublished(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing))) executed
+
+1st process: let exp: timestamp = succ_t(succ_t(curr)) succeeds
+
+1st process: out(c, jws_general(~M,jws_payload(~M_1,~M_2,~M_3),~M_4)) with ~M = pk2s(pk(gen_sk_for_id(app_signing))), ~M_1 = pk2s(pk(gen_sk_for_id(claim_signing))), ~M_2 = curr, ~M_3 = succ_t(succ_t(curr)), ~M_4 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(app_signing)) done
+
+Additional knowledge of the attacker:
+~M_4 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(app_signing))
+~M_1 = pk2s(pk(gen_sk_for_id(claim_signing)))
+~M = pk2s(pk(gen_sk_for_id(app_signing)))
+--------------------------------------------------------------
+1st process: out(c, jws_general(~M_5,jws_payload(cert_claim(~M_6,~M_7),~M_8,~M_9),~M_10)) with ~M_5 = pk2s(pk(gen_sk_for_id(claim_signing))), ~M_6 = server_cert_subject_and_san, ~M_7 = real_cert_issuer, ~M_8 = curr, ~M_9 = succ_t(succ_t(curr)), ~M_10 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(claim_signing)) done
+
+Additional knowledge of the attacker:
+~M_10 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(claim_signing))
+--------------------------------------------------------------
+1st process: out(c, ~M_11) with ~M_11 = gen_sk_for_id(other_app_signing) done
+
+Additional knowledge of the attacker:
+~M_11 = gen_sk_for_id(other_app_signing)
+--------------------------------------------------------------
+1st process: Reduction 0
+
+New processes:
+(
+    in(c, tk: bitstring);
+    let jws_general(hk: bitstring,kp: bitstring,ks: bitstring) = tk in
+    let =true = header_matches(hk,pk(gen_sk_for_id(app_signing))) in
+    let =true = jws_general_verify(tk,pk(gen_sk_for_id(app_signing))) in
+    let kiat: timestamp = get_iat(kp) in
+    let kexp: timestamp = get_exp(kp) in
+    let delegated: pkey = s2pk(get_content(kp)) in
+    in(c, tc: bitstring);
+    let jws_general(hc: bitstring,cp: bitstring,cs_1: bitstring) = tc in
+    let =true = header_matches(hc,delegated) in
+    let =true = jws_general_verify(tc,delegated) in
+    let ciat: timestamp = get_iat(cp) in
+    let cexp: timestamp = get_exp(cp) in
+    let claim: bitstring = get_content(cp) in
+    let identity: bitstring = get_subject_and_san(claim) in
+    let =true = check_host(server_hostname,identity) in
+    let authorized: bitstring = get_issuer(claim) in
+    let now: timestamp = succ_t(curr) in
+    let =true = token_fresh(kiat,kexp,now) in
+    let =true = token_fresh(ciat,cexp,now) in
+    event CrossAppPolicy(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),delegated);
+    new nonce: bitstring;
+    out(c, nonce);
+    in(c, (certificate: bitstring,possession: bitstring));
+    let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+    let =true = check_host(server_hostname,cert_host) in
+    let =true = check_issuer(issuer,system_ca_list) in
+    let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+    let =true = sig_verify((nonce,certificate),possession,leaf) in
+    event CrossAppNativeValid(issuer);
+    if (issuer = authorized) then
+        event CrossAppConnected(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer);
+        event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer)
+    else
+        event CrossAppIssuerRejected
+) | (
+    in(c, nonce_2: bitstring);
+    let server_id_1: bitstring = rogue_server in
+    let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+    let issuer_2: bitstring = rogue_cert_issuer in
+    let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+    out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+) | (
+    in(c, nonce_2: bitstring);
+    let server_id_1: bitstring = rogue_server in
+    let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+    let issuer_2: bitstring = rogue_cert_issuer in
+    let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+    out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+)
+
+--------------------------------------------------------------
+1st process: in(c, tk: bitstring) done with message jws_general(~M,jws_payload(~M_1,curr,succ_t(succ_t(curr))),~M_4) = jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(app_signing)))
+
+1st process: let jws_general(hk: bitstring,kp: bitstring,ks: bitstring) = jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(app_signing))) succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let kiat: timestamp = curr succeeds
+
+1st process: let kexp: timestamp = succ_t(succ_t(curr)) succeeds
+
+1st process: let delegated: pkey = pk(gen_sk_for_id(claim_signing)) succeeds
+
+New processes:
+(
+    in(c, tc: bitstring);
+    let jws_general(hc: bitstring,cp: bitstring,cs_1: bitstring) = tc in
+    let =true = header_matches(hc,pk(gen_sk_for_id(claim_signing))) in
+    let =true = jws_general_verify(tc,pk(gen_sk_for_id(claim_signing))) in
+    let ciat: timestamp = get_iat(cp) in
+    let cexp: timestamp = get_exp(cp) in
+    let claim: bitstring = get_content(cp) in
+    let identity: bitstring = get_subject_and_san(claim) in
+    let =true = check_host(server_hostname,identity) in
+    let authorized: bitstring = get_issuer(claim) in
+    let now: timestamp = succ_t(curr) in
+    let =true = token_fresh(curr,succ_t(succ_t(curr)),now) in
+    let =true = token_fresh(ciat,cexp,now) in
+    event CrossAppPolicy(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)));
+    new nonce: bitstring;
+    out(c, nonce);
+    in(c, (certificate: bitstring,possession: bitstring));
+    let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+    let =true = check_host(server_hostname,cert_host) in
+    let =true = check_issuer(issuer,system_ca_list) in
+    let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+    let =true = sig_verify((nonce,certificate),possession,leaf) in
+    event CrossAppNativeValid(issuer);
+    if (issuer = authorized) then
+        event CrossAppConnected(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer);
+        event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer)
+    else
+        event CrossAppIssuerRejected
+) | (
+    in(c, nonce_2: bitstring);
+    let server_id_1: bitstring = rogue_server in
+    let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+    let issuer_2: bitstring = rogue_cert_issuer in
+    let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+    out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+) | (
+    in(c, nonce_2: bitstring);
+    let server_id_1: bitstring = rogue_server in
+    let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+    let issuer_2: bitstring = rogue_cert_issuer in
+    let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+    out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+)
+
+--------------------------------------------------------------
+1st process: in(c, tc: bitstring) done with message jws_general(~M_1,jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr))),~M_10) = jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(claim_signing)))
+
+1st process: let jws_general(hc: bitstring,cp: bitstring,cs_1: bitstring) = jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(claim_signing))) succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let ciat: timestamp = curr succeeds
+
+1st process: let cexp: timestamp = succ_t(succ_t(curr)) succeeds
+
+1st process: let claim: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
+
+1st process: let identity: bitstring = server_cert_subject_and_san succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let authorized: bitstring = real_cert_issuer succeeds
+
+1st process: let now: timestamp = succ_t(curr) succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: event CrossAppPolicy(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing))) executed
+
+1st process: new nonce: bitstring creating nonce_5
+
+1st process: out(c, ~M_12) with ~M_12 = nonce_5 done
+
+Additional knowledge of the attacker:
+~M_12 = nonce_5
+--------------------------------------------------------------
+New processes:
+(
+    in(c, (certificate: bitstring,possession: bitstring));
+    let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+    let =true = check_host(server_hostname,cert_host) in
+    let =true = check_issuer(issuer,system_ca_list) in
+    let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+    let =true = sig_verify((nonce_5,certificate),possession,leaf) in
+    event CrossAppNativeValid(issuer);
+    if (issuer = real_cert_issuer) then
+        event CrossAppConnected(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer);
+        event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer)
+    else
+        event CrossAppIssuerRejected
+) | (
+    in(c, nonce_2: bitstring);
+    let server_id_1: bitstring = rogue_server in
+    let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+    let issuer_2: bitstring = rogue_cert_issuer in
+    let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+    out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+) | (
+    in(c, nonce_2: bitstring);
+    let server_id_1: bitstring = rogue_server in
+    let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+    let issuer_2: bitstring = rogue_cert_issuer in
+    let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+    out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+)
+
+--------------------------------------------------------------
+2nd process: in(c, nonce_2: bitstring) done with message a
+
+2nd process: let server_id_1: bitstring = rogue_server succeeds
+
+2nd process: let leaf_sk_1: skey = gen_sk_for_id(rogue_server) succeeds
+
+2nd process: let issuer_2: bitstring = rogue_cert_issuer succeeds
+
+2nd process: let certificate_2: bitstring = gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))) succeeds
+
+2nd process: out(c, (gen_cert(~M_13,~M_14,~M_15,~M_16),~M_17)) with ~M_13 = pk(gen_sk_for_id(rogue_server)), ~M_14 = server_cert_subject_and_san, ~M_15 = rogue_cert_issuer, ~M_16 = sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)), ~M_17 = sig_sign((a,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)) done
+
+Additional knowledge of the attacker:
+~M_17 = sig_sign((a,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))
+~M_16 = sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))
+~M_13 = pk(gen_sk_for_id(rogue_server))
+--------------------------------------------------------------
+2nd process: Reduction 0
+
+New processes:
+(
+    in(c, (certificate: bitstring,possession: bitstring));
+    let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+    let =true = check_host(server_hostname,cert_host) in
+    let =true = check_issuer(issuer,system_ca_list) in
+    let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+    let =true = sig_verify((nonce_5,certificate),possession,leaf) in
+    event CrossAppNativeValid(issuer);
+    if (issuer = real_cert_issuer) then
+        event CrossAppConnected(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer);
+        event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer)
+    else
+        event CrossAppIssuerRejected
+) | (
+    in(c, nonce_2: bitstring);
+    let server_id_1: bitstring = rogue_server in
+    let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+    let issuer_2: bitstring = rogue_cert_issuer in
+    let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+    out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+)
+
+--------------------------------------------------------------
+2nd process: in(c, nonce_2: bitstring) done with message ~M_12 = nonce_5
+
+2nd process: let server_id_1: bitstring = rogue_server succeeds
+
+2nd process: let leaf_sk_1: skey = gen_sk_for_id(rogue_server) succeeds
+
+2nd process: let issuer_2: bitstring = rogue_cert_issuer succeeds
+
+2nd process: let certificate_2: bitstring = gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))) succeeds
+
+2nd process: out(c, (gen_cert(~M_18,~M_19,~M_20,~M_21),~M_22)) with ~M_18 = pk(gen_sk_for_id(rogue_server)), ~M_19 = server_cert_subject_and_san, ~M_20 = rogue_cert_issuer, ~M_21 = sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)), ~M_22 = sig_sign((nonce_5,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)) done
+
+Additional knowledge of the attacker:
+~M_22 = sig_sign((nonce_5,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))
+--------------------------------------------------------------
+2nd process: Reduction 0
+
+New processes:
+    in(c, (certificate: bitstring,possession: bitstring));
+    let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+    let =true = check_host(server_hostname,cert_host) in
+    let =true = check_issuer(issuer,system_ca_list) in
+    let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+    let =true = sig_verify((nonce_5,certificate),possession,leaf) in
+    event CrossAppNativeValid(issuer);
+    if (issuer = real_cert_issuer) then
+        event CrossAppConnected(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer);
+        event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer)
+    else
+        event CrossAppIssuerRejected
+
+--------------------------------------------------------------
+1st process: in(c, (certificate: bitstring,possession: bitstring)) done with message (gen_cert(~M_13,server_cert_subject_and_san,rogue_cert_issuer,~M_16),~M_22) = (gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_5,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)))
+
+1st process: let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))) succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: event CrossAppNativeValid(rogue_cert_issuer) executed
+
+1st process: if (rogue_cert_issuer = real_cert_issuer): else branch taken
+
+1st process: event CrossAppIssuerRejected executed; it is a goal
+
+New processes:
+    0
+
+--------------------------------------------------------------
+The event CrossAppIssuerRejected is executed at {48} in copy a_1.
+A trace has been found.
+RESULT not event(CrossAppIssuerRejected) is false.
+-- Query not event(CrossAppNativeValid(rogue_cert_issuer)) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (75 with conclusion selected). Queue: 156 rules.
+400 rules inserted. Base: 375 rules (84 with conclusion selected). Queue: 193 rules.
+600 rules inserted. Base: 545 rules (88 with conclusion selected). Queue: 61 rules.
+800 rules inserted. Base: 611 rules (89 with conclusion selected). Queue: 138 rules.
+Starting query not event(CrossAppNativeValid(rogue_cert_issuer))
+goal reachable: event(CrossAppNativeValid(rogue_cert_issuer))
+
+Derivation:
+Abbreviations:
+nonce_3 = nonce[tc = jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))),tk = jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))),!1 = @sid]
+
+1. The message jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))) may be sent to the attacker at output {5}.
+attacker(jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing)))).
+
+2. By 1, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+Using the function 3-proj-jws_general the attacker may obtain sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing)).
+attacker(sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+
+3. The attacker initially knows curr[].
+attacker(curr[]).
+
+4. By 3, the attacker may know curr[].
+Using the function succ_t the attacker may obtain succ_t(curr[]).
+attacker(succ_t(curr[])).
+
+5. By 4, the attacker may know succ_t(curr[]).
+Using the function succ_t the attacker may obtain succ_t(succ_t(curr[])).
+attacker(succ_t(succ_t(curr[]))).
+
+6. By 1, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+Using the function 2-proj-jws_general the attacker may obtain jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))).
+attacker(jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))).
+
+7. By 6, the attacker may know jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))).
+Using the function 1-proj-jws_payload the attacker may obtain pk2s(pk(gen_sk_for_id(claim_signing))).
+attacker(pk2s(pk(gen_sk_for_id(claim_signing)))).
+
+8. By 7, the attacker may know pk2s(pk(gen_sk_for_id(claim_signing))).
+By 3, the attacker may know curr[].
+By 5, the attacker may know succ_t(succ_t(curr[])).
+Using the function jws_payload the attacker may obtain jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))).
+attacker(jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))).
+
+9. By 1, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+Using the function 1-proj-jws_general the attacker may obtain pk2s(pk(gen_sk_for_id(app_signing))).
+attacker(pk2s(pk(gen_sk_for_id(app_signing)))).
+
+10. By 9, the attacker may know pk2s(pk(gen_sk_for_id(app_signing))).
+By 8, the attacker may know jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))).
+By 2, the attacker may know sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing)).
+Using the function jws_general the attacker may obtain jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+attacker(jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing)))).
+
+11. The message jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))) may be sent to the attacker at output {6}.
+attacker(jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing)))).
+
+12. By 11, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))).
+Using the function 3-proj-jws_general the attacker may obtain sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing)).
+attacker(sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))).
+
+13. Using the function real_cert_issuer the attacker may obtain real_cert_issuer.
+attacker(real_cert_issuer).
+
+14. Using the function server_cert_subject_and_san the attacker may obtain server_cert_subject_and_san.
+attacker(server_cert_subject_and_san).
+
+15. By 14, the attacker may know server_cert_subject_and_san.
+By 13, the attacker may know real_cert_issuer.
+Using the function cert_claim the attacker may obtain cert_claim(server_cert_subject_and_san,real_cert_issuer).
+attacker(cert_claim(server_cert_subject_and_san,real_cert_issuer)).
+
+16. By 15, the attacker may know cert_claim(server_cert_subject_and_san,real_cert_issuer).
+By 3, the attacker may know curr[].
+By 5, the attacker may know succ_t(succ_t(curr[])).
+Using the function jws_payload the attacker may obtain jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))).
+attacker(jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))).
+
+17. By 7, the attacker may know pk2s(pk(gen_sk_for_id(claim_signing))).
+By 16, the attacker may know jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))).
+By 12, the attacker may know sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing)).
+Using the function jws_general the attacker may obtain jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))).
+attacker(jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing)))).
+
+18. The message jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))) that the attacker may have by 10 may be received at input {15}.
+The message jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))) that the attacker may have by 17 may be received at input {22}.
+So the message nonce_3 may be sent to the attacker at output {37}.
+attacker(nonce_3).
+
+19. The message nonce_3 that the attacker may have by 18 may be received at input {61}.
+So the message (gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))) may be sent to the attacker at output {62}.
+attacker((gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)))).
+
+20. By 19, the attacker may know (gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))).
+Using the function 2-proj-2-tuple the attacker may obtain sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)).
+attacker(sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))).
+
+21. The attacker has some term nonce_4.
+attacker(nonce_4).
+
+22. The message nonce_4 that the attacker may have by 21 may be received at input {61}.
+So the message (gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_4,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))) may be sent to the attacker at output {62}.
+attacker((gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_4,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)))).
+
+23. By 22, the attacker may know (gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_4,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))).
+Using the function 1-proj-2-tuple the attacker may obtain gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))).
+attacker(gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))).
+
+24. By 23, the attacker may know gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))).
+Using the function 4-proj-gen_cert the attacker may obtain sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)).
+attacker(sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))).
+
+25. Using the function rogue_cert_issuer the attacker may obtain rogue_cert_issuer.
+attacker(rogue_cert_issuer).
+
+26. By 23, the attacker may know gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))).
+Using the function 1-proj-gen_cert the attacker may obtain pk(gen_sk_for_id(rogue_server)).
+attacker(pk(gen_sk_for_id(rogue_server))).
+
+27. By 26, the attacker may know pk(gen_sk_for_id(rogue_server)).
+By 14, the attacker may know server_cert_subject_and_san.
+By 25, the attacker may know rogue_cert_issuer.
+By 24, the attacker may know sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)).
+Using the function gen_cert the attacker may obtain gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))).
+attacker(gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))).
+
+28. By 27, the attacker may know gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))).
+By 20, the attacker may know sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)).
+Using the function 2-tuple the attacker may obtain (gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))).
+attacker((gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)))).
+
+29. The message jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))) that the attacker may have by 10 may be received at input {15}.
+The message jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))) that the attacker may have by 17 may be received at input {22}.
+The message (gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_3,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))) that the attacker may have by 28 may be received at input {38}.
+So event CrossAppNativeValid(rogue_cert_issuer) may be executed at {44}.
+event(CrossAppNativeValid(rogue_cert_issuer)).
+
+30. By 29, event(CrossAppNativeValid(rogue_cert_issuer)).
+The goal is reached, represented in the following fact:
+event(CrossAppNativeValid(rogue_cert_issuer)).
+
+
+Initial state
+
+Additional knowledge of the attacker:
+c
+cc
+cs
+succ_t(succ_t(curr))
+succ_t(curr)
+curr
+a
+rogue_cert_issuer
+server_cert_subject_and_san
+real_cert_issuer
+--------------------------------------------------------------
+New processes:
+    (
+        let claim_sk: skey = gen_sk_for_id(claim_signing) in
+        let root_sk: skey = gen_sk_for_id(app_signing) in
+        event CrossAppDelegationPublished(pk(root_sk),pk(claim_sk));
+        let exp: timestamp = succ_t(succ_t(curr)) in
+        out(c, jws_general_sign(pk2s(pk(root_sk)),pk2s(pk(claim_sk)),curr,exp,root_sk));
+        out(c, jws_general_sign(pk2s(pk(claim_sk)),cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,exp,claim_sk));
+        out(c, gen_sk_for_id(other_app_signing))
+    ) | (
+        !
+        let caller_record: bitstring = package_signing_record(caller_app_id,pk(gen_sk_for_id(other_app_signing))) in
+        let caller_root: pkey = resolve_os_key(caller_record,caller_app_id) in
+        let record: bitstring = package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))) in
+        let root: pkey = resolve_os_key(record,target_app_id) in
+        if (caller_root ≠ root) then
+        event CrossAppResolved(caller_app_id,target_app_id,root);
+        in(c, tk: bitstring);
+        let jws_general(hk: bitstring,kp: bitstring,ks: bitstring) = tk in
+        let =true = header_matches(hk,root) in
+        let =true = jws_general_verify(tk,root) in
+        let kiat: timestamp = get_iat(kp) in
+        let kexp: timestamp = get_exp(kp) in
+        let delegated: pkey = s2pk(get_content(kp)) in
+        in(c, tc: bitstring);
+        let jws_general(hc: bitstring,cp: bitstring,cs_1: bitstring) = tc in
+        let =true = header_matches(hc,delegated) in
+        let =true = jws_general_verify(tc,delegated) in
+        let ciat: timestamp = get_iat(cp) in
+        let cexp: timestamp = get_exp(cp) in
+        let claim: bitstring = get_content(cp) in
+        let identity: bitstring = get_subject_and_san(claim) in
+        let =true = check_host(server_hostname,identity) in
+        let authorized: bitstring = get_issuer(claim) in
+        let now: timestamp = succ_t(curr) in
+        let =true = token_fresh(kiat,kexp,now) in
+        let =true = token_fresh(ciat,cexp,now) in
+        event CrossAppPolicy(caller_app_id,target_app_id,root,delegated);
+        new nonce: bitstring;
+        out(c, nonce);
+        in(c, (certificate: bitstring,possession: bitstring));
+        let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+        let =true = check_host(server_hostname,cert_host) in
+        let =true = check_issuer(issuer,system_ca_list) in
+        let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+        let =true = sig_verify((nonce,certificate),possession,leaf) in
+        event CrossAppNativeValid(issuer);
+        if (issuer = authorized) then
+            event CrossAppConnected(caller_app_id,target_app_id,root,issuer);
+            event CrossAppData(caller_app_id,target_app_id,root,issuer)
+        else
+            event CrossAppIssuerRejected
+    ) | (
+        !
+        in(c, nonce_1: bitstring);
+        let server_id: bitstring = real_server in
+        let leaf_sk: skey = gen_sk_for_id(server_id) in
+        let issuer_1: bitstring = real_cert_issuer in
+        let certificate_1: bitstring = gen_cert(pk(leaf_sk),server_cert_subject_and_san,issuer_1,sig_sign(cert_content(pk(leaf_sk),server_cert_subject_and_san,issuer_1),gen_sk_for_id(issuer_1))) in
+        out(c, (certificate_1,sig_sign((nonce_1,certificate_1),leaf_sk)))
+    ) | (
+        !
+        in(c, nonce_2: bitstring);
+        let server_id_1: bitstring = rogue_server in
+        let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+        let issuer_2: bitstring = rogue_cert_issuer in
+        let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+        out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+    ) | (
+        event CrossAppTargetRefused(target_unavailable)
+    )
+
+--------------------------------------------------------------
+1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction |
+
+5th process: event CrossAppTargetRefused(target_unavailable) executed
+
+5th process: Reduction 0
+
+4th process: Reduction ! 2 copy(ies)
+
+5th process: Beginning of process CrossAppServer
+
+4th process: Beginning of process CrossAppServer
+
+3rd process: Reduction ! 0 copy(ies)
+
+2nd process: Reduction ! 1 copy(ies)
+
+2nd process: Beginning of process CrossAppVerifier
+
+2nd process: let caller_record: bitstring = package_signing_record(caller_app_id,pk(gen_sk_for_id(other_app_signing))) succeeds
+
+2nd process: let caller_root: pkey = pk(gen_sk_for_id(other_app_signing)) succeeds
+
+2nd process: let record: bitstring = package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))) succeeds
+
+2nd process: let root: pkey = pk(gen_sk_for_id(app_signing)) succeeds
+
+2nd process: if (pk(gen_sk_for_id(other_app_signing)) ≠ pk(gen_sk_for_id(app_signing))) succeeds
+
+2nd process: event CrossAppResolved(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing))) executed
+
+1st process: Beginning of process CrossAppPublisher
+
+1st process: let claim_sk: skey = gen_sk_for_id(claim_signing) succeeds
+
+1st process: let root_sk: skey = gen_sk_for_id(app_signing) succeeds
+
+1st process: event CrossAppDelegationPublished(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing))) executed
+
+1st process: let exp: timestamp = succ_t(succ_t(curr)) succeeds
+
+1st process: out(c, jws_general(~M,jws_payload(~M_1,~M_2,~M_3),~M_4)) with ~M = pk2s(pk(gen_sk_for_id(app_signing))), ~M_1 = pk2s(pk(gen_sk_for_id(claim_signing))), ~M_2 = curr, ~M_3 = succ_t(succ_t(curr)), ~M_4 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(app_signing)) done
+
+Additional knowledge of the attacker:
+~M_4 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(app_signing))
+~M_1 = pk2s(pk(gen_sk_for_id(claim_signing)))
+~M = pk2s(pk(gen_sk_for_id(app_signing)))
+--------------------------------------------------------------
+1st process: out(c, jws_general(~M_5,jws_payload(cert_claim(~M_6,~M_7),~M_8,~M_9),~M_10)) with ~M_5 = pk2s(pk(gen_sk_for_id(claim_signing))), ~M_6 = server_cert_subject_and_san, ~M_7 = real_cert_issuer, ~M_8 = curr, ~M_9 = succ_t(succ_t(curr)), ~M_10 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(claim_signing)) done
+
+Additional knowledge of the attacker:
+~M_10 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(claim_signing))
+--------------------------------------------------------------
+1st process: out(c, ~M_11) with ~M_11 = gen_sk_for_id(other_app_signing) done
+
+Additional knowledge of the attacker:
+~M_11 = gen_sk_for_id(other_app_signing)
+--------------------------------------------------------------
+1st process: Reduction 0
+
+New processes:
+(
+    in(c, tk: bitstring);
+    let jws_general(hk: bitstring,kp: bitstring,ks: bitstring) = tk in
+    let =true = header_matches(hk,pk(gen_sk_for_id(app_signing))) in
+    let =true = jws_general_verify(tk,pk(gen_sk_for_id(app_signing))) in
+    let kiat: timestamp = get_iat(kp) in
+    let kexp: timestamp = get_exp(kp) in
+    let delegated: pkey = s2pk(get_content(kp)) in
+    in(c, tc: bitstring);
+    let jws_general(hc: bitstring,cp: bitstring,cs_1: bitstring) = tc in
+    let =true = header_matches(hc,delegated) in
+    let =true = jws_general_verify(tc,delegated) in
+    let ciat: timestamp = get_iat(cp) in
+    let cexp: timestamp = get_exp(cp) in
+    let claim: bitstring = get_content(cp) in
+    let identity: bitstring = get_subject_and_san(claim) in
+    let =true = check_host(server_hostname,identity) in
+    let authorized: bitstring = get_issuer(claim) in
+    let now: timestamp = succ_t(curr) in
+    let =true = token_fresh(kiat,kexp,now) in
+    let =true = token_fresh(ciat,cexp,now) in
+    event CrossAppPolicy(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),delegated);
+    new nonce: bitstring;
+    out(c, nonce);
+    in(c, (certificate: bitstring,possession: bitstring));
+    let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+    let =true = check_host(server_hostname,cert_host) in
+    let =true = check_issuer(issuer,system_ca_list) in
+    let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+    let =true = sig_verify((nonce,certificate),possession,leaf) in
+    event CrossAppNativeValid(issuer);
+    if (issuer = authorized) then
+        event CrossAppConnected(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer);
+        event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer)
+    else
+        event CrossAppIssuerRejected
+) | (
+    in(c, nonce_2: bitstring);
+    let server_id_1: bitstring = rogue_server in
+    let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+    let issuer_2: bitstring = rogue_cert_issuer in
+    let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+    out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+) | (
+    in(c, nonce_2: bitstring);
+    let server_id_1: bitstring = rogue_server in
+    let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+    let issuer_2: bitstring = rogue_cert_issuer in
+    let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+    out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+)
+
+--------------------------------------------------------------
+1st process: in(c, tk: bitstring) done with message jws_general(~M,jws_payload(~M_1,curr,succ_t(succ_t(curr))),~M_4) = jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(app_signing)))
+
+1st process: let jws_general(hk: bitstring,kp: bitstring,ks: bitstring) = jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(app_signing))) succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let kiat: timestamp = curr succeeds
+
+1st process: let kexp: timestamp = succ_t(succ_t(curr)) succeeds
+
+1st process: let delegated: pkey = pk(gen_sk_for_id(claim_signing)) succeeds
+
+New processes:
+(
+    in(c, tc: bitstring);
+    let jws_general(hc: bitstring,cp: bitstring,cs_1: bitstring) = tc in
+    let =true = header_matches(hc,pk(gen_sk_for_id(claim_signing))) in
+    let =true = jws_general_verify(tc,pk(gen_sk_for_id(claim_signing))) in
+    let ciat: timestamp = get_iat(cp) in
+    let cexp: timestamp = get_exp(cp) in
+    let claim: bitstring = get_content(cp) in
+    let identity: bitstring = get_subject_and_san(claim) in
+    let =true = check_host(server_hostname,identity) in
+    let authorized: bitstring = get_issuer(claim) in
+    let now: timestamp = succ_t(curr) in
+    let =true = token_fresh(curr,succ_t(succ_t(curr)),now) in
+    let =true = token_fresh(ciat,cexp,now) in
+    event CrossAppPolicy(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)));
+    new nonce: bitstring;
+    out(c, nonce);
+    in(c, (certificate: bitstring,possession: bitstring));
+    let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+    let =true = check_host(server_hostname,cert_host) in
+    let =true = check_issuer(issuer,system_ca_list) in
+    let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+    let =true = sig_verify((nonce,certificate),possession,leaf) in
+    event CrossAppNativeValid(issuer);
+    if (issuer = authorized) then
+        event CrossAppConnected(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer);
+        event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer)
+    else
+        event CrossAppIssuerRejected
+) | (
+    in(c, nonce_2: bitstring);
+    let server_id_1: bitstring = rogue_server in
+    let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+    let issuer_2: bitstring = rogue_cert_issuer in
+    let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+    out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+) | (
+    in(c, nonce_2: bitstring);
+    let server_id_1: bitstring = rogue_server in
+    let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+    let issuer_2: bitstring = rogue_cert_issuer in
+    let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+    out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+)
+
+--------------------------------------------------------------
+1st process: in(c, tc: bitstring) done with message jws_general(~M_1,jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr))),~M_10) = jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(claim_signing)))
+
+1st process: let jws_general(hc: bitstring,cp: bitstring,cs_1: bitstring) = jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(claim_signing))) succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let ciat: timestamp = curr succeeds
+
+1st process: let cexp: timestamp = succ_t(succ_t(curr)) succeeds
+
+1st process: let claim: bitstring = cert_claim(server_cert_subject_and_san,real_cert_issuer) succeeds
+
+1st process: let identity: bitstring = server_cert_subject_and_san succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let authorized: bitstring = real_cert_issuer succeeds
+
+1st process: let now: timestamp = succ_t(curr) succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: event CrossAppPolicy(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing))) executed
+
+1st process: new nonce: bitstring creating nonce_5
+
+1st process: out(c, ~M_12) with ~M_12 = nonce_5 done
+
+Additional knowledge of the attacker:
+~M_12 = nonce_5
+--------------------------------------------------------------
+New processes:
+(
+    in(c, (certificate: bitstring,possession: bitstring));
+    let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+    let =true = check_host(server_hostname,cert_host) in
+    let =true = check_issuer(issuer,system_ca_list) in
+    let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+    let =true = sig_verify((nonce_5,certificate),possession,leaf) in
+    event CrossAppNativeValid(issuer);
+    if (issuer = real_cert_issuer) then
+        event CrossAppConnected(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer);
+        event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer)
+    else
+        event CrossAppIssuerRejected
+) | (
+    in(c, nonce_2: bitstring);
+    let server_id_1: bitstring = rogue_server in
+    let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+    let issuer_2: bitstring = rogue_cert_issuer in
+    let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+    out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+) | (
+    in(c, nonce_2: bitstring);
+    let server_id_1: bitstring = rogue_server in
+    let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+    let issuer_2: bitstring = rogue_cert_issuer in
+    let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+    out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+)
+
+--------------------------------------------------------------
+2nd process: in(c, nonce_2: bitstring) done with message a
+
+2nd process: let server_id_1: bitstring = rogue_server succeeds
+
+2nd process: let leaf_sk_1: skey = gen_sk_for_id(rogue_server) succeeds
+
+2nd process: let issuer_2: bitstring = rogue_cert_issuer succeeds
+
+2nd process: let certificate_2: bitstring = gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))) succeeds
+
+2nd process: out(c, (gen_cert(~M_13,~M_14,~M_15,~M_16),~M_17)) with ~M_13 = pk(gen_sk_for_id(rogue_server)), ~M_14 = server_cert_subject_and_san, ~M_15 = rogue_cert_issuer, ~M_16 = sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)), ~M_17 = sig_sign((a,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)) done
+
+Additional knowledge of the attacker:
+~M_17 = sig_sign((a,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))
+~M_16 = sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))
+~M_13 = pk(gen_sk_for_id(rogue_server))
+--------------------------------------------------------------
+2nd process: Reduction 0
+
+New processes:
+(
+    in(c, (certificate: bitstring,possession: bitstring));
+    let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+    let =true = check_host(server_hostname,cert_host) in
+    let =true = check_issuer(issuer,system_ca_list) in
+    let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+    let =true = sig_verify((nonce_5,certificate),possession,leaf) in
+    event CrossAppNativeValid(issuer);
+    if (issuer = real_cert_issuer) then
+        event CrossAppConnected(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer);
+        event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer)
+    else
+        event CrossAppIssuerRejected
+) | (
+    in(c, nonce_2: bitstring);
+    let server_id_1: bitstring = rogue_server in
+    let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+    let issuer_2: bitstring = rogue_cert_issuer in
+    let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+    out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+)
+
+--------------------------------------------------------------
+2nd process: in(c, nonce_2: bitstring) done with message ~M_12 = nonce_5
+
+2nd process: let server_id_1: bitstring = rogue_server succeeds
+
+2nd process: let leaf_sk_1: skey = gen_sk_for_id(rogue_server) succeeds
+
+2nd process: let issuer_2: bitstring = rogue_cert_issuer succeeds
+
+2nd process: let certificate_2: bitstring = gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))) succeeds
+
+2nd process: out(c, (gen_cert(~M_18,~M_19,~M_20,~M_21),~M_22)) with ~M_18 = pk(gen_sk_for_id(rogue_server)), ~M_19 = server_cert_subject_and_san, ~M_20 = rogue_cert_issuer, ~M_21 = sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)), ~M_22 = sig_sign((nonce_5,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)) done
+
+Additional knowledge of the attacker:
+~M_22 = sig_sign((nonce_5,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server))
+--------------------------------------------------------------
+2nd process: Reduction 0
+
+New processes:
+    in(c, (certificate: bitstring,possession: bitstring));
+    let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+    let =true = check_host(server_hostname,cert_host) in
+    let =true = check_issuer(issuer,system_ca_list) in
+    let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+    let =true = sig_verify((nonce_5,certificate),possession,leaf) in
+    event CrossAppNativeValid(issuer);
+    if (issuer = real_cert_issuer) then
+        event CrossAppConnected(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer);
+        event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),issuer)
+    else
+        event CrossAppIssuerRejected
+
+--------------------------------------------------------------
+1st process: in(c, (certificate: bitstring,possession: bitstring)) done with message (gen_cert(~M_13,server_cert_subject_and_san,rogue_cert_issuer,~M_16),~M_22) = (gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))),sig_sign((nonce_5,gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer)))),gen_sk_for_id(rogue_server)))
+
+1st process: let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = gen_cert(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer,sig_sign(cert_content(pk(gen_sk_for_id(rogue_server)),server_cert_subject_and_san,rogue_cert_issuer),gen_sk_for_id(rogue_cert_issuer))) succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: event CrossAppNativeValid(rogue_cert_issuer) executed; it is a goal
+
+New processes:
+    if (rogue_cert_issuer = real_cert_issuer) then
+        event CrossAppConnected(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),rogue_cert_issuer);
+        event CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),rogue_cert_issuer)
+    else
+        event CrossAppIssuerRejected
+
+--------------------------------------------------------------
+The event CrossAppNativeValid(rogue_cert_issuer) is executed at {44} in copy a_1.
+A trace has been found.
+RESULT not event(CrossAppNativeValid(rogue_cert_issuer)) is false.
+-- Query not event(CrossAppData(caller,target,root_1,rogue_cert_issuer)) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (75 with conclusion selected). Queue: 156 rules.
+400 rules inserted. Base: 375 rules (84 with conclusion selected). Queue: 193 rules.
+600 rules inserted. Base: 545 rules (88 with conclusion selected). Queue: 61 rules.
+800 rules inserted. Base: 613 rules (89 with conclusion selected). Queue: 140 rules.
+Starting query not event(CrossAppData(caller,target,root_1,rogue_cert_issuer))
+RESULT not event(CrossAppData(caller,target,root_1,rogue_cert_issuer)) is true.
+-- Query not event(CrossAppPolicy(caller_app_id,target_app_id,pk(gen_sk_for_id(other_app_signing)),delegated_1)) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (75 with conclusion selected). Queue: 108 rules.
+400 rules inserted. Base: 314 rules (88 with conclusion selected). Queue: 65 rules.
+600 rules inserted. Base: 397 rules (90 with conclusion selected). Queue: 124 rules.
+Starting query not event(CrossAppPolicy(caller_app_id,target_app_id,pk(gen_sk_for_id(other_app_signing)),delegated_1))
+RESULT not event(CrossAppPolicy(caller_app_id,target_app_id,pk(gen_sk_for_id(other_app_signing)),delegated_1)) is true.
+-- Query not event(CrossAppResolved(caller_app_id,caller_app_id,root_1)) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (83 with conclusion selected). Queue: 59 rules.
+400 rules inserted. Base: 258 rules (89 with conclusion selected). Queue: 63 rules.
+600 rules inserted. Base: 415 rules (90 with conclusion selected). Queue: 46 rules.
+Starting query not event(CrossAppResolved(caller_app_id,caller_app_id,root_1))
+RESULT not event(CrossAppResolved(caller_app_id,caller_app_id,root_1)) is true.
+-- Query not event(CrossAppTargetRefused(target_unavailable)) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (83 with conclusion selected). Queue: 59 rules.
+400 rules inserted. Base: 258 rules (89 with conclusion selected). Queue: 63 rules.
+600 rules inserted. Base: 415 rules (90 with conclusion selected). Queue: 46 rules.
+Starting query not event(CrossAppTargetRefused(target_unavailable))
+goal reachable: event(CrossAppTargetRefused(target_unavailable))
+
+Derivation:
+
+1. Event CrossAppTargetRefused(target_unavailable) may be executed at {63}.
+event(CrossAppTargetRefused(target_unavailable)).
+
+2. By 1, event(CrossAppTargetRefused(target_unavailable)).
+The goal is reached, represented in the following fact:
+event(CrossAppTargetRefused(target_unavailable)).
+
+
+Initial state
+
+Additional knowledge of the attacker:
+c
+cc
+cs
+curr
+--------------------------------------------------------------
+New processes:
+    (
+        let claim_sk: skey = gen_sk_for_id(claim_signing) in
+        let root_sk: skey = gen_sk_for_id(app_signing) in
+        event CrossAppDelegationPublished(pk(root_sk),pk(claim_sk));
+        let exp: timestamp = succ_t(succ_t(curr)) in
+        out(c, jws_general_sign(pk2s(pk(root_sk)),pk2s(pk(claim_sk)),curr,exp,root_sk));
+        out(c, jws_general_sign(pk2s(pk(claim_sk)),cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,exp,claim_sk));
+        out(c, gen_sk_for_id(other_app_signing))
+    ) | (
+        !
+        let caller_record: bitstring = package_signing_record(caller_app_id,pk(gen_sk_for_id(other_app_signing))) in
+        let caller_root: pkey = resolve_os_key(caller_record,caller_app_id) in
+        let record: bitstring = package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))) in
+        let root: pkey = resolve_os_key(record,target_app_id) in
+        if (caller_root ≠ root) then
+        event CrossAppResolved(caller_app_id,target_app_id,root);
+        in(c, tk: bitstring);
+        let jws_general(hk: bitstring,kp: bitstring,ks: bitstring) = tk in
+        let =true = header_matches(hk,root) in
+        let =true = jws_general_verify(tk,root) in
+        let kiat: timestamp = get_iat(kp) in
+        let kexp: timestamp = get_exp(kp) in
+        let delegated: pkey = s2pk(get_content(kp)) in
+        in(c, tc: bitstring);
+        let jws_general(hc: bitstring,cp: bitstring,cs_1: bitstring) = tc in
+        let =true = header_matches(hc,delegated) in
+        let =true = jws_general_verify(tc,delegated) in
+        let ciat: timestamp = get_iat(cp) in
+        let cexp: timestamp = get_exp(cp) in
+        let claim: bitstring = get_content(cp) in
+        let identity: bitstring = get_subject_and_san(claim) in
+        let =true = check_host(server_hostname,identity) in
+        let authorized: bitstring = get_issuer(claim) in
+        let now: timestamp = succ_t(curr) in
+        let =true = token_fresh(kiat,kexp,now) in
+        let =true = token_fresh(ciat,cexp,now) in
+        event CrossAppPolicy(caller_app_id,target_app_id,root,delegated);
+        new nonce: bitstring;
+        out(c, nonce);
+        in(c, (certificate: bitstring,possession: bitstring));
+        let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+        let =true = check_host(server_hostname,cert_host) in
+        let =true = check_issuer(issuer,system_ca_list) in
+        let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+        let =true = sig_verify((nonce,certificate),possession,leaf) in
+        event CrossAppNativeValid(issuer);
+        if (issuer = authorized) then
+            event CrossAppConnected(caller_app_id,target_app_id,root,issuer);
+            event CrossAppData(caller_app_id,target_app_id,root,issuer)
+        else
+            event CrossAppIssuerRejected
+    ) | (
+        !
+        in(c, nonce_1: bitstring);
+        let server_id: bitstring = real_server in
+        let leaf_sk: skey = gen_sk_for_id(server_id) in
+        let issuer_1: bitstring = real_cert_issuer in
+        let certificate_1: bitstring = gen_cert(pk(leaf_sk),server_cert_subject_and_san,issuer_1,sig_sign(cert_content(pk(leaf_sk),server_cert_subject_and_san,issuer_1),gen_sk_for_id(issuer_1))) in
+        out(c, (certificate_1,sig_sign((nonce_1,certificate_1),leaf_sk)))
+    ) | (
+        !
+        in(c, nonce_2: bitstring);
+        let server_id_1: bitstring = rogue_server in
+        let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+        let issuer_2: bitstring = rogue_cert_issuer in
+        let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+        out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+    ) | (
+        event CrossAppTargetRefused(target_unavailable)
+    )
+
+--------------------------------------------------------------
+1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction |
+
+5th process: event CrossAppTargetRefused(target_unavailable) executed; it is a goal
+
+New processes:
+(
+    let claim_sk: skey = gen_sk_for_id(claim_signing) in
+    let root_sk: skey = gen_sk_for_id(app_signing) in
+    event CrossAppDelegationPublished(pk(root_sk),pk(claim_sk));
+    let exp: timestamp = succ_t(succ_t(curr)) in
+    out(c, jws_general_sign(pk2s(pk(root_sk)),pk2s(pk(claim_sk)),curr,exp,root_sk));
+    out(c, jws_general_sign(pk2s(pk(claim_sk)),cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,exp,claim_sk));
+    out(c, gen_sk_for_id(other_app_signing))
+) | (
+    !
+    let caller_record: bitstring = package_signing_record(caller_app_id,pk(gen_sk_for_id(other_app_signing))) in
+    let caller_root: pkey = resolve_os_key(caller_record,caller_app_id) in
+    let record: bitstring = package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))) in
+    let root: pkey = resolve_os_key(record,target_app_id) in
+    if (caller_root ≠ root) then
+    event CrossAppResolved(caller_app_id,target_app_id,root);
+    in(c, tk: bitstring);
+    let jws_general(hk: bitstring,kp: bitstring,ks: bitstring) = tk in
+    let =true = header_matches(hk,root) in
+    let =true = jws_general_verify(tk,root) in
+    let kiat: timestamp = get_iat(kp) in
+    let kexp: timestamp = get_exp(kp) in
+    let delegated: pkey = s2pk(get_content(kp)) in
+    in(c, tc: bitstring);
+    let jws_general(hc: bitstring,cp: bitstring,cs_1: bitstring) = tc in
+    let =true = header_matches(hc,delegated) in
+    let =true = jws_general_verify(tc,delegated) in
+    let ciat: timestamp = get_iat(cp) in
+    let cexp: timestamp = get_exp(cp) in
+    let claim: bitstring = get_content(cp) in
+    let identity: bitstring = get_subject_and_san(claim) in
+    let =true = check_host(server_hostname,identity) in
+    let authorized: bitstring = get_issuer(claim) in
+    let now: timestamp = succ_t(curr) in
+    let =true = token_fresh(kiat,kexp,now) in
+    let =true = token_fresh(ciat,cexp,now) in
+    event CrossAppPolicy(caller_app_id,target_app_id,root,delegated);
+    new nonce: bitstring;
+    out(c, nonce);
+    in(c, (certificate: bitstring,possession: bitstring));
+    let gen_cert(leaf: pkey,cert_host: bitstring,issuer: bitstring,signature: bitstring) = certificate in
+    let =true = check_host(server_hostname,cert_host) in
+    let =true = check_issuer(issuer,system_ca_list) in
+    let =true = sig_verify(cert_content(leaf,cert_host,issuer),signature,pk(gen_sk_for_id(issuer))) in
+    let =true = sig_verify((nonce,certificate),possession,leaf) in
+    event CrossAppNativeValid(issuer);
+    if (issuer = authorized) then
+        event CrossAppConnected(caller_app_id,target_app_id,root,issuer);
+        event CrossAppData(caller_app_id,target_app_id,root,issuer)
+    else
+        event CrossAppIssuerRejected
+) | (
+    !
+    in(c, nonce_1: bitstring);
+    let server_id: bitstring = real_server in
+    let leaf_sk: skey = gen_sk_for_id(server_id) in
+    let issuer_1: bitstring = real_cert_issuer in
+    let certificate_1: bitstring = gen_cert(pk(leaf_sk),server_cert_subject_and_san,issuer_1,sig_sign(cert_content(pk(leaf_sk),server_cert_subject_and_san,issuer_1),gen_sk_for_id(issuer_1))) in
+    out(c, (certificate_1,sig_sign((nonce_1,certificate_1),leaf_sk)))
+) | (
+    !
+    in(c, nonce_2: bitstring);
+    let server_id_1: bitstring = rogue_server in
+    let leaf_sk_1: skey = gen_sk_for_id(server_id_1) in
+    let issuer_2: bitstring = rogue_cert_issuer in
+    let certificate_2: bitstring = gen_cert(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2,sig_sign(cert_content(pk(leaf_sk_1),server_cert_subject_and_san,issuer_2),gen_sk_for_id(issuer_2))) in
+    out(c, (certificate_2,sig_sign((nonce_2,certificate_2),leaf_sk_1)))
+) | (
+    0
+)
+
+--------------------------------------------------------------
+The event CrossAppTargetRefused(target_unavailable) is executed at {63}.
+A trace has been found.
+RESULT not event(CrossAppTargetRefused(target_unavailable)) is false.
+-- Query not event(CrossAppData(caller_app_id,target_unavailable,root_1,issuer_3)) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (75 with conclusion selected). Queue: 156 rules.
+400 rules inserted. Base: 375 rules (84 with conclusion selected). Queue: 193 rules.
+600 rules inserted. Base: 545 rules (88 with conclusion selected). Queue: 61 rules.
+800 rules inserted. Base: 613 rules (89 with conclusion selected). Queue: 140 rules.
+Starting query not event(CrossAppData(caller_app_id,target_unavailable,root_1,issuer_3))
+RESULT not event(CrossAppData(caller_app_id,target_unavailable,root_1,issuer_3)) is true.
+
+--------------------------------------------------------------
+Verification summary:
+
+Query event(CrossAppData(caller,target,root_1,issuer_3)) ==> event(CrossAppConnected(caller,target,root_1,issuer_3)) && event(CrossAppResolved(caller,target,root_1)) && event(CrossAppPolicy(caller,target,root_1,delegated_1)) && event(CrossAppNativeValid(issuer_3)) is true.
+
+Query event(CrossAppPolicy(caller,target,root_1,delegated_1)) ==> event(CrossAppDelegationPublished(root_1,delegated_1)) is true.
+
+Query not event(CrossAppData(caller_app_id,target_app_id,pk(gen_sk_for_id(app_signing)),real_cert_issuer)) is false.
+
+Query not event(CrossAppIssuerRejected) is false.
+
+Query not event(CrossAppNativeValid(rogue_cert_issuer)) is false.
+
+Query not event(CrossAppData(caller,target,root_1,rogue_cert_issuer)) is true.
+
+Query not event(CrossAppPolicy(caller_app_id,target_app_id,pk(gen_sk_for_id(other_app_signing)),delegated_1)) is true.
+
+Query not event(CrossAppResolved(caller_app_id,caller_app_id,root_1)) is true.
+
+Query not event(CrossAppTargetRefused(target_unavailable)) is false.
+
+Query not event(CrossAppData(caller_app_id,target_unavailable,root_1,issuer_3)) is true.
+
+--------------------------------------------------------------
+

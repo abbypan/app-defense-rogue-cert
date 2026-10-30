@@ -16,3 +16,23 @@ ASPin/*/app/src/debug/res/raw/aspin_benchmark_ca.pem
 # Per-run measurement directories are generated artifacts. Curated runs can be
 # force-added when they are intentionally retained as paper evidence.
 results/robustness-*
+results/remote-e2e-*
+# Real test-endpoint TLS key; certificates and PKCS#10 requests are public.
+public-cross/certificates/server-privkey.pem
+
+# Experiment private keys and private-key stores; keep public certificates/CSRs.
+*-key.pem
+*.key.pem
+*privkey*.pem
+*private*.pem
+*-key.der
+*privkey*.der
+*private*.der
+*.key
+*.pk8
+*.p8
+*.pkcs8
+*.keystore
+*.jks
+*.p12
+*.pfx

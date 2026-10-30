@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Compatibility root, WITHOUT NSC dynamic pins: native-only controls
+         must remain native-only, and the caller explicitly chooses target B. -->
+    <application android:networkSecurityConfig="@xml/network_security_config">
+        <meta-data android:name="android.security.aspin.POLICY_PUBLIC_KEY"
+            android:value="${aspinPolicyPublicKey}" />
+    </application>
+</manifest>

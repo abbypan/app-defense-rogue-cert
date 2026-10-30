@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+pa2f2589fb235-compat-cross-target-hot,com.cert.aspin.caller,cross,com.cert.aspin,protected,false,true,hot,1793246205685,1793246193000,1793249793000,0.000000,0.000000,4.156128,231.711914,true,true,accepted,accepted,PASS,"",""

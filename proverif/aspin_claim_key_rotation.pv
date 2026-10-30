@@ -1,0 +1,266 @@
+(*
+ * Delegated claim-key rotation with the same owner and Subject/SAN context.
+ * A verified old T_k remains fresh while its T_c cache entry is evicted.
+ * The next query either accepts a still-fresh old pair or encounters a new
+ * T_c, authenticates T_k once, and retries T_c once. Tokens, including replay
+ * inputs, always arrive on adversarial channel c. Private channels carry only
+ * state established by a successful verifier. Time and eviction are symbolic.
+ *)
+
+free claim_rotation_origin: timestamp.
+free claim_rotation_cached_state: channel [private].
+free claim_rotation_direct_state: channel [private].
+free claim_rotation_committed_state: channel [private].
+const replacement_claim_signing: bitstring.
+const claim_rotation_cached: bitstring.
+const claim_rotation_retry: bitstring.
+const claim_rotation_direct: bitstring.
+const claim_rotation_replay: bitstring.
+const claim_rotation_tk: bitstring.
+const claim_rotation_tc: bitstring.
+
+event ClaimRotationSeeded(pkey, pkey, timestamp, timestamp).
+event ClaimRotationCacheEvicted(pkey, bitstring).
+event ClaimRotationRetryStarted(pkey, bitstring).
+event ClaimRotationRetryExhausted(pkey, bitstring).
+event ClaimRotationRetrySucceeded(pkey, pkey).
+event ClaimRotationAccepted(
+    bitstring, pkey, pkey, pkey, timestamp, timestamp, timestamp).
+event ClaimRotationRollbackRejected(
+    bitstring, pkey, timestamp, timestamp).
+
+let ClaimRotationPublisher =
+  let root_sk = gen_sk_for_id(app_signing) in
+  let root = pk(root_sk) in
+  let old_sk = gen_sk_for_id(claim_signing) in
+  let new_sk = gen_sk_for_id(replacement_claim_signing) in
+  let old_key = pk(old_sk) in
+  let new_key = pk(new_sk) in
+  let t0 = claim_rotation_origin in
+  let t1 = succ_t(t0) in
+  let exp = succ_t(succ_t(t1)) in
+  let content = cert_claim(server_cert_subject_and_san, real_cert_issuer) in
+
+  let tk0 = jws_general_sign(pk2s(root), pk2s(old_key), t0, exp, root_sk) in
+  let tc0 = jws_general_sign(pk2s(old_key), content, t0, exp, old_sk) in
+  event ClaimKeySign(root_sk, old_key, t0, exp);
+  event CertClaimSign(old_sk, server_cert_subject_and_san,
+      real_cert_issuer, t0, exp);
+  out(c, tk0); out(c, tc0);
+
+  let tk1 = jws_general_sign(pk2s(root), pk2s(new_key), t1, exp, root_sk) in
+  let tc1 = jws_general_sign(pk2s(new_key), content, t1, exp, new_sk) in
+  event ClaimKeySign(root_sk, new_key, t1, exp);
+  event CertClaimSign(new_sk, server_cert_subject_and_san,
+      real_cert_issuer, t1, exp);
+  out(c, tk1); out(c, tc1);
+
+  (* The new signer can re-sign an older logical T_c payload. It has the same
+   * payload as tc0, not a second distinct version at t0. This input isolates
+   * the persistent H_c check after H_k has already reached t1. *)
+  let old_payload_new_signature = jws_general_sign(
+      pk2s(new_key), content, t0, exp, new_sk) in
+  event CertClaimSign(new_sk, server_cert_subject_and_san,
+      real_cert_issuer, t0, exp);
+  out(c, old_payload_new_signature).
+
+(* Both signatures and both freshness checks precede the atomic H_k/H_c
+ * commit. Claim state is kept in the same Subject/SAN partition across K_c
+ * changes. No accepted-pair event occurs on either rollback branch. *)
+let ClaimRotationCheckPair(
+    mode: bitstring, root: pkey, delegated: pkey,
+    kiat: timestamp, kexp: timestamp, tc: bitstring, now: timestamp,
+    highest_k: timestamp, highest_c: timestamp) =
+  let jws_general(hc: bitstring, pc: bitstring, sc: bitstring) = tc in
+  let (=true) = header_matches(hc, delegated) in
+  let (=true) = jws_general_verify(tc, delegated) in
+  let ciat = get_iat(pc) in
+  let cexp = get_exp(pc) in
+  let content = get_content(pc) in
+  let identity = get_subject_and_san(content) in
+  let (=true) = check_host(server_hostname, identity) in
+  let issuer = get_issuer(content) in
+  let (=real_cert_issuer) = issuer in
+  let (=true) = token_fresh(kiat, kexp, now) in
+  let (=true) = token_fresh(ciat, cexp, now) in
+  event CertClaimVerify(delegated, identity, issuer, ciat, cexp);
+  let (=true) = iat_not_older(kiat, highest_k) in
+  (
+    let (=true) = iat_not_older(ciat, highest_c) in
+      event ClaimRotationAccepted(
+          mode, root, delegated, s2pk(hc), kiat, ciat, now);
+      if mode = claim_rotation_retry then
+        (event ClaimRotationRetrySucceeded(root, delegated);
+         out(claim_rotation_committed_state, (root, delegated, kiat, ciat)))
+      else
+        out(claim_rotation_committed_state, (root, delegated, kiat, ciat))
+    else
+      let (=true) = iat_older(ciat, highest_c) in
+      event ClaimRotationRollbackRejected(claim_rotation_tc, root, ciat, highest_c)
+  )
+  else
+    let (=true) = iat_older(kiat, highest_k) in
+    event ClaimRotationRollbackRejected(claim_rotation_tk, root, kiat, highest_k).
+
+let ClaimRotationSeed =
+  let record = package_signing_record(
+      target_app_id, pk(gen_sk_for_id(app_signing))) in
+  let root = resolve_os_key(record, target_app_id) in
+  in(c, tk0: bitstring);
+  let jws_general(hk: bitstring, pk0: bitstring, sk0: bitstring) = tk0 in
+  let (=true) = header_matches(hk, root) in
+  let (=true) = jws_general_verify(tk0, root) in
+  let kiat = get_iat(pk0) in
+  let kexp = get_exp(pk0) in
+  let (=claim_rotation_origin) = kiat in
+  let (=true) = token_fresh(kiat, kexp, claim_rotation_origin) in
+  let old_key = s2pk(get_content(pk0)) in
+  let (=pk(gen_sk_for_id(claim_signing))) = old_key in
+  event ClaimKeyVerify(root, old_key, kiat, kexp);
+  in(c, tc0: bitstring);
+  let jws_general(hc: bitstring, pc0: bitstring, sc0: bitstring) = tc0 in
+  let (=true) = header_matches(hc, old_key) in
+  let (=true) = jws_general_verify(tc0, old_key) in
+  let ciat = get_iat(pc0) in
+  let cexp = get_exp(pc0) in
+  let (=claim_rotation_origin) = ciat in
+  let (=true) = token_fresh(ciat, cexp, claim_rotation_origin) in
+  let content = get_content(pc0) in
+  let identity = get_subject_and_san(content) in
+  let (=true) = check_host(server_hostname, identity) in
+  let issuer = get_issuer(content) in
+  let (=real_cert_issuer) = issuer in
+  event CertClaimVerify(old_key, identity, issuer, ciat, cexp);
+  event ClaimRotationSeeded(root, old_key, kiat, ciat);
+  out(claim_rotation_cached_state, (root, old_key, kiat, kexp, ciat));
+  out(claim_rotation_direct_state, (root, kiat, ciat)).
+
+let ClaimRotationRefresh =
+  in(claim_rotation_cached_state,
+      (root: pkey, cached_key: pkey, kiat: timestamp,
+       kexp: timestamp, highest_c: timestamp));
+  let now = succ_t(claim_rotation_origin) in
+  let (=true) = token_fresh(kiat, kexp, now) in
+  event ClaimRotationCacheEvicted(root, server_hostname);
+  in(c, first_tc: bitstring);
+  let (=true) = jws_general_verify(first_tc, cached_key) in
+  (
+    ClaimRotationCheckPair(claim_rotation_cached, root, cached_key,
+        kiat, kexp, first_tc, now, kiat, highest_c)
+  )
+  else
+  (
+    event ClaimRotationRetryStarted(root, server_hostname);
+    in(c, refreshed_tk: bitstring);
+    let jws_general(hk: bitstring, payload_k: bitstring, sigk: bitstring) =
+        refreshed_tk in
+    let (=true) = header_matches(hk, root) in
+    let (=true) = jws_general_verify(refreshed_tk, root) in
+    let refreshed_iat = get_iat(payload_k) in
+    let refreshed_exp = get_exp(payload_k) in
+    let (=true) = token_fresh(refreshed_iat, refreshed_exp, now) in
+    let refreshed_key = s2pk(get_content(payload_k)) in
+    event ClaimKeyVerify(root, refreshed_key, refreshed_iat, refreshed_exp);
+    in(c, retry_tc: bitstring);
+    let (=true) = jws_general_verify(retry_tc, refreshed_key) in
+      ClaimRotationCheckPair(claim_rotation_retry, root, refreshed_key,
+          refreshed_iat, refreshed_exp, retry_tc, now, kiat, highest_c)
+    else
+      event ClaimRotationRetryExhausted(root, server_hostname)
+  ).
+
+let ClaimRotationDirectRefresh =
+  in(claim_rotation_direct_state,
+      (root: pkey, highest_k: timestamp, highest_c: timestamp));
+  let now = succ_t(claim_rotation_origin) in
+  in(c, tk: bitstring);
+  let jws_general(hk: bitstring, payload_k: bitstring, sigk: bitstring) = tk in
+  let (=true) = header_matches(hk, root) in
+  let (=true) = jws_general_verify(tk, root) in
+  let kiat = get_iat(payload_k) in
+  let kexp = get_exp(payload_k) in
+  let (=true) = token_fresh(kiat, kexp, now) in
+  let delegated = s2pk(get_content(payload_k)) in
+  event ClaimKeyVerify(root, delegated, kiat, kexp);
+  in(c, tc: bitstring);
+  ClaimRotationCheckPair(claim_rotation_direct, root, delegated,
+      kiat, kexp, tc, now, highest_k, highest_c).
+
+let ClaimRotationReplay =
+  let t1 = succ_t(claim_rotation_origin) in
+  (* This is protected state output only by an actual accepted higher pair. *)
+  in(claim_rotation_committed_state,
+      (root: pkey, =pk(gen_sk_for_id(replacement_claim_signing)), =t1, =t1));
+  in(c, tk: bitstring);
+  let jws_general(hk: bitstring, payload_k: bitstring, sigk: bitstring) = tk in
+  let (=true) = header_matches(hk, root) in
+  let (=true) = jws_general_verify(tk, root) in
+  let kiat = get_iat(payload_k) in
+  let kexp = get_exp(payload_k) in
+  let (=true) = token_fresh(kiat, kexp, t1) in
+  let delegated = s2pk(get_content(payload_k)) in
+  event ClaimKeyVerify(root, delegated, kiat, kexp);
+  in(c, tc: bitstring);
+  ClaimRotationCheckPair(claim_rotation_replay, root, delegated,
+      kiat, kexp, tc, t1, t1, t1).
+
+query root_sk: skey, delegated: pkey, iat: timestamp, exp: timestamp;
+  event(ClaimKeyVerify(pk(root_sk), delegated, iat, exp)) ==>
+  event(ClaimKeySign(root_sk, delegated, iat, exp)).
+query delegated_sk: skey, identity: bitstring, issuer: bitstring,
+      iat: timestamp, exp: timestamp;
+  event(CertClaimVerify(pk(delegated_sk), identity, issuer, iat, exp)) ==>
+  event(CertClaimSign(delegated_sk, identity, issuer, iat, exp)).
+query root: pkey, key: pkey;
+  event(ClaimRotationRetrySucceeded(root, key)) ==>
+  event(ClaimRotationRetryStarted(root, server_hostname)).
+query root: pkey, host: bitstring;
+  event(ClaimRotationRetryExhausted(root, host)) ==>
+  event(ClaimRotationRetryStarted(root, host)).
+
+(* Reachable success, bounded-retry failure, and both independent rollback
+ * branches. Old versions remain unexpired at the rejection time t1. *)
+query root: pkey;
+  event(ClaimRotationRetrySucceeded(root,
+      pk(gen_sk_for_id(replacement_claim_signing)))).
+query root: pkey, host: bitstring;
+  event(ClaimRotationRetryExhausted(root, host)).
+query root: pkey;
+  event(ClaimRotationRollbackRejected(claim_rotation_tk, root,
+      claim_rotation_origin, succ_t(claim_rotation_origin))).
+query root: pkey;
+  event(ClaimRotationRollbackRejected(claim_rotation_tc, root,
+      claim_rotation_origin, succ_t(claim_rotation_origin))).
+
+(* A still-fresh old pair remains usable until refresh authenticates a newer
+ * version. Publishing replacement artifacts is not global revocation. *)
+query root: pkey;
+  event(ClaimRotationAccepted(claim_rotation_cached, root,
+      pk(gen_sk_for_id(claim_signing)), pk(gen_sk_for_id(claim_signing)),
+      claim_rotation_origin, claim_rotation_origin,
+      succ_t(claim_rotation_origin))).
+
+(* The same successful-pair event checks actual T_k and T_c header keys, so
+ * neither mixed old/new cryptographic pair can reach acceptance. *)
+query mode: bitstring, root: pkey, kiat: timestamp,
+      ciat: timestamp, now: timestamp;
+  event(ClaimRotationAccepted(mode, root,
+      pk(gen_sk_for_id(claim_signing)),
+      pk(gen_sk_for_id(replacement_claim_signing)), kiat, ciat, now)).
+query mode: bitstring, root: pkey, kiat: timestamp,
+      ciat: timestamp, now: timestamp;
+  event(ClaimRotationAccepted(mode, root,
+      pk(gen_sk_for_id(replacement_claim_signing)),
+      pk(gen_sk_for_id(claim_signing)), kiat, ciat, now)).
+query root: pkey, delegated: pkey, header_key: pkey,
+      ciat: timestamp, now: timestamp;
+  event(ClaimRotationAccepted(claim_rotation_replay, root, delegated, header_key,
+      claim_rotation_origin, ciat, now)).
+query root: pkey, delegated: pkey, header_key: pkey,
+      kiat: timestamp, now: timestamp;
+  event(ClaimRotationAccepted(claim_rotation_replay, root, delegated, header_key,
+      kiat, claim_rotation_origin, now)).
+
+process
+  ClaimRotationPublisher | ClaimRotationSeed |
+  ClaimRotationRefresh | ClaimRotationDirectRefresh | !ClaimRotationReplay

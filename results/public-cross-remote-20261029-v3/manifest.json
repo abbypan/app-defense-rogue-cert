@@ -1,0 +1,242 @@
+{
+  "state": "complete",
+  "created_utc": "2026-10-29T01:45:22.168630+00:00",
+  "run_id": "pc28027e050491",
+  "hostname": "cross.idouzi.top",
+  "iterations": 20,
+  "root_store": "Android system only",
+  "certificate_info": {
+    "same_csr_public_key": true,
+    "same_leaf_certificate": false,
+    "direct_issuer_same_subject_key": false,
+    "public_cross_sign_location": "LE ancestor CAs, not the direct issuer",
+    "csr_sha256": "489304c40d1c4a9278a905fa91a62dedb12311eadab99ea8c7eadd0ca14634d9",
+    "issuer_sets": {
+      "le-only": [
+        "sha256:l2WN6MaN-pis4eUCimPVShqukRs-IUcQdsaFDNCMurQ"
+      ],
+      "dual": [
+        "sha256:l2WN6MaN-pis4eUCimPVShqukRs-IUcQdsaFDNCMurQ",
+        "sha256:vshPzg2qQj87Pu046kgGbMVhj1JErWXNn4YkqBP6TD0"
+      ],
+      "ancestor-only": [
+        "sha256:D8CQHMorrp6f27AtUNAvEJT3s2ZyCGmRueiXYm3EhfA"
+      ],
+      "zerossl-only": [
+        "sha256:vshPzg2qQj87Pu046kgGbMVhj1JErWXNn4YkqBP6TD0"
+      ]
+    },
+    "issuers": {
+      "le": "CN=YE2,O=Let's Encrypt,C=US",
+      "zerossl": "CN=ZeroSSL ECC DV SSL CA 2,O=ZeroSSL GmbH,C=AT"
+    },
+    "chains": {
+      "le": [
+        {
+          "subject": "CN=cross.idouzi.top",
+          "issuer": "CN=YE2,O=Let's Encrypt,C=US",
+          "id": "sha256:7nxofNX7MAF7WJtea9GjRivh0vkahbyF25YW8TfzsZE"
+        },
+        {
+          "subject": "CN=YE2,O=Let's Encrypt,C=US",
+          "issuer": "CN=Root YE,O=ISRG,C=US",
+          "id": "sha256:l2WN6MaN-pis4eUCimPVShqukRs-IUcQdsaFDNCMurQ"
+        },
+        {
+          "subject": "CN=Root YE,O=ISRG,C=US",
+          "issuer": "CN=ISRG Root X2,O=Internet Security Research Group,C=US",
+          "id": "sha256:D8CQHMorrp6f27AtUNAvEJT3s2ZyCGmRueiXYm3EhfA"
+        },
+        {
+          "subject": "CN=ISRG Root X2,O=Internet Security Research Group,C=US",
+          "issuer": "CN=ISRG Root X1,O=Internet Security Research Group,C=US",
+          "id": "sha256:7l96vWmBuwJVYyzY9JKDRRtLGIRNEgQLRO4A8HuP4sY"
+        }
+      ],
+      "zerossl": [
+        {
+          "subject": "CN=cross.idouzi.top",
+          "issuer": "CN=ZeroSSL ECC DV SSL CA 2,O=ZeroSSL GmbH,C=AT",
+          "id": "sha256:GX_NQxSz4D1kN3DdyEIfeMPgcpiQOQPGsFHZku3VFF0"
+        },
+        {
+          "subject": "CN=ZeroSSL ECC DV SSL CA 2,O=ZeroSSL GmbH,C=AT",
+          "issuer": "CN=Sectigo Public Server Authentication Root E46,O=Sectigo Limited,C=GB",
+          "id": "sha256:vshPzg2qQj87Pu046kgGbMVhj1JErWXNn4YkqBP6TD0"
+        },
+        {
+          "subject": "CN=Sectigo Public Server Authentication Root E46,O=Sectigo Limited,C=GB",
+          "issuer": "CN=USERTrust ECC Certification Authority,O=The USERTRUST Network,L=Jersey City,ST=New Jersey,C=US",
+          "id": "sha256:6muJ7WkHogn_kYhnb7Fk56ztiUuJlt--XOW7zCLeTd0"
+        }
+      ]
+    }
+  },
+  "cells": [
+    {
+      "mode": "primary",
+      "case": "le-only-le",
+      "scenario": "pc28027e050491-primary-le-only-le",
+      "presentation": "le",
+      "policy": "le-only",
+      "accepted": true,
+      "file": "primary-le-only-le.csv"
+    },
+    {
+      "mode": "primary",
+      "case": "le-only-zerossl",
+      "scenario": "pc28027e050491-primary-le-only-zerossl",
+      "presentation": "zerossl",
+      "policy": "le-only",
+      "accepted": false,
+      "file": "primary-le-only-zerossl.csv"
+    },
+    {
+      "mode": "primary",
+      "case": "le-only-padded-zerossl",
+      "scenario": "pc28027e050491-primary-le-only-padded-zerossl",
+      "presentation": "padded-zerossl",
+      "policy": "le-only",
+      "accepted": false,
+      "file": "primary-le-only-padded-zerossl.csv"
+    },
+    {
+      "mode": "primary",
+      "case": "dual-le-full",
+      "scenario": "pc28027e050491-primary-dual-le-full",
+      "presentation": "le",
+      "policy": "dual",
+      "accepted": true,
+      "file": "primary-dual-le-full.csv"
+    },
+    {
+      "mode": "primary",
+      "case": "dual-le-short",
+      "scenario": "pc28027e050491-primary-dual-le-short",
+      "presentation": "le-short",
+      "policy": "dual",
+      "accepted": true,
+      "file": "primary-dual-le-short.csv"
+    },
+    {
+      "mode": "primary",
+      "case": "dual-zerossl",
+      "scenario": "pc28027e050491-primary-dual-zerossl",
+      "presentation": "zerossl",
+      "policy": "dual",
+      "accepted": true,
+      "file": "primary-dual-zerossl.csv"
+    },
+    {
+      "mode": "primary",
+      "case": "ancestor-only-le",
+      "scenario": "pc28027e050491-primary-ancestor-only-le",
+      "presentation": "le",
+      "policy": "ancestor-only",
+      "accepted": false,
+      "file": "primary-ancestor-only-le.csv"
+    },
+    {
+      "mode": "primary",
+      "case": "zerossl-only-zerossl",
+      "scenario": "pc28027e050491-primary-zerossl-only-zerossl",
+      "presentation": "zerossl",
+      "policy": "zerossl-only",
+      "accepted": true,
+      "file": "primary-zerossl-only-zerossl.csv"
+    },
+    {
+      "mode": "primary",
+      "case": "zerossl-only-le",
+      "scenario": "pc28027e050491-primary-zerossl-only-le",
+      "presentation": "le",
+      "policy": "zerossl-only",
+      "accepted": false,
+      "file": "primary-zerossl-only-le.csv"
+    },
+    {
+      "mode": "compatible",
+      "case": "le-only-le",
+      "scenario": "pc28027e050491-compatible-le-only-le",
+      "presentation": "le",
+      "policy": "le-only",
+      "accepted": true,
+      "file": "compatible-le-only-le.csv"
+    },
+    {
+      "mode": "compatible",
+      "case": "le-only-zerossl",
+      "scenario": "pc28027e050491-compatible-le-only-zerossl",
+      "presentation": "zerossl",
+      "policy": "le-only",
+      "accepted": false,
+      "file": "compatible-le-only-zerossl.csv"
+    },
+    {
+      "mode": "compatible",
+      "case": "le-only-padded-zerossl",
+      "scenario": "pc28027e050491-compatible-le-only-padded-zerossl",
+      "presentation": "padded-zerossl",
+      "policy": "le-only",
+      "accepted": false,
+      "file": "compatible-le-only-padded-zerossl.csv"
+    },
+    {
+      "mode": "compatible",
+      "case": "dual-le-full",
+      "scenario": "pc28027e050491-compatible-dual-le-full",
+      "presentation": "le",
+      "policy": "dual",
+      "accepted": true,
+      "file": "compatible-dual-le-full.csv"
+    },
+    {
+      "mode": "compatible",
+      "case": "dual-le-short",
+      "scenario": "pc28027e050491-compatible-dual-le-short",
+      "presentation": "le-short",
+      "policy": "dual",
+      "accepted": true,
+      "file": "compatible-dual-le-short.csv"
+    },
+    {
+      "mode": "compatible",
+      "case": "dual-zerossl",
+      "scenario": "pc28027e050491-compatible-dual-zerossl",
+      "presentation": "zerossl",
+      "policy": "dual",
+      "accepted": true,
+      "file": "compatible-dual-zerossl.csv"
+    },
+    {
+      "mode": "compatible",
+      "case": "ancestor-only-le",
+      "scenario": "pc28027e050491-compatible-ancestor-only-le",
+      "presentation": "le",
+      "policy": "ancestor-only",
+      "accepted": false,
+      "file": "compatible-ancestor-only-le.csv"
+    },
+    {
+      "mode": "compatible",
+      "case": "zerossl-only-zerossl",
+      "scenario": "pc28027e050491-compatible-zerossl-only-zerossl",
+      "presentation": "zerossl",
+      "policy": "zerossl-only",
+      "accepted": true,
+      "file": "compatible-zerossl-only-zerossl.csv"
+    },
+    {
+      "mode": "compatible",
+      "case": "zerossl-only-le",
+      "scenario": "pc28027e050491-compatible-zerossl-only-le",
+      "presentation": "le",
+      "policy": "zerossl-only",
+      "accepted": false,
+      "file": "compatible-zerossl-only-le.csv"
+    }
+  ],
+  "device_fingerprint": "Android/gsi_arm64/generic_arm64:Baklava/CP2A.260605.016/eng.exp:userdebug/test-keys",
+  "restored_app": true,
+  "endpoint_finalized": true
+}

@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+pa2f2589fb235-primary-migration-current-only,com.cert.aspin,self,,protected,true,true,two-token-refresh,1793245848361,1793245846000,1793245906000,649.215251,94.045451,752.666912,948.354452,true,true,accepted,accepted,PASS,"",""

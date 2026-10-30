@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="false">es256.idouzi.top</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="@raw/aspin_benchmark_ca" />
+        </trust-anchors>
+        <pin-set>
+            <pin digest="SHA-256">QFQzq+74K/zkT1IRmVv0FCaekT6wM1udgC+rF2S6428=</pin>
+        </pin-set>
+    </domain-config>
+</network-security-config>

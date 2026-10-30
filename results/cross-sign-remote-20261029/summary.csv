@@ -1,0 +1,13 @@
+Mode,Case,Attempts,Native_Valid,Accepted,Policy_Rejected,Result
+primary,incomplete-a,20,20,20,0,PASS
+primary,incomplete-b-rejected,20,20,0,20,PASS
+primary,complete-a,20,20,20,0,PASS
+primary,complete-b,20,20,20,0,PASS
+primary,same-name-rejected,20,20,0,20,PASS
+primary,padding-rejected,20,20,0,20,PASS
+compatible,incomplete-a,20,20,20,0,PASS
+compatible,incomplete-b-rejected,20,20,0,20,PASS
+compatible,complete-a,20,20,20,0,PASS
+compatible,complete-b,20,20,20,0,PASS
+compatible,same-name-rejected,20,20,0,20,PASS
+compatible,padding-rejected,20,20,0,20,PASS

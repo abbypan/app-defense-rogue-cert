@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+pa2f2589fb235-compat-migration-overlap-current,com.cert.aspin,self,,protected,true,true,two-token-refresh,1793246704004,1793246700000,1793246760000,142.036336,147.087484,298.211060,853.540121,true,true,accepted,accepted,PASS,"",""

@@ -1,0 +1,623 @@
+{
+  "state": "complete",
+  "created_utc": "2026-10-29T14:00:27.309779+00:00",
+  "run_id": "a49e4411bedc2",
+  "cases": [
+    {
+      "file": "a49e4411bedc2-primary-es256-prime.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "es256"
+    },
+    {
+      "file": "a49e4411bedc2-primary-es256-cached-probe.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "es256"
+    },
+    {
+      "file": "a49e4411bedc2-primary-es256-cache-1t.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "es256"
+    },
+    {
+      "file": "a49e4411bedc2-primary-es256-cache-8t.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "es256"
+    },
+    {
+      "file": "a49e4411bedc2-primary-es256-cross-target-prime.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-primary-es256-cross-cached-probe.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-primary-es256-cross-cache-1t.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-primary-es256-cross-cache-8t.csv",
+      "mode": "primary",
+      "algorithm": "es256",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-primary-es384-prime.csv",
+      "mode": "primary",
+      "algorithm": "es384",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-primary-es384-cached-probe.csv",
+      "mode": "primary",
+      "algorithm": "es384",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-primary-es384-cache-1t.csv",
+      "mode": "primary",
+      "algorithm": "es384",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-primary-es384-cache-8t.csv",
+      "mode": "primary",
+      "algorithm": "es384",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-primary-es384-cross-target-prime.csv",
+      "mode": "primary",
+      "algorithm": "es384",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es256"
+    },
+    {
+      "file": "a49e4411bedc2-primary-es384-cross-cached-probe.csv",
+      "mode": "primary",
+      "algorithm": "es384",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es256"
+    },
+    {
+      "file": "a49e4411bedc2-primary-es384-cross-cache-1t.csv",
+      "mode": "primary",
+      "algorithm": "es384",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es256"
+    },
+    {
+      "file": "a49e4411bedc2-primary-es384-cross-cache-8t.csv",
+      "mode": "primary",
+      "algorithm": "es384",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es256"
+    },
+    {
+      "file": "a49e4411bedc2-primary-rsa3072-prime.csv",
+      "mode": "primary",
+      "algorithm": "rsa3072",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "rsa3072"
+    },
+    {
+      "file": "a49e4411bedc2-primary-rsa3072-cached-probe.csv",
+      "mode": "primary",
+      "algorithm": "rsa3072",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "rsa3072"
+    },
+    {
+      "file": "a49e4411bedc2-primary-rsa3072-cache-1t.csv",
+      "mode": "primary",
+      "algorithm": "rsa3072",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "rsa3072"
+    },
+    {
+      "file": "a49e4411bedc2-primary-rsa3072-cache-8t.csv",
+      "mode": "primary",
+      "algorithm": "rsa3072",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "rsa3072"
+    },
+    {
+      "file": "a49e4411bedc2-primary-rsa3072-cross-target-prime.csv",
+      "mode": "primary",
+      "algorithm": "rsa3072",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-primary-rsa3072-cross-cached-probe.csv",
+      "mode": "primary",
+      "algorithm": "rsa3072",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-primary-rsa3072-cross-cache-1t.csv",
+      "mode": "primary",
+      "algorithm": "rsa3072",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-primary-rsa3072-cross-cache-8t.csv",
+      "mode": "primary",
+      "algorithm": "rsa3072",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-primary-rsa4096-prime.csv",
+      "mode": "primary",
+      "algorithm": "rsa4096",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "rsa4096"
+    },
+    {
+      "file": "a49e4411bedc2-primary-rsa4096-cached-probe.csv",
+      "mode": "primary",
+      "algorithm": "rsa4096",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "rsa4096"
+    },
+    {
+      "file": "a49e4411bedc2-primary-rsa4096-cache-1t.csv",
+      "mode": "primary",
+      "algorithm": "rsa4096",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "rsa4096"
+    },
+    {
+      "file": "a49e4411bedc2-primary-rsa4096-cache-8t.csv",
+      "mode": "primary",
+      "algorithm": "rsa4096",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "rsa4096"
+    },
+    {
+      "file": "a49e4411bedc2-primary-rsa4096-cross-target-prime.csv",
+      "mode": "primary",
+      "algorithm": "rsa4096",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-primary-rsa4096-cross-cached-probe.csv",
+      "mode": "primary",
+      "algorithm": "rsa4096",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-primary-rsa4096-cross-cache-1t.csv",
+      "mode": "primary",
+      "algorithm": "rsa4096",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-primary-rsa4096-cross-cache-8t.csv",
+      "mode": "primary",
+      "algorithm": "rsa4096",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-compat-es256-prime.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "es256"
+    },
+    {
+      "file": "a49e4411bedc2-compat-es256-cached-probe.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "es256"
+    },
+    {
+      "file": "a49e4411bedc2-compat-es256-cache-1t.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "es256"
+    },
+    {
+      "file": "a49e4411bedc2-compat-es256-cache-8t.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "es256"
+    },
+    {
+      "file": "a49e4411bedc2-compat-es256-cross-target-prime.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-compat-es256-cross-cached-probe.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-compat-es256-cross-cache-1t.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-compat-es256-cross-cache-8t.csv",
+      "mode": "compat",
+      "algorithm": "es256",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-compat-es384-prime.csv",
+      "mode": "compat",
+      "algorithm": "es384",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-compat-es384-cached-probe.csv",
+      "mode": "compat",
+      "algorithm": "es384",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-compat-es384-cache-1t.csv",
+      "mode": "compat",
+      "algorithm": "es384",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-compat-es384-cache-8t.csv",
+      "mode": "compat",
+      "algorithm": "es384",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-compat-es384-cross-target-prime.csv",
+      "mode": "compat",
+      "algorithm": "es384",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es256"
+    },
+    {
+      "file": "a49e4411bedc2-compat-es384-cross-cached-probe.csv",
+      "mode": "compat",
+      "algorithm": "es384",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es256"
+    },
+    {
+      "file": "a49e4411bedc2-compat-es384-cross-cache-1t.csv",
+      "mode": "compat",
+      "algorithm": "es384",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es256"
+    },
+    {
+      "file": "a49e4411bedc2-compat-es384-cross-cache-8t.csv",
+      "mode": "compat",
+      "algorithm": "es384",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es256"
+    },
+    {
+      "file": "a49e4411bedc2-compat-rsa3072-prime.csv",
+      "mode": "compat",
+      "algorithm": "rsa3072",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "rsa3072"
+    },
+    {
+      "file": "a49e4411bedc2-compat-rsa3072-cached-probe.csv",
+      "mode": "compat",
+      "algorithm": "rsa3072",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "rsa3072"
+    },
+    {
+      "file": "a49e4411bedc2-compat-rsa3072-cache-1t.csv",
+      "mode": "compat",
+      "algorithm": "rsa3072",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "rsa3072"
+    },
+    {
+      "file": "a49e4411bedc2-compat-rsa3072-cache-8t.csv",
+      "mode": "compat",
+      "algorithm": "rsa3072",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "rsa3072"
+    },
+    {
+      "file": "a49e4411bedc2-compat-rsa3072-cross-target-prime.csv",
+      "mode": "compat",
+      "algorithm": "rsa3072",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-compat-rsa3072-cross-cached-probe.csv",
+      "mode": "compat",
+      "algorithm": "rsa3072",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-compat-rsa3072-cross-cache-1t.csv",
+      "mode": "compat",
+      "algorithm": "rsa3072",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-compat-rsa3072-cross-cache-8t.csv",
+      "mode": "compat",
+      "algorithm": "rsa3072",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-compat-rsa4096-prime.csv",
+      "mode": "compat",
+      "algorithm": "rsa4096",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "rsa4096"
+    },
+    {
+      "file": "a49e4411bedc2-compat-rsa4096-cached-probe.csv",
+      "mode": "compat",
+      "algorithm": "rsa4096",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "rsa4096"
+    },
+    {
+      "file": "a49e4411bedc2-compat-rsa4096-cache-1t.csv",
+      "mode": "compat",
+      "algorithm": "rsa4096",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "rsa4096"
+    },
+    {
+      "file": "a49e4411bedc2-compat-rsa4096-cache-8t.csv",
+      "mode": "compat",
+      "algorithm": "rsa4096",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin",
+      "result": "PASS",
+      "caller_signing_variant": "rsa4096"
+    },
+    {
+      "file": "a49e4411bedc2-compat-rsa4096-cross-target-prime.csv",
+      "mode": "compat",
+      "algorithm": "rsa4096",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-compat-rsa4096-cross-cached-probe.csv",
+      "mode": "compat",
+      "algorithm": "rsa4096",
+      "kind": "claimprobe",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-compat-rsa4096-cross-cache-1t.csv",
+      "mode": "compat",
+      "algorithm": "rsa4096",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    },
+    {
+      "file": "a49e4411bedc2-compat-rsa4096-cross-cache-8t.csv",
+      "mode": "compat",
+      "algorithm": "rsa4096",
+      "kind": "concurrency",
+      "caller": "com.cert.aspin.caller",
+      "result": "PASS",
+      "caller_signing_variant": "es384"
+    }
+  ],
+  "schema_version": 2,
+  "suite": "cache-matrix",
+  "operations": 2000,
+  "cross_algorithms": [
+    "es256",
+    "es384",
+    "rsa3072",
+    "rsa4096"
+  ],
+  "caller_signing_variants": {
+    "es256": "es384",
+    "es384": "es256",
+    "rsa3072": "es384",
+    "rsa4096": "es384"
+  },
+  "clock_rollback_seconds": 0,
+  "runner_sha256": "ac15c813e3d712a99ba51e03d007cf6971cb6f9da1ae02b85e27e72171f29c1d",
+  "apk_sha256": {
+    "ASPin-rsa4096.apk": "888da22bbb07ce8a2784088275092ccdc78995483e2e80bc54bb22f2d6de874b",
+    "ASPin-rsa3072-compatible.apk": "5cb172bbb1bcf93a6de6cd230079bcb37b7e09e234d6fdfeb6ff52ef3023eb3c",
+    "ASPin-es384.apk": "4dd5c35fa02a0913698701c0ab32afc2fe8f1bc5f66f1abb0c73d8caa1747eed",
+    "ASPin-es256-compatible.apk": "cf2d08cb96809f33b316a63881d28d6f8e2e5b5b47ea3510d55e01acbf61bd15",
+    "ASPin-es256.apk": "b5c17add10883939a3b3b3d675b4dd78fbc347a8e0cc6fec7c868629f90bd80a",
+    "ASPin-caller-es256.apk": "d339f5eb724ea4d06f0bbea84592f92e770cdf725130dda5154f8425d3df6b68",
+    "ASPin-rsa3072.apk": "6f124f769a4b122bb51b1667f7e5215e7f534241f2d53af97a6601adb55615ab",
+    "ASPin-es384-compatible.apk": "46b352cb8f5d9032e78a1fbab70de97a03cf2e747e00f1f9f35fb77699af0f34",
+    "ASPin-rsa4096-compatible.apk": "ff4d9ea7a8643447b30085e7d15e8dd631a9bc4832cce2c25890d127620ca3f5",
+    "ASPin-caller-es384.apk": "c1dc7ba7b05101ddfc2bc31cbf95db9d1335e05e5d378316fc4ebc3bbb38350d"
+  },
+  "transport": "device Internet -> public-CA hk:443",
+  "cache_timing_scope": "local OS API calls after Internet policy authentication",
+  "device_fingerprint": "Android/gsi_arm64/generic_arm64:Baklava/CP2A.260605.016/eng.exp:userdebug/test-keys",
+  "app_source_sha256": {
+    "ASPin/es256/app/src/main/java/com/cert/aspin/MainActivity.java": "31eff377d59bd711dc96d8f6205eb8e448438ead77e4e05584bbce677173be52",
+    "ASPin/rsa4096/app/src/main/java/com/cert/aspin/MainActivity.java": "5af7da808d40e83641a884938d072379384f91bc7ceb2ebbd234f33fff28fd79",
+    "ASPin/es384/app/src/main/java/com/cert/aspin/MainActivity.java": "33ed79dc505780be837b9f7ed3d9a1682358e5ee74b0786a550c79f03939fddb",
+    "ASPin/rsa3072/app/src/main/java/com/cert/aspin/MainActivity.java": "0da1d6d10d51199e17d72ce5d27b5528ade667d2a2e06eb58a4344a17a459df7"
+  },
+  "server_since": "2026-10-29T13:59:24Z",
+  "finished_utc": "2026-10-29T14:12:25.135551+00:00"
+}

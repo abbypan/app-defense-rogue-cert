@@ -5,8 +5,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export ANDROID_HOME="${ANDROID_HOME:-/opt/android-sdk}"
 if [ -n "${ASPIN_JAVA_HOME:-}" ]; then
     export JAVA_HOME="$ASPIN_JAVA_HOME"
-elif [ -x /usr/lib/jvm/java-17-openjdk/bin/java ]; then
-    export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+elif [ -x /usr/lib/jvm/java-21-openjdk/bin/java ]; then
+    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
 fi
 
 ITERATIONS="${1:-2000}"
@@ -23,6 +23,8 @@ ASPIN_AOSP_FRAMEWORKS_BASE="${ASPIN_AOSP_FRAMEWORKS_BASE:-}"
 ASPIN_FLASHED_IMAGE="${ASPIN_FLASHED_IMAGE:-}"
 ADB_REVERSE_TRANSPORT="${ASPIN_ADB_REVERSE_TRANSPORT:-0}"
 GENERATE_ROGUE_CA="${ASPIN_GENERATE_ROGUE_CA:-1}"
+RTT_MATRIX_ONLY="${ASPIN_RTT_MATRIX_ONLY:-0}"
+POLICY_SCENARIOS_ONLY="${ASPIN_POLICY_SCENARIOS_ONLY:-0}"
 PACKAGE="com.cert.aspin"
 CALLER_PACKAGE="com.cert.aspin.caller"
 ALGORITHMS=(es256 es384 rsa3072 rsa4096)
@@ -37,6 +39,7 @@ APK_DIR="$SCRIPT_DIR/results/apks"
 SNAPSHOT_DIR="$RUN_DIR/token-snapshots"
 BENCHMARK_CERT_DIR=""
 TRANSPORT_HOSTS_BACKED_UP=0
+RTT_ORIGINAL_REVERSE=""
 
 if ! [[ "$ITERATIONS" =~ ^[1-9][0-9]*$ ]] ||
         ! [[ "$THREADS" =~ ^[1-9][0-9]*$ ]] ||
@@ -47,11 +50,23 @@ if ! [[ "$ITERATIONS" =~ ^[1-9][0-9]*$ ]] ||
         ! [[ "$EXPIRY_ONLY" =~ ^[01]$ ]] ||
         ! [[ "$ADB_REVERSE_TRANSPORT" =~ ^[01]$ ]] ||
         ! [[ "$GENERATE_ROGUE_CA" =~ ^[01]$ ]] ||
+        ! [[ "$RTT_MATRIX_ONLY" =~ ^[01]$ ]] ||
+        ! [[ "$POLICY_SCENARIOS_ONLY" =~ ^[01]$ ]] ||
         ! [[ "$NETWORK_WAIT_SECONDS" =~ ^[1-9][0-9]*$ ]]; then
     echo "ERROR: iterations, thread count, and timeout must be positive integers;" >&2
     echo "       ASPIN_SKIP_APP_BUILD, ASPIN_RESUME_AFTER_REBOOT," >&2
     echo "       ASPIN_RESUME_LIFECYCLE, ASPIN_EXPIRY_ONLY, and" >&2
-    echo "       ASPIN_ADB_REVERSE_TRANSPORT and ASPIN_GENERATE_ROGUE_CA must be 0 or 1." >&2
+    echo "       ASPIN_ADB_REVERSE_TRANSPORT, ASPIN_GENERATE_ROGUE_CA, and ASPIN_RTT_MATRIX_ONLY must be 0 or 1." >&2
+    exit 2
+fi
+if [ "$POLICY_SCENARIOS_ONLY" -eq 1 ] && [ "$RTT_MATRIX_ONLY" -ne 1 ]; then
+    echo "ERROR: Policy scenarios require isolated RTT-only harness setup." >&2
+    exit 2
+fi
+if [ "$RTT_MATRIX_ONLY" -eq 1 ] && { [ "$ADB_REVERSE_TRANSPORT" -ne 1 ] \
+        || [ "$GENERATE_ROGUE_CA" -ne 1 ] || [ "$RESUME_AFTER_REBOOT" -ne 0 ] \
+        || [ "$RESUME_LIFECYCLE" -ne 0 ] || [ "$EXPIRY_ONLY" -ne 0 ]; }; then
+    echo "ERROR: RTT-only runs require generated debug CAs and adb reverse, without resume modes." >&2
     exit 2
 fi
 if [ "$((RESUME_AFTER_REBOOT + RESUME_LIFECYCLE + EXPIRY_ONLY))" -gt 1 ]; then
@@ -76,6 +91,9 @@ if ! flock -n 9; then
     echo "ERROR: Another ASPin benchmark already holds $BENCHMARK_LOCK_FILE." >&2
     echo "Wait for that run to finish; parallel runs share the device and Nginx state." >&2
     exit 1
+fi
+if [ "$RTT_MATRIX_ONLY" -eq 1 ]; then
+    RTT_ORIGINAL_REVERSE="$(adb -s "$DEVICE_ID" reverse --list)"
 fi
 if ! adb -s "$DEVICE_ID" shell service list | grep -q '[[:space:]]aspin:'; then
     echo "ERROR: The connected device does not expose the ASPin OS service." >&2
@@ -187,6 +205,9 @@ generate_benchmark_certificates() {
             cat "$BENCHMARK_CERT_DIR/unexpected-ca.crt"
         } > "$SCRIPT_DIR/ASPin/$algorithm/app/src/debug/res/raw/aspin_benchmark_ca.pem"
     done
+    mkdir -p "$SCRIPT_DIR/ASPin/shared/src/main/res/raw"
+    cp "$SCRIPT_DIR/ASPin/es256/app/src/debug/res/raw/aspin_benchmark_ca.pem" \
+        "$SCRIPT_DIR/ASPin/shared/src/main/res/raw/aspin_benchmark_ca.pem"
 }
 
 wait_for_framework() {
@@ -381,12 +402,15 @@ path = pathlib.Path(sys.argv[1])
 column = sys.argv[2]
 with path.open(newline="", encoding="utf-8") as stream:
     rows = list(csv.DictReader(stream))
-if len(rows) != 1:
-    raise SystemExit(f"{path}: expected exactly one result row, found {len(rows)}")
+if not rows:
+    raise SystemExit(f"{path}: expected at least one result row")
 if column not in rows[0]:
     raise SystemExit(f"{path}: missing result column {column!r}")
-if rows[0][column] != "PASS":
-    raise SystemExit(f"{path}: {column}={rows[0][column]!r}, expected 'PASS'")
+for index, row in enumerate(rows, start=1):
+    if row[column] != "PASS":
+        raise SystemExit(
+            f"{path}: row {index} has {column}={row[column]!r}, expected 'PASS'"
+        )
 PY
 }
 
@@ -433,8 +457,17 @@ run_benchmark() {
 
 install_target() {
     local algorithm="$1"
+    local mode="${2:-primary}"
+    local suffix=""
+    case "$mode" in
+        primary) suffix="" ;;
+        scp) suffix=-scp ;;
+        dcp) suffix=-dcp ;;
+        compatible) suffix=-compatible ;;
+        *) echo "ERROR: unknown APK mode: $mode" >&2; return 2 ;;
+    esac
     adb -s "$DEVICE_ID" uninstall "$PACKAGE" >/dev/null 2>&1 || true
-    adb -s "$DEVICE_ID" install -r "$APK_DIR/ASPin-$algorithm.apk"
+    adb -s "$DEVICE_ID" install -r "$APK_DIR/ASPin-$algorithm$suffix.apk"
     adb -s "$DEVICE_ID" shell "su 0 cmd deviceidle whitelist +$PACKAGE" \
         >/dev/null 2>&1 || true
 }
@@ -476,9 +509,30 @@ cleanup() {
     if [ "$SERVER_CHANGED" -eq 1 ]; then
         deploy_profile real
     fi
-    adb -s "$DEVICE_ID" uninstall "$CALLER_PACKAGE" >/dev/null 2>&1 || true
+    if [ "$RTT_MATRIX_ONLY" -eq 0 ]; then
+        for algorithm in "${ALGORITHMS[@]}"; do
+            "$SCRIPT_DIR/activate-claim-signing-key.sh" "$algorithm" primary \
+                >/dev/null 2>&1 || true
+        done
+    fi
+    if [ "$RTT_MATRIX_ONLY" -eq 0 ]; then
+        adb -s "$DEVICE_ID" uninstall "$CALLER_PACKAGE" >/dev/null 2>&1 || true
+    fi
     adb -s "$DEVICE_ID" uninstall "$PACKAGE" >/dev/null 2>&1 || true
-    adb -s "$DEVICE_ID" reverse --remove-all >/dev/null 2>&1 || true
+    if [ "$RTT_MATRIX_ONLY" -eq 1 ]; then
+        local device_transport device_port host_port
+        for device_port in tcp:80 tcp:443 tcp:19090; do
+            adb -s "$DEVICE_ID" reverse --remove "$device_port" >/dev/null 2>&1 || true
+        done
+        while read -r device_transport device_port host_port; do
+            case "$device_port" in
+                tcp:80|tcp:443|tcp:19090)
+                    adb -s "$DEVICE_ID" reverse "$device_port" "$host_port" >/dev/null 2>&1 || true ;;
+            esac
+        done <<< "$RTT_ORIGINAL_REVERSE"
+    else
+        adb -s "$DEVICE_ID" reverse --remove-all >/dev/null 2>&1 || true
+    fi
     if [ "$TRANSPORT_HOSTS_BACKED_UP" -eq 1 ]; then
         adb -s "$DEVICE_ID" shell \
             'cp /data/local/tmp/aspin-benchmark-hosts.before /system/etc/hosts' \
@@ -496,7 +550,7 @@ validate_server_certificates
 wait_for_test_network
 
 if [ "$EXPIRY_ONLY" -eq 1 ]; then
-    test -s "$RUN_DIR/cold-refresh-es256.csv"
+    test -s "$RUN_DIR/cold-refresh-primary-es256.csv"
     generate_unequal_expiry_es256_pair
     install_target es256
     run_benchmark "$PACKAGE" expirybound delegation-expiry.csv Result
@@ -559,12 +613,43 @@ if [ "$GENERATE_ROGUE_CA" -eq 1 ]; then
     done
 fi
 if [ "$SKIP_APP_BUILD" -eq 0 ]; then
-    python3 "$SCRIPT_DIR/gen-signed-apks.py" --workers 24 --output-dir "$APK_DIR"
-    (cd "$SCRIPT_DIR/ASPin/es256" && \
-        ./gradlew --max-workers=24 :app:assembleCrossAppCaller)
+    python3 "$SCRIPT_DIR/gen-signed-apks.py" --workers 24 \
+        --mode primary --mode scp --mode dcp --mode compatible --output-dir "$APK_DIR"
+    if [ "$RTT_MATRIX_ONLY" -eq 0 ]; then
+        (cd "$SCRIPT_DIR/ASPin/es256" && \
+            ./gradlew --max-workers=24 :app:assembleCrossAppCaller)
+    fi
 else
     python3 "$SCRIPT_DIR/gen-signed-apks.py" --workers 24 --skip-build \
-        --output-dir "$APK_DIR"
+        --mode primary --mode scp --mode dcp --mode compatible --output-dir "$APK_DIR"
+fi
+
+if [ "$RTT_MATRIX_ONLY" -eq 1 ]; then
+    if [ "$POLICY_SCENARIOS_ONLY" -eq 1 ]; then
+        # All builds are launched by the calling independent background job.
+        if [ "$SKIP_APP_BUILD" -eq 0 ]; then
+            (cd "$SCRIPT_DIR/ASPin/es256" && ./gradlew --max-workers=24 \
+                :app:assembleCrossAppCaller :app:assembleCrossAppHidden \
+                :app:assembleCompatibilityBenchmark)
+        fi
+        python3 "$SCRIPT_DIR/run-policy-scenario-matrix.py" \
+            --device "$DEVICE_ID" --cert-dir "$BENCHMARK_CERT_DIR" \
+            --apk-dir "$APK_DIR" --run-dir "$RUN_DIR/policy-scenarios" \
+            --repeats "$ITERATIONS" --timeout "$TIMEOUT_SECONDS" \
+            --short-seconds "${ASPIN_POLICY_SHORT_SECONDS:-60}"
+        echo "Policy availability/cross-app results: $RUN_DIR/policy-scenarios"
+        exit 0
+    fi
+    # Stop here: do not execute the standard suite's reboot/clock-rollback tests.
+    python3 "$SCRIPT_DIR/run-rtt-cache-matrix.py" \
+        --device "$DEVICE_ID" --cert-dir "$BENCHMARK_CERT_DIR" \
+        --apk-dir "$APK_DIR" --run-dir "$RUN_DIR/rtt-cache" \
+        --iterations "$ITERATIONS" --timeout "$TIMEOUT_SECONDS" \
+        --rtts "${ASPIN_RTT_VALUES_MS:-0,20,50,100,200}" \
+        --warmups "${ASPIN_RTT_WARMUPS:-10}" \
+        --repeats "${ASPIN_RTT_REPEATS:-1}" --seed "${ASPIN_RTT_SEED:-2027}"
+    echo "RTT/cache matrix results: $RUN_DIR/rtt-cache"
+    exit 0
 fi
 
 # Fail fast before the long distributions if the controlled unauthorized-issuer-CA
@@ -572,33 +657,53 @@ fi
 deploy_profile real
 SERVER_CHANGED=1
 install_target es256
+"$SCRIPT_DIR/activate-claim-signing-key.sh" es256 primary
 run_benchmark "$PACKAGE" claimprobe preflight-real-claim-refresh.csv Result \
     --ez force_refresh true --ez expect_success true \
     --es probe_label preflight_real_refresh
 run_benchmark "$PACKAGE" avgvisittime preflight-real-es256.csv \
-    Matches_TeX_Design --ei iterations 1 --es server_phase realserver
+    Result --ei iterations 1 --es server_phase realserver
 deploy_profile rogue
 run_benchmark "$PACKAGE" avgvisittime preflight-rogue-es256.csv \
-    Matches_TeX_Design --ei iterations 1 --es server_phase rogueserver
+    Result --ei iterations 1 --es server_phase rogueserver
 
 # Four-algorithm distributions: full forced refresh, successful cached
 # connection, rejected rogue connection, and concurrent cache hits.
 for algorithm in "${ALGORITHMS[@]}"; do
     deploy_profile real
     SERVER_CHANGED=1
-    install_target "$algorithm"
-    run_benchmark "$PACKAGE" avgveriftime "cold-refresh-$algorithm.csv" Result \
+    install_target "$algorithm" primary
+    "$SCRIPT_DIR/activate-claim-signing-key.sh" "$algorithm" primary
+    run_benchmark "$PACKAGE" avgveriftime "cold-refresh-primary-$algorithm.csv" Result \
         --ei iterations "$ITERATIONS"
-    run_benchmark "$PACKAGE" avgvisittime "cached-real-$algorithm.csv" \
-        Matches_TeX_Design --ei iterations "$ITERATIONS" \
+    run_benchmark "$PACKAGE" avgvisittime "cached-real-primary-$algorithm.csv" \
+        Result --ei iterations "$ITERATIONS" \
         --es server_phase realserver
     run_benchmark "$PACKAGE" concurrency "concurrent-cache-$algorithm.csv" Result \
         --ei iterations "$ITERATIONS" --ei threads "$THREADS"
 
+    install_target "$algorithm" scp
+    run_benchmark "$PACKAGE" avgvisittime "cached-real-scp-$algorithm.csv" \
+        Result --ei iterations "$ITERATIONS" --es server_phase realserver
+
+    install_target "$algorithm" dcp
+    run_benchmark "$PACKAGE" avgvisittime "cached-real-dcp-$algorithm.csv" \
+        Result --ei iterations "$ITERATIONS" --es server_phase realserver
+
+    # Only forced refresh is attributed to K_s here. The independent matrix
+    # additionally isolates OS RAM before its compatible-mode cached batches.
+    install_target "$algorithm" compatible
+    "$SCRIPT_DIR/activate-claim-signing-key.sh" "$algorithm" compat
+    run_benchmark "$PACKAGE" avgveriftime "cold-refresh-compatible-$algorithm.csv" Result \
+        --ei iterations "$ITERATIONS"
+
     deploy_profile rogue
-    run_benchmark "$PACKAGE" avgvisittime "cached-rogue-$algorithm.csv" \
-        Matches_TeX_Design --ei iterations "$ITERATIONS" \
-        --es server_phase rogueserver
+    for mode in primary scp dcp; do
+        install_target "$algorithm" "$mode"
+        run_benchmark "$PACKAGE" avgvisittime \
+            "cached-rogue-$mode-$algorithm.csv" Result \
+            --ei iterations "$ITERATIONS" --es server_phase rogueserver
+    done
     adb -s "$DEVICE_ID" uninstall "$PACKAGE" >/dev/null 2>&1 || true
 done
 
@@ -606,6 +711,7 @@ done
 # detects accidental global serialization around network retrieval.
 deploy_profile real
 install_target es256
+"$SCRIPT_DIR/activate-claim-signing-key.sh" es256 primary
 adb -s "$DEVICE_ID" install -r \
     "$SCRIPT_DIR/ASPin/es256/app/build/outputs/apk/crossAppCaller/app-crossAppCaller.apk"
 run_benchmark "$PACKAGE" parallelrefresh parallel-cold-refresh.csv Result \
@@ -631,6 +737,7 @@ fi
 if [ "$RESUME_AFTER_REBOOT" -eq 0 ]; then
     deploy_profile real
     install_target es256
+    "$SCRIPT_DIR/activate-claim-signing-key.sh" es256 primary
     run_benchmark "$PACKAGE" claimprobe lifecycle-v1-accepted.csv Result \
         --ez force_refresh true --ez expect_success true --es probe_label accept_v1
 
@@ -650,6 +757,7 @@ else
     deploy_profile real
     SERVER_CHANGED=1
     install_target es256
+    "$SCRIPT_DIR/activate-claim-signing-key.sh" es256 primary
 fi
 wait_for_test_network
 

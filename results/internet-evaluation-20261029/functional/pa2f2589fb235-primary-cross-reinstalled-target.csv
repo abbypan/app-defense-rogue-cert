@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+pa2f2589fb235-primary-cross-reinstalled-target,com.cert.aspin.caller,cross,com.cert.aspin,protected,true,true,two-token-refresh,1793245588913,1793245554000,1793249154000,195.738729,80.802083,284.937825,505.787028,true,true,accepted,accepted,PASS,"",""

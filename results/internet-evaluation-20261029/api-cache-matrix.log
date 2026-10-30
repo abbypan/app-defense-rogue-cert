@@ -1,0 +1,844 @@
+Preparing fresh-policies
+QFQzq+74K/zkT1IRmVv0FCaekT6wM1udgC+rF2S6428=
+es256: ASPin artifacts are structurally and cryptographically valid
+eQ4ldmVRKkPbS6Ahsn2BDyxMc2xEkkpkur4YQsmnWlI=
+es384: ASPin artifacts are structurally and cryptographically valid
+WDPukUU/2qGL7axE6IYiYMZb85waH1saUdGfKPZNDsg=
+rsa3072: ASPin artifacts are structurally and cryptographically valid
+E69E9hhB2GC1GNGlzbXqFgZq0yjlTki0DDNK4F97OpI=
+rsa4096: ASPin artifacts are structurally and cryptographically valid
+> es256: generate my-app-cert-scp-hash.txt
+> es256: generate app-signing-key-rooted ClaimSigningKey JWS
+Copied /mnt/code/aspin/signing/es256/ClaimSigningKey.jws -> /mnt/code/aspin/signing/es256/ClaimSigningKey.primary.jws
+> es256: generate manifest-key-rooted compatible ClaimSigningKey JWS
+> es256: generate independently signed NSC DCP leaf-pin policy
+> es256: generate ServerCertClaim.jws
+> es256: validate ASPin token schema, trust anchors, and signatures
+Wrote /mnt/code/aspin/signing/es256/my-app-cert-scp-hash.txt
+Wrote /mnt/code/aspin/signing/es256/ClaimSigningKey.primary.jws
+Wrote /mnt/code/aspin/signing/es256/ClaimSigningKey.compat.jws
+Wrote /mnt/code/aspin/signing/es256/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/es256/ServerCertClaim.jws -> /mnt/code/aspin/realserver/var/www/es256/.well-known/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/es256/DCPServerCertPin.jws -> /mnt/code/aspin/realserver/var/www/es256/.well-known/DCPServerCertPin.jws
+Copied /mnt/code/aspin/signing/es256/ClaimSigningKey.primary.jws -> /mnt/code/aspin/realserver/var/www/es256/.well-known/ClaimSigningKey.jws
+Copied /mnt/code/aspin/signing/es256/ClaimSigningKey.primary.jws -> /mnt/code/aspin/realserver/var/www/es256/.well-known/ClaimSigningKey.primary.jws
+Copied /mnt/code/aspin/signing/es256/ClaimSigningKey.compat.jws -> /mnt/code/aspin/realserver/var/www/es256/.well-known/ClaimSigningKey.compat.jws
+Copied /mnt/code/aspin/signing/es256/ServerCertClaim.jws -> /mnt/code/aspin/ASPin/es256/app/src/main/resources/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/es256/ClaimSigningKey.primary.jws -> /mnt/code/aspin/ASPin/es256/app/src/main/resources/ClaimSigningKey.jws
+> es384: generate my-app-cert-scp-hash.txt
+> es384: generate app-signing-key-rooted ClaimSigningKey JWS
+Copied /mnt/code/aspin/signing/es384/ClaimSigningKey.jws -> /mnt/code/aspin/signing/es384/ClaimSigningKey.primary.jws
+> es384: generate manifest-key-rooted compatible ClaimSigningKey JWS
+> es384: generate independently signed NSC DCP leaf-pin policy
+> es384: generate ServerCertClaim.jws
+> es384: validate ASPin token schema, trust anchors, and signatures
+Wrote /mnt/code/aspin/signing/es384/my-app-cert-scp-hash.txt
+Wrote /mnt/code/aspin/signing/es384/ClaimSigningKey.primary.jws
+Wrote /mnt/code/aspin/signing/es384/ClaimSigningKey.compat.jws
+Wrote /mnt/code/aspin/signing/es384/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/es384/ServerCertClaim.jws -> /mnt/code/aspin/realserver/var/www/es384/.well-known/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/es384/DCPServerCertPin.jws -> /mnt/code/aspin/realserver/var/www/es384/.well-known/DCPServerCertPin.jws
+Copied /mnt/code/aspin/signing/es384/ClaimSigningKey.primary.jws -> /mnt/code/aspin/realserver/var/www/es384/.well-known/ClaimSigningKey.jws
+Copied /mnt/code/aspin/signing/es384/ClaimSigningKey.primary.jws -> /mnt/code/aspin/realserver/var/www/es384/.well-known/ClaimSigningKey.primary.jws
+Copied /mnt/code/aspin/signing/es384/ClaimSigningKey.compat.jws -> /mnt/code/aspin/realserver/var/www/es384/.well-known/ClaimSigningKey.compat.jws
+Copied /mnt/code/aspin/signing/es384/ServerCertClaim.jws -> /mnt/code/aspin/ASPin/es384/app/src/main/resources/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/es384/ClaimSigningKey.primary.jws -> /mnt/code/aspin/ASPin/es384/app/src/main/resources/ClaimSigningKey.jws
+> rsa3072: generate my-app-cert-scp-hash.txt
+> rsa3072: generate app-signing-key-rooted ClaimSigningKey JWS
+Copied /mnt/code/aspin/signing/rsa3072/ClaimSigningKey.jws -> /mnt/code/aspin/signing/rsa3072/ClaimSigningKey.primary.jws
+> rsa3072: generate manifest-key-rooted compatible ClaimSigningKey JWS
+> rsa3072: generate independently signed NSC DCP leaf-pin policy
+> rsa3072: generate ServerCertClaim.jws
+> rsa3072: validate ASPin token schema, trust anchors, and signatures
+Wrote /mnt/code/aspin/signing/rsa3072/my-app-cert-scp-hash.txt
+Wrote /mnt/code/aspin/signing/rsa3072/ClaimSigningKey.primary.jws
+Wrote /mnt/code/aspin/signing/rsa3072/ClaimSigningKey.compat.jws
+Wrote /mnt/code/aspin/signing/rsa3072/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/rsa3072/ServerCertClaim.jws -> /mnt/code/aspin/realserver/var/www/rsa3072/.well-known/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/rsa3072/DCPServerCertPin.jws -> /mnt/code/aspin/realserver/var/www/rsa3072/.well-known/DCPServerCertPin.jws
+Copied /mnt/code/aspin/signing/rsa3072/ClaimSigningKey.primary.jws -> /mnt/code/aspin/realserver/var/www/rsa3072/.well-known/ClaimSigningKey.jws
+Copied /mnt/code/aspin/signing/rsa3072/ClaimSigningKey.primary.jws -> /mnt/code/aspin/realserver/var/www/rsa3072/.well-known/ClaimSigningKey.primary.jws
+Copied /mnt/code/aspin/signing/rsa3072/ClaimSigningKey.compat.jws -> /mnt/code/aspin/realserver/var/www/rsa3072/.well-known/ClaimSigningKey.compat.jws
+Copied /mnt/code/aspin/signing/rsa3072/ServerCertClaim.jws -> /mnt/code/aspin/ASPin/rsa3072/app/src/main/resources/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/rsa3072/ClaimSigningKey.primary.jws -> /mnt/code/aspin/ASPin/rsa3072/app/src/main/resources/ClaimSigningKey.jws
+> rsa4096: generate my-app-cert-scp-hash.txt
+> rsa4096: generate app-signing-key-rooted ClaimSigningKey JWS
+Copied /mnt/code/aspin/signing/rsa4096/ClaimSigningKey.jws -> /mnt/code/aspin/signing/rsa4096/ClaimSigningKey.primary.jws
+> rsa4096: generate manifest-key-rooted compatible ClaimSigningKey JWS
+> rsa4096: generate independently signed NSC DCP leaf-pin policy
+> rsa4096: generate ServerCertClaim.jws
+> rsa4096: validate ASPin token schema, trust anchors, and signatures
+Wrote /mnt/code/aspin/signing/rsa4096/my-app-cert-scp-hash.txt
+Wrote /mnt/code/aspin/signing/rsa4096/ClaimSigningKey.primary.jws
+Wrote /mnt/code/aspin/signing/rsa4096/ClaimSigningKey.compat.jws
+Wrote /mnt/code/aspin/signing/rsa4096/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/rsa4096/ServerCertClaim.jws -> /mnt/code/aspin/realserver/var/www/rsa4096/.well-known/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/rsa4096/DCPServerCertPin.jws -> /mnt/code/aspin/realserver/var/www/rsa4096/.well-known/DCPServerCertPin.jws
+Copied /mnt/code/aspin/signing/rsa4096/ClaimSigningKey.primary.jws -> /mnt/code/aspin/realserver/var/www/rsa4096/.well-known/ClaimSigningKey.jws
+Copied /mnt/code/aspin/signing/rsa4096/ClaimSigningKey.primary.jws -> /mnt/code/aspin/realserver/var/www/rsa4096/.well-known/ClaimSigningKey.primary.jws
+Copied /mnt/code/aspin/signing/rsa4096/ClaimSigningKey.compat.jws -> /mnt/code/aspin/realserver/var/www/rsa4096/.well-known/ClaimSigningKey.compat.jws
+Copied /mnt/code/aspin/signing/rsa4096/ServerCertClaim.jws -> /mnt/code/aspin/ASPin/rsa4096/app/src/main/resources/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/rsa4096/ClaimSigningKey.primary.jws -> /mnt/code/aspin/ASPin/rsa4096/app/src/main/resources/ClaimSigningKey.jws
+Preparing publish-policies
+Updated public ASPin/DCP policies; authority private keys stayed local.
+Preparing build-targets-and-callers
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs NO-SOURCE
+> Task :app:stripDebugDebugSymbols NO-SOURCE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:mergeProjectDexDebug
+> Task :app:mergeDebugJavaResource
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug
+
+[Incubating] Problems report is available at: file:///mnt/code/aspin/ASPin/es256/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 9s
+36 actionable tasks: 6 executed, 30 up-to-date
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=APP, OU=Dev, O=MyCompany, L=City, ST=State, C=CN
+Signer #1 certificate SHA-256 digest: bb84932447c40f59859bf7be4592b53db0a1f3dfba4c02830f1f8f2fec09a598
+Signer #1 certificate SHA-1 digest: c1b8f925228b03d1d4e2dce126157cec59863020
+Signer #1 certificate MD5 digest: 9f13e29001961402a4a54da3c257bfc9
+Signer #1 key algorithm: EC
+Signer #1 key size (bits): 256
+Signer #1 public key SHA-256 digest: 424b7ce3e6797b53afdd70f756d258b39a15770e7af61fb5a3ccb04f0cf1f669
+Signer #1 public key SHA-1 digest: 8a97cc44be2f6131f0453585490ea148db9081c9
+Signer #1 public key MD5 digest: 9d98c71e61229d33ed09c904f3dcd199
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preCompatibilityBenchmarkBuild UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkNativeDebugMetadata NO-SOURCE
+> Task :app:generateCompatibilityBenchmarkBuildConfig UP-TO-DATE
+> Task :app:javaPreCompileCompatibilityBenchmark UP-TO-DATE
+> Task :app:checkCompatibilityBenchmarkAarMetadata UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkNavigationResources
+> Task :app:compileCompatibilityBenchmarkNavigationResources UP-TO-DATE
+> Task :app:generateCompatibilityBenchmarkResValues UP-TO-DATE
+> Task :app:mapCompatibilityBenchmarkSourceSetPaths UP-TO-DATE
+> Task :app:generateCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:packageCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:parseCompatibilityBenchmarkLocalResources UP-TO-DATE
+> Task :app:createCompatibilityBenchmarkCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksCompatibilityBenchmark
+> Task :app:processCompatibilityBenchmarkMainManifest
+> Task :app:processCompatibilityBenchmarkManifest
+> Task :app:mergeCompatibilityBenchmarkShaders UP-TO-DATE
+> Task :app:compileCompatibilityBenchmarkShaders NO-SOURCE
+> Task :app:generateCompatibilityBenchmarkAssets UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkAssets UP-TO-DATE
+> Task :app:compressCompatibilityBenchmarkAssets UP-TO-DATE
+> Task :app:desugarCompatibilityBenchmarkFileDependencies UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkJavaRes
+> Task :app:checkCompatibilityBenchmarkDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexCompatibilityBenchmark UP-TO-DATE
+> Task :app:mergeLibDexCompatibilityBenchmark UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkJniLibFolders UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkNativeLibs NO-SOURCE
+> Task :app:stripCompatibilityBenchmarkDebugSymbols NO-SOURCE
+> Task :app:validateSigningCompatibilityBenchmark UP-TO-DATE
+> Task :app:writeCompatibilityBenchmarkAppMetadata UP-TO-DATE
+> Task :app:writeCompatibilityBenchmarkSigningConfigVersions UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkManifestForPackage
+> Task :app:mergeCompatibilityBenchmarkJavaResource
+> Task :app:processCompatibilityBenchmarkResources
+> Task :app:compileCompatibilityBenchmarkJavaWithJavac
+> Task :app:dexBuilderCompatibilityBenchmark
+> Task :app:mergeCompatibilityBenchmarkGlobalSynthetics UP-TO-DATE
+> Task :app:mergeProjectDexCompatibilityBenchmark
+> Task :app:packageCompatibilityBenchmark
+> Task :app:createCompatibilityBenchmarkApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleCompatibilityBenchmark
+
+[Incubating] Problems report is available at: file:///mnt/code/aspin/ASPin/es256/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 2s
+36 actionable tasks: 12 executed, 24 up-to-date
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=APP, OU=Dev, O=MyCompany, L=City, ST=State, C=CN
+Signer #1 certificate SHA-256 digest: bb84932447c40f59859bf7be4592b53db0a1f3dfba4c02830f1f8f2fec09a598
+Signer #1 certificate SHA-1 digest: c1b8f925228b03d1d4e2dce126157cec59863020
+Signer #1 certificate MD5 digest: 9f13e29001961402a4a54da3c257bfc9
+Signer #1 key algorithm: EC
+Signer #1 key size (bits): 256
+Signer #1 public key SHA-256 digest: 424b7ce3e6797b53afdd70f756d258b39a15770e7af61fb5a3ccb04f0cf1f669
+Signer #1 public key SHA-1 digest: 8a97cc44be2f6131f0453585490ea148db9081c9
+Signer #1 public key MD5 digest: 9d98c71e61229d33ed09c904f3dcd199
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs NO-SOURCE
+> Task :app:stripDebugDebugSymbols NO-SOURCE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:mergeProjectDexDebug
+> Task :app:mergeDebugJavaResource
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug
+
+[Incubating] Problems report is available at: file:///mnt/code/aspin/ASPin/es384/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1s
+36 actionable tasks: 6 executed, 30 up-to-date
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=APP, OU=Dev, O=MyCompany, L=City, ST=State, C=CN
+Signer #1 certificate SHA-256 digest: 11551ef400996c5c146975ba647658aaa2d532baabdf59c3d7a6f9a5e3bae83d
+Signer #1 certificate SHA-1 digest: b2a6c92c76f11b165eea8d2c28e060fd93c9f976
+Signer #1 certificate MD5 digest: 4b902b8c0715efbcea9e9d8ff521a897
+Signer #1 key algorithm: EC
+Signer #1 key size (bits): 384
+Signer #1 public key SHA-256 digest: bd73901483c9b43c2a5425358e8e9837e8f73341faf8ec8bc75690272ebee5ff
+Signer #1 public key SHA-1 digest: 36c43c5d257bd16d22fef1e354a671b5f7ddfaba
+Signer #1 public key MD5 digest: 48a53c0758fa462846c4dfe2e17e5a4f
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preCompatibilityBenchmarkBuild UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkNativeDebugMetadata NO-SOURCE
+> Task :app:generateCompatibilityBenchmarkBuildConfig UP-TO-DATE
+> Task :app:javaPreCompileCompatibilityBenchmark UP-TO-DATE
+> Task :app:checkCompatibilityBenchmarkAarMetadata UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkNavigationResources UP-TO-DATE
+> Task :app:compileCompatibilityBenchmarkNavigationResources UP-TO-DATE
+> Task :app:generateCompatibilityBenchmarkResValues UP-TO-DATE
+> Task :app:mapCompatibilityBenchmarkSourceSetPaths UP-TO-DATE
+> Task :app:generateCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:packageCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:parseCompatibilityBenchmarkLocalResources UP-TO-DATE
+> Task :app:createCompatibilityBenchmarkCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksCompatibilityBenchmark UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkMainManifest UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkManifest UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkManifestForPackage UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:compileCompatibilityBenchmarkJavaWithJavac
+> Task :app:mergeCompatibilityBenchmarkShaders UP-TO-DATE
+> Task :app:compileCompatibilityBenchmarkShaders NO-SOURCE
+> Task :app:generateCompatibilityBenchmarkAssets UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkAssets UP-TO-DATE
+> Task :app:compressCompatibilityBenchmarkAssets UP-TO-DATE
+> Task :app:desugarCompatibilityBenchmarkFileDependencies UP-TO-DATE
+> Task :app:dexBuilderCompatibilityBenchmark
+> Task :app:mergeCompatibilityBenchmarkGlobalSynthetics UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkJavaRes
+> Task :app:checkCompatibilityBenchmarkDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexCompatibilityBenchmark UP-TO-DATE
+> Task :app:mergeLibDexCompatibilityBenchmark UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkJniLibFolders UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkNativeLibs NO-SOURCE
+> Task :app:stripCompatibilityBenchmarkDebugSymbols NO-SOURCE
+> Task :app:validateSigningCompatibilityBenchmark UP-TO-DATE
+> Task :app:writeCompatibilityBenchmarkAppMetadata UP-TO-DATE
+> Task :app:writeCompatibilityBenchmarkSigningConfigVersions UP-TO-DATE
+> Task :app:mergeProjectDexCompatibilityBenchmark
+> Task :app:mergeCompatibilityBenchmarkJavaResource
+> Task :app:packageCompatibilityBenchmark
+> Task :app:createCompatibilityBenchmarkApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleCompatibilityBenchmark
+
+[Incubating] Problems report is available at: file:///mnt/code/aspin/ASPin/es384/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1s
+36 actionable tasks: 6 executed, 30 up-to-date
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=APP, OU=Dev, O=MyCompany, L=City, ST=State, C=CN
+Signer #1 certificate SHA-256 digest: 11551ef400996c5c146975ba647658aaa2d532baabdf59c3d7a6f9a5e3bae83d
+Signer #1 certificate SHA-1 digest: b2a6c92c76f11b165eea8d2c28e060fd93c9f976
+Signer #1 certificate MD5 digest: 4b902b8c0715efbcea9e9d8ff521a897
+Signer #1 key algorithm: EC
+Signer #1 key size (bits): 384
+Signer #1 public key SHA-256 digest: bd73901483c9b43c2a5425358e8e9837e8f73341faf8ec8bc75690272ebee5ff
+Signer #1 public key SHA-1 digest: 36c43c5d257bd16d22fef1e354a671b5f7ddfaba
+Signer #1 public key MD5 digest: 48a53c0758fa462846c4dfe2e17e5a4f
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs NO-SOURCE
+> Task :app:stripDebugDebugSymbols NO-SOURCE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:mergeProjectDexDebug
+> Task :app:mergeDebugJavaResource
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug
+
+[Incubating] Problems report is available at: file:///mnt/code/aspin/ASPin/rsa3072/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1s
+36 actionable tasks: 6 executed, 30 up-to-date
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=APP, OU=Dev, O=MyCompany, L=City, ST=State, C=CN
+Signer #1 certificate SHA-256 digest: 367b86a8d5ebad635002d548724270938cc6318e4831a5be5c30eb1a2ca2c9b7
+Signer #1 certificate SHA-1 digest: a2023f2421a077fd4792454ce266ab52d5748635
+Signer #1 certificate MD5 digest: edddfccb3d4c12787ce03d5240c49d0e
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 3072
+Signer #1 public key SHA-256 digest: 34d5362a663bec1efecca366889988213734c2ec456ac7bc05aff5379b759ae3
+Signer #1 public key SHA-1 digest: 72b4b74cb339694f316bfa31d94f056b437860ca
+Signer #1 public key MD5 digest: 99096b34237a004513dc04f149f6e58e
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preCompatibilityBenchmarkBuild UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkNativeDebugMetadata NO-SOURCE
+> Task :app:generateCompatibilityBenchmarkBuildConfig UP-TO-DATE
+> Task :app:javaPreCompileCompatibilityBenchmark UP-TO-DATE
+> Task :app:checkCompatibilityBenchmarkAarMetadata UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkNavigationResources UP-TO-DATE
+> Task :app:compileCompatibilityBenchmarkNavigationResources UP-TO-DATE
+> Task :app:generateCompatibilityBenchmarkResValues UP-TO-DATE
+> Task :app:mapCompatibilityBenchmarkSourceSetPaths UP-TO-DATE
+> Task :app:generateCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:packageCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:parseCompatibilityBenchmarkLocalResources UP-TO-DATE
+> Task :app:createCompatibilityBenchmarkCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksCompatibilityBenchmark UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkMainManifest UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkManifest UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkManifestForPackage UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:compileCompatibilityBenchmarkJavaWithJavac
+> Task :app:mergeCompatibilityBenchmarkShaders UP-TO-DATE
+> Task :app:compileCompatibilityBenchmarkShaders NO-SOURCE
+> Task :app:generateCompatibilityBenchmarkAssets UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkAssets UP-TO-DATE
+> Task :app:compressCompatibilityBenchmarkAssets UP-TO-DATE
+> Task :app:desugarCompatibilityBenchmarkFileDependencies UP-TO-DATE
+> Task :app:dexBuilderCompatibilityBenchmark
+> Task :app:mergeCompatibilityBenchmarkGlobalSynthetics UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkJavaRes
+> Task :app:checkCompatibilityBenchmarkDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexCompatibilityBenchmark UP-TO-DATE
+> Task :app:mergeLibDexCompatibilityBenchmark UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkJniLibFolders UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkNativeLibs NO-SOURCE
+> Task :app:stripCompatibilityBenchmarkDebugSymbols NO-SOURCE
+> Task :app:validateSigningCompatibilityBenchmark UP-TO-DATE
+> Task :app:writeCompatibilityBenchmarkAppMetadata UP-TO-DATE
+> Task :app:writeCompatibilityBenchmarkSigningConfigVersions UP-TO-DATE
+> Task :app:mergeProjectDexCompatibilityBenchmark
+> Task :app:mergeCompatibilityBenchmarkJavaResource
+> Task :app:packageCompatibilityBenchmark
+> Task :app:createCompatibilityBenchmarkApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleCompatibilityBenchmark
+
+[Incubating] Problems report is available at: file:///mnt/code/aspin/ASPin/rsa3072/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1s
+36 actionable tasks: 6 executed, 30 up-to-date
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=APP, OU=Dev, O=MyCompany, L=City, ST=State, C=CN
+Signer #1 certificate SHA-256 digest: 367b86a8d5ebad635002d548724270938cc6318e4831a5be5c30eb1a2ca2c9b7
+Signer #1 certificate SHA-1 digest: a2023f2421a077fd4792454ce266ab52d5748635
+Signer #1 certificate MD5 digest: edddfccb3d4c12787ce03d5240c49d0e
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 3072
+Signer #1 public key SHA-256 digest: 34d5362a663bec1efecca366889988213734c2ec456ac7bc05aff5379b759ae3
+Signer #1 public key SHA-1 digest: 72b4b74cb339694f316bfa31d94f056b437860ca
+Signer #1 public key MD5 digest: 99096b34237a004513dc04f149f6e58e
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs NO-SOURCE
+> Task :app:stripDebugDebugSymbols NO-SOURCE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:mergeProjectDexDebug
+> Task :app:mergeDebugJavaResource
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug
+
+[Incubating] Problems report is available at: file:///mnt/code/aspin/ASPin/rsa4096/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1s
+36 actionable tasks: 6 executed, 30 up-to-date
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=APP, OU=Dev, O=MyCompany, L=City, ST=State, C=CN
+Signer #1 certificate SHA-256 digest: fe4d19f67ba0bc622d1acdc9c1b2b36b60ca758293d28a824b5b81995a6e29f8
+Signer #1 certificate SHA-1 digest: c816a709e9e2beaafc89afe995c8c482eb4b920f
+Signer #1 certificate MD5 digest: 20fd5a9f501a727d014817167619e6a1
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 4096
+Signer #1 public key SHA-256 digest: 8b9d371e3bf5afb4eed5bb1939c537e72270ed131c019861d401202e6e70bcfc
+Signer #1 public key SHA-1 digest: fcc8f9f01f917b3114869cfffdc26da6b2e5a5c1
+Signer #1 public key MD5 digest: d6b204ce4ed4bceae622ddf78f868a26
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preCompatibilityBenchmarkBuild UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkNativeDebugMetadata NO-SOURCE
+> Task :app:generateCompatibilityBenchmarkBuildConfig UP-TO-DATE
+> Task :app:javaPreCompileCompatibilityBenchmark UP-TO-DATE
+> Task :app:checkCompatibilityBenchmarkAarMetadata UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkNavigationResources UP-TO-DATE
+> Task :app:compileCompatibilityBenchmarkNavigationResources UP-TO-DATE
+> Task :app:generateCompatibilityBenchmarkResValues UP-TO-DATE
+> Task :app:mapCompatibilityBenchmarkSourceSetPaths UP-TO-DATE
+> Task :app:generateCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:packageCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:parseCompatibilityBenchmarkLocalResources UP-TO-DATE
+> Task :app:createCompatibilityBenchmarkCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksCompatibilityBenchmark UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkMainManifest UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkManifest UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkManifestForPackage UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:compileCompatibilityBenchmarkJavaWithJavac
+> Task :app:mergeCompatibilityBenchmarkShaders UP-TO-DATE
+> Task :app:compileCompatibilityBenchmarkShaders NO-SOURCE
+> Task :app:generateCompatibilityBenchmarkAssets UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkAssets UP-TO-DATE
+> Task :app:compressCompatibilityBenchmarkAssets UP-TO-DATE
+> Task :app:desugarCompatibilityBenchmarkFileDependencies UP-TO-DATE
+> Task :app:dexBuilderCompatibilityBenchmark
+> Task :app:mergeCompatibilityBenchmarkGlobalSynthetics UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkJavaRes
+> Task :app:checkCompatibilityBenchmarkDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexCompatibilityBenchmark UP-TO-DATE
+> Task :app:mergeLibDexCompatibilityBenchmark UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkJniLibFolders UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkNativeLibs NO-SOURCE
+> Task :app:stripCompatibilityBenchmarkDebugSymbols NO-SOURCE
+> Task :app:validateSigningCompatibilityBenchmark UP-TO-DATE
+> Task :app:writeCompatibilityBenchmarkAppMetadata UP-TO-DATE
+> Task :app:writeCompatibilityBenchmarkSigningConfigVersions UP-TO-DATE
+> Task :app:mergeProjectDexCompatibilityBenchmark
+> Task :app:mergeCompatibilityBenchmarkJavaResource
+> Task :app:packageCompatibilityBenchmark
+> Task :app:createCompatibilityBenchmarkApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleCompatibilityBenchmark
+
+[Incubating] Problems report is available at: file:///mnt/code/aspin/ASPin/rsa4096/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1s
+36 actionable tasks: 6 executed, 30 up-to-date
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=APP, OU=Dev, O=MyCompany, L=City, ST=State, C=CN
+Signer #1 certificate SHA-256 digest: fe4d19f67ba0bc622d1acdc9c1b2b36b60ca758293d28a824b5b81995a6e29f8
+Signer #1 certificate SHA-1 digest: c816a709e9e2beaafc89afe995c8c482eb4b920f
+Signer #1 certificate MD5 digest: 20fd5a9f501a727d014817167619e6a1
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 4096
+Signer #1 public key SHA-256 digest: 8b9d371e3bf5afb4eed5bb1939c537e72270ed131c019861d401202e6e70bcfc
+Signer #1 public key SHA-1 digest: fcc8f9f01f917b3114869cfffdc26da6b2e5a5c1
+Signer #1 public key MD5 digest: d6b204ce4ed4bceae622ddf78f868a26
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.13/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preCrossAppCallerBuild UP-TO-DATE
+> Task :app:mergeCrossAppCallerNativeDebugMetadata NO-SOURCE
+> Task :app:generateCrossAppCallerBuildConfig UP-TO-DATE
+> Task :app:javaPreCompileCrossAppCaller UP-TO-DATE
+> Task :app:checkCrossAppCallerAarMetadata UP-TO-DATE
+> Task :app:processCrossAppCallerNavigationResources UP-TO-DATE
+> Task :app:compileCrossAppCallerNavigationResources UP-TO-DATE
+> Task :app:generateCrossAppCallerResValues UP-TO-DATE
+> Task :app:mapCrossAppCallerSourceSetPaths UP-TO-DATE
+> Task :app:generateCrossAppCallerResources UP-TO-DATE
+> Task :app:mergeCrossAppCallerResources UP-TO-DATE
+> Task :app:packageCrossAppCallerResources UP-TO-DATE
+> Task :app:parseCrossAppCallerLocalResources UP-TO-DATE
+> Task :app:createCrossAppCallerCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksCrossAppCaller UP-TO-DATE
+> Task :app:processCrossAppCallerMainManifest UP-TO-DATE
+> Task :app:processCrossAppCallerManifest UP-TO-DATE
+> Task :app:processCrossAppCallerManifestForPackage UP-TO-DATE
+> Task :app:processCrossAppCallerResources UP-TO-DATE
+> Task :app:compileCrossAppCallerJavaWithJavac
+> Task :app:mergeCrossAppCallerShaders UP-TO-DATE
+> Task :app:compileCrossAppCallerShaders NO-SOURCE
+> Task :app:generateCrossAppCallerAssets UP-TO-DATE
+> Task :app:mergeCrossAppCallerAssets UP-TO-DATE
+> Task :app:compressCrossAppCallerAssets UP-TO-DATE
+> Task :app:desugarCrossAppCallerFileDependencies UP-TO-DATE
+> Task :app:dexBuilderCrossAppCaller
+> Task :app:mergeCrossAppCallerGlobalSynthetics UP-TO-DATE
+> Task :app:processCrossAppCallerJavaRes
+> Task :app:checkCrossAppCallerDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexCrossAppCaller UP-TO-DATE
+> Task :app:mergeLibDexCrossAppCaller UP-TO-DATE
+> Task :app:mergeCrossAppCallerJniLibFolders UP-TO-DATE
+> Task :app:mergeCrossAppCallerNativeLibs NO-SOURCE
+> Task :app:stripCrossAppCallerDebugSymbols NO-SOURCE
+> Task :app:validateSigningCrossAppCaller UP-TO-DATE
+> Task :app:writeCrossAppCallerAppMetadata UP-TO-DATE
+> Task :app:writeCrossAppCallerSigningConfigVersions UP-TO-DATE
+> Task :app:mergeProjectDexCrossAppCaller
+> Task :app:mergeCrossAppCallerJavaResource
+> Task :app:packageCrossAppCaller
+> Task :app:createCrossAppCallerApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleCrossAppCaller
+
+[Incubating] Problems report is available at: file:///mnt/code/aspin/ASPin/es256/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 9s
+36 actionable tasks: 6 executed, 30 up-to-date
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+> Gradle task :app:assembleDebug for es256 (primary)
+> zipalign for es256 (primary)
+> APK signing for es256 (primary)
+> APK verification for es256 (primary)
+--> Built and signed es256 primary APK: /mnt/code/aspin/results/internet-evaluation-20261029/api-cache-matrix/apks/ASPin-es256.apk
+> Gradle task :app:assembleCompatibilityBenchmark for es256 (compatible)
+> zipalign for es256 (compatible)
+> APK signing for es256 (compatible)
+> APK verification for es256 (compatible)
+--> Built and signed es256 compatible APK: /mnt/code/aspin/results/internet-evaluation-20261029/api-cache-matrix/apks/ASPin-es256-compatible.apk
+> Gradle task :app:assembleDebug for es384 (primary)
+> zipalign for es384 (primary)
+> APK signing for es384 (primary)
+> APK verification for es384 (primary)
+--> Built and signed es384 primary APK: /mnt/code/aspin/results/internet-evaluation-20261029/api-cache-matrix/apks/ASPin-es384.apk
+> Gradle task :app:assembleCompatibilityBenchmark for es384 (compatible)
+> zipalign for es384 (compatible)
+> APK signing for es384 (compatible)
+> APK verification for es384 (compatible)
+--> Built and signed es384 compatible APK: /mnt/code/aspin/results/internet-evaluation-20261029/api-cache-matrix/apks/ASPin-es384-compatible.apk
+> Gradle task :app:assembleDebug for rsa3072 (primary)
+> zipalign for rsa3072 (primary)
+> APK signing for rsa3072 (primary)
+> APK verification for rsa3072 (primary)
+--> Built and signed rsa3072 primary APK: /mnt/code/aspin/results/internet-evaluation-20261029/api-cache-matrix/apks/ASPin-rsa3072.apk
+> Gradle task :app:assembleCompatibilityBenchmark for rsa3072 (compatible)
+> zipalign for rsa3072 (compatible)
+> APK signing for rsa3072 (compatible)
+> APK verification for rsa3072 (compatible)
+--> Built and signed rsa3072 compatible APK: /mnt/code/aspin/results/internet-evaluation-20261029/api-cache-matrix/apks/ASPin-rsa3072-compatible.apk
+> Gradle task :app:assembleDebug for rsa4096 (primary)
+> zipalign for rsa4096 (primary)
+> APK signing for rsa4096 (primary)
+> APK verification for rsa4096 (primary)
+--> Built and signed rsa4096 primary APK: /mnt/code/aspin/results/internet-evaluation-20261029/api-cache-matrix/apks/ASPin-rsa4096.apk
+> Gradle task :app:assembleCompatibilityBenchmark for rsa4096 (compatible)
+> zipalign for rsa4096 (compatible)
+> APK signing for rsa4096 (compatible)
+> APK verification for rsa4096 (compatible)
+--> Built and signed rsa4096 compatible APK: /mnt/code/aspin/results/internet-evaluation-20261029/api-cache-matrix/apks/ASPin-rsa4096-compatible.apk
+> Build cached-API caller
+> Align cached-API caller
+> Sign cached-API caller with es256
+> Verify cached-API caller es256
+> Sign cached-API caller with es384
+> Verify cached-API caller es384
+a49e4411bedc2-primary-es256-prime
+a49e4411bedc2-primary-es256-cached-probe
+a49e4411bedc2-primary-es256-cache-1t
+a49e4411bedc2-primary-es256-cache-8t
+a49e4411bedc2-primary-es256-cross-target-prime
+a49e4411bedc2-primary-es256-cross-cached-probe
+a49e4411bedc2-primary-es256-cross-cache-1t
+a49e4411bedc2-primary-es256-cross-cache-8t
+a49e4411bedc2-primary-es384-prime
+a49e4411bedc2-primary-es384-cached-probe
+a49e4411bedc2-primary-es384-cache-1t
+a49e4411bedc2-primary-es384-cache-8t
+a49e4411bedc2-primary-es384-cross-target-prime
+a49e4411bedc2-primary-es384-cross-cached-probe
+a49e4411bedc2-primary-es384-cross-cache-1t
+a49e4411bedc2-primary-es384-cross-cache-8t
+a49e4411bedc2-primary-rsa3072-prime
+a49e4411bedc2-primary-rsa3072-cached-probe
+a49e4411bedc2-primary-rsa3072-cache-1t
+a49e4411bedc2-primary-rsa3072-cache-8t
+a49e4411bedc2-primary-rsa3072-cross-target-prime
+a49e4411bedc2-primary-rsa3072-cross-cached-probe
+a49e4411bedc2-primary-rsa3072-cross-cache-1t
+a49e4411bedc2-primary-rsa3072-cross-cache-8t
+a49e4411bedc2-primary-rsa4096-prime
+a49e4411bedc2-primary-rsa4096-cached-probe
+a49e4411bedc2-primary-rsa4096-cache-1t
+a49e4411bedc2-primary-rsa4096-cache-8t
+a49e4411bedc2-primary-rsa4096-cross-target-prime
+a49e4411bedc2-primary-rsa4096-cross-cached-probe
+a49e4411bedc2-primary-rsa4096-cross-cache-1t
+a49e4411bedc2-primary-rsa4096-cross-cache-8t
+a49e4411bedc2-compat-es256-prime
+a49e4411bedc2-compat-es256-cached-probe
+a49e4411bedc2-compat-es256-cache-1t
+a49e4411bedc2-compat-es256-cache-8t
+a49e4411bedc2-compat-es256-cross-target-prime
+a49e4411bedc2-compat-es256-cross-cached-probe
+a49e4411bedc2-compat-es256-cross-cache-1t
+a49e4411bedc2-compat-es256-cross-cache-8t
+a49e4411bedc2-compat-es384-prime
+a49e4411bedc2-compat-es384-cached-probe
+a49e4411bedc2-compat-es384-cache-1t
+a49e4411bedc2-compat-es384-cache-8t
+a49e4411bedc2-compat-es384-cross-target-prime
+a49e4411bedc2-compat-es384-cross-cached-probe
+a49e4411bedc2-compat-es384-cross-cache-1t
+a49e4411bedc2-compat-es384-cross-cache-8t
+a49e4411bedc2-compat-rsa3072-prime
+a49e4411bedc2-compat-rsa3072-cached-probe
+a49e4411bedc2-compat-rsa3072-cache-1t
+a49e4411bedc2-compat-rsa3072-cache-8t
+a49e4411bedc2-compat-rsa3072-cross-target-prime
+a49e4411bedc2-compat-rsa3072-cross-cached-probe
+a49e4411bedc2-compat-rsa3072-cross-cache-1t
+a49e4411bedc2-compat-rsa3072-cross-cache-8t
+a49e4411bedc2-compat-rsa4096-prime
+a49e4411bedc2-compat-rsa4096-cached-probe
+a49e4411bedc2-compat-rsa4096-cache-1t
+a49e4411bedc2-compat-rsa4096-cache-8t
+a49e4411bedc2-compat-rsa4096-cross-target-prime
+a49e4411bedc2-compat-rsa4096-cross-cached-probe
+a49e4411bedc2-compat-rsa4096-cross-cache-1t
+a49e4411bedc2-compat-rsa4096-cross-cache-8t

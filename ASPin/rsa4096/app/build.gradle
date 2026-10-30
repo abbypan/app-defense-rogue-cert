@@ -14,6 +14,7 @@ android {
         targetSdk 36
         versionCode 1
         versionName "1.0"
+        buildConfigField "String", "BENCHMARK_MODE", '"primary"'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -42,6 +43,42 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
+        scpBenchmark {
+            initWith debug
+            signingConfig signingConfigs.debug
+            matchingFallbacks = ['debug']
+            buildConfigField "String", "BENCHMARK_MODE", '"scp"'
+        }
+        compatibilityBenchmark {
+            initWith debug
+            signingConfig signingConfigs.debug
+            matchingFallbacks = ['debug']
+            buildConfigField "String", "BENCHMARK_MODE", '"compatible"'
+            manifestPlaceholders = [
+                    aspinPolicyPublicKey: file("../../../signing/rsa4096/my-dcp-pub.txt")
+                            .getText("UTF-8").trim()
+            ]
+        }
+        dcpBenchmark {
+            initWith debug
+            signingConfig signingConfigs.debug
+            matchingFallbacks = ['debug']
+            buildConfigField "String", "BENCHMARK_MODE", '"dcp"'
+            manifestPlaceholders = [
+                    dcpPolicyPublicKey: file("../../../signing/rsa4096/my-dcp-pub.txt")
+                            .getText("UTF-8").trim()
+            ]
+        }
+    }
+
+    sourceSets {
+        main.java.srcDir "../../shared/src/main/java"
+        main.res.srcDir "../../shared/src/main/res"
+        test.java.srcDir "../../shared/src/test/java"
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     compileOptions {

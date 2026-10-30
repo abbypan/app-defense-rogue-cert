@@ -1,0 +1,1 @@
+{"version": 1, "hosts": {"cross.idouzi.top": {"algorithm": "shared-csr", "certificates": {"real": {"chain": "certificates/zerossl-fullchain.pem", "key": "certificates/server-privkey.pem"}, "rogue": {"chain": "certificates/zerossl-fullchain.pem", "key": "certificates/server-privkey.pem"}}, "tokens": "tokens"}}}

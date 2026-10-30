@@ -505,73 +505,89 @@ Process 0 (that is, the initial process):
 )
 
 -- Query event(MigrationClaimCached(w,key,host,identity,claim,iat_4,exp_4)) ==> event(MigrationClaimPublished(w,key,identity,claim,iat_4,exp_4)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 159 rules (89 with conclusion selected). Queue: 7 rules.
+200 rules inserted. Base: 178 rules (99 with conclusion selected). Queue: 8 rules.
 Starting query event(MigrationClaimCached(w,key,host,identity,claim,iat_4,exp_4)) ==> event(MigrationClaimPublished(w,key,identity,claim,iat_4,exp_4))
 goal reachable: b-event(MigrationClaimPublished(window_current,pk(gen_sk_for_id(app_signing)),server_cert_subject_and_san,claim_current_ca,migration_time_0[],succ_t(migration_time_0[]))) -> event(MigrationClaimCached(window_current,pk(gen_sk_for_id(app_signing)),server_hostname,server_cert_subject_and_san,claim_current_ca,migration_time_0[],succ_t(migration_time_0[])))
 goal reachable: b-event(MigrationClaimPublished(window_overlap,pk(gen_sk_for_id(app_signing)),server_cert_subject_and_san,claim_transition_ca,succ_t(migration_time_0[]),succ_t(succ_t(migration_time_0[])))) && b-event(MigrationClaimPublished(window_current,pk(gen_sk_for_id(app_signing)),server_cert_subject_and_san,claim_current_ca,migration_time_0[],succ_t(migration_time_0[]))) -> event(MigrationClaimCached(window_overlap,pk(gen_sk_for_id(app_signing)),server_hostname,server_cert_subject_and_san,claim_transition_ca,succ_t(migration_time_0[]),succ_t(succ_t(migration_time_0[]))))
 goal reachable: b-event(MigrationClaimPublished(window_new_cert,pk(gen_sk_for_id(app_signing)),server_cert_subject_and_san,claim_new_ca,succ_t(succ_t(migration_time_0[])),succ_t(succ_t(succ_t(migration_time_0[]))))) && b-event(MigrationClaimPublished(window_overlap,pk(gen_sk_for_id(app_signing)),server_cert_subject_and_san,claim_transition_ca,succ_t(migration_time_0[]),succ_t(succ_t(migration_time_0[])))) && b-event(MigrationClaimPublished(window_current,pk(gen_sk_for_id(app_signing)),server_cert_subject_and_san,claim_current_ca,migration_time_0[],succ_t(migration_time_0[]))) -> event(MigrationClaimCached(window_new_cert,pk(gen_sk_for_id(app_signing)),server_hostname,server_cert_subject_and_san,claim_new_ca,succ_t(succ_t(migration_time_0[])),succ_t(succ_t(succ_t(migration_time_0[])))))
 RESULT event(MigrationClaimCached(w,key,host,identity,claim,iat_4,exp_4)) ==> event(MigrationClaimPublished(w,key,identity,claim,iat_4,exp_4)) is true.
 -- Query event(MigrationClaimReturned(w,key,host,identity,claim,iat_4,exp_4)) ==> event(MigrationClaimAuthenticated(key,identity,claim,iat_4,exp_4)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
+200 rules inserted. Base: 173 rules (99 with conclusion selected). Queue: 4 rules.
 Starting query event(MigrationClaimReturned(w,key,host,identity,claim,iat_4,exp_4)) ==> event(MigrationClaimAuthenticated(key,identity,claim,iat_4,exp_4))
 goal reachable: b-event(MigrationClaimAuthenticated(pk(gen_sk_for_id(app_signing)),server_cert_subject_and_san,claim_current_ca,migration_time_0[],succ_t(migration_time_0[]))) -> event(MigrationClaimReturned(window_current,pk(gen_sk_for_id(app_signing)),server_hostname,server_cert_subject_and_san,claim_current_ca,migration_time_0[],succ_t(migration_time_0[])))
 goal reachable: b-event(MigrationClaimAuthenticated(pk(gen_sk_for_id(app_signing)),server_cert_subject_and_san,claim_transition_ca,succ_t(migration_time_0[]),succ_t(succ_t(migration_time_0[])))) && b-event(MigrationClaimAuthenticated(pk(gen_sk_for_id(app_signing)),server_cert_subject_and_san,claim_current_ca,migration_time_0[],succ_t(migration_time_0[]))) -> event(MigrationClaimReturned(window_overlap,pk(gen_sk_for_id(app_signing)),server_hostname,server_cert_subject_and_san,claim_transition_ca,succ_t(migration_time_0[]),succ_t(succ_t(migration_time_0[]))))
 goal reachable: b-event(MigrationClaimAuthenticated(pk(gen_sk_for_id(app_signing)),server_cert_subject_and_san,claim_new_ca,succ_t(succ_t(migration_time_0[])),succ_t(succ_t(succ_t(migration_time_0[]))))) && b-event(MigrationClaimAuthenticated(pk(gen_sk_for_id(app_signing)),server_cert_subject_and_san,claim_transition_ca,succ_t(migration_time_0[]),succ_t(succ_t(migration_time_0[])))) && b-event(MigrationClaimAuthenticated(pk(gen_sk_for_id(app_signing)),server_cert_subject_and_san,claim_current_ca,migration_time_0[],succ_t(migration_time_0[]))) -> event(MigrationClaimReturned(window_new_cert,pk(gen_sk_for_id(app_signing)),server_hostname,server_cert_subject_and_san,claim_new_ca,succ_t(succ_t(migration_time_0[])),succ_t(succ_t(succ_t(migration_time_0[])))))
 RESULT event(MigrationClaimReturned(w,key,host,identity,claim,iat_4,exp_4)) ==> event(MigrationClaimAuthenticated(key,identity,claim,iat_4,exp_4)) is true.
 -- Query event(MigrationJointCutover(window_new_cert,new_cert_issuer,claim_new_ca)) ==> event(MigrationNewCertObtained(new_cert_issuer)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
 Starting query event(MigrationJointCutover(window_new_cert,new_cert_issuer,claim_new_ca)) ==> event(MigrationNewCertObtained(new_cert_issuer))
 goal reachable: b-event(MigrationNewCertObtained(new_cert_issuer)) -> event(MigrationJointCutover(window_new_cert,new_cert_issuer,claim_new_ca))
 RESULT event(MigrationJointCutover(window_new_cert,new_cert_issuer,claim_new_ca)) ==> event(MigrationNewCertObtained(new_cert_issuer)) is true.
 -- Query event(MigrationJointCutover(window_new_cert,new_cert_issuer,claim_new_ca)) ==> event(MigrationTransitionAvailable(window_overlap)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
 Starting query event(MigrationJointCutover(window_new_cert,new_cert_issuer,claim_new_ca)) ==> event(MigrationTransitionAvailable(window_overlap))
 goal reachable: b-event(MigrationTransitionAvailable(window_overlap)) -> event(MigrationJointCutover(window_new_cert,new_cert_issuer,claim_new_ca))
 RESULT event(MigrationJointCutover(window_new_cert,new_cert_issuer,claim_new_ca)) ==> event(MigrationTransitionAvailable(window_overlap)) is true.
 -- Query event(MigrationJointCutover(window_new_cert,new_cert_issuer,claim_new_ca)) ==> event(MigrationPhaseElapsed(window_overlap,succ_t(succ_t(migration_time_0[])))) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
 Starting query event(MigrationJointCutover(window_new_cert,new_cert_issuer,claim_new_ca)) ==> event(MigrationPhaseElapsed(window_overlap,succ_t(succ_t(migration_time_0[]))))
 goal reachable: b-event(MigrationPhaseElapsed(window_overlap,succ_t(succ_t(migration_time_0[])))) -> event(MigrationJointCutover(window_new_cert,new_cert_issuer,claim_new_ca))
 RESULT event(MigrationJointCutover(window_new_cert,new_cert_issuer,claim_new_ca)) ==> event(MigrationPhaseElapsed(window_overlap,succ_t(succ_t(migration_time_0[])))) is true.
 -- Query event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca)) ==> event(MigrationJointCutover(window_new_cert,new_cert_issuer,claim_new_ca)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
-200 rules inserted. Base: 156 rules (90 with conclusion selected). Queue: 2 rules.
+200 rules inserted. Base: 176 rules (99 with conclusion selected). Queue: 6 rules.
 Starting query event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca)) ==> event(MigrationJointCutover(window_new_cert,new_cert_issuer,claim_new_ca))
 goal reachable: b-event(MigrationJointCutover(window_new_cert,new_cert_issuer,claim_new_ca)) -> event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca))
 RESULT event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca)) ==> event(MigrationJointCutover(window_new_cert,new_cert_issuer,claim_new_ca)) is true.
 -- Query not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_current_ca)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
+200 rules inserted. Base: 173 rules (99 with conclusion selected). Queue: 4 rules.
 Starting query not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_current_ca))
 RESULT not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_current_ca)) is true.
 -- Query not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
+200 rules inserted. Base: 173 rules (99 with conclusion selected). Queue: 4 rules.
 Starting query not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca))
 RESULT not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_transition_ca)) is true.
 -- Query not event(MigrationCertAccepted(window_new_cert,real_cert_issuer,claim_new_ca)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
+200 rules inserted. Base: 173 rules (99 with conclusion selected). Queue: 4 rules.
 Starting query not event(MigrationCertAccepted(window_new_cert,real_cert_issuer,claim_new_ca))
 RESULT not event(MigrationCertAccepted(window_new_cert,real_cert_issuer,claim_new_ca)) is true.
 -- Query not event(MigrationPolicyPairAllowed(new_cert_issuer,claim_current_ca)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
 Starting query not event(MigrationPolicyPairAllowed(new_cert_issuer,claim_current_ca))
 RESULT not event(MigrationPolicyPairAllowed(new_cert_issuer,claim_current_ca)) is true.
 -- Query not event(MigrationPolicyPairAllowed(real_cert_issuer,claim_new_ca)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
 Starting query not event(MigrationPolicyPairAllowed(real_cert_issuer,claim_new_ca))
 RESULT not event(MigrationPolicyPairAllowed(real_cert_issuer,claim_new_ca)) is true.
 -- Query not event(MigrationPolicyPairAllowed(new_cert_issuer,claim_transition_ca)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
 Starting query not event(MigrationPolicyPairAllowed(new_cert_issuer,claim_transition_ca))
@@ -1261,21 +1277,25 @@ The event MigrationPolicyPairAllowed(new_cert_issuer,claim_transition_ca) is exe
 A trace has been found.
 RESULT not event(MigrationPolicyPairAllowed(new_cert_issuer,claim_transition_ca)) is false.
 -- Query not event(CrossSigningKeyCacheHit(old_key,new_key,content_3)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
 Starting query not event(CrossSigningKeyCacheHit(old_key,new_key,content_3))
 RESULT not event(CrossSigningKeyCacheHit(old_key,new_key,content_3)) is true.
 -- Query not event(CrossDelegationCacheHit(old_key,new_key,content_3)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
 Starting query not event(CrossDelegationCacheHit(old_key,new_key,content_3))
 RESULT not event(CrossDelegationCacheHit(old_key,new_key,content_3)) is true.
 -- Query not event(CrossHostnameCacheHit(expected,requested,key)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
 Starting query not event(CrossHostnameCacheHit(expected,requested,key))
 RESULT not event(CrossHostnameCacheHit(expected,requested,key)) is true.
 -- Query not event(RollbackRejected(token_type,old_iat_2,highest_iat)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
 Starting query not event(RollbackRejected(token_type,old_iat_2,highest_iat))
@@ -1922,6 +1942,7 @@ The event RollbackRejected(token_type_claim,migration_time_0,succ_t(migration_ti
 A trace has been found.
 RESULT not event(RollbackRejected(token_type,old_iat_2,highest_iat)) is false.
 -- Query not event(RollbackRejected(token_type_claim,migration_time_0[],succ_t(migration_time_0[]))) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
 Starting query not event(RollbackRejected(token_type_claim,migration_time_0[],succ_t(migration_time_0[])))
@@ -2568,6 +2589,7 @@ The event RollbackRejected(token_type_claim,migration_time_0,succ_t(migration_ti
 A trace has been found.
 RESULT not event(RollbackRejected(token_type_claim,migration_time_0[],succ_t(migration_time_0[]))) is false.
 -- Query not event(RollbackRejected(token_type_key,migration_time_0[],succ_t(migration_time_0[]))) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
 Starting query not event(RollbackRejected(token_type_key,migration_time_0[],succ_t(migration_time_0[])))
@@ -3177,6 +3199,7 @@ The event RollbackRejected(token_type_key,migration_time_0,succ_t(migration_time
 A trace has been found.
 RESULT not event(RollbackRejected(token_type_key,migration_time_0[],succ_t(migration_time_0[]))) is false.
 -- Query not event(ExpiredTokenRejected(token_type,exp_4,now)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
 Starting query not event(ExpiredTokenRejected(token_type,exp_4,now))
@@ -3750,6 +3773,7 @@ The event ExpiredTokenRejected(token_type_claim,succ_t(migration_time_0),succ_t(
 A trace has been found.
 RESULT not event(ExpiredTokenRejected(token_type,exp_4,now)) is false.
 -- Query not event(EmergencyTokenRevoked(revoked,replacement_iat)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
 Starting query not event(EmergencyTokenRevoked(revoked,replacement_iat))
@@ -4398,14 +4422,17 @@ The event EmergencyTokenRevoked(claim_current_ca,succ_t(migration_time_0)) is ex
 A trace has been found.
 RESULT not event(EmergencyTokenRevoked(revoked,replacement_iat)) is false.
 -- Query event(EmergencyReplacementAccepted(claim,iat_4)) ==> event(EmergencyReplacementPublished(claim,iat_4)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
 Starting query event(EmergencyReplacementAccepted(claim,iat_4)) ==> event(EmergencyReplacementPublished(claim,iat_4))
 goal reachable: b-event(EmergencyReplacementPublished(claim_new_ca,succ_t(migration_time_0[]))) -> event(EmergencyReplacementAccepted(claim_new_ca,succ_t(migration_time_0[])))
 RESULT event(EmergencyReplacementAccepted(claim,iat_4)) ==> event(EmergencyReplacementPublished(claim,iat_4)) is true.
 -- Query not event(MigrationWindowComplete(window_current)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
+200 rules inserted. Base: 173 rules (99 with conclusion selected). Queue: 4 rules.
 Starting query not event(MigrationWindowComplete(window_current))
 goal reachable: event(MigrationWindowComplete(window_current))
 
@@ -5987,8 +6014,10 @@ The event MigrationWindowComplete(window_current) is executed at {77}.
 A trace has been found.
 RESULT not event(MigrationWindowComplete(window_current)) is false.
 -- Query not event(MigrationWindowComplete(window_overlap)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
+200 rules inserted. Base: 173 rules (99 with conclusion selected). Queue: 4 rules.
 Starting query not event(MigrationWindowComplete(window_overlap))
 goal reachable: event(MigrationWindowComplete(window_overlap))
 
@@ -7869,8 +7898,10 @@ The event MigrationWindowComplete(window_overlap) is executed at {106}.
 A trace has been found.
 RESULT not event(MigrationWindowComplete(window_overlap)) is false.
 -- Query not event(MigrationWindowComplete(window_new_cert)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
+200 rules inserted. Base: 173 rules (99 with conclusion selected). Queue: 4 rules.
 Starting query not event(MigrationWindowComplete(window_new_cert))
 goal reachable: event(MigrationWindowComplete(window_new_cert))
 
@@ -10000,8 +10031,10 @@ The event MigrationWindowComplete(window_new_cert) is executed at {139}.
 A trace has been found.
 RESULT not event(MigrationWindowComplete(window_new_cert)) is false.
 -- Query not event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
+200 rules inserted. Base: 173 rules (99 with conclusion selected). Queue: 4 rules.
 Starting query not event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca))
 goal reachable: event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca))
 
@@ -11582,8 +11615,10 @@ The event MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca
 A trace has been found.
 RESULT not event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca)) is false.
 -- Query not event(MigrationCertAccepted(window_overlap,real_cert_issuer,claim_transition_ca)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
+200 rules inserted. Base: 173 rules (99 with conclusion selected). Queue: 4 rules.
 Starting query not event(MigrationCertAccepted(window_overlap,real_cert_issuer,claim_transition_ca))
 goal reachable: event(MigrationCertAccepted(window_overlap,real_cert_issuer,claim_transition_ca))
 
@@ -13463,8 +13498,10 @@ The event MigrationCertAccepted(window_overlap,real_cert_issuer,claim_transition
 A trace has been found.
 RESULT not event(MigrationCertAccepted(window_overlap,real_cert_issuer,claim_transition_ca)) is false.
 -- Query not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
+200 rules inserted. Base: 173 rules (99 with conclusion selected). Queue: 4 rules.
 Starting query not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca))
 goal reachable: event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca))
 
@@ -15592,20 +15629,26 @@ The event MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca) is
 A trace has been found.
 RESULT not event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca)) is false.
 -- Query event(MigrationWindowComplete(window_current)) ==> event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
+200 rules inserted. Base: 173 rules (99 with conclusion selected). Queue: 4 rules.
 Starting query event(MigrationWindowComplete(window_current)) ==> event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca))
 goal reachable: b-event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca)) -> event(MigrationWindowComplete(window_current))
 RESULT event(MigrationWindowComplete(window_current)) ==> event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca)) is true.
 -- Query event(MigrationWindowComplete(window_overlap)) ==> event(MigrationCertAccepted(window_overlap,real_cert_issuer,claim_transition_ca)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
+200 rules inserted. Base: 173 rules (99 with conclusion selected). Queue: 4 rules.
 Starting query event(MigrationWindowComplete(window_overlap)) ==> event(MigrationCertAccepted(window_overlap,real_cert_issuer,claim_transition_ca))
 goal reachable: b-event(MigrationCertAccepted(window_overlap,real_cert_issuer,claim_transition_ca)) && b-event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca)) -> event(MigrationWindowComplete(window_overlap))
 RESULT event(MigrationWindowComplete(window_overlap)) ==> event(MigrationCertAccepted(window_overlap,real_cert_issuer,claim_transition_ca)) is true.
 -- Query event(MigrationWindowComplete(window_new_cert)) ==> event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca)) in process 1.
+select jws_array_member(*entry_3,tail)/-5000
 Translating the process into Horn clauses...
 Completing...
+200 rules inserted. Base: 173 rules (99 with conclusion selected). Queue: 4 rules.
 Starting query event(MigrationWindowComplete(window_new_cert)) ==> event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca))
 goal reachable: b-event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca)) && b-event(MigrationCertAccepted(window_overlap,real_cert_issuer,claim_transition_ca)) && b-event(MigrationCertAccepted(window_current,real_cert_issuer,claim_current_ca)) -> event(MigrationWindowComplete(window_new_cert))
 RESULT event(MigrationWindowComplete(window_new_cert)) ==> event(MigrationCertAccepted(window_new_cert,new_cert_issuer,claim_new_ca)) is true.

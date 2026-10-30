@@ -1,0 +1,14 @@
+Mode,Group,Cases,Result
+compat,claim-key,5,PASS
+compat,cross,11,PASS
+compat,ks-root,3,PASS
+compat,migration,6,PASS
+compat,parallel,2,PASS
+compat,tc-bound,11,PASS
+compat,tk-bound,11,PASS
+primary,app-root,5,PASS
+primary,claim-key,5,PASS
+primary,cross,11,PASS
+primary,migration,6,PASS
+primary,tc-bound,11,PASS
+primary,tk-bound,11,PASS

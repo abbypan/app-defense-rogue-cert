@@ -1,0 +1,8 @@
+{
+  "cases": 98,
+  "policy_request_audits": 95,
+  "claim_only_rollback_probes": 3,
+  "expiration_bounds_rechecked": 4,
+  "staging_intervals_rechecked": 2,
+  "result": "PASS"
+}

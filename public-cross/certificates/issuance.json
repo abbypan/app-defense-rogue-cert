@@ -1,0 +1,23 @@
+{
+  "hostname": "cross.idouzi.top",
+  "address": "64.90.5.66",
+  "csr_sha256": "489304c40d1c4a9278a905fa91a62dedb12311eadab99ea8c7eadd0ca14634d9",
+  "created_utc": "2026-10-29T01:51:30.488194+00:00",
+  "certificate_kind": "same-CSR public-CA end-entity issuance; not a cross-signed intermediate",
+  "providers": {
+    "letsencrypt": {
+      "issuer": "CN=YE2,O=Let's Encrypt,C=US",
+      "subject": "CN=cross.idouzi.top",
+      "expires": "2027-01-27T00:33:51+00:00",
+      "leaf_sha256": "ee7c687cd5fb30017b589b5e6bd1a3462be1d2f91a85bc85db9616f137f3b191",
+      "spki_sha256": "3771f08e2e97aa7adaf4b582c51482a15cb7946f2a3b866ff663a18ddceb7c40"
+    },
+    "zerossl": {
+      "issuer": "CN=ZeroSSL ECC DV SSL CA 2,O=ZeroSSL GmbH,C=AT",
+      "subject": "CN=cross.idouzi.top",
+      "expires": "2027-01-27T23:59:59+00:00",
+      "leaf_sha256": "197fcd4314b3e03d643770ddc8421f78c3e07298903903c6b051d992edd5145d",
+      "spki_sha256": "3771f08e2e97aa7adaf4b582c51482a15cb7946f2a3b866ff663a18ddceb7c40"
+    }
+  }
+}

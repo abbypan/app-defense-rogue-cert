@@ -31,6 +31,8 @@ const ttl_four: ttl.
 
 const app_signing: bitstring.
 const other_app_signing: bitstring.
+const self_host_signing: bitstring.
+const other_self_host_signing: bitstring.
 const claim_signing: bitstring.
 const real_server: bitstring.
 const rogue_server: bitstring.
@@ -39,6 +41,7 @@ const rogue_server: bitstring.
 free c: channel.
 free cc: channel.
 free cs: channel.
+free cm: channel [private].
 
 (* Signature primitives. *)
 fun pk(skey): pkey.
@@ -59,6 +62,19 @@ fun package_signing_record(bitstring, pkey): bitstring [private].
 reduc forall app_id: bitstring, signing_key: pkey;
       resolve_os_key(
           package_signing_record(app_id, signing_key), app_id) = signing_key.
+
+(* Compatibility mode: an authenticated installed manifest binds a separate
+ * ASPin verification key to the package.  The binding and its local delivery
+ * remain OS-protected; public APIs never accept this key from the caller.
+ * The APK signature authenticates the manifest, including K_spub. No separate
+ * manifest-root archive or manifest-root lineage is assumed. *)
+const installed_app_version: bitstring.
+const updated_app_version: bitstring.
+fun app_manifest(bitstring, pkey, bitstring): bitstring [data].
+fun manifest_key_record(bitstring, pkey): bitstring [private].
+reduc forall app_id: bitstring, manifest_key: pkey;
+      resolve_manifest_key(
+          manifest_key_record(app_id, manifest_key), app_id) = manifest_key.
 
 (* X.509 and native TLS validation abstraction. real_cert_issuer and
  * rogue_cert_issuer denote the concrete hash-name-tagged identifiers of the
@@ -159,9 +175,10 @@ reduc forall subject_and_san: bitstring, issuer: bitstring;
 reduc forall subject_and_san: bitstring, issuer: bitstring;
       get_issuer(cert_claim(subject_and_san, issuer)) = issuer.
 
-(* General JWS JSON Serialization abstraction. The single-signature form has
- * one protected header/signature entry; the transition form below has two
- * entries over the same payload. T_k signs the delegated key, iat, and exp.
+(* General JWS JSON Serialization abstraction. The single-signature and dual
+ * forms remain convenient fixtures for existing traces, not signature-count
+ * limits. The list form below permits arbitrarily many entries over one
+ * payload. T_k signs the delegated key, iat, and exp.
  * T_c signs the certificate claim (including Subject/SAN), iat, and exp. *)
 fun jws_payload(bitstring, timestamp, timestamp): bitstring [data].
 reduc forall content: bitstring, iat: timestamp, exp: timestamp;
@@ -235,6 +252,48 @@ reduc forall h1: bitstring, h2: bitstring, content: bitstring,
                   h2, jws_payload(content, iat, exp)), sk2)),
           pk(sk2)) = true.
 
+(* General T_k arrays: no fixed list length or scan-depth bound. The private
+ * request is OS-internal, not a wire-level owner selector. Recursive Horn
+ * membership abstracts a search of the whole list, not its running time.
+ * Only an OS-selected context key enters the check. A matching kid alone is
+ * insufficient: the signature must cover this array's common payload.
+ * Byte limits, parsing costs, and scan termination/time are not modeled. *)
+type jws_signature_list.
+const jws_no_signatures: jws_signature_list [data].
+fun jws_signature_cons(bitstring, jws_signature_list): jws_signature_list [data].
+fun jws_signature_entry(bitstring, bitstring): bitstring [data].
+fun jws_signature_array(bitstring, jws_signature_list): bitstring [data].
+reduc forall header: bitstring, payload: bitstring, signing_key: skey;
+      jws_sign_entry(header, payload, signing_key) =
+      jws_signature_entry(header, sig_sign(jws_tosign(header, payload), signing_key)).
+free jws_signature_scan: channel [private].
+pred jws_array_member(bitstring, jws_signature_list) [memberOptim].
+clauses
+  forall entry: bitstring, tail: jws_signature_list;
+    jws_array_member(entry, jws_signature_cons(entry, tail));
+  forall entry: bitstring, head: bitstring, tail: jws_signature_list;
+    jws_array_member(entry, tail) ->
+    jws_array_member(entry, jws_signature_cons(head, tail)).
+
+let GeneralJwsSignatureScanner =
+  in(jws_signature_scan, (payload: bitstring, entries: jws_signature_list,
+      context_key: pkey, reply: channel));
+  let entry: bitstring suchthat jws_array_member(entry, entries) in
+  (
+    let jws_signature_entry(header: bitstring, signature: bitstring) = entry in
+    (
+      let (=true) = header_matches(header, context_key) in
+      (
+        let (=true) = sig_verify(jws_tosign(header, payload), signature, context_key) in
+          out(reply, true)
+        else out(reply, false)
+      )
+      else out(reply, false)
+    )
+    else out(reply, false)
+  )
+  else out(reply, false).
+
 (* Protocol and TLS events. *)
 event ClaimKeySign(
     skey, pkey, timestamp, timestamp).
@@ -257,3 +316,9 @@ event RollbackRejected(bitstring, timestamp, timestamp).
 event ExpiredTokenRejected(bitstring, timestamp, timestamp).
 event EmergencyTokenRevoked(bitstring, timestamp).
 event DualSigAppKeyVerify(pkey, pkey, pkey, timestamp, timestamp).
+event ManifestKeyBind(bitstring, pkey).
+event ManifestKeyResolve(bitstring, pkey).
+event AppManifestSigned(bitstring, pkey, pkey, bitstring).
+event AppManifestAuthenticated(bitstring, pkey, pkey, bitstring).
+event CompatClaimKeyVerify(
+    bitstring, pkey, pkey, timestamp, timestamp).

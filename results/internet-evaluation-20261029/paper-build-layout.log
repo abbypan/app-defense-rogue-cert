@@ -1,0 +1,13 @@
+python3 .build/latexrun.py -O . --latex-args="--shell-escape" paper_abstract-sigconf.tex
+/mnt/code/aspin/tex/.build/latexrun.py:1214: SyntaxWarning: "\w" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\w"? A raw string is also an option.
+  if lookingatre('(Package |Class |LaTeX |pdfTeX )?(\w+ )?warning: ', re.I):
+/mnt/code/aspin/tex/.build/latexrun.py:1353: SyntaxWarning: "\." is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\."? A raw string is also an option.
+  m2 = self.__lookingatre('l\.[0-9]+ ')
+/mnt/code/aspin/tex/.build/latexrun.py:1835: SyntaxWarning: "\d" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\d"? A raw string is also an option.
+  m2 = re.match("BibTeX subsystem: (.*?), line (\d+), (.*)$", m.group(1))
+acmart.cls: warning: [pdfmanagement] The loading of package hyperxmp is disabled. It is not compatible with the PDF management
+paper_abstract-sigconf.tex: warning: Unused global option(s):
+paper_appendix.tex:235: warning: Overfull \hbox (4.17497pt too wide) (page 19)
+paper_abstract-sigconf.tex: warning: extra `)' in log; file names may be wrong 
+paper_abstract-sigconf.tex: 44 underfull warnings not shown (use -Wall to show them)
+sigproc.bib:953: warning: empty address in rula2020leftbehind

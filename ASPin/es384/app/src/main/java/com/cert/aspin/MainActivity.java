@@ -796,14 +796,27 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         String benchmarkType = intent.getStringExtra("benchmark_type");
+        String requestedHost = intent.getStringExtra("target_hostname");
+        if (requestedHost != null && !requestedHost.trim().isEmpty()) {
+            updateHostDisplay(requestedHost.trim());
+        }
         int iterations = intent.getIntExtra("iterations", 2000);
         String csvPath = intent.getStringExtra("output_csv");
         intent.removeExtra("benchmark_type");
 
         if ("avgveriftime".equalsIgnoreCase(benchmarkType)) {
-            runTableAvgVerifTimeBenchmarkAuto(iterations, csvPath);
+            runExperimentRefreshBenchmark(iterations, csvPath);
         } else if ("avgvisittime".equalsIgnoreCase(benchmarkType)) {
-            runTableAvgVisitTimeBenchmarkAuto(iterations, csvPath);
+            runExperimentConnectionBenchmark(
+                    iterations, intent.getStringExtra("server_phase"), csvPath);
+        } else if ("schemecomparison".equalsIgnoreCase(benchmarkType)) {
+            SchemeComparisonBenchmark.start(this, getCurrentHost(), intent);
+        } else if ("rttcache".equalsIgnoreCase(benchmarkType)) {
+            RttCacheBenchmark.start(this, getCurrentHost(), intent);
+        } else if ("policyscenario".equalsIgnoreCase(benchmarkType)) {
+            PolicyScenarioBenchmark.start(this, getCurrentHost(), intent);
+        } else if ("crosssign".equalsIgnoreCase(benchmarkType)) {
+            CrossSignBenchmark.start(this, getCurrentHost(), intent);
         } else if ("concurrency".equalsIgnoreCase(benchmarkType)) {
             runConcurrencyBenchmarkAuto(iterations,
                     intent.getIntExtra("threads", 8), csvPath);
@@ -819,6 +832,39 @@ public class MainActivity extends AppCompatActivity {
         } else if ("expirybound".equalsIgnoreCase(benchmarkType)) {
             runDelegationExpiryBoundProbeAuto(csvPath);
         }
+    }
+
+    private void runExperimentRefreshBenchmark(int iterations, String csvPath) {
+        mainHandler.post(() -> responseTextView.setText(
+                "Running " + BuildConfig.BENCHMARK_MODE + " refresh benchmark..."));
+        new Thread(() -> {
+            try {
+                String report = ExperimentBenchmark.runRefresh(
+                        this, getCurrentHost(), iterations, csvPath);
+                mainHandler.post(() -> responseTextView.setText(report));
+            } catch (Exception e) {
+                Log.e(TAG, "Experiment refresh benchmark failed", e);
+                mainHandler.post(() -> responseTextView.setText(
+                        "Refresh benchmark failed: " + e.getMessage()));
+            }
+        }).start();
+    }
+
+    private void runExperimentConnectionBenchmark(
+            int iterations, String serverPhase, String csvPath) {
+        mainHandler.post(() -> responseTextView.setText(
+                "Running " + BuildConfig.BENCHMARK_MODE + " connection benchmark..."));
+        new Thread(() -> {
+            try {
+                String report = ExperimentBenchmark.runConnections(
+                        this, getCurrentHost(), iterations, serverPhase, csvPath);
+                mainHandler.post(() -> responseTextView.setText(report));
+            } catch (Exception e) {
+                Log.e(TAG, "Experiment connection benchmark failed", e);
+                mainHandler.post(() -> responseTextView.setText(
+                        "Connection benchmark failed: " + e.getMessage()));
+            }
+        }).start();
     }
 
     public void runTableAvgVerifTimeBenchmarkAuto(int maxAttempts, String csvPath) {
@@ -1132,15 +1178,16 @@ public class MainActivity extends AppCompatActivity {
                 String timestamp = new java.text.SimpleDateFormat(
                         "yyyy-MM-dd HH:mm:ss", Locale.ROOT).format(new java.util.Date());
                 boolean passed = successes.get() == operations;
-                String header = "Operations,Threads,Successes,Failures,Mean_ms,P50_ms,P95_ms,P99_ms,Throughput_ops_s,Result,Timestamp";
+                String header = "Operations,Threads,Successes,Failures,Mean_ms,P50_ms,P95_ms,P99_ms,Throughput_ops_s,Result,Timestamp,API,Hostname,TargetAppId";
                 String row = String.format(Locale.ROOT,
-                        "%d,%d,%d,%d,%.3f,%.3f,%.3f,%.3f,%.2f,%s,%s",
+                        "%d,%d,%d,%d,%.3f,%.3f,%.3f,%.3f,%.2f,%s,%s,%s,%s,%s",
                         operations, threads, successes.get(),
                         operations - successes.get(), meanMillis(durations),
                         percentileMillis(durations, 0.50),
                         percentileMillis(durations, 0.95),
                         percentileMillis(durations, 0.99), throughput,
-                        passed ? "PASS" : "FAIL", timestamp);
+                        passed ? "PASS" : "FAIL", timestamp,
+                        isOwnAspinTarget() ? "self" : "cross", host, ASPIN_TARGET_APP_ID);
                 saveCsvResult(csvPath, header, row);
             } catch (Exception e) {
                 Log.e(TAG, "Concurrency benchmark failed", e);

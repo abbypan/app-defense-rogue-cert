@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+pa2f2589fb235-primary-migration-next-before-overlap,com.cert.aspin,self,,protected,false,true,hot,1793245852512,1793245846000,1793245906000,0.000000,0.000000,4.095011,117.090576,true,false,policy_rejected,policy_rejected,PASS,"javax.net.ssl.SSLHandshakeException","Direct issuer CA certificate is not authorized by the authenticated ASPin claim"

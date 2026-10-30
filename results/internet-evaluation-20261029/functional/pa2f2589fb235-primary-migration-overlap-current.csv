@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+pa2f2589fb235-primary-migration-overlap-current,com.cert.aspin,self,,protected,true,true,two-token-refresh,1793245867283,1793245865000,1793245925000,151.215739,449.180624,607.607504,774.634644,true,true,accepted,accepted,PASS,"",""

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate generated ASPin artifacts against the token format in the paper."""
+"""Validate generated single-owner ASPin fixtures against the paper's format."""
 
 import argparse
 import base64
@@ -7,11 +7,15 @@ import hashlib
 import ipaddress
 import json
 import re
+import sys
 from pathlib import Path
 
 from cryptography import x509
 from cryptography.hazmat.primitives import serialization
 from jwcrypto import jwk, jws
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "signing"))
+from issuer_policy import direct_issuer_certificates
 
 
 ALGORITHMS = {
@@ -35,7 +39,7 @@ def decode_general(token_path):
     signatures = value["signatures"]
     if not isinstance(signatures, list) or len(signatures) != 1:
         raise ValueError(
-            f"{token_path}: ordinary publication requires one General JWS signature"
+            f"{token_path}: this single-owner fixture requires one General JWS signature"
         )
     signature = signatures[0]
     require_exact_keys(
@@ -184,6 +188,26 @@ def validate_variant(repo_root, variant):
     verify_jws(tk, signing_dir / "my-app-pubkey.pem")
     verify_jws(tc, signing_dir / "my-claim-pubkey.pem")
 
+    compat_path = signing_dir / "ClaimSigningKey.compat.jws"
+    compat, compat_header, compat_payload = decode_general(compat_path)
+    require_exact_keys(
+        compat_header, ("alg", "kid"), f"{variant} compatible T_k header"
+    )
+    require_exact_keys(
+        compat_payload, ("cnf", "iat", "exp"), f"{variant} compatible T_k payload"
+    )
+    require_exact_keys(
+        compat_payload["cnf"], ("jwk",), f"{variant} compatible T_k cnf"
+    )
+    require_interval(compat_payload, f"{variant} compatible T_k")
+    if compat_header["alg"] != expected_alg:
+        raise ValueError(f"{variant}: compatible T_k uses an unexpected JWS alg")
+    if compat_header["kid"] != key_id(signing_dir / "my-dcp-pubkey.pem"):
+        raise ValueError(f"{variant}: compatible T_k kid does not identify K_spub")
+    if canonical_public_jwk(compat_payload["cnf"]["jwk"]) != expected_claim_jwk:
+        raise ValueError(f"{variant}: compatible T_k cnf.jwk does not contain K_cpub")
+    verify_jws(compat, signing_dir / "my-dcp-pubkey.pem")
+
     app_certificate = x509.load_pem_x509_certificate(
         (signing_dir / "my-app-cert.pem").read_bytes()
     )
@@ -195,18 +219,19 @@ def validate_variant(repo_root, variant):
         raise ValueError(f"{variant}: APK certificate and T_k trust anchor differ")
 
     server_certificate = x509.load_pem_x509_certificate(server_cert_path.read_bytes())
-    issuer_certificate = first_pem_certificate(issuer_chain_path)
-    if server_certificate.issuer != issuer_certificate.subject:
-        raise ValueError(f"{variant}: first chain certificate is not the direct issuer")
-    server_certificate.verify_directly_issued_by(issuer_certificate)
-    expected_issuer = issuer_identifier(issuer_certificate)
+    issuer_certificates = direct_issuer_certificates(
+        server_certificate,
+        x509.load_pem_x509_certificates(issuer_chain_path.read_bytes()),
+    )
     issuers = tc_payload["issuer"]
     if not isinstance(issuers, list) or not issuers:
         raise ValueError(f"{variant}: T_c issuer must be a non-empty IssuerSet")
     for value in issuers:
         validate_issuer_identifier(value, variant)
-    if expected_issuer not in issuers:
-        raise ValueError(f"{variant}: T_c omits the server certificate IssuerId")
+    for issuer_certificate in issuer_certificates:
+        if not any(issuer_identifier(issuer_certificate, value.split(":", 1)[0]) == value
+                   for value in issuers):
+            raise ValueError(f"{variant}: T_c omits a supplied direct-issuer variant")
 
     sans = tc_payload["san"]
     if not isinstance(sans, list) or not sans or not all(
