@@ -105,6 +105,9 @@ android {
         main.java.srcDir "../../shared/src/main/java"
         main.res.srcDir "../../shared/src/main/res"
         test.java.srcDir "../../shared/src/test/java"
+        if (providers.gradleProperty("aspinScpResourceDir").isPresent()) {
+            scpBenchmark.res.setSrcDirs([providers.gradleProperty("aspinScpResourceDir").get()])
+        }
     }
 
     buildFeatures {

@@ -1,0 +1,1 @@
+{"default": {"claim_file": "ServerCertClaim.jws", "generation": "api-idle", "key_file": "ClaimSigningKey.primary.jws", "metadata_fault": "none", "mode": "primary", "phase": "real"}, "hosts": {}}

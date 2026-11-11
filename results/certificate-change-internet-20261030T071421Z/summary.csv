@@ -1,0 +1,16 @@
+scheme,phase,attempts,accepted,policy_rejected,expected,result
+TLS,real,20,20,0,accepted,PASS
+TLS,renewal,20,20,0,accepted,PASS
+TLS,rekey,20,20,0,accepted,PASS
+SCP,real,20,20,0,accepted,PASS
+SCP,renewal,20,20,0,accepted,PASS
+SCP,rekey,20,0,20,policy_rejected,PASS
+DCP,real,20,20,0,accepted,PASS
+DCP,renewal,20,20,0,accepted,PASS
+DCP,rekey,20,0,20,policy_rejected,PASS
+ASPin,real,20,20,0,accepted,PASS
+ASPin,renewal,20,20,0,accepted,PASS
+ASPin,rekey,20,20,0,accepted,PASS
+ASPin-compatible,real,20,20,0,accepted,PASS
+ASPin-compatible,renewal,20,20,0,accepted,PASS
+ASPin-compatible,rekey,20,20,0,accepted,PASS

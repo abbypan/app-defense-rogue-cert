@@ -43,10 +43,18 @@ def run(command, check=True):
     return subprocess.run(list(map(str, command)), check=check, capture_output=True, text=True).stdout
 
 
+def expected_outcome(scheme, phase):
+    if scheme not in MODES or phase not in ("real", "rogue", "renewal", "rekey"):
+        raise ValueError("Unknown scheme or certificate phase")
+    rejected = ((phase == "rogue" and scheme != "TLS")
+                or (phase == "rekey" and scheme in ("SCP", "DCP")))
+    return "policy_rejected" if rejected else "accepted"
+
+
 def validate(rows, cell, iterations, record_transport_failures=False):
     if len(rows) != iterations:
         raise ValueError("Missing comparison samples")
-    expected = "policy_rejected" if cell["phase"] == "rogue" and cell["scheme"] != "TLS" else "accepted"
+    expected = expected_outcome(cell["scheme"], cell["phase"])
     for sample, row in enumerate(rows, 1):
         for field, key in (("Algorithm", "algorithm"), ("Phase", "phase"), ("Cache", "cache")):
             if row.get(field) != cell[key]: raise ValueError("Incorrect comparison " + field)

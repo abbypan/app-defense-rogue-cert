@@ -36,7 +36,7 @@ def load_state(filename, hostname):
                 "claim_file": "ServerCertClaim.jws", "dcp_file": "DCPServerCertPin.jws",
                 "generation": "initial"}
     profile = defaults | profile
-    if profile["phase"] not in ("real", "rogue"):
+    if profile["phase"] not in ("real", "rogue", "renewal", "rekey"):
         raise ValueError("Unknown certificate phase")
     if profile["mode"] not in ("primary", "compat"):
         raise ValueError("Unknown token mode")

@@ -1,0 +1,147 @@
+{
+  "result": "PASS",
+  "cells": 15,
+  "attempts": 300,
+  "accepted": 260,
+  "policy_rejected": 40,
+  "unchanged_direct_issuer": true,
+  "unchanged_subject_san": true,
+  "unchanged_tokens": true,
+  "rows": [
+    {
+      "scheme": "TLS",
+      "phase": "real",
+      "attempts": 20,
+      "accepted": 20,
+      "policy_rejected": 0,
+      "expected": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scheme": "TLS",
+      "phase": "renewal",
+      "attempts": 20,
+      "accepted": 20,
+      "policy_rejected": 0,
+      "expected": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scheme": "TLS",
+      "phase": "rekey",
+      "attempts": 20,
+      "accepted": 20,
+      "policy_rejected": 0,
+      "expected": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scheme": "SCP",
+      "phase": "real",
+      "attempts": 20,
+      "accepted": 20,
+      "policy_rejected": 0,
+      "expected": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scheme": "SCP",
+      "phase": "renewal",
+      "attempts": 20,
+      "accepted": 20,
+      "policy_rejected": 0,
+      "expected": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scheme": "SCP",
+      "phase": "rekey",
+      "attempts": 20,
+      "accepted": 0,
+      "policy_rejected": 20,
+      "expected": "policy_rejected",
+      "result": "PASS"
+    },
+    {
+      "scheme": "DCP",
+      "phase": "real",
+      "attempts": 20,
+      "accepted": 20,
+      "policy_rejected": 0,
+      "expected": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scheme": "DCP",
+      "phase": "renewal",
+      "attempts": 20,
+      "accepted": 20,
+      "policy_rejected": 0,
+      "expected": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scheme": "DCP",
+      "phase": "rekey",
+      "attempts": 20,
+      "accepted": 0,
+      "policy_rejected": 20,
+      "expected": "policy_rejected",
+      "result": "PASS"
+    },
+    {
+      "scheme": "ASPin",
+      "phase": "real",
+      "attempts": 20,
+      "accepted": 20,
+      "policy_rejected": 0,
+      "expected": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scheme": "ASPin",
+      "phase": "renewal",
+      "attempts": 20,
+      "accepted": 20,
+      "policy_rejected": 0,
+      "expected": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scheme": "ASPin",
+      "phase": "rekey",
+      "attempts": 20,
+      "accepted": 20,
+      "policy_rejected": 0,
+      "expected": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "phase": "real",
+      "attempts": 20,
+      "accepted": 20,
+      "policy_rejected": 0,
+      "expected": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "phase": "renewal",
+      "attempts": 20,
+      "accepted": 20,
+      "policy_rejected": 0,
+      "expected": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "phase": "rekey",
+      "attempts": 20,
+      "accepted": 20,
+      "policy_rejected": 0,
+      "expected": "accepted",
+      "result": "PASS"
+    }
+  ]
+}

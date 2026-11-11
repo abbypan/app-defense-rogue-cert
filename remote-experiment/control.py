@@ -12,7 +12,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--state", type=Path, required=True)
     parser.add_argument("--host", default="all")
-    parser.add_argument("--phase", choices=("real", "rogue"))
+    parser.add_argument("--phase", choices=("real", "rogue", "renewal", "rekey"))
     parser.add_argument("--mode", choices=("primary", "compat"))
     parser.add_argument("--fault", choices=("none", "503", "timeout"))
     parser.add_argument("--key-file")

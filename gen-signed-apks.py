@@ -221,6 +221,8 @@ def main():
     parser.add_argument("--build-callers", action="store_true",
                         help="Also build ES256/ES384-signed callers for the full cached API matrix")
     parser.add_argument("--output-dir", default=str(default_output))
+    parser.add_argument("--scp-resource-dir", type=Path,
+                        help="Explicit SCP experiment resource overlay; other modes are unchanged")
     parser.add_argument("--sdk-root", help="Android SDK root containing build-tools/")
     parser.add_argument("--zipalign", help="Path to zipalign or zipalign.exe")
     parser.add_argument("--apksigner", help="Path to apksigner or apksigner.bat")
@@ -238,6 +240,8 @@ def main():
 
     modes = args.mode or ["primary"]
     variants = args.variant or VARIANTS
+    if args.scp_resource_dir and tuple(variants) != ("es256",):
+        parser.error("The certificate-change SCP resource overlay requires --variant es256")
     if any(mode.startswith("public-") for mode in modes) and tuple(variants) != ("es256",):
         parser.error("The public cross-CA test APKs require --variant es256")
     for variant in variants:
@@ -269,9 +273,15 @@ def main():
                 build_type, suffix = MODES[mode]
                 if not args.skip_build:
                     task = f":app:assemble{build_type[:1].upper()}{build_type[1:]}"
+                    properties = []
+                    if mode == "scp" and args.scp_resource_dir:
+                        resource = args.scp_resource_dir.expanduser().resolve()
+                        if not (resource / "xml/network_security_config.xml").is_file():
+                            raise SystemExit("SCP overlay must contain xml/network_security_config.xml")
+                        properties.append("-PaspinScpResourceDir=" + str(resource))
                     run_checked(
                         gradle_wrapper(variant_project_dir)
-                        + [f"--max-workers={args.workers}", task],
+                        + [f"--max-workers={args.workers}", *properties, task],
                         f"Gradle task {task} for {variant} ({mode})",
                         cwd=variant_project_dir,
                     )

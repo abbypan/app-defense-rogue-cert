@@ -14,6 +14,14 @@ public class RttBenchmarkChecksTest {
                     RttBenchmarkChecks.expectedOutcome(scheme, "rogue"));
         }
     }
+    @Test public void unchangedPolicyDuringCertificateChange() {
+        for (String scheme : new String[] {"TLS", "ASPin", "ASPin-compatible", "SCP", "DCP"}) {
+            assertEquals("accepted", RttBenchmarkChecks.expectedOutcome(scheme, "renewal"));
+            assertEquals("SCP".equals(scheme) || "DCP".equals(scheme)
+                            ? "policy_rejected" : "accepted",
+                    RttBenchmarkChecks.expectedOutcome(scheme, "rekey"));
+        }
+    }
     @Test public void timeoutIsNotPolicyRejection() {
         assertFalse(RttBenchmarkChecks.isPolicyRejection(new SocketTimeoutException(), "ASPin"));
         assertFalse(RttBenchmarkChecks.isPolicyRejection(

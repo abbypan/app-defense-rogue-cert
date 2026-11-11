@@ -3,8 +3,10 @@
 This document preserves the experimental details moved from Appendix E.
 It explains the fresh Internet cohort at
 `results/internet-evaluation-20261029/`, including a later complete cached-API
-session on the same ASPin image. The original robustness observations and the
-supplementary timing session remain separately archived. Functional lifecycle and cross-app cases are detailed in
+session on the same ASPin image, and the separately archived
+`results/certificate-change-internet-20261030T071421Z/` session. The original
+robustness observations, supplementary timing session, and certificate-change
+observations remain separate. Functional lifecycle and cross-app cases are detailed in
 [evaluation-scenarios.md](evaluation-scenarios.md).
 
 ## 1. Cohort and evidence
@@ -12,7 +14,10 @@ supplementary timing session remain separately archived. Functional lifecycle an
 The reported cohort uses the ASPin-flashed Pixel 8, Wi-Fi Internet, and a remote
 HTTPS endpoint. Policies were regenerated, experiment APKs rebuilt, and the
 connection, lifecycle, cross-app, public-CA, and API/robustness suites rerun for
-that cohort. No historical local measurements enter the tables or summaries.
+that cohort. A later certificate-change session uses the same flashed image
+and Internet endpoint, but new certificate fixtures and its own token pair,
+APKs, raw data, and evidence index. It does not replace old samples or alter
+the original matrix's 1,280-attempt total. No historical local measurements enter the tables or summaries.
 Raw observations, per-case request audits, public JWS fixtures, APK hashes,
 and `evidence-sha256.json` identify the evidence. The later `api-cache-matrix/`
 session supplies the complete API timing table; the original `api-robustness/`
@@ -30,6 +35,7 @@ The documented consistency/audit commands do not perform device measurements:
 
 ```sh
 python3 summarize-internet-evaluation.py results/internet-evaluation-20261029 --check-paper
+python3 summarize-certificate-change-results.py results/certificate-change-internet-20261030T071421Z --check-paper
 python3 check-implementation-consistency.py
 python3 -m unittest test_internet_evaluation.py
 ```
@@ -126,7 +132,8 @@ anchor, with independent state. Before compatible-mode measurement the phone
 reboots to clear volatile tokens without deleting highest-seen values. Ordinary
 cache hits then measure the manifest-rooted claim rather than a surviving
 app-rooted claim. The phone remains awake while powered. DNS and native TLS
-validation remain enabled. Every reported cell belongs to the same cohort.
+validation remain enabled. Every cell of the original connection matrix belongs
+to the same cohort; the certificate-change experiment is identified separately.
 
 ## 4. Rogue-profile connection matrix
 
@@ -233,5 +240,10 @@ clock tests exercise ordinary paths, not privileged rollback resistance.
 
 The bounded cached-key retry remains unmeasured. A separate isolated-link RTT
 matrix is prepared but unmeasured; the WAN observations do not instantiate
-those configured delays. Same-issuer leaf renewal and TLS-key replacement
-under an unchanged token pair remain device-untested.
+those configured delays. The later certificate-change session adds 300 actual
+Internet attempts across five configurations and three stages, with unchanged
+Subject/SAN and exact direct-issuer DER. Both ASPin modes accept all 20 attempts
+in each renewal/rekey stage with byte-identical tokens and no metadata fetches. This ES256
+session does not establish behavior for every CA's renewal path or other
+algorithm profiles, and its fixed-policy SCP/DCP refusals are not a full DCP
+lifecycle evaluation.

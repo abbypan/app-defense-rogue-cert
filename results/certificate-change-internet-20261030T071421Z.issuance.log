@@ -1,0 +1,54 @@
+Requesting public-CA renewal certificate
+letsencrypt/shared-csr: ISSUE; SAN=es256.idouzi.top
+Run directory: <private-acme-state>/runs/20261030T071422Z-2e7hnto0
+Saving debug log to <private-acme-state>/runs/20261030T071422Z-2e7hnto0/letsencrypt/shared-csr/certbot-logs/letsencrypt.log
+Requesting a certificate for es256.idouzi.top
+
+Successfully received certificate.
+Certificate is saved at:            <private-acme-state>/runs/20261030T071422Z-2e7hnto0/letsencrypt/shared-csr/cert.pem
+Intermediate CA chain is saved at:  <private-acme-state>/runs/20261030T071422Z-2e7hnto0/letsencrypt/shared-csr/chain.pem
+Full certificate chain is saved at: <private-acme-state>/runs/20261030T071422Z-2e7hnto0/letsencrypt/shared-csr/fullchain.pem
+This certificate expires on 2027-01-28.
+NEXT STEPS:
+- Certificates created using --csr will not be renewed automatically by Certbot. You will need to renew the certificate before it expires, by running the same Certbot command again.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+PASS letsencrypt/shared-csr; expires 2027-01-28T06:15:50+00:00
+Complete. Private keys unchanged; servers, A/CNAME records, JWS policies and APKs not modified.
+CSR mode does not configure automatic renewal; rerun this script before expiry.
+Requesting public-CA rekey certificate
+letsencrypt/shared-csr: ISSUE; SAN=es256.idouzi.top
+Run directory: <private-acme-state>/runs/20261030T071427Z-y45mdbbd
+Saving debug log to <private-acme-state>/runs/20261030T071427Z-y45mdbbd/letsencrypt/shared-csr/certbot-logs/letsencrypt.log
+Requesting a certificate for es256.idouzi.top
+
+Successfully received certificate.
+Certificate is saved at:            <private-acme-state>/runs/20261030T071427Z-y45mdbbd/letsencrypt/shared-csr/cert.pem
+Intermediate CA chain is saved at:  <private-acme-state>/runs/20261030T071427Z-y45mdbbd/letsencrypt/shared-csr/chain.pem
+Full certificate chain is saved at: <private-acme-state>/runs/20261030T071427Z-y45mdbbd/letsencrypt/shared-csr/fullchain.pem
+This certificate expires on 2027-01-28.
+NEXT STEPS:
+- Certificates created using --csr will not be renewed automatically by Certbot. You will need to renew the certificate before it expires, by running the same Certbot command again.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+PASS letsencrypt/shared-csr; expires 2027-01-28T06:15:56+00:00
+Complete. Private keys unchanged; servers, A/CNAME records, JWS policies and APKs not modified.
+CSR mode does not configure automatic renewal; rerun this script before expiry.
+Traceback (most recent call last):
+  File "/mnt/code/aspin/prepare-certificate-change.py", line 168, in <module>
+    main()
+    ~~~~^^
+  File "/mnt/code/aspin/prepare-certificate-change.py", line 158, in main
+    metadata.update(state="complete", certificates=inspect_fixtures(directory))
+                                                   ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/mnt/code/aspin/prepare-certificate-change.py", line 79, in inspect_fixtures
+    raise ValueError("Direct issuer DER differs: this is CA evolution, not certificate change")
+ValueError: Direct issuer DER differs: this is CA evolution, not certificate change

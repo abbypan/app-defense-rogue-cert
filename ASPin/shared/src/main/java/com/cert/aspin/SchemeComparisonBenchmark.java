@@ -44,7 +44,11 @@ public final class SchemeComparisonBenchmark {
             throw new IllegalArgumentException("Invalid comparison configuration");
         }
         boolean aspin = "ASPin".equals(scheme) || "ASPin-compatible".equals(scheme);
-        if ("hot".equals(cache)) {
+        boolean reuseCachedPolicy = intent.getBooleanExtra("reuse_cached_policy", false);
+        if (reuseCachedPolicy && (!aspin || !"hot".equals(cache))) {
+            throw new IllegalArgumentException("Only a hot ASPin run can reuse the OS claim cache");
+        }
+        if ("hot".equals(cache) && !reuseCachedPolicy) {
             if (aspin) OsAspinClient.refreshCertificateClaim(context, host);
             else requireExpected(observe(context, host, scheme, cache, label + "-preload"), expected);
         }

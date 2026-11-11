@@ -218,6 +218,96 @@ the API table while retaining the original robustness evidence. Incomplete or
 failed supplementary sessions block the audit rather than falling back to old
 timings. After updating the paper, rerun the auditor with `--check-paper`.
 
+### Certificate renewal and TLS-key replacement with unchanged policies
+
+This supplementary Internet experiment holds Subject/SAN and the **exact direct
+issuer CA certificate DER** constant across three distinct leaf certificates:
+baseline, same-key renewal, and TLS-key replacement. It compares native TLS,
+NSC SCP, independent NSC DCP, primary ASPin, and compatible ASPin on the
+ASPin-flashed Pixel 8. It does not build or flash AOSP, change DNS A records,
+reset protected state, or alter the clock.
+
+Choose a fresh directory. The certificate helper reuses the existing Certbot
+account and DNS-01 credentials; it does not register an account. It preserves
+the existing endpoint credentials and writes new fixtures only beneath the
+chosen directory. All private keys remain Git-ignored. Certificate acquisition,
+APK builds, and device measurements run as independent background services:
+
+```bash
+CERT_CHANGE_RUN=/mnt/code/aspin/results/certificate-change-internet-$(date -u +%Y%m%dT%H%M%SZ)
+systemd-run --user --unit="aspin-cert-change-issue-$(date -u +%Y%m%dT%H%M%SZ)" \
+  --property=WorkingDirectory=/mnt/code/aspin --property=UMask=0077 \
+  --property="StandardOutput=append:$CERT_CHANGE_RUN.issuance.log" \
+  --property=StandardError=inherit \
+  /usr/bin/python3 -u /mnt/code/aspin/prepare-certificate-change.py \
+  --output-dir "$CERT_CHANGE_RUN/certificates" --issue
+```
+
+Wait for `certificates/fixtures.json` to report `state: complete`. A public CA
+may select a different intermediate for an order. If the helper refuses the
+exact-issuer invariant, retain that failed attempt. Explicit bounded retries
+use the same directory with `--rekey-attempt 2`, then, only if needed,
+`--rekey-attempt 3`. The last option tries another TLS key and selects eligible
+certificates from the archived issuance pool **before** device testing. It
+never substitutes an issuer name or CA public key for certificate-DER equality.
+Stop if no eligible triplet is available; consider ACME rate limits before
+requesting another certificate. Do not rerun issuance against a completed run.
+
+After fixtures pass, build all four APKs. The generated SCP resource overlay
+pins the selected baseline leaf key; ordinary APK builds are unaffected.
+
+```bash
+systemd-run --user --unit="aspin-cert-change-build-$(date -u +%Y%m%dT%H%M%SZ)" \
+  --property=WorkingDirectory=/mnt/code/aspin \
+  --setenv=JAVA_HOME=/usr/lib/jvm/java-21-openjdk \
+  --property="StandardOutput=append:$CERT_CHANGE_RUN.build.log" \
+  --property=StandardError=inherit \
+  /usr/bin/python3 -u /mnt/code/aspin/gen-signed-apks.py \
+  --variant es256 --workers 24 \
+  --mode primary --mode scp --mode dcp --mode compatible \
+  --scp-resource-dir "$CERT_CHANGE_RUN/scp-res" \
+  --output-dir "$CERT_CHANGE_RUN/apks"
+```
+
+After the build succeeds, run the experiment with the existing isolated remote
+origin and an authorized, Internet-connected ASPin Pixel 8:
+
+```bash
+systemd-run --user --unit="aspin-cert-change-test-$(date -u +%Y%m%dT%H%M%SZ)" \
+  --property=WorkingDirectory=/mnt/code/aspin \
+  --property="StandardOutput=append:$CERT_CHANGE_RUN.benchmark.log" \
+  --property=StandardError=inherit \
+  /usr/bin/python3 -u /mnt/code/aspin/run-certificate-change-benchmark.py \
+  --deployment /mnt/code/aspin/results/remote-e2e-20261028/deployment.json \
+  --run-dir "$CERT_CHANGE_RUN" --iterations 20 --warmups 3
+```
+
+The runner holds one fresh, byte-identical ASPin token pair per root across
+the stages. Renewal and rekey cells reuse the baseline OS cache without forced
+preloading; audits require zero metadata downloads. SCP and DCP retain their
+baseline leaf-SPKI policies. Their rekey refusals mean those policies need a
+pin update, not that DCP cannot support key replacement. A normal reboot before
+compatible mode clears RAM tokens but preserves highest-seen state. Only test
+TLS keys and public policies are uploaded; policy-authority keys stay local.
+The original isolated server manifest, state, and code are restored on exit.
+
+Independent auditing requires no device or TLS private keys:
+
+```bash
+python3 summarize-certificate-change-results.py "$CERT_CHANGE_RUN" --check-paper
+```
+
+The completed session is
+`results/certificate-change-internet-20261030T071421Z/`: 15 cells and 300
+measured attempts, with 260 acceptances and 40 expected SCP/DCP rekey refusals.
+All configurations accept renewal; both ASPin modes also accept rekeying with
+unchanged tokens. Raw CSVs, public certificates/CSRs, unchanged signed policies,
+request audits, APK/source hashes, and an evidence index are retained. This
+fixed-order ES256 functional session supplements, rather than modifies, the
+original 1,280-attempt connection matrix. It is not a latency comparison.
+See [the scenario specification](spec/evaluation-scenarios.md) for selection
+invariants and evidence boundaries.
+
 ### Direct remote four-scheme comparison
 
 Use only a Pixel 8 running the newly built ASPin image (`ro.build.user=exp`),
@@ -384,14 +474,16 @@ on debuggable builds; they are not additional production query APIs.
 The reproducible AOSP patch bundle is in `aosp-aspin/`:
 
 - `base.xml` is the `android17-release` manifest. It pins the exact baseline
-  revisions of the two modified projects.
-- `patches.tar.zst` contains the `frameworks/base` and `system/sepolicy`
-  patches, a series file, and internal SHA-256 checksums.
+  revisions of the three modified projects.
+- `patches.tar.zst` contains the `frameworks/base`, `external/conscrypt`, and
+  `system/sepolicy` patches, a series file, source commit IDs, and internal
+  SHA-256 checksums. The patches include parallel app-signing/manifest ASPin
+  roots, native TLS token retrieval, and the independent NSC DCP verifier.
 - `apply.sh` verifies the archive, the project revisions, the cleanliness of
-  both worktrees, and `git apply --check` before modifying any source file.
+  all three worktrees, and `git apply --check` before modifying any source file.
 
 The patch set intentionally excludes unrelated local `build/soong` changes.
-Use a clean checkout; `apply.sh` refuses to run if either target project is at
+Use a clean checkout; `apply.sh` refuses to run if any target project is at
 the wrong revision or already contains local changes.
 
 The following example creates an AOSP checkout using the supplied baseline
@@ -425,7 +517,7 @@ Preflight and apply the patches:
 
 The preflight mode performs all checks without changing the checkout. A
 successful application leaves the ASPin changes as normal uncommitted Git
-changes in `frameworks/base` and `system/sepolicy`.
+changes in `frameworks/base`, `external/conscrypt`, and `system/sepolicy`.
 
 ### Building the patched OS image
 

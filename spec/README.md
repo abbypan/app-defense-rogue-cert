@@ -7,7 +7,7 @@ protocols, not additional proofs or Android experiments.
 - [Model setup, network attacks, cross-app use, cache, and fail-closed behavior](proverif-models.md)
 - [Certificate changes, migration, key rotation, and lifecycle boundaries](proverif-lifecycle.md)
 - [Evaluation controls, timing definitions, cache, and API robustness](evaluation-protocol.md)
-- [Cross-app, fail-closed, public-CA, migration, and key-rotation experiments](evaluation-scenarios.md)
+- [Cross-app, fail-closed, certificate-change, public-CA, migration, and key-rotation experiments](evaluation-scenarios.md)
 
 The document order follows the paper's Security Analysis and Evaluation. Model assumptions
 and the Android prototype gap remain stated in Appendix C; moving trace-level

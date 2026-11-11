@@ -1,0 +1,52 @@
+{
+  "state": "complete",
+  "created_utc": "2026-10-30T07:29:36.375672+00:00",
+  "hostname": "es256.idouzi.top",
+  "public_ca": "letsencrypt",
+  "new_account": false,
+  "dns_a_records_modified": false,
+  "selected_issuances": {
+    "real": "original",
+    "renewal": "same-key-renewal",
+    "rekey": "second-new-key"
+  },
+  "certificates": {
+    "real": {
+      "leaf_sha256": "5e5684c8ec31f195b7992569727494b87d4b2c60f539e4d2ab7af26627398971",
+      "serial": "564932211327874295649351624622048237147288",
+      "spki_sha256": "405433abeef82bfce44f5211995bf414269e913eb0335b9d802fab1764bae36f",
+      "subject": "CN=es256.idouzi.top",
+      "san": [
+        "es256.idouzi.top"
+      ],
+      "issuer_der_sha256": "a2372d06431e9716365eeed47ec020351497d182fcc038e457e58168a03cac07",
+      "not_before": "2026-10-28T05:31:52+00:00",
+      "not_after": "2027-01-26T05:31:51+00:00"
+    },
+    "renewal": {
+      "leaf_sha256": "88c44b55b9e85a5c2c09ab3adf2cbe1a15bfb80b8de44525455107a05a2cb87f",
+      "serial": "589531513520260600520478356577981269604700",
+      "spki_sha256": "405433abeef82bfce44f5211995bf414269e913eb0335b9d802fab1764bae36f",
+      "subject": "CN=es256.idouzi.top",
+      "san": [
+        "es256.idouzi.top"
+      ],
+      "issuer_der_sha256": "a2372d06431e9716365eeed47ec020351497d182fcc038e457e58168a03cac07",
+      "not_before": "2026-10-30T06:15:51+00:00",
+      "not_after": "2027-01-28T06:15:50+00:00"
+    },
+    "rekey": {
+      "leaf_sha256": "f54700a4f13892f96d1a79d8ab0a7a64d6b18cbe76cc7b3866d9d01f49d71cab",
+      "serial": "546620948337541838972207542848382936718261",
+      "spki_sha256": "5939cd29dedfb1cfa6d4b2befe30972c6233682f02af2ef383f94e4625733a5a",
+      "subject": "CN=es256.idouzi.top",
+      "san": [
+        "es256.idouzi.top"
+      ],
+      "issuer_der_sha256": "a2372d06431e9716365eeed47ec020351497d182fcc038e457e58168a03cac07",
+      "not_before": "2026-10-30T06:31:07+00:00",
+      "not_after": "2027-01-28T06:31:06+00:00"
+    }
+  },
+  "rekey_issuance_attempt": 3
+}

@@ -1,11 +1,12 @@
 # Functional Internet evaluation scenarios
 
-This document retains detailed procedures moved out of Appendix E. All results
-refer to the existing `results/internet-evaluation-20261029/` cohort, not new
-runs. General controls and timing definitions are in
+This document retains detailed procedures moved out of Appendix E. Results
+refer to `results/internet-evaluation-20261029/` and the separately archived
+`results/certificate-change-internet-20261030T071421Z/` session, not proposed
+measurements. General controls and timing definitions are in
 [evaluation-protocol.md](evaluation-protocol.md).
 
-The functional suite records pass/fail observations separately from latency
+The original functional suite records pass/fail observations separately from latency
 distributions. It uses the remote comparison's public-CA profiles and a fixed
 Subject/SAN partition. Transition claims have 60-second lifetimes. Real-time
 waits retain highest-seen state and do not advance the clock to bypass expiry.
@@ -46,7 +47,79 @@ migration probes leave the clock and protected state intact and use ordinary
 retrieval from public destinations. The observations show conditional
 fail-closed decisions, not availability under sustained suppression.
 
-## 3. Public-CA and ancestor cross-sign-chain checks
+## 3. Certificate renewal and TLS-key replacement
+
+### Fixture invariants
+
+This supplementary session uses one ES256 profile, a remote public-CA HTTPS
+endpoint, and the same ASPin image. Three distinct leaf certificates have
+identical Subject/SAN and exactly the same direct issuer CA certificate DER.
+The renewal leaf has a new serial and certificate fingerprint but the baseline
+TLS SPKI; the rekey leaf has a new serial, fingerprint, and TLS SPKI. Both CSRs
+and resulting certificates are retained. Native public trust, current validity,
+hostname, and local private-key correspondence are checked before deployment.
+
+The selected direct issuer is Let's Encrypt YE1. Two orders using the first
+new TLS key returned YE2 instead, so those certificates fail the exact-issuer
+invariant and are excluded from device testing. A second new TLS key produced
+an eligible YE1 certificate. The issuance pool and unsuccessful issuer-matching
+attempts remain archived. This eligibility selection occurs before device
+results exist; it does not choose outcomes. The experiment does not assume
+every future renewal preserves the direct CA certificate.
+
+### Policies and device procedure
+
+The runner generates one fresh signed `T_k` under each ASPin root and one shared
+`T_c`, authorizing the exact baseline issuer and signed server identity. Every
+serialized object remains byte-identical through baseline, renewal, and rekey.
+Both signed intervals cover the complete run. SCP's NSC overlay pins the selected
+baseline leaf SPKI, and independent NSC DCP retains an authenticated policy
+pinning that same SPKI. DCP downloads its identical policy once per staged cell;
+this is not a DCP pin-update experiment.
+
+Five configurations run in fixed order: native TLS, SCP, DCP, primary ASPin,
+and compatible ASPin. Each configuration visits baseline, renewal, then rekey,
+with three warmups and 20 measured new TLS connections per cell. Each attempt
+uses the native trust manager; no permissive trust manager is used. ASPin primes
+its cache only at baseline. Subsequent cells request ordinary cached claims
+without force-preloading; request audits require zero `T_k/T_c` transfers and
+rows require zero token-download timings. A normal reboot before compatible
+mode prevents the primary root's volatile entry from serving that group, while
+preserving protected highest-seen state. The test does not model or measure
+TLS resumption.
+
+The harness temporarily changes only the existing isolated test origin's
+certificate inventory and selected host profile. It verifies the endpoint's
+presented leaf and immutable remote policy hashes for every cell, records
+generation-tagged requests, and restores the original manifest, state, and
+origin code afterward. DNS, clocks, and protected rollback state remain intact;
+no app-signing, claim-signing, or manifest-root private key is uploaded.
+
+### Observations and independent audit
+
+All 300 measured attempts match expectations: 260 acceptances and 40 policy
+rejections. All five configurations accept baseline and same-key renewal.
+Native TLS and both ASPin modes accept rekeying; unchanged SCP and DCP SPKI
+policies reject all 20 rekey attempts each. An updated DCP pin could accept the
+new TLS key; that capability is not contradicted by these fixed-policy results.
+Each ASPin mode accepts all 20 renewal and 20 rekey attempts with no metadata
+fetch, supporting cached-policy continuity for this profile.
+
+Server audits contain exactly one tagged business HTTP request per measured
+acceptance and none per rejection. Warmups have separate tags and are excluded
+from the 300 measurements. A network error cannot count as policy refusal.
+`summarize-certificate-change-results.py` independently verifies raw rows,
+signed-policy contents and freshness throughout the run, certificate
+relationships, static NSC pin, request audits, and deployment restoration.
+It can operate without TLS private keys. Its evidence index excludes private
+keys and records public fixtures and observations. With `--check-paper` it
+also checks the appendix's accepted/attempts table against the audited rows.
+
+These are single-device, fixed-order functional observations, not latency
+rankings, a deployment-availability study, or coverage of all signature
+profiles. Existing CA-migration and key-rotation observations remain separate.
+
+## 4. Public-CA and ancestor cross-sign-chain checks
 
 ### Certificate acquisition and native paths
 
@@ -116,7 +189,7 @@ observations were reused. The harness restores the original app and leaves a
 fresh dual-issuer policy at the endpoint. These are functional observations,
 not latency distributions; timing tables use the separate connection matrix.
 
-## 4. CA migration
+## 5. CA migration
 
 | Window | Server/policy action | Expected observation |
 | --- | --- | --- |
@@ -136,7 +209,7 @@ does not redefine normal `w2` deployment as NewCert. This checks one server and
 one observed client, not distributed publication atomicity, OS enforcement of
 the deployment-profile maximum, or fleet-wide retirement.
 
-## 5. Claim-key rotation
+## 6. Claim-key rotation
 
 The experiment retains the policy root and changes the delegated key from
 P-256 to P-384. Each mode has five checks:
@@ -153,7 +226,7 @@ These probes force token retrieval. They do not measure the bounded cached-key
 refresh/retry path. The mixed-pair refusals are signature-policy outcomes, not
 network failures.
 
-## 6. App-signing-key and manifest-root changes
+## 7. App-signing-key and manifest-root changes
 
 ### Primary app-signing-key update
 
@@ -183,11 +256,12 @@ another under the manifest root. A cache-isolating reboot distinguishes the
 roots. These are two eligible authorities with independent state, not a
 two-signature requirement or cross-root rollback-floor transfer.
 
-## 7. Scope of the evidence
+## 8. Scope of the evidence
 
 Functional results are pass/fail observations, not latency distributions or
 guarantees for untested schedules. API/robustness timing and lifecycle evidence
 are separate. A single observed reboot, clock adjustment, or state transition
-does not establish privileged rollback resistance. Same-issuer renewal and
-TLS-key replacement with an unchanged pair remain device-untested, and exact
-direct-issuer cross-sign variants remain model/host-only.
+does not establish privileged rollback resistance. The separate ES256
+certificate-change session covers same-issuer renewal and TLS-key replacement
+with an unchanged pair; exact direct-issuer cross-sign variants remain
+model/host-only.

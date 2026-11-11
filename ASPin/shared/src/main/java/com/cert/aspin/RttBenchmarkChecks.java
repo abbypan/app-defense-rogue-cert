@@ -10,13 +10,14 @@ public final class RttBenchmarkChecks {
     private RttBenchmarkChecks() { }
 
     public static String expectedOutcome(String scheme, String phase) {
-        if (!"real".equals(phase) && !"rogue".equals(phase)) {
+        if (!Set.of("real", "rogue", "renewal", "rekey").contains(phase)) {
             throw new IllegalArgumentException("Unknown server phase");
         }
         if (!Set.of("TLS", "ASPin", "ASPin-compatible", "SCP", "DCP").contains(scheme)) {
             throw new IllegalArgumentException("Unknown scheme");
         }
-        return "rogue".equals(phase) && !"TLS".equals(scheme)
+        return ("rogue".equals(phase) && !"TLS".equals(scheme))
+                || ("rekey".equals(phase) && Set.of("SCP", "DCP").contains(scheme))
                 ? "policy_rejected" : "accepted";
     }
 
