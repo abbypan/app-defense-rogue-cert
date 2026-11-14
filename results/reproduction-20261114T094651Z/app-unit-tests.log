@@ -1,0 +1,17 @@
+Fresh unit tests: es256
+
+BUILD SUCCESSFUL in 4s
+92 actionable tasks: 92 executed
+Fresh unit tests: es384
+
+BUILD SUCCESSFUL in 4s
+92 actionable tasks: 92 executed
+Fresh unit tests: rsa3072
+
+BUILD SUCCESSFUL in 4s
+92 actionable tasks: 92 executed
+Fresh unit tests: rsa4096
+
+BUILD SUCCESSFUL in 4s
+92 actionable tasks: 92 executed
+All fresh app unit-test tasks passed.

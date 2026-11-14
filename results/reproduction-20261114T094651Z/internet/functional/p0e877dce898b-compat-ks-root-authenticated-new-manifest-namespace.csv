@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+p0e877dce898b-compat-ks-root-authenticated-new-manifest-namespace,com.cert.aspin,self,,protected,true,true,two-token-refresh,1794651848078,1794651825000,1794655425000,126.878662,85.840861,220.730143,382.511597,true,true,accepted,accepted,PASS,"",""

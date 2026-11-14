@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "hosts": {
+    "es256.idouzi.top": {
+      "algorithm": "es256",
+      "certificates": {
+        "real": {
+          "chain": "certificate-change-c62ec42d348c3/certificates/real/fullchain.pem",
+          "key": "certificate-change-c62ec42d348c3/certificates/real/tls-key.pem"
+        },
+        "rogue": {
+          "chain": "certificates/es256/rogue/fullchain.pem",
+          "key": "certificates/es256/rogue/tls-key.pem"
+        },
+        "renewal": {
+          "chain": "certificate-change-c62ec42d348c3/certificates/renewal/fullchain.pem",
+          "key": "certificate-change-c62ec42d348c3/certificates/renewal/tls-key.pem"
+        },
+        "rekey": {
+          "chain": "certificate-change-c62ec42d348c3/certificates/rekey/fullchain.pem",
+          "key": "certificate-change-c62ec42d348c3/certificates/rekey/tls-key.pem"
+        }
+      },
+      "tokens": "certificate-change-c62ec42d348c3/tokens"
+    },
+    "es384.idouzi.top": {
+      "algorithm": "es384",
+      "certificates": {
+        "real": {
+          "chain": "certificates/es384/real/fullchain.pem",
+          "key": "certificates/es384/real/tls-key.pem"
+        },
+        "rogue": {
+          "chain": "certificates/es384/rogue/fullchain.pem",
+          "key": "certificates/es384/rogue/tls-key.pem"
+        }
+      },
+      "tokens": "tokens/es384"
+    },
+    "rsa3072.idouzi.top": {
+      "algorithm": "rsa3072",
+      "certificates": {
+        "real": {
+          "chain": "certificates/rsa3072/real/fullchain.pem",
+          "key": "certificates/rsa3072/real/tls-key.pem"
+        },
+        "rogue": {
+          "chain": "certificates/rsa3072/rogue/fullchain.pem",
+          "key": "certificates/rsa3072/rogue/tls-key.pem"
+        }
+      },
+      "tokens": "tokens/rsa3072"
+    },
+    "rsa4096.idouzi.top": {
+      "algorithm": "rsa4096",
+      "certificates": {
+        "real": {
+          "chain": "certificates/rsa4096/real/fullchain.pem",
+          "key": "certificates/rsa4096/real/tls-key.pem"
+        },
+        "rogue": {
+          "chain": "certificates/rsa4096/rogue/fullchain.pem",
+          "key": "certificates/rsa4096/rogue/tls-key.pem"
+        }
+      },
+      "tokens": "tokens/rsa4096"
+    },
+    "dcp.idouzi.top": {
+      "algorithm": "dcp",
+      "certificates": {
+        "real": {
+          "chain": "certificates/dcp/real/fullchain.pem",
+          "key": "certificates/dcp/real/tls-key.pem"
+        }
+      },
+      "tokens": "tokens/dcp"
+    }
+  }
+}

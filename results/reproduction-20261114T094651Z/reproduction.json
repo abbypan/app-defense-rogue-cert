@@ -1,0 +1,204 @@
+{
+  "state": "complete",
+  "created_utc": "2026-11-14T09:48:00.725516+00:00",
+  "historical_measurements_reused": false,
+  "stages": [
+    {
+      "name": "configure-dns",
+      "state": "complete",
+      "started_utc": "2026-11-14T09:48:01.136691+00:00",
+      "returncode": 0,
+      "finished_utc": "2026-11-14T09:48:01.424270+00:00"
+    },
+    {
+      "name": "aosp-runtime-audit",
+      "state": "complete",
+      "started_utc": "2026-11-14T09:48:02.256803+00:00",
+      "returncode": 0,
+      "finished_utc": "2026-11-14T09:48:04.251496+00:00"
+    },
+    {
+      "name": "internet",
+      "state": "complete",
+      "started_utc": "2026-11-14T09:48:12.289133+00:00",
+      "returncode": 0,
+      "finished_utc": "2026-11-14T10:27:24.657678+00:00"
+    },
+    {
+      "name": "api-robustness",
+      "state": "complete",
+      "started_utc": "2026-11-14T10:27:24.657896+00:00",
+      "returncode": 0,
+      "finished_utc": "2026-11-14T10:42:41.377177+00:00"
+    },
+    {
+      "name": "audit-internet",
+      "state": "complete",
+      "started_utc": "2026-11-14T10:42:41.377459+00:00",
+      "returncode": 0,
+      "finished_utc": "2026-11-14T10:42:42.429275+00:00"
+    },
+    {
+      "name": "build-certificate-change",
+      "state": "complete",
+      "started_utc": "2026-11-14T10:42:42.460688+00:00",
+      "returncode": 0,
+      "finished_utc": "2026-11-14T10:42:48.958966+00:00"
+    },
+    {
+      "name": "certificate-change",
+      "state": "complete",
+      "started_utc": "2026-11-14T10:42:48.959265+00:00",
+      "returncode": 0,
+      "finished_utc": "2026-11-14T10:47:41.287445+00:00"
+    },
+    {
+      "name": "audit-certificate-change",
+      "state": "complete",
+      "started_utc": "2026-11-14T10:47:41.287722+00:00",
+      "returncode": 0,
+      "finished_utc": "2026-11-14T10:47:41.442126+00:00"
+    }
+  ],
+  "workers": 24,
+  "dns_server_override": "8.8.8.8",
+  "git_revision": "ab6ddab3c92964f40ba3f96c4dd746d4d90fa39f",
+  "python_version": "3.14.10",
+  "python_packages": {
+    "cryptography": "50.0.2",
+    "jwcrypto": "1.6.1"
+  },
+  "certificate_fixture_origin": "certificate-fixtures/renewal-rekey",
+  "certificate_fixtures_preflight": {
+    "real": {
+      "leaf_sha256": "5e5684c8ec31f195b7992569727494b87d4b2c60f539e4d2ab7af26627398971",
+      "serial": "564932211327874295649351624622048237147288",
+      "spki_sha256": "405433abeef82bfce44f5211995bf414269e913eb0335b9d802fab1764bae36f",
+      "subject": "CN=es256.idouzi.top",
+      "san": [
+        "es256.idouzi.top"
+      ],
+      "issuer_der_sha256": "a2372d06431e9716365eeed47ec020351497d182fcc038e457e58168a03cac07",
+      "not_before": "2026-10-28T05:31:52+00:00",
+      "not_after": "2027-01-26T05:31:51+00:00"
+    },
+    "renewal": {
+      "leaf_sha256": "88c44b55b9e85a5c2c09ab3adf2cbe1a15bfb80b8de44525455107a05a2cb87f",
+      "serial": "589531513520260600520478356577981269604700",
+      "spki_sha256": "405433abeef82bfce44f5211995bf414269e913eb0335b9d802fab1764bae36f",
+      "subject": "CN=es256.idouzi.top",
+      "san": [
+        "es256.idouzi.top"
+      ],
+      "issuer_der_sha256": "a2372d06431e9716365eeed47ec020351497d182fcc038e457e58168a03cac07",
+      "not_before": "2026-10-30T06:15:51+00:00",
+      "not_after": "2027-01-28T06:15:50+00:00"
+    },
+    "rekey": {
+      "leaf_sha256": "f54700a4f13892f96d1a79d8ab0a7a64d6b18cbe76cc7b3866d9d01f49d71cab",
+      "serial": "546620948337541838972207542848382936718261",
+      "spki_sha256": "5939cd29dedfb1cfa6d4b2befe30972c6233682f02af2ef383f94e4625733a5a",
+      "subject": "CN=es256.idouzi.top",
+      "san": [
+        "es256.idouzi.top"
+      ],
+      "issuer_der_sha256": "a2372d06431e9716365eeed47ec020351497d182fcc038e457e58168a03cac07",
+      "not_before": "2026-10-30T06:31:07+00:00",
+      "not_after": "2027-01-28T06:31:06+00:00"
+    }
+  },
+  "runtime": {
+    "image_sha256": "b59683f92f70def862b84101af6cb43adef6700940cca9d02f46a45adaf8a972",
+    "image_bytes": 1703751680,
+    "build_properties": {
+      "ro.build.fingerprint": "Android/gsi_arm64/generic_arm64:Baklava/CP2A.260605.016/eng.exp:userdebug/test-keys",
+      "ro.build.user": "exp",
+      "ro.build.date.utc": "1793194997",
+      "ro.build.version.incremental": "eng.exp",
+      "ro.boot.slot_suffix": "_a"
+    },
+    "components": {
+      "/system/apex/com.android.conscrypt.capex": "9fd35a215d285ad64cab36fb555b161cde6b686047802af349c3376c11cccce0",
+      "/system/build.prop": "bc01279d0d651965350c445301779bccc873cfff75d75db7a150a0f79615b7be",
+      "/system/etc/selinux/plat_sepolicy.cil": "61320e4fcd9a7836975ce6e9b6d0c77b50e0421ad7be54869313e4170ed00069",
+      "/system/etc/selinux/plat_service_contexts": "3bbf85ff0e144030aa50c4bb1c176431cd227c3785145eb56f23a1e2214ae173",
+      "/system/framework/framework.jar": "23ed32de47c084517f308a2fff644e58f6ef345e7749bb199a694a2e9308fa1f",
+      "/system/framework/services.jar": "5698e4a17d693e06a99d0096f38233a7ed215b34f1beec9f40d37addee9c788d",
+      "/system/product/etc/build.prop": "430435b0b1e6b66a6a65920f08afbe50cccf73c59cb107e6e6291b03f80340ca"
+    },
+    "system_partition": "/dev/block/mapper/system_a",
+    "installed_image_prefix_sha256": "b59683f92f70def862b84101af6cb43adef6700940cca9d02f46a45adaf8a972"
+  },
+  "runtime_source_sha256": {
+    "runtime-source/frameworks/base/services/java/com/android/server/SystemServer.java": "fb8d3157e28eb711dae9e9c7765122b76c38356e297b5d9c23fb3361ab6e1b6e",
+    "runtime-source/frameworks/base/services/core/java/com/android/server/aspin/AspinService.java": "2fd9fb2bd954e624219d7715995733a7794aa344ad5777dcce91bee579b92d37",
+    "runtime-source/frameworks/base/core/api/current.txt": "c79d76047614a6aa2b227122ff6020136380858dd8e27320d78cd0f47610f7b1",
+    "runtime-source/frameworks/base/core/java/android/content/Context.java": "227e8aa147bd29fe66610ef4d3ffba8a8e4d7957249d03d74b2eebb798bbca85",
+    "runtime-source/frameworks/base/core/java/android/app/SystemServiceRegistry.java": "57345127f130b82b743aa01e460a5c0f8ed05a62b1d47016694a43379ced6a74",
+    "runtime-source/frameworks/base/core/java/android/security/flags.aconfig": "6cb0f152014497aeef937ff436f1b7ed0d096480c7dfe85502e419808abce46b",
+    "runtime-source/frameworks/base/core/java/android/security/aspin/AspinCertificateClaim.aidl": "7ecbc006357d2688bf93cf5686149a250d3a6246e2e0b6bd588f4a7e48b186f4",
+    "runtime-source/frameworks/base/core/java/android/security/aspin/AspinManager.java": "bbbd1c5c0eb0abfd7ec30934e701e04f2931afd7feedfc7cc57d3bf5f26370bd",
+    "runtime-source/frameworks/base/core/java/android/security/aspin/AspinCertificateClaim.java": "1cf954bf7061b610fb4b2b4140b62f32a010dccdc9380bdd823448f73f1ce8da",
+    "runtime-source/frameworks/base/core/java/android/security/aspin/IAspinService.aidl": "d1dc1c70b02be6acd24d86e045648507573e6131f96565faa47763bb881993a1",
+    "runtime-source/frameworks/base/packages/NetworkSecurityConfig/platform/src/android/security/net/config/NetworkSecurityConfig.java": "2eb65af017eb7bff48f047744d77030984b72cb36c7aa417d3ee1a131ddc7231",
+    "runtime-source/frameworks/base/packages/NetworkSecurityConfig/platform/src/android/security/net/config/XmlConfigSource.java": "131b8e2bb6c2e9918dc76bdd279b12698cd77853652264a5f94ff698f90e0974",
+    "runtime-source/frameworks/base/packages/NetworkSecurityConfig/platform/src/android/security/net/config/NetworkSecurityTrustManager.java": "721d448f4e3b32de345f4682f3c07cf7c29573696d2b38c9065184a6a519abdc",
+    "runtime-source/frameworks/base/packages/NetworkSecurityConfig/platform/src/android/security/net/config/DcpPinningVerifier.java": "5f63d64ab254d111f9c29ab69ea898be38c4b78ce77f69b538011f1626114c21",
+    "runtime-source/system/sepolicy/private/service_contexts": "3b5b1f806f78cca3e95bce337e91d5a4530d8a458f7aa9973cddd85e6254c6ea",
+    "runtime-source/system/sepolicy/private/service.te": "99fcc3ef7bbb9b01bda6c2d40a7ab1dbddba25583c98c1017921e63745916a60",
+    "runtime-source/external/conscrypt/nsc/src/android/security/net/config/NetworkSecurityConfig.java": "c1ef0011ef9e4868ca3ec922c148f3b5e5dc5e67cd68adf1f0acfc379c78817b",
+    "runtime-source/external/conscrypt/nsc/src/android/security/net/config/XmlConfigSource.java": "8f6be1c00c400607dcb9370151fc3426f577a54b61cdabe8776f1112b92a2d42",
+    "runtime-source/external/conscrypt/nsc/src/android/security/net/config/NetworkSecurityTrustManager.java": "f769ceba51720cb51b11dfb194fb1c6febe5ad4b07b3101df7c8538e39ef39f8",
+    "runtime-source/external/conscrypt/nsc/src/android/security/net/config/DcpPinningVerifier.java": "5e233bf70969febcff1c08d22fee9405192cd71f9e71a52a40579452834f52e5",
+    "aosp-aspin/base.xml": "d20be480a07ea868b313af610dc757eb39715c5ae6f097f1f92fe18c2af171ed",
+    "aosp-aspin/apply.sh": "db83f64dec64af04c28417e4e27d50f87feff1db0d32367fb1f5d1026f32b318",
+    "aosp-aspin/experiment-code.json": "4f75cb50de368b6d9acc7b2406040cec3ef1489df46abb5b50591c991ddb5997",
+    "aosp-aspin/patches.tar.zst": "d7cdd8ca02891e980021eb8b5251d4731515f70f2b2b313469d541723c8276b2",
+    "aosp-aspin/check-experiment-code.py": "2552f53a8f854e856ab7584915706d8d55c139c1526c254fe533739f3c5ff1a0"
+  },
+  "certificate_fixture_sha256": {
+    "real": {
+      "leaf_sha256": "5e5684c8ec31f195b7992569727494b87d4b2c60f539e4d2ab7af26627398971",
+      "serial": "564932211327874295649351624622048237147288",
+      "spki_sha256": "405433abeef82bfce44f5211995bf414269e913eb0335b9d802fab1764bae36f",
+      "subject": "CN=es256.idouzi.top",
+      "san": [
+        "es256.idouzi.top"
+      ],
+      "issuer_der_sha256": "a2372d06431e9716365eeed47ec020351497d182fcc038e457e58168a03cac07",
+      "not_before": "2026-10-28T05:31:52+00:00",
+      "not_after": "2027-01-26T05:31:51+00:00"
+    },
+    "renewal": {
+      "leaf_sha256": "88c44b55b9e85a5c2c09ab3adf2cbe1a15bfb80b8de44525455107a05a2cb87f",
+      "serial": "589531513520260600520478356577981269604700",
+      "spki_sha256": "405433abeef82bfce44f5211995bf414269e913eb0335b9d802fab1764bae36f",
+      "subject": "CN=es256.idouzi.top",
+      "san": [
+        "es256.idouzi.top"
+      ],
+      "issuer_der_sha256": "a2372d06431e9716365eeed47ec020351497d182fcc038e457e58168a03cac07",
+      "not_before": "2026-10-30T06:15:51+00:00",
+      "not_after": "2027-01-28T06:15:50+00:00"
+    },
+    "rekey": {
+      "leaf_sha256": "f54700a4f13892f96d1a79d8ab0a7a64d6b18cbe76cc7b3866d9d01f49d71cab",
+      "serial": "546620948337541838972207542848382936718261",
+      "spki_sha256": "5939cd29dedfb1cfa6d4b2befe30972c6233682f02af2ef383f94e4625733a5a",
+      "subject": "CN=es256.idouzi.top",
+      "san": [
+        "es256.idouzi.top"
+      ],
+      "issuer_der_sha256": "a2372d06431e9716365eeed47ec020351497d182fcc038e457e58168a03cac07",
+      "not_before": "2026-10-30T06:31:07+00:00",
+      "not_after": "2027-01-28T06:31:06+00:00"
+    }
+  },
+  "finished_utc": "2026-11-14T10:47:41.446503+00:00",
+  "post_run_audit_sha256": {
+    "post-run-audit/experiment-code.json": "e3d2f8af1c62643dee75239e829d989f48e3f979144d10fde6cfe05082f3e6db",
+    "post-run-audit/check-experiment-code.py": "2552f53a8f854e856ab7584915706d8d55c139c1526c254fe533739f3c5ff1a0",
+    "post-run-audit/refresh-experiment-evidence.py": "971ffd35a92e02c746eaebbfcbe4024e7a30634887943e374e1217a879d64827"
+  },
+  "post_run_reference_refresh_utc": "2026-11-14T10:50:52.193766+00:00"
+}

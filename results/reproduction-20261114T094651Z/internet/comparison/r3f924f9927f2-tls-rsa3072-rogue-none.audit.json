@@ -1,0 +1,26 @@
+{
+  "business_requests": 20,
+  "expected_business_requests": 20,
+  "measured_tags": [
+    "r3f924f9927f2-tls-rsa3072-rogue-none-1",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-10",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-11",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-12",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-13",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-14",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-15",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-16",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-17",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-18",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-19",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-2",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-20",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-3",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-4",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-5",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-6",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-7",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-8",
+    "r3f924f9927f2-tls-rsa3072-rogue-none-9"
+  ]
+}

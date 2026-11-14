@@ -1,2 +1,0 @@
-Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
-p4886d9f3e9b9-primary-app-root-latest-installed-target-cross-query,com.cert.aspin.caller,cross,com.cert.aspin,protected,true,true,two-token-refresh,1794639074232,1794639069000,1794642669000,125.317139,80.433431,213.478068,385.824911,true,true,accepted,accepted,PASS,"",""

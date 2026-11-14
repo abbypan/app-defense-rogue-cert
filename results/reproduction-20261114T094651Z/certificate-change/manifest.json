@@ -1,0 +1,230 @@
+{
+  "state": "complete",
+  "run_id": "c62ec42d348c3",
+  "created_utc": "2026-11-14T10:43:09.965967+00:00",
+  "device_fingerprint": "Android/gsi_arm64/generic_arm64:Baklava/CP2A.260605.016/eng.exp:userdebug/test-keys",
+  "transport": "Pixel 8 Wi-Fi Internet to public-CA HTTPS origin",
+  "hostname": "es256.idouzi.top",
+  "iterations": 20,
+  "warmups": 3,
+  "certificates": {
+    "real": {
+      "leaf_sha256": "5e5684c8ec31f195b7992569727494b87d4b2c60f539e4d2ab7af26627398971",
+      "serial": "564932211327874295649351624622048237147288",
+      "spki_sha256": "405433abeef82bfce44f5211995bf414269e913eb0335b9d802fab1764bae36f",
+      "subject": "CN=es256.idouzi.top",
+      "san": [
+        "es256.idouzi.top"
+      ],
+      "issuer_der_sha256": "a2372d06431e9716365eeed47ec020351497d182fcc038e457e58168a03cac07",
+      "not_before": "2026-10-28T05:31:52+00:00",
+      "not_after": "2027-01-26T05:31:51+00:00"
+    },
+    "renewal": {
+      "leaf_sha256": "88c44b55b9e85a5c2c09ab3adf2cbe1a15bfb80b8de44525455107a05a2cb87f",
+      "serial": "589531513520260600520478356577981269604700",
+      "spki_sha256": "405433abeef82bfce44f5211995bf414269e913eb0335b9d802fab1764bae36f",
+      "subject": "CN=es256.idouzi.top",
+      "san": [
+        "es256.idouzi.top"
+      ],
+      "issuer_der_sha256": "a2372d06431e9716365eeed47ec020351497d182fcc038e457e58168a03cac07",
+      "not_before": "2026-10-30T06:15:51+00:00",
+      "not_after": "2027-01-28T06:15:50+00:00"
+    },
+    "rekey": {
+      "leaf_sha256": "f54700a4f13892f96d1a79d8ab0a7a64d6b18cbe76cc7b3866d9d01f49d71cab",
+      "serial": "546620948337541838972207542848382936718261",
+      "spki_sha256": "5939cd29dedfb1cfa6d4b2befe30972c6233682f02af2ef383f94e4625733a5a",
+      "subject": "CN=es256.idouzi.top",
+      "san": [
+        "es256.idouzi.top"
+      ],
+      "issuer_der_sha256": "a2372d06431e9716365eeed47ec020351497d182fcc038e457e58168a03cac07",
+      "not_before": "2026-10-30T06:31:07+00:00",
+      "not_after": "2027-01-28T06:31:06+00:00"
+    }
+  },
+  "policy_sha256": {
+    "ClaimSigningKey.primary.jws": "353e86120c110d40c69a2ef1b50f44e3de74adc04497b3d24162eb52f2f0f314",
+    "ServerCertClaim.jws": "074ec0c817298b24dafcf676a30415a1e59bf42cb2bc7c314483a2afc33fcd4e",
+    "ClaimSigningKey.compat.jws": "13b452a5eb1c267e8510a211f01ea9b61547e25f741a21820c7bddb76f65043c",
+    "DCPServerCertPin.jws": "91b33a9e9c7e2108f36717b6107e2c7441c5ee5492fe95039fb6a60c6c718c88"
+  },
+  "cells": [
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "phase": "real",
+      "cache": "none",
+      "algorithm": "es256",
+      "scenario": "c62ec42d348c3-tls-real",
+      "reuse_cached_policy": false
+    },
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "phase": "renewal",
+      "cache": "none",
+      "algorithm": "es256",
+      "scenario": "c62ec42d348c3-tls-renewal",
+      "reuse_cached_policy": false
+    },
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "phase": "rekey",
+      "cache": "none",
+      "algorithm": "es256",
+      "scenario": "c62ec42d348c3-tls-rekey",
+      "reuse_cached_policy": false
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "phase": "real",
+      "cache": "static",
+      "algorithm": "es256",
+      "scenario": "c62ec42d348c3-scp-real",
+      "reuse_cached_policy": false
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "phase": "renewal",
+      "cache": "static",
+      "algorithm": "es256",
+      "scenario": "c62ec42d348c3-scp-renewal",
+      "reuse_cached_policy": false
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "phase": "rekey",
+      "cache": "static",
+      "algorithm": "es256",
+      "scenario": "c62ec42d348c3-scp-rekey",
+      "reuse_cached_policy": false
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "phase": "real",
+      "cache": "hot",
+      "algorithm": "es256",
+      "scenario": "c62ec42d348c3-dcp-real",
+      "reuse_cached_policy": false
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "phase": "renewal",
+      "cache": "hot",
+      "algorithm": "es256",
+      "scenario": "c62ec42d348c3-dcp-renewal",
+      "reuse_cached_policy": false
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "phase": "rekey",
+      "cache": "hot",
+      "algorithm": "es256",
+      "scenario": "c62ec42d348c3-dcp-rekey",
+      "reuse_cached_policy": false
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "phase": "real",
+      "cache": "hot",
+      "algorithm": "es256",
+      "scenario": "c62ec42d348c3-aspin-real",
+      "reuse_cached_policy": false
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "phase": "renewal",
+      "cache": "hot",
+      "algorithm": "es256",
+      "scenario": "c62ec42d348c3-aspin-renewal",
+      "reuse_cached_policy": true
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "phase": "rekey",
+      "cache": "hot",
+      "algorithm": "es256",
+      "scenario": "c62ec42d348c3-aspin-rekey",
+      "reuse_cached_policy": true
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "phase": "real",
+      "cache": "hot",
+      "algorithm": "es256",
+      "scenario": "c62ec42d348c3-aspin-compatible-real",
+      "reuse_cached_policy": false
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "phase": "renewal",
+      "cache": "hot",
+      "algorithm": "es256",
+      "scenario": "c62ec42d348c3-aspin-compatible-renewal",
+      "reuse_cached_policy": true
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "phase": "rekey",
+      "cache": "hot",
+      "algorithm": "es256",
+      "scenario": "c62ec42d348c3-aspin-compatible-rekey",
+      "reuse_cached_policy": true
+    }
+  ],
+  "completed_cells": 15,
+  "scope": "ES256 functional observations, fixed order; not a latency comparison",
+  "protected_state_reset": false,
+  "clock_changed": false,
+  "dns_records_changed": false,
+  "dns_server_override": "8.8.8.8",
+  "scp_resource_sha256": "790108a6203b6e699c39e78735a455fa62523795d086e697833bb67c686fca60",
+  "source_sha256": {
+    "run-certificate-change-benchmark.py": "5d7c1c14edc02accde59c79e37dc241166d1adf2c81156d1c8015719387c9c5b",
+    "prepare-certificate-change.py": "88c1c35cbf05b06a8ebfca776043ad77657c757bbd0c2b333b97367b4d1519d3",
+    "remote-experiment/server.py": "31cb145ce8462f990368d3c59dad3a7c12b3bd94dd56335c24a849bbc6b7ba21",
+    "remote-experiment/control.py": "8ab9218b54054a4bd15e27d782cee41844c19c4381be6b6436a7e45e669c07b4",
+    "ASPin/shared/src/main/java/com/cert/aspin/SchemeComparisonBenchmark.java": "7900c56f7fba274ce05a02b2aa0dfd8834da016a5aa6efde5c2821a0a72e145c",
+    "ASPin/shared/src/main/java/com/cert/aspin/RttBenchmarkChecks.java": "e43fa6de4e9a2ca60f78c75e42b0af56994c03a2df74d0f87d82cabb2f397201"
+  },
+  "apk_sha256": {
+    "ASPin-es256-compatible.apk": "da4967667ae42543562217d895ac76c24e5ef1fe46e573826c68f0fc86fa577c",
+    "ASPin-es256.apk": "d4149f14a81c6e5a381ce928962a5fc405d4c7fe9809c7148da943f39e9fdbd4",
+    "ASPin-es256-scp.apk": "306650f09840cc201b88d7d776bd7b2157a8fc644421d1dbbd30edae7dc8b10c",
+    "ASPin-es256-dcp.apk": "805547908b0bb03d60e903c431df4f01686ae20ceaa504df237445814a68e028"
+  },
+  "server_since": "2026-11-14T10:42:12Z",
+  "deployment_restored": true,
+  "finished_utc": "2026-11-14T10:47:41.121813+00:00"
+}

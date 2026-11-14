@@ -1,0 +1,2 @@
+Label,ForceRefresh,ExpectedSuccess,ObservedSuccess,ExpectedErrorSubstring,ReasonMatch,Total_ms,Tk_ms,Tc_ms,Result,Error,Timestamp
+a0eebf22a7131-compat-reboot-current,true,true,true,"",true,180.336,81.035,91.148,PASS,"",2026-11-14 18:42:06

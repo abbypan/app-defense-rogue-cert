@@ -10,4 +10,9 @@ keytool -exportcert -alias my_dcp -keystore my-dcp-key.keystore -storetype PKCS1
 
 openssl x509 -in my-dcp-cert.pem -pubkey -noout > my-dcp-pubkey.pem
 
+# Export DER SPKI as hex for NSC DCP and ASPin-compatible manifest roots.
+openssl pkey -pubin -in my-dcp-pubkey.pem -outform DER |
+  od -An -v -tx1 | tr -d '[:space:]' > my-dcp-pub.txt
+printf '\n' >> my-dcp-pub.txt
+
 python3 rsapub2jwk.py my-dcp-pubkey.pem > my-dcp-pubkey.jwk

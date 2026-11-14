@@ -1,2 +1,0 @@
-Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
-p4886d9f3e9b9-primary-claim-key-matching-new,com.cert.aspin,self,,protected,true,true,two-token-refresh,1794639036944,1794639029000,1794642629000,133.061930,89.958293,232.166260,394.523723,true,true,accepted,accepted,PASS,"",""

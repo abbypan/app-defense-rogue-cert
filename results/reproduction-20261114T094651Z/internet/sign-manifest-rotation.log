@@ -1,0 +1,21 @@
+> zipalign for es256 (compatible)
+> APK signing for es256 (compatible)
+> APK verification for es256 (compatible)
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=APP, OU=Dev, O=MyCompany, L=City, ST=State, C=CN
+Signer #1 certificate SHA-256 digest: bb84932447c40f59859bf7be4592b53db0a1f3dfba4c02830f1f8f2fec09a598
+Signer #1 certificate SHA-1 digest: c1b8f925228b03d1d4e2dce126157cec59863020
+Signer #1 certificate MD5 digest: 9f13e29001961402a4a54da3c257bfc9
+Signer #1 key algorithm: EC
+Signer #1 key size (bits): 256
+Signer #1 public key SHA-256 digest: 424b7ce3e6797b53afdd70f756d258b39a15770e7af61fb5a3ccb04f0cf1f669
+Signer #1 public key SHA-1 digest: 8a97cc44be2f6131f0453585490ea148db9081c9
+Signer #1 public key MD5 digest: 9d98c71e61229d33ed09c904f3dcd199
+--> Built and signed es256 compatible APK: /mnt/code/aspin/results/reproduction-20261114T094651Z/internet/rotated-apk/ASPin-es256-compatible.apk

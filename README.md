@@ -97,9 +97,25 @@ For each algorithm this produces `ASPin-<alg>.apk` (primary ASPin),
 `ASPin-<alg>-scp.apk` (standard Android NSC `pin-set`),
 `ASPin-<alg>-dcp.apk` (independent extended-NSC DCP), and
 `ASPin-<alg>-compatible.apk` (ASPin compatibility mode).
+SCP runs only through Android NSC: the dedicated `-scp.apk` declares
+`networkSecurityConfig`, and the native trust manager enforces its standard
+SHA-256 SPKI `pin-set`. The old manual certificate-hash verifier, its UI
+buttons, and the single-APK mixed-scheme benchmark have been removed. Use the
+dedicated SCP APK and the comparison runner below; the primary ASPin APK does
+not implement a selectable SCP connection mode. `signing/gen_scp_hash.py`
+remains the generator of Base64 SPKI pins for NSC, not a runtime verifier.
 The DCP APK declares `android.security.dcp.POLICY_PUBLIC_KEY`; its NSC
 `dynamic-pin-set` directly verifies the hostname-bound leaf-SPKI policy at
 `/.well-known/DCPServerCertPin.jws`. It never calls the ASPin service.
+The old app-side DCP verifier, raw-pin JSON generators and fixtures, manual
+verification microbenchmarks, and TLS-validation bypass have been removed.
+Each algorithm app now keeps only its OS client, CertClaimCheck, native-TLS
+connections, and current experiment entry points. Policy signatures are
+verified by the OS, not by a second app-side JWS implementation. The apps do
+not bundle token copies or separate PEM/JWK policy-root resources; build-time
+manifest roots still come from `signing/<alg>/my-dcp-pub.txt`.
+Use `signing/gen_dcp_policy.py` for independent NSC DCP policies and
+`signing/gen_compat_ClaimSigningKey.py` for ASPin-compatible delegations.
 The Android 17 `trunk_staging` build enables Conscrypt-hosted NSC, so the active
 extension is in `external/conscrypt/nsc/src/android/security/net/config`.
 The corresponding framework NSC path is retained for builds with modular NSC
@@ -238,7 +254,7 @@ tests, flash the device, or reuse old API timing samples.
 Choose a cohort whose `api-cache-matrix/` does not already exist:
 
 ```bash
-CACHED_COHORT=/mnt/code/aspin/results/reproduction-20261114T062526Z/internet
+CACHED_COHORT=/mnt/code/aspin/results/reproduction-20261114T094651Z/internet
 systemd-run --user --unit="aspin-cached-api-$(date -u +%Y%m%dT%H%M%SZ)" \
   --property=WorkingDirectory=/mnt/code/aspin \
   --property="StandardOutput=append:$CACHED_COHORT/api-cache-matrix.log" \
@@ -338,7 +354,7 @@ python3 summarize-certificate-change-results.py "$CERT_CHANGE_RUN" --check-paper
 ```
 
 The completed session is
-`results/reproduction-20261114T062526Z/certificate-change/`: 15 cells and 300
+`results/reproduction-20261114T094651Z/certificate-change/`: 15 cells and 300
 measured attempts, with 260 acceptances and 40 expected SCP/DCP rekey refusals.
 All configurations accept renewal; both ASPin modes also accept rekeying with
 unchanged tokens. Raw CSVs, public certificates/CSRs, unchanged signed policies,
@@ -361,7 +377,7 @@ python3 update-remote-policies.py \
 python3 run-remote-comparison.py \
   --device 3A201FDJH000GP \
   --deployment remote-experiment/deployments/main.json \
-  --apk-dir results/reproduction-20261114T062526Z/internet/apks \
+  --apk-dir results/reproduction-20261114T094651Z/internet/apks \
   --run-dir results/comparison-new \
   --iterations 20 --warmups 3
 ```
@@ -406,7 +422,7 @@ not the APK's app-signing identity.
 python3 run-remote-policy-scenarios.py \
   --device 3A201FDJH000GP \
   --deployment remote-experiment/deployments/main.json \
-  --apk-dir results/reproduction-20261114T062526Z/internet/apks \
+  --apk-dir results/reproduction-20261114T094651Z/internet/apks \
   --run-dir results/policy-scenarios-new \
   --short-seconds 60
 ```
@@ -613,7 +629,7 @@ record to that session before retiring previous result directories:
 
 ```bash
 python3 aosp-aspin/refresh-experiment-evidence.py \
-  results/reproduction-20261114T062526Z
+  results/reproduction-20261114T094651Z
 python3 aosp-aspin/check-experiment-code.py --require-complete-sources
 ```
 
@@ -910,8 +926,8 @@ The compatible ASPin APK uses manifest $K_{spub}$ through the ASPin service.
 Neither the DCP baseline nor SCP is an ASPin service wrapper.
 The aggregate robustness helper attributes only forced two-token refresh to
 compatible ASPin; use the new comparison matrix for isolated compatible-mode
-connection timings. Historical reduced-DCP refresh records retain their old
-labels and are not interpreted as independent NSC DCP measurements.
+connection timings. Measure DCP policy retrieval and verification inside the
+NSC connection path, not through an app-side verification microbenchmark.
 
 Outputs:
 
@@ -1125,7 +1141,7 @@ ISRG Root X2); its full and shortened presentations retain the SAME direct
 issuer. The experiment reports these facts separately and never relabels the
 two leaves as a cross-signed intermediate.
 
-The current run's `results/reproduction-20261114T062526Z/internet/public-cross/` contains 360
+The current run's `results/reproduction-20261114T094651Z/internet/public-cross/` contains 360
 attempts: 200 accepted, 160 issuer-policy rejections, and 200 matching tagged
 application requests. Native verification succeeded in every attempt. Both LE
 presentations selected the same ISRG Root X2 path; the ZeroSSL path terminated
@@ -1157,7 +1173,7 @@ systemd-run --user --unit="$ASPIN_CROSS_UNIT" \
   --setenv=ANDROID_HOME=/opt/android-sdk \
   /usr/bin/python3 /mnt/code/aspin/run-public-cross-benchmark.py \
   --deployment /mnt/code/aspin/remote-experiment/deployments/public-cross.json \
-  --restore-apk /mnt/code/aspin/results/reproduction-20261114T062526Z/internet/apks/ASPin-es256.apk \
+  --restore-apk /mnt/code/aspin/results/reproduction-20261114T094651Z/internet/apks/ASPin-es256.apk \
   --run-dir "$ASPIN_CROSS_RUN" --iterations 20
 ```
 
@@ -1233,15 +1249,16 @@ profile and its certificate digest is placed in the generated ASPin policy;
 the other signs the controlled unauthorized-issuer profile. Both CAs are added
 only to debug APKs through an Android network-security configuration; release
 builds contain neither them nor the configuration. Native TLS therefore
-accepts both profiles, while ASPin, SCP, and DCP reject the profile whose direct
-issuer CA certificate is absent from policy. Benchmark CA and leaf certificates
+accepts both profiles. ASPin checks the authorized direct-issuer CA certificate;
+SCP and DCP enforce their leaf-SPKI pins. Benchmark CA and leaf certificates
 are retained with the results, but generated CA and leaf private keys are removed
 by the exit trap. A timestamped
 directory under `results/robustness-*` contains:
 
 - `cold-refresh-<alg>.csv`: four-algorithm end-to-end API/IPC, both token
   downloads and verifications, persistent anti-rollback write, and cache
-  commit, with ASPin and DCP mean/p50/p95/p99;
+  commit, with ASPin mean/p50/p95/p99; DCP timing belongs to the NSC connection
+  matrix rather than the two-token refresh entry point;
 - `cached-{real,rogue}-<alg>.csv`: mean/p95/p99 and acceptance counts for TLS,
   ASPin, SCP, and DCP against both server profiles;
 - `concurrent-cache-<alg>.csv`: four-algorithm 8-thread cached self-query

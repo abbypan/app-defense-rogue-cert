@@ -1,0 +1,26 @@
+{
+  "business_requests": 20,
+  "expected_business_requests": 20,
+  "measured_tags": [
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-1",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-10",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-11",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-12",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-13",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-14",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-15",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-16",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-17",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-18",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-19",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-2",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-20",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-3",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-4",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-5",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-6",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-7",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-8",
+    "r3f924f9927f2-aspin-es256-real-cold-forced-refresh-9"
+  ]
+}

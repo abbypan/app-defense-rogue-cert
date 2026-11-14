@@ -18,10 +18,6 @@ import java.util.Locale;
 
 /** Implements ASPin CertClaimCheck from the paper. */
 public final class ASPinVerifier {
-    public static String getAppSigningCertPem(android.content.Context context) {
-        return AppInfo.getPrimarySigningCert(context);
-    }
-
     private ASPinVerifier() {
     }
 

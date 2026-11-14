@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 
 from cryptography.hazmat.primitives import serialization
 
@@ -140,6 +141,94 @@ class ConfigurationSeparationTest(unittest.TestCase):
         self.assertIn("android.security.dcp.POLICY_PUBLIC_KEY", (active / "XmlConfigSource.java").read_text())
         self.assertIn("new DcpPinningVerifier", (active / "NetworkSecurityTrustManager.java").read_text())
         self.assertNotIn("IAspinService", (active / "NetworkSecurityTrustManager.java").read_text())
+
+
+class CurrentSchemeSourcesTest(unittest.TestCase):
+    def test_only_current_runtime_classes_and_dependencies_remain(self):
+        expected = {"ASPinVerifier.java", "AppTrustedServerCert.java", "HttpsConn.java",
+                    "MainActivity.java", "OsAspinClient.java"}
+        for variant in GEN.ALGORITHMS:
+            with self.subTest(variant=variant):
+                app = ROOT / "ASPin" / variant / "app"
+                java = app / "src/main/java/com/cert/aspin"
+                self.assertEqual({source.name for source in java.glob("*.java")}, expected)
+                self.assertEqual(list((app / "src/main/resources").glob("*")), [])
+                gradle = (app / "build.gradle").read_text()
+                for old_dependency in ("nimbus-jose-jwt", "bcprov-jdk18on", "kerby-asn1"):
+                    self.assertNotIn(old_dependency, gradle)
+                # CertClaimCheck still needs strict literal-IP normalization.
+                self.assertIn("com.google.guava:guava", gradle)
+
+    def test_old_manual_dcp_artifacts_and_generators_are_absent(self):
+        for variant in GEN.ALGORITHMS:
+            with self.subTest(variant=variant):
+                signing = ROOT / "signing" / variant
+                self.assertFalse((signing / "gen_dcp.py").exists())
+                self.assertFalse((signing / "DCPServerCertPin.json").exists())
+                self.assertFalse((ROOT / "realserver/var/www/dcp/.well-known"
+                                  / ("DCPServerCertPin-" + variant + ".json")).exists())
+                self.assertTrue((ROOT / "realserver/var/www" / variant
+                                 / ".well-known/DCPServerCertPin.jws").is_file())
+
+    def test_independent_nsc_configuration_and_manifest_roots_are_preserved(self):
+        android = "{http://schemas.android.com/apk/res/android}"
+        for variant in GEN.ALGORITHMS:
+            with self.subTest(variant=variant):
+                app = ROOT / "ASPin" / variant / "app"
+                manifest = ET.parse(app / "src/dcpBenchmark/AndroidManifest.xml")
+                application = manifest.find("application")
+                self.assertEqual(application.get(android + "networkSecurityConfig"),
+                                 "@xml/network_security_config")
+                entries = application.findall("meta-data")
+                self.assertEqual([entry.get(android + "name") for entry in entries],
+                                 ["android.security.dcp.POLICY_PUBLIC_KEY"])
+                self.assertEqual(entries[0].get(android + "value"), "${dcpPolicyPublicKey}")
+                config = ET.parse(app / "src/dcpBenchmark/res/xml/network_security_config.xml")
+                self.assertEqual(len(config.findall(".//dynamic-pin-set")), 1)
+                self.assertEqual(config.findall(".//pin-set"), [])
+                signing = ROOT / "signing" / variant
+                key = serialization.load_pem_public_key((signing / "my-dcp-pubkey.pem").read_bytes())
+                der = key.public_bytes(serialization.Encoding.DER,
+                                       serialization.PublicFormat.SubjectPublicKeyInfo)
+                encoded = (signing / "my-dcp-pub.txt").read_text().strip()
+                try:
+                    decoded = bytes.fromhex(encoded)
+                except ValueError:
+                    decoded = base64.b64decode(encoded, validate=True)
+                self.assertEqual(decoded, der)
+                self.assertTrue((signing / "my-dcp-key.pem").is_file())
+                key_script = (signing / "gen_dcp_signing_key.sh").read_text()
+                self.assertIn("openssl pkey -pubin", key_script)
+                self.assertIn("my-dcp-pub.txt", key_script)
+
+    def test_no_manual_pinning_or_tls_bypass_path_is_left_in_apps(self):
+        obsolete = ("DCPVerifier", "SCPVerifier", "createDCPConnection", "createSCPConnection",
+                    "create_main_conn", "BenchmarkVerifier", "JwsVerifier", "PemUtils",
+                    "getBypassTrustManagers", "createBypassSslSocketFactory",
+                    "setHostnameVerifier", "DCPServerCertPin-")
+        for variant in GEN.ALGORITHMS:
+            with self.subTest(variant=variant):
+                directory = ROOT / "ASPin" / variant / "app/src/main/java/com/cert/aspin"
+                for source in directory.glob("*.java"):
+                    for name in obsolete:
+                        self.assertNotIn(name, source.read_text(), str(source))
+                main = (directory / "MainActivity.java").read_text()
+                for mode in ("avgveriftime", "avgvisittime", "schemecomparison", "rttcache",
+                             "policyscenario", "crosssign", "concurrency", "claimprobe",
+                             "parallelrefresh", "expirybound"):
+                    self.assertIn('"' + mode + '"', main)
+                self.assertIn("connectWithASPin()", main)
+                https = (directory / "HttpsConn.java").read_text()
+                check = https.split("public static HttpsURLConnection createASPinConnection", 1)[1]
+                self.assertLess(check.index("authenticatedClaim == null"),
+                                check.index("resolveHost(host)"))
+
+    def test_generation_and_local_diagnostics_do_not_reintroduce_app_policy_resources(self):
+        generator = (ROOT / "gen-trust-artifacts.py").read_text()
+        self.assertNotIn("app_resources_dir", generator)
+        self.assertIn("gen_dcp_policy.py", generator)
+        self.assertIn("write_nsc_experiment_configs(repo_root, alg, scp_pin)", generator)
+        self.assertNotIn("app/src/main/resources", (ROOT / "run-robustness-benchmark.sh").read_text())
 
 
 if __name__ == "__main__":

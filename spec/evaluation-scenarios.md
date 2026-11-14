@@ -1,8 +1,8 @@
 # Functional Internet evaluation scenarios
 
 This document retains detailed procedures moved out of Appendix C. Results
-refer to `results/reproduction-20261114T062526Z/internet/` and the independently audited
-`results/reproduction-20261114T062526Z/certificate-change/` subtree, not proposed
+refer to `results/reproduction-20261114T094651Z/internet/` and the independently audited
+`results/reproduction-20261114T094651Z/certificate-change/` subtree, not proposed
 measurements. General controls and timing definitions are in
 [evaluation-protocol.md](evaluation-protocol.md).
 
@@ -199,8 +199,8 @@ not latency distributions; timing tables use the separate connection matrix.
 
 After overlap publication is observed, the harness waits at least 60 complete
 seconds and beyond the claim's signed expiration. The recorded staging
-intervals are 61.02487249299884 seconds for the primary root and
-60.01759130600112 seconds for the compatible root. One atomic server-profile
+intervals are 60.071769640999264 seconds for the primary root and
+60.3202941549971 seconds for the compatible root. One atomic server-profile
 change then selects NewCert and the new-only claim for subsequent handshakes.
 Both modes pass six transition probes.
 

@@ -1,0 +1,100 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.13/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preCrossAppCallerBuild UP-TO-DATE
+> Task :app:mergeCrossAppCallerNativeDebugMetadata NO-SOURCE
+> Task :app:generateCrossAppCallerBuildConfig UP-TO-DATE
+> Task :app:javaPreCompileCrossAppCaller UP-TO-DATE
+> Task :app:checkCrossAppCallerAarMetadata UP-TO-DATE
+> Task :app:processCrossAppCallerNavigationResources UP-TO-DATE
+> Task :app:compileCrossAppCallerNavigationResources UP-TO-DATE
+> Task :app:generateCrossAppCallerResValues UP-TO-DATE
+> Task :app:mapCrossAppCallerSourceSetPaths UP-TO-DATE
+> Task :app:generateCrossAppCallerResources UP-TO-DATE
+> Task :app:mergeCrossAppCallerResources UP-TO-DATE
+> Task :app:packageCrossAppCallerResources UP-TO-DATE
+> Task :app:parseCrossAppCallerLocalResources UP-TO-DATE
+> Task :app:createCrossAppCallerCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksCrossAppCaller UP-TO-DATE
+> Task :app:processCrossAppCallerMainManifest UP-TO-DATE
+> Task :app:processCrossAppCallerManifest UP-TO-DATE
+> Task :app:processCrossAppCallerManifestForPackage UP-TO-DATE
+> Task :app:processCrossAppCallerResources UP-TO-DATE
+> Task :app:compileCrossAppCallerJavaWithJavac UP-TO-DATE
+> Task :app:mergeCrossAppCallerShaders UP-TO-DATE
+> Task :app:compileCrossAppCallerShaders NO-SOURCE
+> Task :app:generateCrossAppCallerAssets UP-TO-DATE
+> Task :app:mergeCrossAppCallerAssets UP-TO-DATE
+> Task :app:compressCrossAppCallerAssets UP-TO-DATE
+> Task :app:desugarCrossAppCallerFileDependencies UP-TO-DATE
+> Task :app:dexBuilderCrossAppCaller UP-TO-DATE
+> Task :app:mergeCrossAppCallerGlobalSynthetics UP-TO-DATE
+> Task :app:processCrossAppCallerJavaRes NO-SOURCE
+> Task :app:mergeCrossAppCallerJavaResource UP-TO-DATE
+> Task :app:checkCrossAppCallerDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexCrossAppCaller UP-TO-DATE
+> Task :app:mergeLibDexCrossAppCaller UP-TO-DATE
+> Task :app:mergeProjectDexCrossAppCaller UP-TO-DATE
+> Task :app:mergeCrossAppCallerJniLibFolders UP-TO-DATE
+> Task :app:mergeCrossAppCallerNativeLibs NO-SOURCE
+> Task :app:stripCrossAppCallerDebugSymbols NO-SOURCE
+> Task :app:validateSigningCrossAppCaller UP-TO-DATE
+> Task :app:writeCrossAppCallerAppMetadata UP-TO-DATE
+> Task :app:writeCrossAppCallerSigningConfigVersions UP-TO-DATE
+> Task :app:packageCrossAppCaller UP-TO-DATE
+> Task :app:createCrossAppCallerApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleCrossAppCaller UP-TO-DATE
+> Task :app:preCrossAppHiddenBuild UP-TO-DATE
+> Task :app:mergeCrossAppHiddenNativeDebugMetadata NO-SOURCE
+> Task :app:generateCrossAppHiddenBuildConfig UP-TO-DATE
+> Task :app:javaPreCompileCrossAppHidden UP-TO-DATE
+> Task :app:checkCrossAppHiddenAarMetadata UP-TO-DATE
+> Task :app:processCrossAppHiddenNavigationResources UP-TO-DATE
+> Task :app:compileCrossAppHiddenNavigationResources UP-TO-DATE
+> Task :app:generateCrossAppHiddenResValues UP-TO-DATE
+> Task :app:mapCrossAppHiddenSourceSetPaths UP-TO-DATE
+> Task :app:generateCrossAppHiddenResources UP-TO-DATE
+> Task :app:mergeCrossAppHiddenResources UP-TO-DATE
+> Task :app:packageCrossAppHiddenResources UP-TO-DATE
+> Task :app:parseCrossAppHiddenLocalResources UP-TO-DATE
+> Task :app:createCrossAppHiddenCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksCrossAppHidden UP-TO-DATE
+> Task :app:processCrossAppHiddenMainManifest UP-TO-DATE
+> Task :app:processCrossAppHiddenManifest UP-TO-DATE
+> Task :app:processCrossAppHiddenManifestForPackage UP-TO-DATE
+> Task :app:processCrossAppHiddenResources UP-TO-DATE
+> Task :app:compileCrossAppHiddenJavaWithJavac UP-TO-DATE
+> Task :app:mergeCrossAppHiddenShaders UP-TO-DATE
+> Task :app:compileCrossAppHiddenShaders NO-SOURCE
+> Task :app:generateCrossAppHiddenAssets UP-TO-DATE
+> Task :app:mergeCrossAppHiddenAssets UP-TO-DATE
+> Task :app:compressCrossAppHiddenAssets UP-TO-DATE
+> Task :app:desugarCrossAppHiddenFileDependencies UP-TO-DATE
+> Task :app:dexBuilderCrossAppHidden UP-TO-DATE
+> Task :app:mergeCrossAppHiddenGlobalSynthetics UP-TO-DATE
+> Task :app:processCrossAppHiddenJavaRes NO-SOURCE
+> Task :app:mergeCrossAppHiddenJavaResource UP-TO-DATE
+> Task :app:checkCrossAppHiddenDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexCrossAppHidden UP-TO-DATE
+> Task :app:mergeLibDexCrossAppHidden UP-TO-DATE
+> Task :app:mergeProjectDexCrossAppHidden UP-TO-DATE
+> Task :app:mergeCrossAppHiddenJniLibFolders UP-TO-DATE
+> Task :app:mergeCrossAppHiddenNativeLibs NO-SOURCE
+> Task :app:stripCrossAppHiddenDebugSymbols NO-SOURCE
+> Task :app:validateSigningCrossAppHidden UP-TO-DATE
+> Task :app:writeCrossAppHiddenAppMetadata UP-TO-DATE
+> Task :app:writeCrossAppHiddenSigningConfigVersions UP-TO-DATE
+> Task :app:packageCrossAppHidden UP-TO-DATE
+> Task :app:createCrossAppHiddenApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleCrossAppHidden UP-TO-DATE
+
+[Incubating] Problems report is available at: file:///mnt/code/aspin/ASPin/es256/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 6s
+70 actionable tasks: 70 up-to-date

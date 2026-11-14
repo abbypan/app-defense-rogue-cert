@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+p0e877dce898b-primary-app-root-new-only,com.cert.aspin,self,,protected,true,true,two-token-refresh,1794651155912,1794651152000,1794654752000,128.188151,80.445842,216.094686,368.176107,true,true,accepted,accepted,PASS,"",""

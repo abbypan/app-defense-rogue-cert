@@ -1,0 +1,235 @@
+{
+  "result": "PASS",
+  "verified_utc": "2026-11-14T10:51:54.862207+00:00",
+  "scope": "All 16 Gradle unit-test tasks freshly executed with --rerun-tasks and 24 workers",
+  "tests": 336,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "groups": [
+    {
+      "variant": "es256",
+      "task": "testDebugUnitTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files_sha256": {
+        "es256/testDebugUnitTest/TEST-com.cert.aspin.CertificateValidationTest.xml": "6c44f271c70d9dbbf797782b1e684dcd09e5aa80aca9e7f8017329138886aaba",
+        "es256/testDebugUnitTest/TEST-com.cert.aspin.ConnectionSecurityTest.xml": "ff5fbfcc76acbe284db93ce989fcf36011612e724f7903d6e615556864fabd2a",
+        "es256/testDebugUnitTest/TEST-com.cert.aspin.PolicyScenarioChecksTest.xml": "73a1843f379786d11a7f2eddd70cfa0bdf3cd2bbcbcba671b2efc624b92cb3c8",
+        "es256/testDebugUnitTest/TEST-com.cert.aspin.RttBenchmarkChecksTest.xml": "401eceb92c1ebdf74630489ad7ffd3678db6bf4b46c407c8915bc2f377f6223e"
+      }
+    },
+    {
+      "variant": "es256",
+      "task": "testScpBenchmarkUnitTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files_sha256": {
+        "es256/testScpBenchmarkUnitTest/TEST-com.cert.aspin.CertificateValidationTest.xml": "c982d91ee7e96f49da7583c435dd329e5061c49401a9996427342de515581891",
+        "es256/testScpBenchmarkUnitTest/TEST-com.cert.aspin.ConnectionSecurityTest.xml": "d17f9a2bcfedeeaca095b151303c1b77f1a70c134de4a2a7fb5126fe5f20c472",
+        "es256/testScpBenchmarkUnitTest/TEST-com.cert.aspin.PolicyScenarioChecksTest.xml": "9ee2cc4fe49cf7df2f4e8ef39855ec8a1235f05c628fc7e9911cde00dfedc9bc",
+        "es256/testScpBenchmarkUnitTest/TEST-com.cert.aspin.RttBenchmarkChecksTest.xml": "542c36a9eb3918887996a5745142f95dcd89d1864304055a0e5380776718d4ca"
+      }
+    },
+    {
+      "variant": "es256",
+      "task": "testDcpBenchmarkUnitTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files_sha256": {
+        "es256/testDcpBenchmarkUnitTest/TEST-com.cert.aspin.CertificateValidationTest.xml": "ae628ae65c7886f0d7cab0653323a75ea11663964c27c0ebd033b450f991f803",
+        "es256/testDcpBenchmarkUnitTest/TEST-com.cert.aspin.ConnectionSecurityTest.xml": "ad5c52f18ff8f47990756f1ad0f2c2ae9ef03b4cb3e297aae14cdfc3ca243c9b",
+        "es256/testDcpBenchmarkUnitTest/TEST-com.cert.aspin.PolicyScenarioChecksTest.xml": "00537022bd815f1ae51f4bc9f945641ddf6153962ba4a27c0ad6ea1c60fbad0d",
+        "es256/testDcpBenchmarkUnitTest/TEST-com.cert.aspin.RttBenchmarkChecksTest.xml": "d65e89b313d5659768c401f38f5c6ccd69c07ba53577184103c1f34396e8fa1f"
+      }
+    },
+    {
+      "variant": "es256",
+      "task": "testCompatibilityBenchmarkUnitTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files_sha256": {
+        "es256/testCompatibilityBenchmarkUnitTest/TEST-com.cert.aspin.CertificateValidationTest.xml": "ed682f611cb73a3809497803b83f1540a0b90cb81f694e080624bf21d1c1b748",
+        "es256/testCompatibilityBenchmarkUnitTest/TEST-com.cert.aspin.ConnectionSecurityTest.xml": "b782a824bb51794dd9ed612c08e2b89170713d9776b46624eeb8d9c898df5119",
+        "es256/testCompatibilityBenchmarkUnitTest/TEST-com.cert.aspin.PolicyScenarioChecksTest.xml": "5515cdbecca5015e602c8001360e5af590127da4a8fcdba6ed8690471b7362f7",
+        "es256/testCompatibilityBenchmarkUnitTest/TEST-com.cert.aspin.RttBenchmarkChecksTest.xml": "ef4dfcefc5656ea9f4ffbfe2f3a49ef0597deca2f19bd5d477b455484a171ffd"
+      }
+    },
+    {
+      "variant": "es384",
+      "task": "testDebugUnitTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files_sha256": {
+        "es384/testDebugUnitTest/TEST-com.cert.aspin.CertificateValidationTest.xml": "5857f620370a9b19f0b218611e199d578a95c7b1e4d008f9c790453e81f32811",
+        "es384/testDebugUnitTest/TEST-com.cert.aspin.ConnectionSecurityTest.xml": "5c5b9a2ced0b2b710ab7082f21423413d78a05c819b353ed20d8dd55757a8354",
+        "es384/testDebugUnitTest/TEST-com.cert.aspin.PolicyScenarioChecksTest.xml": "c1278dafad70e1c885232a04219c87fd2c36d57ff8a6cde797f30f1235f85213",
+        "es384/testDebugUnitTest/TEST-com.cert.aspin.RttBenchmarkChecksTest.xml": "186f492673600d0914990f9f212f7b79fb989b1cf103ab7d86b4a85156961a33"
+      }
+    },
+    {
+      "variant": "es384",
+      "task": "testScpBenchmarkUnitTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files_sha256": {
+        "es384/testScpBenchmarkUnitTest/TEST-com.cert.aspin.CertificateValidationTest.xml": "4a15ad12bd422a68ef180f53bba8fabc337c852ff17fd1e19ad4c750f4ffed30",
+        "es384/testScpBenchmarkUnitTest/TEST-com.cert.aspin.ConnectionSecurityTest.xml": "a0b3da707cfec8965e8a15ef8553aef8c163174740e33d085625f89f59f8f545",
+        "es384/testScpBenchmarkUnitTest/TEST-com.cert.aspin.PolicyScenarioChecksTest.xml": "947733bf994fe256c1ff265f63080e251ba46242dabf044ec2a9800b2673731e",
+        "es384/testScpBenchmarkUnitTest/TEST-com.cert.aspin.RttBenchmarkChecksTest.xml": "c3dbb054e6af747b6c592006d5c7061f16d3d6fd14945039e9116670c74bf4ba"
+      }
+    },
+    {
+      "variant": "es384",
+      "task": "testDcpBenchmarkUnitTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files_sha256": {
+        "es384/testDcpBenchmarkUnitTest/TEST-com.cert.aspin.CertificateValidationTest.xml": "4d265014c3ad77004c601f0d60b6a86c527b7c48a27b7b13732a64ef41866d0f",
+        "es384/testDcpBenchmarkUnitTest/TEST-com.cert.aspin.ConnectionSecurityTest.xml": "ec1fa7c82df1f8ee64f751b6ed340c803a3a4f2db60dd6b597a9ad564200a6aa",
+        "es384/testDcpBenchmarkUnitTest/TEST-com.cert.aspin.PolicyScenarioChecksTest.xml": "3bda1308b1f0afda68c701f193e7cd752131fc3f5c6068ba6141abe13bebf9db",
+        "es384/testDcpBenchmarkUnitTest/TEST-com.cert.aspin.RttBenchmarkChecksTest.xml": "2acd7661b5566a3f2c04305582868630fca7c3d3c7825beb86424e2905dfea12"
+      }
+    },
+    {
+      "variant": "es384",
+      "task": "testCompatibilityBenchmarkUnitTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files_sha256": {
+        "es384/testCompatibilityBenchmarkUnitTest/TEST-com.cert.aspin.CertificateValidationTest.xml": "834eed4fcd9ab8d79a1597956cf6d2b9dfc8724f3f1c292ba3ce5a76aa46a3f6",
+        "es384/testCompatibilityBenchmarkUnitTest/TEST-com.cert.aspin.ConnectionSecurityTest.xml": "a716fb3816503732ebd7b2c62abf96f7c625d7fb04490e8e739ce387f4aaa893",
+        "es384/testCompatibilityBenchmarkUnitTest/TEST-com.cert.aspin.PolicyScenarioChecksTest.xml": "3b6988826f370f5dabb9a1d238693974b0f6008bb378906cb64a5e917431e81a",
+        "es384/testCompatibilityBenchmarkUnitTest/TEST-com.cert.aspin.RttBenchmarkChecksTest.xml": "59d13c04cb93a2b06a8a0f1386f39e9117ca02a56e997194ac6a3fa222451413"
+      }
+    },
+    {
+      "variant": "rsa3072",
+      "task": "testDebugUnitTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files_sha256": {
+        "rsa3072/testDebugUnitTest/TEST-com.cert.aspin.CertificateValidationTest.xml": "e8e70a85ec78896c53a717eb7117c7c200e80e8d9e957787afdb3130621880de",
+        "rsa3072/testDebugUnitTest/TEST-com.cert.aspin.ConnectionSecurityTest.xml": "5a08276c899e0504745305fd0647d4e5829f48940400bc2ccae68719e011e9e4",
+        "rsa3072/testDebugUnitTest/TEST-com.cert.aspin.PolicyScenarioChecksTest.xml": "c25e781f3fb93e9a8fb6d3c7fa18c9743e6ebeadb3cb61a49a75e036a848554a",
+        "rsa3072/testDebugUnitTest/TEST-com.cert.aspin.RttBenchmarkChecksTest.xml": "fd783f4a47edb629132f545763995b97d0fc3dc5689bd32474ff21dbc4215a3e"
+      }
+    },
+    {
+      "variant": "rsa3072",
+      "task": "testScpBenchmarkUnitTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files_sha256": {
+        "rsa3072/testScpBenchmarkUnitTest/TEST-com.cert.aspin.CertificateValidationTest.xml": "2cfc124e83ff4adc121af93a4bcdc979447d422cd2cd88db6a047e7b1bb334e5",
+        "rsa3072/testScpBenchmarkUnitTest/TEST-com.cert.aspin.ConnectionSecurityTest.xml": "3c184e6fe343abe2817f3a6570dd0aab4d6815b3247ba8c79bcc916d97350e30",
+        "rsa3072/testScpBenchmarkUnitTest/TEST-com.cert.aspin.PolicyScenarioChecksTest.xml": "04ff61cfe88e26a0926265e2d80785ecd9a04c9e59220f25cdda71ace011137b",
+        "rsa3072/testScpBenchmarkUnitTest/TEST-com.cert.aspin.RttBenchmarkChecksTest.xml": "8f219763cacbd336785b9e97d6e18e3dee147a977f0c5d47955448fa40504ede"
+      }
+    },
+    {
+      "variant": "rsa3072",
+      "task": "testDcpBenchmarkUnitTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files_sha256": {
+        "rsa3072/testDcpBenchmarkUnitTest/TEST-com.cert.aspin.CertificateValidationTest.xml": "a86d20745f1612dfd275414d5cccc10820efe0fb3b50f9f69a9cf9bd773f3bd9",
+        "rsa3072/testDcpBenchmarkUnitTest/TEST-com.cert.aspin.ConnectionSecurityTest.xml": "188ba79e3f2728d80cd3ca7a2da4caf9b954ccb14ddfae6007ebc364ad8d8355",
+        "rsa3072/testDcpBenchmarkUnitTest/TEST-com.cert.aspin.PolicyScenarioChecksTest.xml": "1e10796fae6d144833c1a086a51047c29243d7850f500d38e17eb801508d6889",
+        "rsa3072/testDcpBenchmarkUnitTest/TEST-com.cert.aspin.RttBenchmarkChecksTest.xml": "f4ed64cc0ec1f50f8f601418a64610df12fb45b27627e7c65f05cac4f281fd20"
+      }
+    },
+    {
+      "variant": "rsa3072",
+      "task": "testCompatibilityBenchmarkUnitTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files_sha256": {
+        "rsa3072/testCompatibilityBenchmarkUnitTest/TEST-com.cert.aspin.CertificateValidationTest.xml": "88919a7efbd5f2e182a785877f31f2ff9114b9f217eac3ec905106d5fab115c8",
+        "rsa3072/testCompatibilityBenchmarkUnitTest/TEST-com.cert.aspin.ConnectionSecurityTest.xml": "7281baaef6f12265b0d9aa56240b13f73de4c068b423a434e1bb0997993a3a4d",
+        "rsa3072/testCompatibilityBenchmarkUnitTest/TEST-com.cert.aspin.PolicyScenarioChecksTest.xml": "7d79889affa3e3ff29d905097acc6c7182bf9bb1334aa34090f77c4a11666222",
+        "rsa3072/testCompatibilityBenchmarkUnitTest/TEST-com.cert.aspin.RttBenchmarkChecksTest.xml": "74510c36adc42205409d1555569e81047365f6b530e429d1bce1764742e143b4"
+      }
+    },
+    {
+      "variant": "rsa4096",
+      "task": "testDebugUnitTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files_sha256": {
+        "rsa4096/testDebugUnitTest/TEST-com.cert.aspin.CertificateValidationTest.xml": "d369306eb6bde1bee6606d17fc8d3a23de119462fb73409c5831715e4e16183e",
+        "rsa4096/testDebugUnitTest/TEST-com.cert.aspin.ConnectionSecurityTest.xml": "be82aef91a39d8e2f8c7a8d6be1cfaf024f2f1cfbc9a093cf3fc133de718b6c1",
+        "rsa4096/testDebugUnitTest/TEST-com.cert.aspin.PolicyScenarioChecksTest.xml": "0f55e4eed636d97dd677c6d0632d6c98c031f4d0f53fc210be267b48015957ba",
+        "rsa4096/testDebugUnitTest/TEST-com.cert.aspin.RttBenchmarkChecksTest.xml": "057673d395c3bd257a29a81a7e24e71b3cd675a8f77e6d53254c8637484c4d3d"
+      }
+    },
+    {
+      "variant": "rsa4096",
+      "task": "testScpBenchmarkUnitTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files_sha256": {
+        "rsa4096/testScpBenchmarkUnitTest/TEST-com.cert.aspin.CertificateValidationTest.xml": "cba8d29f2ef833a81464275ffc830049a7cfc2330e9533e2c99d83f12323e89e",
+        "rsa4096/testScpBenchmarkUnitTest/TEST-com.cert.aspin.ConnectionSecurityTest.xml": "c9f36d49188eef9eca8247efa1d9c775271f47b008bab4d6d9e39210fd19c9a1",
+        "rsa4096/testScpBenchmarkUnitTest/TEST-com.cert.aspin.PolicyScenarioChecksTest.xml": "395207a6ae276cf5df92a28050cb3c89c8898cbc9ecb8cc847c9f994c65b4056",
+        "rsa4096/testScpBenchmarkUnitTest/TEST-com.cert.aspin.RttBenchmarkChecksTest.xml": "c7f5ea9aec0a6f5864ae4ab3434a5336f058b4081859569f78921fcd914ff06b"
+      }
+    },
+    {
+      "variant": "rsa4096",
+      "task": "testDcpBenchmarkUnitTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files_sha256": {
+        "rsa4096/testDcpBenchmarkUnitTest/TEST-com.cert.aspin.CertificateValidationTest.xml": "ce1ddce31373b7d1bac5d7366a8e8b940cc10ac8850c2d342392c85dd01249db",
+        "rsa4096/testDcpBenchmarkUnitTest/TEST-com.cert.aspin.ConnectionSecurityTest.xml": "9c8fd9617e93d0d313fc539f765418ab4f265d2818648fc19317239aa8739d2e",
+        "rsa4096/testDcpBenchmarkUnitTest/TEST-com.cert.aspin.PolicyScenarioChecksTest.xml": "9bc418b2f1bd0d3cf6c413aebd77924d6599bcd32cf6838d0ce7327e14660d87",
+        "rsa4096/testDcpBenchmarkUnitTest/TEST-com.cert.aspin.RttBenchmarkChecksTest.xml": "ffecb60e1bdabbb97119336c0e0b2215a8b48353f9a262445aba006d7b2d1fde"
+      }
+    },
+    {
+      "variant": "rsa4096",
+      "task": "testCompatibilityBenchmarkUnitTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files_sha256": {
+        "rsa4096/testCompatibilityBenchmarkUnitTest/TEST-com.cert.aspin.CertificateValidationTest.xml": "807629044a6fccb496f96dff84541b323df08c18b959479e6a5b7f499dd0b85d",
+        "rsa4096/testCompatibilityBenchmarkUnitTest/TEST-com.cert.aspin.ConnectionSecurityTest.xml": "daeb8326ff25b3c4b22db8add6fa839d95eeb6e40b356a2ffd9bba21bd118bef",
+        "rsa4096/testCompatibilityBenchmarkUnitTest/TEST-com.cert.aspin.PolicyScenarioChecksTest.xml": "db8710a8ad17408ddf4d1574f08078885cc9b30729fc0c0cac343d830a3af801",
+        "rsa4096/testCompatibilityBenchmarkUnitTest/TEST-com.cert.aspin.RttBenchmarkChecksTest.xml": "798e22cb04fff7cd667a9c4d6cd8db2632cc8f406986425c1e0a19857dcffaed"
+      }
+    }
+  ]
+}

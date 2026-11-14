@@ -1,0 +1,619 @@
+{
+  "state": "complete",
+  "run_id": "r3f924f9927f2",
+  "created_utc": "2026-11-14T09:49:29.120615+00:00",
+  "iterations": 20,
+  "warmups": 3,
+  "cells": [
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "es256",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-dcp-es256-real-hot"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "es256",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-dcp-es256-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "es256",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-dcp-es256-rogue-hot"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "es256",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-dcp-es256-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "es384",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-dcp-es384-real-hot"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "es384",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-dcp-es384-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "es384",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-dcp-es384-rogue-hot"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "es384",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-dcp-es384-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "rsa3072",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-dcp-rsa3072-real-hot"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "rsa3072",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-dcp-rsa3072-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "rsa3072",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-dcp-rsa3072-rogue-hot"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "rsa3072",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-dcp-rsa3072-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "rsa4096",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-dcp-rsa4096-real-hot"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "rsa4096",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-dcp-rsa4096-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "rsa4096",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-dcp-rsa4096-rogue-hot"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "rsa4096",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-dcp-rsa4096-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es256",
+      "phase": "real",
+      "cache": "none",
+      "scenario": "r3f924f9927f2-tls-es256-real-none"
+    },
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es256",
+      "phase": "rogue",
+      "cache": "none",
+      "scenario": "r3f924f9927f2-tls-es256-rogue-none"
+    },
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es384",
+      "phase": "real",
+      "cache": "none",
+      "scenario": "r3f924f9927f2-tls-es384-real-none"
+    },
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es384",
+      "phase": "rogue",
+      "cache": "none",
+      "scenario": "r3f924f9927f2-tls-es384-rogue-none"
+    },
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa3072",
+      "phase": "real",
+      "cache": "none",
+      "scenario": "r3f924f9927f2-tls-rsa3072-real-none"
+    },
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa3072",
+      "phase": "rogue",
+      "cache": "none",
+      "scenario": "r3f924f9927f2-tls-rsa3072-rogue-none"
+    },
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa4096",
+      "phase": "real",
+      "cache": "none",
+      "scenario": "r3f924f9927f2-tls-rsa4096-real-none"
+    },
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa4096",
+      "phase": "rogue",
+      "cache": "none",
+      "scenario": "r3f924f9927f2-tls-rsa4096-rogue-none"
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "algorithm": "es256",
+      "phase": "real",
+      "cache": "static",
+      "scenario": "r3f924f9927f2-scp-es256-real-static"
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "algorithm": "es256",
+      "phase": "rogue",
+      "cache": "static",
+      "scenario": "r3f924f9927f2-scp-es256-rogue-static"
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "algorithm": "es384",
+      "phase": "real",
+      "cache": "static",
+      "scenario": "r3f924f9927f2-scp-es384-real-static"
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "algorithm": "es384",
+      "phase": "rogue",
+      "cache": "static",
+      "scenario": "r3f924f9927f2-scp-es384-rogue-static"
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "algorithm": "rsa3072",
+      "phase": "real",
+      "cache": "static",
+      "scenario": "r3f924f9927f2-scp-rsa3072-real-static"
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "algorithm": "rsa3072",
+      "phase": "rogue",
+      "cache": "static",
+      "scenario": "r3f924f9927f2-scp-rsa3072-rogue-static"
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "algorithm": "rsa4096",
+      "phase": "real",
+      "cache": "static",
+      "scenario": "r3f924f9927f2-scp-rsa4096-real-static"
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "algorithm": "rsa4096",
+      "phase": "rogue",
+      "cache": "static",
+      "scenario": "r3f924f9927f2-scp-rsa4096-rogue-static"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es256",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-aspin-es256-real-hot"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es256",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-aspin-es256-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es256",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-aspin-es256-rogue-hot"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es256",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-aspin-es256-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es384",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-aspin-es384-real-hot"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es384",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-aspin-es384-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es384",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-aspin-es384-rogue-hot"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es384",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-aspin-es384-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa3072",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-aspin-rsa3072-real-hot"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa3072",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-aspin-rsa3072-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa3072",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-aspin-rsa3072-rogue-hot"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa3072",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-aspin-rsa3072-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa4096",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-aspin-rsa4096-real-hot"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa4096",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-aspin-rsa4096-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa4096",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-aspin-rsa4096-rogue-hot"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa4096",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-aspin-rsa4096-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "es256",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-aspin-compatible-es256-real-hot"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "es256",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-aspin-compatible-es256-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "es256",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-aspin-compatible-es256-rogue-hot"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "es256",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-aspin-compatible-es256-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "es384",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-aspin-compatible-es384-real-hot"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "es384",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-aspin-compatible-es384-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "es384",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-aspin-compatible-es384-rogue-hot"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "es384",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-aspin-compatible-es384-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "rsa3072",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-aspin-compatible-rsa3072-real-hot"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "rsa3072",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-aspin-compatible-rsa3072-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "rsa3072",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-aspin-compatible-rsa3072-rogue-hot"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "rsa3072",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-aspin-compatible-rsa3072-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "rsa4096",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-aspin-compatible-rsa4096-real-hot"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "rsa4096",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-aspin-compatible-rsa4096-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "rsa4096",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "r3f924f9927f2-aspin-compatible-rsa4096-rogue-hot"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "rsa4096",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "r3f924f9927f2-aspin-compatible-rsa4096-rogue-cold-forced-refresh"
+    }
+  ],
+  "transport": "device Internet -> test DNS -> hk SNI:443; no adb reverse",
+  "timing": "time to acceptance/rejection; HTTP response reading separate",
+  "record_transport_failures": true,
+  "ordering_limit": "fixed scheme order; reboot before compatibility group to clear RAM, not protected rollback state",
+  "device": {
+    "ro.build.fingerprint": "Android/gsi_arm64/generic_arm64:Baklava/CP2A.260605.016/eng.exp:userdebug/test-keys",
+    "ro.build.user": "exp",
+    "ro.build.date.utc": "1793194997",
+    "ro.build.version.incremental": "eng.exp"
+  },
+  "apk_sha256": {
+    "ASPin-rsa4096.apk": "0db3955fa043cd959adde85c1e4804f1f1469e0472999d94225dd7d116393f99",
+    "ASPin-rsa3072-compatible.apk": "d10d4833a6a782c76d5c1425043a6883954192881590d5bbd63dd8a87db67f2d",
+    "ASPin-es384.apk": "bd779e1d3a0f77dfc1d11b253fbc7fba99cb0676977f3da454d6269c4cf4c92f",
+    "ASPin-rsa4096-scp.apk": "6a8f23bd95c0a4776f3674aa8e26855faecf74ff4d19b5da03e7ddd343dc7826",
+    "ASPin-es256-compatible.apk": "a6bf00d38b5910203a5b62087a5a5300ae1dce2ceb7548291e8c111d7fca597f",
+    "ASPin-es384-dcp.apk": "f85721dd1ba6c3e53a64720f543e66320e6b1272461f2b9df2c651fc84c1bf68",
+    "ASPin-rsa3072-dcp.apk": "ae7ed6b2acb8f1c459e5739c30f432f25593e2687b4330b8038720d8e106aaf9",
+    "ASPin-es256.apk": "6178897baf44c2136cc00cd91ca87e43c6850e63a46802f52fe6b22ba09d89dd",
+    "ASPin-rsa4096-dcp.apk": "4c36fd167a2c3f4fbf34e72e56ad4244580893880ec4cd771617fea33e30acf8",
+    "ASPin-es256-scp.apk": "39007cf76f571dcbf7149f4a556cf2bcd720281c3de2395975f0394e8f26cd8d",
+    "ASPin-caller-es256.apk": "f84ac3adc06f2d37e8e5b6b89ac7cd1f71578f9d169c2ca0c1a87623960350f7",
+    "ASPin-es256-dcp.apk": "7ca7d79848c9d8debf1d3afa9ed2d79374a74ca7a43377f5e2a93a8675ece59d",
+    "ASPin-rsa3072.apk": "c938753d56b526858af6b765e9170319f1d2ea97b50edbc4f3008e5644b2fa61",
+    "ASPin-es256-compatible-rotated-root.apk": "705e8a00af541e8e2f81598ead5d012b79c070c0f00833bf06107fcf4c85eb17",
+    "ASPin-es384-scp.apk": "bb6184aa61f4a4da7c824cf78c60ba63d4ef6d76ce2e541edce2313d90e1a09b",
+    "ASPin-es384-compatible.apk": "3284bf5a15937b87b3fa2808fe525f3c1011d516eec28cc1c336d8e780263c84",
+    "ASPin-rsa4096-compatible.apk": "92c3f6df361d4c425a8715eae7dafdcecb5689ccbd979f8d3e9f2cfbed823723",
+    "ASPin-rsa3072-scp.apk": "ef3021ff3b9b8ddf0376428a3cc96ea47c6df37e88e86e32a6f70a4d2c455a1c",
+    "ASPin-caller-es384.apk": "df2f05822728b3f88cb081a2bd7ee275865222107fb0a1ff0791a44f15842d2f"
+  },
+  "power_control": "screen kept awake while externally powered; original setting restored on exit",
+  "server_audit_since_utc": "2026-11-14T09:48:45Z",
+  "completed_cells": 64
+}

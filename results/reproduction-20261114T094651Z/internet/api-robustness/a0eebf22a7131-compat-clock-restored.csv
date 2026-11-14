@@ -1,0 +1,2 @@
+Label,ForceRefresh,ExpectedSuccess,ObservedSuccess,ExpectedErrorSubstring,ReasonMatch,Total_ms,Tk_ms,Tc_ms,Result,Error,Timestamp
+a0eebf22a7131-compat-clock-restored,true,true,true,"",true,179.863,87.639,84.199,PASS,"",2026-11-14 18:42:20

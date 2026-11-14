@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+p0e877dce898b-compat-tc-bound-restored-cross,com.cert.aspin.caller,cross,com.cert.aspin,protected,false,true,hot,1794651705996,1794651702000,1794655302000,0.000000,0.000000,4.448567,217.587606,true,true,accepted,accepted,PASS,"",""

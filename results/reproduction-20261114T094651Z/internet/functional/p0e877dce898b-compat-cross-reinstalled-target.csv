@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+p0e877dce898b-compat-cross-reinstalled-target,com.cert.aspin.caller,cross,com.cert.aspin,protected,true,true,two-token-refresh,1794651345290,1794651320000,1794654920000,96.552490,81.314697,186.156413,369.424968,true,true,accepted,accepted,PASS,"",""

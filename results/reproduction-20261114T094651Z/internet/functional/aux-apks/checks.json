@@ -1,0 +1,30 @@
+{
+  "result": "PASS",
+  "verified_utc": "2026-11-14T10:50:51.815188+00:00",
+  "scope": "Post-run byte comparison of pulled installed packages; the functional Gradle caller and the later API-repacked caller have identical unsigned entries and signing certificate, not identical signing-block bytes. This is not a measurement-time signed build attestation.",
+  "installed_packages_match_archived_bytes": true,
+  "installed_packages": {
+    "com.cert.aspin.caller": {
+      "gradle_apk_sha256": "cc192fa2bec7ddd07198ec327f1ae82d9d8a1a323fc87320373966e7255595b9",
+      "installed_apk_sha256": "df2f05822728b3f88cb081a2bd7ee275865222107fb0a1ff0791a44f15842d2f",
+      "same_unsigned_entries": true,
+      "same_signing_certificate": true,
+      "signing_certificate_sha256": "11551ef400996c5c146975ba647658aaa2d532baabdf59c3d7a6f9a5e3bae83d",
+      "byte_identical": false
+    },
+    "com.cert.aspin.hidden": {
+      "gradle_apk_sha256": "9ce1eb412cda186a13eab26183c61c5a77e639cd4d887b181a9dd66ddc01d42d",
+      "installed_apk_sha256": "9ce1eb412cda186a13eab26183c61c5a77e639cd4d887b181a9dd66ddc01d42d",
+      "same_unsigned_entries": true,
+      "same_signing_certificate": true,
+      "signing_certificate_sha256": "11551ef400996c5c146975ba647658aaa2d532baabdf59c3d7a6f9a5e3bae83d",
+      "byte_identical": true
+    }
+  },
+  "files_sha256": {
+    "app-crossAppCaller.apk": "cc192fa2bec7ddd07198ec327f1ae82d9d8a1a323fc87320373966e7255595b9",
+    "app-crossAppHidden.apk": "9ce1eb412cda186a13eab26183c61c5a77e639cd4d887b181a9dd66ddc01d42d",
+    "installed-crossAppCaller.apk": "df2f05822728b3f88cb081a2bd7ee275865222107fb0a1ff0791a44f15842d2f",
+    "installed-crossAppHidden.apk": "9ce1eb412cda186a13eab26183c61c5a77e639cd4d887b181a9dd66ddc01d42d"
+  }
+}

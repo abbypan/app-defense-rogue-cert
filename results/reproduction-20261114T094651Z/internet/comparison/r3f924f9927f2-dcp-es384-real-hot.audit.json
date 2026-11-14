@@ -1,0 +1,30 @@
+{
+  "business_requests": 20,
+  "expected_business_requests": 20,
+  "measured_tags": [
+    "r3f924f9927f2-dcp-es384-real-hot-1",
+    "r3f924f9927f2-dcp-es384-real-hot-10",
+    "r3f924f9927f2-dcp-es384-real-hot-11",
+    "r3f924f9927f2-dcp-es384-real-hot-12",
+    "r3f924f9927f2-dcp-es384-real-hot-13",
+    "r3f924f9927f2-dcp-es384-real-hot-14",
+    "r3f924f9927f2-dcp-es384-real-hot-15",
+    "r3f924f9927f2-dcp-es384-real-hot-16",
+    "r3f924f9927f2-dcp-es384-real-hot-17",
+    "r3f924f9927f2-dcp-es384-real-hot-18",
+    "r3f924f9927f2-dcp-es384-real-hot-19",
+    "r3f924f9927f2-dcp-es384-real-hot-2",
+    "r3f924f9927f2-dcp-es384-real-hot-20",
+    "r3f924f9927f2-dcp-es384-real-hot-3",
+    "r3f924f9927f2-dcp-es384-real-hot-4",
+    "r3f924f9927f2-dcp-es384-real-hot-5",
+    "r3f924f9927f2-dcp-es384-real-hot-6",
+    "r3f924f9927f2-dcp-es384-real-hot-7",
+    "r3f924f9927f2-dcp-es384-real-hot-8",
+    "r3f924f9927f2-dcp-es384-real-hot-9"
+  ],
+  "metadata_requests": 1,
+  "expected_metadata_requests": 1,
+  "minimum_metadata_requests": 1,
+  "transport_failures": 0
+}

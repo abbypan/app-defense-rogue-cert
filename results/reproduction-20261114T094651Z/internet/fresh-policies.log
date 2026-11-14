@@ -1,0 +1,72 @@
+> es256: generate my-app-cert-scp-hash.txt
+QFQzq+74K/zkT1IRmVv0FCaekT6wM1udgC+rF2S6428=
+> es256: generate app-signing-key-rooted ClaimSigningKey JWS
+Copied /mnt/code/aspin/signing/es256/ClaimSigningKey.jws -> /mnt/code/aspin/signing/es256/ClaimSigningKey.primary.jws
+> es256: generate manifest-key-rooted compatible ClaimSigningKey JWS
+> es256: generate independently signed NSC DCP leaf-pin policy
+> es256: generate ServerCertClaim.jws
+> es256: validate ASPin token schema, trust anchors, and signatures
+es256: ASPin artifacts are structurally and cryptographically valid
+Wrote /mnt/code/aspin/signing/es256/my-app-cert-scp-hash.txt
+Wrote /mnt/code/aspin/signing/es256/ClaimSigningKey.primary.jws
+Wrote /mnt/code/aspin/signing/es256/ClaimSigningKey.compat.jws
+Wrote /mnt/code/aspin/signing/es256/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/es256/ServerCertClaim.jws -> /mnt/code/aspin/realserver/var/www/es256/.well-known/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/es256/DCPServerCertPin.jws -> /mnt/code/aspin/realserver/var/www/es256/.well-known/DCPServerCertPin.jws
+Copied /mnt/code/aspin/signing/es256/ClaimSigningKey.primary.jws -> /mnt/code/aspin/realserver/var/www/es256/.well-known/ClaimSigningKey.jws
+Copied /mnt/code/aspin/signing/es256/ClaimSigningKey.primary.jws -> /mnt/code/aspin/realserver/var/www/es256/.well-known/ClaimSigningKey.primary.jws
+Copied /mnt/code/aspin/signing/es256/ClaimSigningKey.compat.jws -> /mnt/code/aspin/realserver/var/www/es256/.well-known/ClaimSigningKey.compat.jws
+> es384: generate my-app-cert-scp-hash.txt
+eQ4ldmVRKkPbS6Ahsn2BDyxMc2xEkkpkur4YQsmnWlI=
+> es384: generate app-signing-key-rooted ClaimSigningKey JWS
+Copied /mnt/code/aspin/signing/es384/ClaimSigningKey.jws -> /mnt/code/aspin/signing/es384/ClaimSigningKey.primary.jws
+> es384: generate manifest-key-rooted compatible ClaimSigningKey JWS
+> es384: generate independently signed NSC DCP leaf-pin policy
+> es384: generate ServerCertClaim.jws
+> es384: validate ASPin token schema, trust anchors, and signatures
+es384: ASPin artifacts are structurally and cryptographically valid
+Wrote /mnt/code/aspin/signing/es384/my-app-cert-scp-hash.txt
+Wrote /mnt/code/aspin/signing/es384/ClaimSigningKey.primary.jws
+Wrote /mnt/code/aspin/signing/es384/ClaimSigningKey.compat.jws
+Wrote /mnt/code/aspin/signing/es384/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/es384/ServerCertClaim.jws -> /mnt/code/aspin/realserver/var/www/es384/.well-known/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/es384/DCPServerCertPin.jws -> /mnt/code/aspin/realserver/var/www/es384/.well-known/DCPServerCertPin.jws
+Copied /mnt/code/aspin/signing/es384/ClaimSigningKey.primary.jws -> /mnt/code/aspin/realserver/var/www/es384/.well-known/ClaimSigningKey.jws
+Copied /mnt/code/aspin/signing/es384/ClaimSigningKey.primary.jws -> /mnt/code/aspin/realserver/var/www/es384/.well-known/ClaimSigningKey.primary.jws
+Copied /mnt/code/aspin/signing/es384/ClaimSigningKey.compat.jws -> /mnt/code/aspin/realserver/var/www/es384/.well-known/ClaimSigningKey.compat.jws
+> rsa3072: generate my-app-cert-scp-hash.txt
+WDPukUU/2qGL7axE6IYiYMZb85waH1saUdGfKPZNDsg=
+> rsa3072: generate app-signing-key-rooted ClaimSigningKey JWS
+Copied /mnt/code/aspin/signing/rsa3072/ClaimSigningKey.jws -> /mnt/code/aspin/signing/rsa3072/ClaimSigningKey.primary.jws
+> rsa3072: generate manifest-key-rooted compatible ClaimSigningKey JWS
+> rsa3072: generate independently signed NSC DCP leaf-pin policy
+> rsa3072: generate ServerCertClaim.jws
+> rsa3072: validate ASPin token schema, trust anchors, and signatures
+rsa3072: ASPin artifacts are structurally and cryptographically valid
+Wrote /mnt/code/aspin/signing/rsa3072/my-app-cert-scp-hash.txt
+Wrote /mnt/code/aspin/signing/rsa3072/ClaimSigningKey.primary.jws
+Wrote /mnt/code/aspin/signing/rsa3072/ClaimSigningKey.compat.jws
+Wrote /mnt/code/aspin/signing/rsa3072/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/rsa3072/ServerCertClaim.jws -> /mnt/code/aspin/realserver/var/www/rsa3072/.well-known/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/rsa3072/DCPServerCertPin.jws -> /mnt/code/aspin/realserver/var/www/rsa3072/.well-known/DCPServerCertPin.jws
+Copied /mnt/code/aspin/signing/rsa3072/ClaimSigningKey.primary.jws -> /mnt/code/aspin/realserver/var/www/rsa3072/.well-known/ClaimSigningKey.jws
+Copied /mnt/code/aspin/signing/rsa3072/ClaimSigningKey.primary.jws -> /mnt/code/aspin/realserver/var/www/rsa3072/.well-known/ClaimSigningKey.primary.jws
+Copied /mnt/code/aspin/signing/rsa3072/ClaimSigningKey.compat.jws -> /mnt/code/aspin/realserver/var/www/rsa3072/.well-known/ClaimSigningKey.compat.jws
+> rsa4096: generate my-app-cert-scp-hash.txt
+E69E9hhB2GC1GNGlzbXqFgZq0yjlTki0DDNK4F97OpI=
+> rsa4096: generate app-signing-key-rooted ClaimSigningKey JWS
+Copied /mnt/code/aspin/signing/rsa4096/ClaimSigningKey.jws -> /mnt/code/aspin/signing/rsa4096/ClaimSigningKey.primary.jws
+> rsa4096: generate manifest-key-rooted compatible ClaimSigningKey JWS
+> rsa4096: generate independently signed NSC DCP leaf-pin policy
+> rsa4096: generate ServerCertClaim.jws
+> rsa4096: validate ASPin token schema, trust anchors, and signatures
+rsa4096: ASPin artifacts are structurally and cryptographically valid
+Wrote /mnt/code/aspin/signing/rsa4096/my-app-cert-scp-hash.txt
+Wrote /mnt/code/aspin/signing/rsa4096/ClaimSigningKey.primary.jws
+Wrote /mnt/code/aspin/signing/rsa4096/ClaimSigningKey.compat.jws
+Wrote /mnt/code/aspin/signing/rsa4096/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/rsa4096/ServerCertClaim.jws -> /mnt/code/aspin/realserver/var/www/rsa4096/.well-known/ServerCertClaim.jws
+Copied /mnt/code/aspin/signing/rsa4096/DCPServerCertPin.jws -> /mnt/code/aspin/realserver/var/www/rsa4096/.well-known/DCPServerCertPin.jws
+Copied /mnt/code/aspin/signing/rsa4096/ClaimSigningKey.primary.jws -> /mnt/code/aspin/realserver/var/www/rsa4096/.well-known/ClaimSigningKey.jws
+Copied /mnt/code/aspin/signing/rsa4096/ClaimSigningKey.primary.jws -> /mnt/code/aspin/realserver/var/www/rsa4096/.well-known/ClaimSigningKey.primary.jws
+Copied /mnt/code/aspin/signing/rsa4096/ClaimSigningKey.compat.jws -> /mnt/code/aspin/realserver/var/www/rsa4096/.well-known/ClaimSigningKey.compat.jws

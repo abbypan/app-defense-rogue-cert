@@ -1,2 +1,0 @@
-Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
-p4886d9f3e9b9-compat-tk-bound-restored-self,com.cert.aspin,self,,protected,true,true,two-token-refresh,1794639527350,1794639525000,1794643125000,332.879151,647.539063,995.741049,1495.666383,true,true,accepted,accepted,PASS,"",""

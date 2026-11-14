@@ -382,10 +382,6 @@ generate_unequal_expiry_es256_pair() {
         "$SCRIPT_DIR/realserver/var/www/es256/.well-known/ClaimSigningKey.jws"
     cp "$SCRIPT_DIR/signing/es256/ServerCertClaim.jws" \
         "$SCRIPT_DIR/realserver/var/www/es256/.well-known/ServerCertClaim.jws"
-    cp "$SCRIPT_DIR/signing/es256/ClaimSigningKey.jws" \
-        "$SCRIPT_DIR/ASPin/es256/app/src/main/resources/ClaimSigningKey.jws"
-    cp "$SCRIPT_DIR/signing/es256/ServerCertClaim.jws" \
-        "$SCRIPT_DIR/ASPin/es256/app/src/main/resources/ServerCertClaim.jws"
     deploy_profile real
     SERVER_CHANGED=1
 }

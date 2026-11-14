@@ -1,7 +1,7 @@
 # Evaluation protocol, controls, and measurement boundaries
 
 This document preserves the experimental details moved from Appendix C.
-The current reproduction session is `results/reproduction-20261114T062526Z/`.
+The current reproduction session is `results/reproduction-20261114T094651Z/`.
 Its `internet/` subtree contains the connection, functional, public-CA, and
 complete API/robustness suites; `certificate-change/` contains independently
 audited renewal/rekey observations. Functional lifecycle and cross-app cases are detailed in
@@ -22,6 +22,16 @@ observations. Selected driver sources, build configuration, and public inputs
 are retained byte-for-byte in `source-snapshot/`, not represented by hashes
 alone. The strict source-snapshot audit checks the complete recorded inventory.
 
+The active app sources no longer contain the unused manual SCP/DCP verifiers,
+app-side JWS verification stack, or old UI microbenchmarks. They retain the
+OS client, CertClaimCheck, native TLS, and current experiment entry points.
+The freshly rerun SCP/DCP observations use dedicated NSC APKs and native
+trust-manager integration. The primary and compatible ASPin paths use
+the OS service rather than an app-side policy-signature verifier.
+The current cohort's 264-file source snapshot excludes those legacy
+implementations. Only the latest complete experiment session is retained in
+the project; its source snapshots and raw observations remain immutable.
+
 Before testing, the reproduction runner verifies the installed system-partition
 prefix against the local image SHA-256 and checks seven runtime component
 hashes. It also archives changed AOSP sources and the patch bundle. This binds
@@ -41,8 +51,8 @@ invoke no business connection.
 The documented consistency/audit commands do not perform device measurements:
 
 ```sh
-python3 summarize-internet-evaluation.py results/reproduction-20261114T062526Z/internet --check-paper
-python3 summarize-certificate-change-results.py results/reproduction-20261114T062526Z/certificate-change --check-paper
+python3 summarize-internet-evaluation.py results/reproduction-20261114T094651Z/internet --check-paper
+python3 summarize-certificate-change-results.py results/reproduction-20261114T094651Z/certificate-change --check-paper
 python3 check-implementation-consistency.py
 python3 -m unittest test_internet_evaluation.py
 ```

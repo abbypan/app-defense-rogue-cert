@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+p0e877dce898b-compat-claim-key-matching-new,com.cert.aspin,self,,protected,true,true,two-token-refresh,1794651825894,1794651817000,1794655417000,131.539551,80.179402,218.946126,380.011922,true,true,accepted,accepted,PASS,"",""

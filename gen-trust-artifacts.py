@@ -64,7 +64,6 @@ def write_nsc_experiment_configs(repo_root, alg, scp_pin):
 
 def generate_for_algorithm(repo_root, alg):
     signing_dir = repo_root / "signing" / alg
-    app_resources_dir = repo_root / "ASPin" / alg / "app" / "src" / "main" / "resources"
     scp_generator = repo_root / "signing" / "gen_scp_hash.py"
     server_cert = repo_root / "realserver" / "etc" / "cert" / alg / "real-cert.pem"
     issuer_chain = repo_root / "realserver" / "etc" / "cert" / alg / "real-chain.pem"
@@ -155,14 +154,6 @@ def generate_for_algorithm(repo_root, alg):
     copy_file(
         signing_dir / "ClaimSigningKey.compat.jws",
         alg_well_known_dir / "ClaimSigningKey.compat.jws",
-    )
-    copy_file(
-        signing_dir / "ServerCertClaim.jws",
-        app_resources_dir / "ServerCertClaim.jws",
-    )
-    copy_file(
-        signing_dir / "ClaimSigningKey.primary.jws",
-        app_resources_dir / "ClaimSigningKey.jws",
     )
 
 

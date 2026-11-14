@@ -47,7 +47,4 @@ public final class AppTrustedServerCert {
                 host, getValidatedServerCertClaim(context, host));
     }
 
-    /** Kept for existing unit-test setup; caching is owned by the OS service. */
-    static void clearCachesForTests() {
-    }
 }

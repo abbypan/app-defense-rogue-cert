@@ -1,0 +1,120 @@
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig
+> Task :app:javaPreCompileDebug
+> Task :app:checkDebugAarMetadata
+> Task :app:processDebugNavigationResources
+> Task :app:compileDebugNavigationResources
+> Task :app:generateDebugResValues
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:parseDebugLocalResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest
+> Task :app:processDebugJavaRes NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes NO-SOURCE
+> Task :app:preScpBenchmarkBuild UP-TO-DATE
+> Task :app:generateScpBenchmarkBuildConfig
+> Task :app:javaPreCompileScpBenchmark
+> Task :app:checkScpBenchmarkAarMetadata
+> Task :app:processScpBenchmarkNavigationResources
+> Task :app:compileScpBenchmarkNavigationResources
+> Task :app:generateScpBenchmarkResValues
+> Task :app:mapScpBenchmarkSourceSetPaths
+> Task :app:generateScpBenchmarkResources
+> Task :app:mergeDebugResources
+> Task :app:packageScpBenchmarkResources
+> Task :app:createScpBenchmarkCompatibleScreenManifests
+> Task :app:extractDeepLinksScpBenchmark
+> Task :app:parseScpBenchmarkLocalResources
+> Task :app:processScpBenchmarkMainManifest
+> Task :app:processScpBenchmarkManifest
+> Task :app:processDebugManifestForPackage
+> Task :app:preScpBenchmarkUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileScpBenchmarkUnitTest
+> Task :app:processScpBenchmarkJavaRes NO-SOURCE
+> Task :app:processScpBenchmarkUnitTestJavaRes NO-SOURCE
+> Task :app:preDcpBenchmarkBuild UP-TO-DATE
+> Task :app:generateDcpBenchmarkBuildConfig
+> Task :app:javaPreCompileDcpBenchmark
+> Task :app:checkDcpBenchmarkAarMetadata
+> Task :app:processDcpBenchmarkNavigationResources
+> Task :app:compileDcpBenchmarkNavigationResources
+> Task :app:generateDcpBenchmarkResValues
+> Task :app:mapDcpBenchmarkSourceSetPaths
+> Task :app:generateDcpBenchmarkResources
+> Task :app:mergeScpBenchmarkResources
+> Task :app:packageDcpBenchmarkResources
+> Task :app:createDcpBenchmarkCompatibleScreenManifests
+> Task :app:extractDeepLinksDcpBenchmark
+> Task :app:parseDcpBenchmarkLocalResources
+> Task :app:processDcpBenchmarkMainManifest
+> Task :app:processDcpBenchmarkManifest
+> Task :app:preDcpBenchmarkUnitTestBuild UP-TO-DATE
+> Task :app:processDcpBenchmarkJavaRes NO-SOURCE
+> Task :app:javaPreCompileDcpBenchmarkUnitTest
+> Task :app:processDcpBenchmarkUnitTestJavaRes NO-SOURCE
+> Task :app:preCompatibilityBenchmarkBuild UP-TO-DATE
+> Task :app:generateCompatibilityBenchmarkBuildConfig
+> Task :app:javaPreCompileCompatibilityBenchmark
+> Task :app:checkCompatibilityBenchmarkAarMetadata
+> Task :app:processCompatibilityBenchmarkNavigationResources
+> Task :app:compileCompatibilityBenchmarkNavigationResources
+> Task :app:generateCompatibilityBenchmarkResValues
+> Task :app:mapCompatibilityBenchmarkSourceSetPaths
+> Task :app:generateCompatibilityBenchmarkResources
+> Task :app:mergeDcpBenchmarkResources
+> Task :app:processDebugResources
+> Task :app:mergeCompatibilityBenchmarkResources
+> Task :app:compileDebugJavaWithJavac
+> Task :app:processDcpBenchmarkManifestForPackage
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:compileDebugUnitTestJavaWithJavac
+> Task :app:processDcpBenchmarkResources
+> Task :app:testDebugUnitTest
+> Task :app:compileDcpBenchmarkJavaWithJavac
+> Task :app:bundleDcpBenchmarkClassesToRuntimeJar
+> Task :app:bundleDcpBenchmarkClassesToCompileJar
+> Task :app:packageCompatibilityBenchmarkResources
+> Task :app:compileDcpBenchmarkUnitTestJavaWithJavac
+> Task :app:testDcpBenchmarkUnitTest
+> Task :app:createCompatibilityBenchmarkCompatibleScreenManifests
+> Task :app:extractDeepLinksCompatibilityBenchmark
+> Task :app:parseCompatibilityBenchmarkLocalResources
+> Task :app:processCompatibilityBenchmarkMainManifest
+> Task :app:processCompatibilityBenchmarkManifest
+> Task :app:preCompatibilityBenchmarkUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileCompatibilityBenchmarkUnitTest
+> Task :app:processCompatibilityBenchmarkJavaRes NO-SOURCE
+> Task :app:processCompatibilityBenchmarkUnitTestJavaRes NO-SOURCE
+> Task :app:processCompatibilityBenchmarkManifestForPackage
+> Task :app:processScpBenchmarkManifestForPackage
+> Task :app:processCompatibilityBenchmarkResources
+> Task :app:processScpBenchmarkResources
+> Task :app:compileCompatibilityBenchmarkJavaWithJavac
+> Task :app:compileScpBenchmarkJavaWithJavac
+> Task :app:bundleScpBenchmarkClassesToRuntimeJar
+> Task :app:bundleScpBenchmarkClassesToCompileJar
+> Task :app:bundleCompatibilityBenchmarkClassesToRuntimeJar
+> Task :app:bundleCompatibilityBenchmarkClassesToCompileJar
+> Task :app:compileScpBenchmarkUnitTestJavaWithJavac
+> Task :app:testScpBenchmarkUnitTest
+> Task :app:compileCompatibilityBenchmarkUnitTestJavaWithJavac
+> Task :app:testCompatibilityBenchmarkUnitTest
+
+[Incubating] Problems report is available at: file:///mnt/code/aspin/ASPin/rsa4096/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 4s
+92 actionable tasks: 92 executed

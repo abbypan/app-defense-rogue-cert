@@ -1,0 +1,9 @@
+PASS patch/source tree: frameworks/base
+PASS patch/source tree: external/conscrypt
+PASS patch/source tree: system/sepolicy
+PASS experiment-reference hashes and available source bytes
+PASS preserved image, packaged runtime files, NSC APEX, measured build properties
+NOTE: Source/bytecode/image checks and measurement-time device hashes are not a signed build attestation or a reproducible full-image rebuild.
+NOTE: The experiment retains selected source/build/public-input bytes and APK hashes, not every toolchain dependency byte.
+NOTE: Single-device, fixed-order Internet observations do not establish deployment-scale performance or privileged rollback resistance.
+PASS within the recorded AOSP runtime scope; no image build, flash, or new measurement

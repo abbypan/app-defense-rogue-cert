@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+p0e877dce898b-primary-migration-joint-cutover-next,com.cert.aspin,self,,protected,true,true,two-token-refresh,1794651100658,1794651096000,1794651156000,451.098836,128.353882,586.286499,773.815674,true,true,accepted,accepted,PASS,"",""

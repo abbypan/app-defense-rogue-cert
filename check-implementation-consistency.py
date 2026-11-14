@@ -291,7 +291,6 @@ def check_apps():
         "OsAspinClient.java",
         "HttpsConn.java",
         "AppTrustedServerCert.java",
-        "PemUtils.java",
     )
     reference = ROOT / "ASPin" / VARIANTS[0] / "app" / "src" / "main" / "java" / "com" / "cert" / "aspin"
     for filename in common_files:
@@ -305,12 +304,33 @@ def check_apps():
         base = ROOT / "ASPin" / variant / "app" / "src" / "main"
         java = base / "java" / "com" / "cert" / "aspin"
         verifier = java / "ASPinVerifier.java"
-        jws_verifier = java / "JwsVerifier.java"
         client = java / "OsAspinClient.java"
         https = java / "HttpsConn.java"
         main = java / "MainActivity.java"
         gradle = ROOT / "ASPin" / variant / "app" / "build.gradle"
         manifest = base / "AndroidManifest.xml"
+        runtime_files = {
+            "ASPinVerifier.java", "AppTrustedServerCert.java", "HttpsConn.java",
+            "MainActivity.java", "OsAspinClient.java",
+        }
+        if {source.name for source in java.glob("*.java")} != runtime_files:
+            fail(f"unexpected or obsolete app runtime sources in {variant}")
+        if list((base / "resources").glob("*")):
+            fail(f"obsolete bundled policy/key resources remain in {variant}")
+        if (ROOT / "signing" / variant / "gen_dcp.py").exists():
+            fail(f"obsolete manual DCP generator remains in {variant}")
+        for source in java.glob("*.java"):
+            forbid(source, "SCPVerifier", "createSCPConnection", "getSCPTrustManagers",
+                   "createSCPSSLSocketFactory", "runHttpsSCPConnectionBenchmark",
+                   "benchmarkHttpsSCPConnection", "runTableAvgVisitTimeBenchmark",
+                   "DCPVerifier", "createDCPConnection", "getDCPTrustManagers",
+                   "createDCPSslSocketFactory", "runTableAvgVerifTimeBenchmark",
+                   "BenchmarkVerifier", "JwsVerifier", "create_main_conn",
+                   "getBypassTrustManagers", "createBypassSslSocketFactory")
+        forbid(base / "res" / "layout" / "activity_main.xml",
+               "httpsSCPConnectionBenchmarkButton", "AvgVisitTimeBenchmarkButton",
+               "DCPBenchmarkButton", "GetAndVerifyDCPButton",
+               "httpsDCPConnectionBenchmarkButton", "AvgVerifTimeBenchmarkButton")
         require(
             gradle,
             'applicationId "com.cert.aspin"',
@@ -327,6 +347,11 @@ def check_apps():
             fail(f"invalid Base64 SCP pin in {pin_path.relative_to(ROOT)}: {error}")
         if len(pin) != 32:
             fail(f"SCP pin is not a SHA-256 digest in {pin_path.relative_to(ROOT)}")
+        require(
+            ROOT / "ASPin" / variant / "app" / "src" / "scpBenchmark"
+            / "AndroidManifest.xml",
+            'android:networkSecurityConfig="@xml/network_security_config"',
+        )
         require(
             ROOT / "ASPin" / variant / "app" / "src" / "scpBenchmark"
             / "res" / "xml" / "network_security_config.xml",
@@ -372,13 +397,6 @@ def check_apps():
             'throw new CertificateException("The authenticated ASPin claim has expired")',
             "public long getExpiresAtMillis()",
         )
-        require(
-            jws_verifier,
-            "ASPin requires General JWS JSON Serialization",
-            'Set.of("payload", "signatures")',
-            'Set.of("protected", "signature")',
-        )
-        forbid(jws_verifier, "toCompactSerialization", "SignedJWT")
         forbid(
             verifier,
             "hostMatchesClaim(",
@@ -390,6 +408,8 @@ def check_apps():
         )
         require(
             https,
+            "An OS-authenticated ASPin claim is required",
+            "trustManagerFactory.init((KeyStore) null)",
             "new X509TrustManagerExtensions(defaultTrustManager)",
             "List<X509Certificate> validatedPath = trustManagerExtensions.checkServerTrusted(",
             "chain, authType, host)",
@@ -413,10 +433,7 @@ def check_apps():
             "OsAspinClient.getCertificateClaim(this, host)",
             "OsAspinClient.getCertificateClaimForApp(",
             "refreshValidatedAspinClaim(host)",
-            "getClaimKeyDownloadAndVerificationNanos()",
-            "getClaimDownloadAndVerificationNanos()",
-            "OS-level T_k download and verification",
-            "OS-level T_c download and verification",
+            "connectWithASPin()",
         )
         forbid(
             main,
@@ -435,6 +452,9 @@ def check_apps():
         '"ASPin-compatible"',
         "createStandardTLSConnection(host)",
         "createASPinConnection(host, claim)",
+        "getClaimKeyDownloadAndVerificationNanos()",
+        "getClaimDownloadAndVerificationNanos()",
+        "AppTrustedServerCert.refreshValidatedServerCertClaim(context, host)",
     )
 
     matches = list((ROOT / "ASPin").rglob("*com.abbypan.aspin*"))

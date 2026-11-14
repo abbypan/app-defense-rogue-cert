@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.cert.aspin.RttBenchmarkChecksTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-11-14T10:48:13.087Z" hostname="Pixel-8" time="0.001">
+  <properties/>
+  <testcase name="scpHasNoDynamicCache" classname="com.cert.aspin.RttBenchmarkChecksTest" time="0.0"/>
+  <testcase name="cacheEvidence" classname="com.cert.aspin.RttBenchmarkChecksTest" time="0.0"/>
+  <testcase name="partialRefreshIsNotCold" classname="com.cert.aspin.RttBenchmarkChecksTest" time="0.0"/>
+  <testcase name="onlyExactCertificatePolicyFailuresCount" classname="com.cert.aspin.RttBenchmarkChecksTest" time="0.0"/>
+  <testcase name="fetchIsNotHot" classname="com.cert.aspin.RttBenchmarkChecksTest" time="0.0"/>
+  <testcase name="expectedPaths" classname="com.cert.aspin.RttBenchmarkChecksTest" time="0.0"/>
+  <testcase name="timeoutIsNotPolicyRejection" classname="com.cert.aspin.RttBenchmarkChecksTest" time="0.0"/>
+  <testcase name="unchangedPolicyDuringCertificateChange" classname="com.cert.aspin.RttBenchmarkChecksTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,2 +1,0 @@
-Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
-p4886d9f3e9b9-compat-cross-caller-self,com.cert.aspin.caller,self,,protected,true,false,none,1794639242006,0,0,0.000000,0.000000,108.141480,108.269491,false,false,lookup_refused,lookup_refused,PASS,"java.lang.IllegalStateException","ASPin validation failed: T_k has no valid signature under the installed app or manifest ASPin root"

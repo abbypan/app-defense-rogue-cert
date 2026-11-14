@@ -1,0 +1,128 @@
+[1/64] r3f924f9927f2-dcp-es256-real-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[2/64] r3f924f9927f2-dcp-es256-real-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[3/64] r3f924f9927f2-dcp-es256-rogue-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[4/64] r3f924f9927f2-dcp-es256-rogue-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[5/64] r3f924f9927f2-dcp-es384-real-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[6/64] r3f924f9927f2-dcp-es384-real-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[7/64] r3f924f9927f2-dcp-es384-rogue-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[8/64] r3f924f9927f2-dcp-es384-rogue-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[9/64] r3f924f9927f2-dcp-rsa3072-real-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[10/64] r3f924f9927f2-dcp-rsa3072-real-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[11/64] r3f924f9927f2-dcp-rsa3072-rogue-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[12/64] r3f924f9927f2-dcp-rsa3072-rogue-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[13/64] r3f924f9927f2-dcp-rsa4096-real-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[14/64] r3f924f9927f2-dcp-rsa4096-real-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[15/64] r3f924f9927f2-dcp-rsa4096-rogue-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[16/64] r3f924f9927f2-dcp-rsa4096-rogue-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[17/64] r3f924f9927f2-tls-es256-real-none
+  20/20 expected outcomes; 0 transport failures; audit OK
+[18/64] r3f924f9927f2-tls-es256-rogue-none
+  20/20 expected outcomes; 0 transport failures; audit OK
+[19/64] r3f924f9927f2-tls-es384-real-none
+  20/20 expected outcomes; 0 transport failures; audit OK
+[20/64] r3f924f9927f2-tls-es384-rogue-none
+  20/20 expected outcomes; 0 transport failures; audit OK
+[21/64] r3f924f9927f2-tls-rsa3072-real-none
+  20/20 expected outcomes; 0 transport failures; audit OK
+[22/64] r3f924f9927f2-tls-rsa3072-rogue-none
+  20/20 expected outcomes; 0 transport failures; audit OK
+[23/64] r3f924f9927f2-tls-rsa4096-real-none
+  20/20 expected outcomes; 0 transport failures; audit OK
+[24/64] r3f924f9927f2-tls-rsa4096-rogue-none
+  20/20 expected outcomes; 0 transport failures; audit OK
+[25/64] r3f924f9927f2-scp-es256-real-static
+  20/20 expected outcomes; 0 transport failures; audit OK
+[26/64] r3f924f9927f2-scp-es256-rogue-static
+  20/20 expected outcomes; 0 transport failures; audit OK
+[27/64] r3f924f9927f2-scp-es384-real-static
+  20/20 expected outcomes; 0 transport failures; audit OK
+[28/64] r3f924f9927f2-scp-es384-rogue-static
+  20/20 expected outcomes; 0 transport failures; audit OK
+[29/64] r3f924f9927f2-scp-rsa3072-real-static
+  20/20 expected outcomes; 0 transport failures; audit OK
+[30/64] r3f924f9927f2-scp-rsa3072-rogue-static
+  20/20 expected outcomes; 0 transport failures; audit OK
+[31/64] r3f924f9927f2-scp-rsa4096-real-static
+  20/20 expected outcomes; 0 transport failures; audit OK
+[32/64] r3f924f9927f2-scp-rsa4096-rogue-static
+  20/20 expected outcomes; 0 transport failures; audit OK
+[33/64] r3f924f9927f2-aspin-es256-real-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[34/64] r3f924f9927f2-aspin-es256-real-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[35/64] r3f924f9927f2-aspin-es256-rogue-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[36/64] r3f924f9927f2-aspin-es256-rogue-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[37/64] r3f924f9927f2-aspin-es384-real-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[38/64] r3f924f9927f2-aspin-es384-real-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[39/64] r3f924f9927f2-aspin-es384-rogue-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[40/64] r3f924f9927f2-aspin-es384-rogue-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[41/64] r3f924f9927f2-aspin-rsa3072-real-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[42/64] r3f924f9927f2-aspin-rsa3072-real-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[43/64] r3f924f9927f2-aspin-rsa3072-rogue-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[44/64] r3f924f9927f2-aspin-rsa3072-rogue-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[45/64] r3f924f9927f2-aspin-rsa4096-real-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[46/64] r3f924f9927f2-aspin-rsa4096-real-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[47/64] r3f924f9927f2-aspin-rsa4096-rogue-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[48/64] r3f924f9927f2-aspin-rsa4096-rogue-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[49/64] r3f924f9927f2-aspin-compatible-es256-real-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[50/64] r3f924f9927f2-aspin-compatible-es256-real-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[51/64] r3f924f9927f2-aspin-compatible-es256-rogue-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[52/64] r3f924f9927f2-aspin-compatible-es256-rogue-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[53/64] r3f924f9927f2-aspin-compatible-es384-real-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[54/64] r3f924f9927f2-aspin-compatible-es384-real-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[55/64] r3f924f9927f2-aspin-compatible-es384-rogue-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[56/64] r3f924f9927f2-aspin-compatible-es384-rogue-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[57/64] r3f924f9927f2-aspin-compatible-rsa3072-real-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[58/64] r3f924f9927f2-aspin-compatible-rsa3072-real-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[59/64] r3f924f9927f2-aspin-compatible-rsa3072-rogue-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[60/64] r3f924f9927f2-aspin-compatible-rsa3072-rogue-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[61/64] r3f924f9927f2-aspin-compatible-rsa4096-real-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[62/64] r3f924f9927f2-aspin-compatible-rsa4096-real-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK
+[63/64] r3f924f9927f2-aspin-compatible-rsa4096-rogue-hot
+  20/20 expected outcomes; 0 transport failures; audit OK
+[64/64] r3f924f9927f2-aspin-compatible-rsa4096-rogue-cold-forced-refresh
+  20/20 expected outcomes; 0 transport failures; audit OK

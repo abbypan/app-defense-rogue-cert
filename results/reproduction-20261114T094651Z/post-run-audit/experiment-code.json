@@ -1,0 +1,1869 @@
+{
+  "audit_kind": "AOSP source/patch/runtime audit linked to a fresh, source-archived Internet session",
+  "audited_utc": "2026-11-14T10:50:51.942034+00:00",
+  "base_manifest_sha256": "d20be480a07ea868b313af610dc757eb39715c5ae6f097f1f92fe18c2af171ed",
+  "bundle_sha256": "d7cdd8ca02891e980021eb8b5251d4731515f70f2b2b313469d541723c8276b2",
+  "byte_identical_class_count": 251,
+  "class_groups": [
+    {
+      "class_count": 38,
+      "class_set_sha256": "f68775a5bebc304fa1f044cdd76878bf370d9b5b90ba70954d8483e415315aa8",
+      "jar": "soong/.intermediates/external/conscrypt/framework-conscrypt-nsc.impl/android_common_apex31/javac/framework-conscrypt-nsc.jar",
+      "jar_sha256": "9d80bc8b0b3fa62ff953f71e995024847b5e330484b8cf25298d61d432ffd9b9",
+      "name": "nsc",
+      "prefixes": [
+        "android/security/net/config/"
+      ]
+    },
+    {
+      "class_count": 10,
+      "class_set_sha256": "320140a2b0ec837c2f3c3f7fb794381bd9009a63265b99fa6e3efe2f9998de02",
+      "jar": "soong/.intermediates/frameworks/base/services/core/services.core.unboosted/android_common/javac/services.core.unboosted.jar5",
+      "jar_sha256": "d01646114a30afb974aaf20d1d7cefda6c8608754b4379f73815839289c88f3f",
+      "name": "service",
+      "prefixes": [
+        "com/android/server/aspin/"
+      ]
+    },
+    {
+      "class_count": 179,
+      "class_set_sha256": "8dd34320c8de67036cfca077e4ac35e558706795d3a28f029f18a548bbe5040a",
+      "jar": "soong/.intermediates/frameworks/base/framework-minus-apex/android_common/javac/framework.jar2",
+      "jar_sha256": "5d6dfcb7be17603f4d6fcfa6b7e4a0f09c942c4b60c2c8bf2a11acd9c95a93cc",
+      "name": "registry",
+      "prefixes": [
+        "android/app/SystemServiceRegistry"
+      ]
+    },
+    {
+      "class_count": 16,
+      "class_set_sha256": "ce6d25c7b4d8a15bdad6ca111fdfe3060d8bbb1b63573d062ae82d9bab24de29",
+      "jar": "soong/.intermediates/frameworks/base/framework-minus-apex/android_common/javac/framework.jar5",
+      "jar_sha256": "aff4ec5e8c91e69136304d66de1d723696f8f1f5f931b8c705907aad88ba5082",
+      "name": "context",
+      "prefixes": [
+        "android/content/Context"
+      ]
+    },
+    {
+      "class_count": 3,
+      "class_set_sha256": "ef2b4f77cdbff4bd98dbebcb78e2e156d2f31510bdaa8a2dea82ff231925c057",
+      "jar": "soong/.intermediates/frameworks/base/framework-minus-apex/android_common/javac/framework.jar14",
+      "jar_sha256": "cf54a1d0af6ee02050ef42174b0e0272ab9ffe04388bdc27d890f45211892dca",
+      "name": "api",
+      "prefixes": [
+        "android/security/aspin/"
+      ]
+    },
+    {
+      "class_count": 5,
+      "class_set_sha256": "8fbe14a4fbc11617d74ac0d7ceb370a2ba80ef5677da6816090cd508f250bade",
+      "jar": "soong/.intermediates/frameworks/base/services/services.impl/android_common/javac/services.impl.jar",
+      "jar_sha256": "5df7840c87a7ab19aa9cd970df0f0b24de7a66df5b0ab9c4b5944571860f4408",
+      "name": "systemserver",
+      "prefixes": [
+        "com/android/server/SystemServer"
+      ]
+    }
+  ],
+  "compiler_audit_method": [
+    "Read the original six javac actions using Ninja -t commands; never execute their shell cleanup.",
+    "Retain the JDK, language/debug/code-generation flags, annotation processors and source response files.",
+    "Redirect class/generated outputs to temporary directories; omit the OnError diagnostic action and cleaned non-source response lists.",
+    "Compare all selected outer/nested class names and bytes, ignoring only JAR order and container timestamps."
+  ],
+  "experiment_references": [
+    {
+      "manifest": "results/reproduction-20261114T094651Z/internet/cohort.json",
+      "sha256": "4d6899b2841b0fad43fdfa26c0567ad0a6f40f6b3d4e5055d51b6a36cfaeb3f9",
+      "recorded_source_field": "source_sha256",
+      "source_resolutions": [
+        {
+          "path": "ASPin/es256/app/build.gradle",
+          "sha256": "57d02234fe8da1ef3ccd2198cffb6ec46281cd9ce88b84e6c7594ff6d170ceff",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/build.gradle"
+        },
+        {
+          "path": "ASPin/es256/app/src/compatibilityBenchmark/AndroidManifest.xml",
+          "sha256": "1f154070b413a0f06fb918b650d70f2cd2dadfec46f4810f18ae708c37cebf69",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/compatibilityBenchmark/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/compatibilityBenchmark/res/xml/network_security_config.xml",
+          "sha256": "62d1fceb7fc337c37b8e516141d9aadfabb021919a29504875948ad403d6728d",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/compatibilityBenchmark/res/xml/network_security_config.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/crossAppCaller/AndroidManifest.xml",
+          "sha256": "0a1bde72ff3669b55fe190f211e0ba78fcbbeb31f44d29008ed8c4b67510edba",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/crossAppCaller/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/crossAppHidden/AndroidManifest.xml",
+          "sha256": "c51e5bca1f941d1ed4a6343522a2d3a75808fef4c87c4b17e586557cc9fa108b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/crossAppHidden/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/dcpBenchmark/AndroidManifest.xml",
+          "sha256": "60fef3bca9891249ef80a21ded2ea5cbc89cf9da3de746719b8158bee3c61bef",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/dcpBenchmark/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/dcpBenchmark/res/xml/network_security_config.xml",
+          "sha256": "1518c288e053bf9e6969dbad65346bc193ad1a7b1bd515d6f852c4ef5646c793",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/dcpBenchmark/res/xml/network_security_config.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/debug/AndroidManifest.xml",
+          "sha256": "875e663910225953bff31da886339ba0cb97056731c49a16fca3b44d2ae10dd4",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/debug/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/debug/res/raw/aspin_benchmark_ca.pem",
+          "sha256": "ea9bd360e550c73ead8b24fd42d851c55768e433ba93977f2aa29278c4936743",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/debug/res/raw/aspin_benchmark_ca.pem"
+        },
+        {
+          "path": "ASPin/es256/app/src/debug/res/xml/network_security_config.xml",
+          "sha256": "955a1a7474913ad87a762165ebacf9a0b04a8de1cb54b90339ea53c5baf3b6e9",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/debug/res/xml/network_security_config.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/main/AndroidManifest.xml",
+          "sha256": "f4ffba3e967c8a699fd657bc421d304560f170ca184d58239b78edb1bbc11eb5",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/main/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/main/java/com/cert/aspin/ASPinVerifier.java",
+          "sha256": "1975dcd975e53a50305eb40cf8578c90b4a76a3d2fb3b72f34e0935104ca8020",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/main/java/com/cert/aspin/ASPinVerifier.java"
+        },
+        {
+          "path": "ASPin/es256/app/src/main/java/com/cert/aspin/AppTrustedServerCert.java",
+          "sha256": "5d51944d9365b51b7a0216d6b178fac2335b8b560ecdfab91a544f593f2ff8ca",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/main/java/com/cert/aspin/AppTrustedServerCert.java"
+        },
+        {
+          "path": "ASPin/es256/app/src/main/java/com/cert/aspin/HttpsConn.java",
+          "sha256": "781c1b91438e3671b232dca9fe625167db8b30cf92e0dd62feebe00468c62bab",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/main/java/com/cert/aspin/HttpsConn.java"
+        },
+        {
+          "path": "ASPin/es256/app/src/main/java/com/cert/aspin/MainActivity.java",
+          "sha256": "e657dcdff0aeae3fe53b731aa09d02480e8c34e5130fe8d8d0b28b469fd277f3",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/main/java/com/cert/aspin/MainActivity.java"
+        },
+        {
+          "path": "ASPin/es256/app/src/main/java/com/cert/aspin/OsAspinClient.java",
+          "sha256": "62f42cdcb91a5abd6fefbfeb7300437602bb4047ea5e06e570ab2633a5cce529",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/main/java/com/cert/aspin/OsAspinClient.java"
+        },
+        {
+          "path": "ASPin/es256/app/src/main/res/drawable/ic_launcher_background.xml",
+          "sha256": "ed423c73a6f40a4d2909f0901e60527b3a807cd59e1b5593bcaae1808b1c6321",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/main/res/drawable/ic_launcher_background.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/main/res/drawable/ic_launcher_foreground.xml",
+          "sha256": "01d1a6a6c1234eb7fe270d097eb283d72b9c95ae5118886f1b6573aad280f1f7",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/main/res/drawable/ic_launcher_foreground.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/main/res/layout/activity_main.xml",
+          "sha256": "f17e69d84a689d9f813fe5acf38e0681d5e3fb9a59737de5d2d8cad17c466a0b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/main/res/layout/activity_main.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/main/res/mipmap-anydpi/ic_launcher.xml",
+          "sha256": "88f7653499ef524126ea5018a99baf9cc3269e7e584d6205dfdd76db39f39cc0",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/main/res/mipmap-anydpi/ic_launcher.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/main/res/mipmap-anydpi/ic_launcher_round.xml",
+          "sha256": "88f7653499ef524126ea5018a99baf9cc3269e7e584d6205dfdd76db39f39cc0",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/main/res/mipmap-anydpi/ic_launcher_round.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/main/res/values/colors.xml",
+          "sha256": "b5626527d503417f0d8e5b1e08f338de7b31173bf0e122815f03e64932adbd88",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/main/res/values/colors.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/main/res/values/strings.xml",
+          "sha256": "6604aeb08cc8f44b469fb2051e12091313443238d263422bfb17bff1323bcd3f",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/main/res/values/strings.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/main/res/values/themes.xml",
+          "sha256": "fc90df73097339dfae28f0ba6c7982938b10160c71d169c4b6efc2dc1d65fe8d",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/main/res/values/themes.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/main/res/values-night/themes.xml",
+          "sha256": "f6023dbb5097338934eb3c3db3891a7bfba7f6e6723dc16e56704ddc90ea5462",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/main/res/values-night/themes.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/main/res/xml/backup_rules.xml",
+          "sha256": "6cf1a27e6807b1d24e41d3fbe7ddc1bfe1f42226027964f6eaf477d71b43b283",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/main/res/xml/backup_rules.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/main/res/xml/data_extraction_rules.xml",
+          "sha256": "cb1fc47ab4a984530ed60e0e6ee638929c3038290e7e7e0b4b03a3a30fbe7381",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/main/res/xml/data_extraction_rules.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/publicCrossCompatible/AndroidManifest.xml",
+          "sha256": "172d1276d96460b8aa1c22809f6f6377800cd52b6f71cbcd8336986b485a4aaa",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/publicCrossCompatible/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/publicCrossPrimary/AndroidManifest.xml",
+          "sha256": "83d12f1c1ba0df1cabf89d408ad8c43c5e23d993eb15a34d693b18eee60950c2",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/publicCrossPrimary/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/scpBenchmark/AndroidManifest.xml",
+          "sha256": "875e663910225953bff31da886339ba0cb97056731c49a16fca3b44d2ae10dd4",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/scpBenchmark/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/es256/app/src/scpBenchmark/res/xml/network_security_config.xml",
+          "sha256": "762aee7dde8cf44f5896199e6c00d60f06cffea46e7686c5e18668a67d9162ae",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/scpBenchmark/res/xml/network_security_config.xml"
+        },
+        {
+          "path": "ASPin/es256/build.gradle",
+          "sha256": "5dad2d59c54beb7d7801e06e1c795456d1bea58c0ccbeddfce159cd8f58c2fa8",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/build.gradle"
+        },
+        {
+          "path": "ASPin/es256/gradle/wrapper/gradle-wrapper.jar",
+          "sha256": "76805e32c009c0cf0dd5d206bddc9fb22ea42e84db904b764f3047de095493f3",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/gradle/wrapper/gradle-wrapper.jar"
+        },
+        {
+          "path": "ASPin/es256/gradle/wrapper/gradle-wrapper.properties",
+          "sha256": "9bbf0f190f06ffad2d1b547dfbc3fb140942a9a30bff67990da63908badeb836",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/gradle/wrapper/gradle-wrapper.properties"
+        },
+        {
+          "path": "ASPin/es256/gradle.properties",
+          "sha256": "aff8b5b5154d31dfd85cc12d1d1d5782eae537679c4dec28a82ae0dc572ab44b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/gradle.properties"
+        },
+        {
+          "path": "ASPin/es256/gradlew",
+          "sha256": "3238afb2aed5cb16eb7d6718077e7138059108f007b54179e9cc157c5a6e0e89",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/gradlew"
+        },
+        {
+          "path": "ASPin/es256/gradlew.bat",
+          "sha256": "1d297e00bd21de3ace22b4d7f2de1f9dfa858883d66bbf7c1ccbecccec8f4f3b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/gradlew.bat"
+        },
+        {
+          "path": "ASPin/es256/settings.gradle",
+          "sha256": "ad0cde0694f7e9c28d16f1791d1fa7efd93bca175c8f97996f757175f0ebacaf",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/settings.gradle"
+        },
+        {
+          "path": "ASPin/es384/app/build.gradle",
+          "sha256": "f345eb1d9b291fcda47250197ce9245fcecd571e0b77863cadc94303f69d243b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/build.gradle"
+        },
+        {
+          "path": "ASPin/es384/app/src/compatibilityBenchmark/AndroidManifest.xml",
+          "sha256": "2616029c25a2185c8fbc8ee1e893afb14fcca2737b8275f2bcba05d59e66112c",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/compatibilityBenchmark/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/compatibilityBenchmark/res/xml/network_security_config.xml",
+          "sha256": "62d1fceb7fc337c37b8e516141d9aadfabb021919a29504875948ad403d6728d",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/compatibilityBenchmark/res/xml/network_security_config.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/dcpBenchmark/AndroidManifest.xml",
+          "sha256": "60fef3bca9891249ef80a21ded2ea5cbc89cf9da3de746719b8158bee3c61bef",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/dcpBenchmark/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/dcpBenchmark/res/xml/network_security_config.xml",
+          "sha256": "25c3611414db8d4569eabc58a392bd84bc7af7efa356f36725a1c82eec5c8896",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/dcpBenchmark/res/xml/network_security_config.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/debug/AndroidManifest.xml",
+          "sha256": "875e663910225953bff31da886339ba0cb97056731c49a16fca3b44d2ae10dd4",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/debug/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/debug/res/raw/aspin_benchmark_ca.pem",
+          "sha256": "ea9bd360e550c73ead8b24fd42d851c55768e433ba93977f2aa29278c4936743",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/debug/res/raw/aspin_benchmark_ca.pem"
+        },
+        {
+          "path": "ASPin/es384/app/src/debug/res/xml/network_security_config.xml",
+          "sha256": "955a1a7474913ad87a762165ebacf9a0b04a8de1cb54b90339ea53c5baf3b6e9",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/debug/res/xml/network_security_config.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/main/AndroidManifest.xml",
+          "sha256": "f4ffba3e967c8a699fd657bc421d304560f170ca184d58239b78edb1bbc11eb5",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/main/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/main/java/com/cert/aspin/ASPinVerifier.java",
+          "sha256": "1975dcd975e53a50305eb40cf8578c90b4a76a3d2fb3b72f34e0935104ca8020",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/main/java/com/cert/aspin/ASPinVerifier.java"
+        },
+        {
+          "path": "ASPin/es384/app/src/main/java/com/cert/aspin/AppTrustedServerCert.java",
+          "sha256": "5d51944d9365b51b7a0216d6b178fac2335b8b560ecdfab91a544f593f2ff8ca",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/main/java/com/cert/aspin/AppTrustedServerCert.java"
+        },
+        {
+          "path": "ASPin/es384/app/src/main/java/com/cert/aspin/HttpsConn.java",
+          "sha256": "781c1b91438e3671b232dca9fe625167db8b30cf92e0dd62feebe00468c62bab",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/main/java/com/cert/aspin/HttpsConn.java"
+        },
+        {
+          "path": "ASPin/es384/app/src/main/java/com/cert/aspin/MainActivity.java",
+          "sha256": "379b928ae2939e49d7613dca72d1d67bb6fd23be3e73bd68a1501f7c360ac40f",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/main/java/com/cert/aspin/MainActivity.java"
+        },
+        {
+          "path": "ASPin/es384/app/src/main/java/com/cert/aspin/OsAspinClient.java",
+          "sha256": "62f42cdcb91a5abd6fefbfeb7300437602bb4047ea5e06e570ab2633a5cce529",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/main/java/com/cert/aspin/OsAspinClient.java"
+        },
+        {
+          "path": "ASPin/es384/app/src/main/res/drawable/ic_launcher_background.xml",
+          "sha256": "ed423c73a6f40a4d2909f0901e60527b3a807cd59e1b5593bcaae1808b1c6321",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/main/res/drawable/ic_launcher_background.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/main/res/drawable/ic_launcher_foreground.xml",
+          "sha256": "01d1a6a6c1234eb7fe270d097eb283d72b9c95ae5118886f1b6573aad280f1f7",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/main/res/drawable/ic_launcher_foreground.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/main/res/layout/activity_main.xml",
+          "sha256": "f17e69d84a689d9f813fe5acf38e0681d5e3fb9a59737de5d2d8cad17c466a0b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/main/res/layout/activity_main.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/main/res/mipmap-anydpi/ic_launcher.xml",
+          "sha256": "88f7653499ef524126ea5018a99baf9cc3269e7e584d6205dfdd76db39f39cc0",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/main/res/mipmap-anydpi/ic_launcher.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/main/res/mipmap-anydpi/ic_launcher_round.xml",
+          "sha256": "88f7653499ef524126ea5018a99baf9cc3269e7e584d6205dfdd76db39f39cc0",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/main/res/mipmap-anydpi/ic_launcher_round.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/main/res/values/colors.xml",
+          "sha256": "b5626527d503417f0d8e5b1e08f338de7b31173bf0e122815f03e64932adbd88",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/main/res/values/colors.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/main/res/values/strings.xml",
+          "sha256": "6604aeb08cc8f44b469fb2051e12091313443238d263422bfb17bff1323bcd3f",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/main/res/values/strings.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/main/res/values/themes.xml",
+          "sha256": "fc90df73097339dfae28f0ba6c7982938b10160c71d169c4b6efc2dc1d65fe8d",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/main/res/values/themes.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/main/res/values-night/themes.xml",
+          "sha256": "f6023dbb5097338934eb3c3db3891a7bfba7f6e6723dc16e56704ddc90ea5462",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/main/res/values-night/themes.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/main/res/xml/backup_rules.xml",
+          "sha256": "6cf1a27e6807b1d24e41d3fbe7ddc1bfe1f42226027964f6eaf477d71b43b283",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/main/res/xml/backup_rules.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/main/res/xml/data_extraction_rules.xml",
+          "sha256": "cb1fc47ab4a984530ed60e0e6ee638929c3038290e7e7e0b4b03a3a30fbe7381",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/main/res/xml/data_extraction_rules.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/scpBenchmark/AndroidManifest.xml",
+          "sha256": "875e663910225953bff31da886339ba0cb97056731c49a16fca3b44d2ae10dd4",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/scpBenchmark/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/es384/app/src/scpBenchmark/res/xml/network_security_config.xml",
+          "sha256": "7580e5681efc1a76411adc9b0350a4261b93594b3f85aba5cec669240fc2472a",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/scpBenchmark/res/xml/network_security_config.xml"
+        },
+        {
+          "path": "ASPin/es384/build.gradle",
+          "sha256": "5dad2d59c54beb7d7801e06e1c795456d1bea58c0ccbeddfce159cd8f58c2fa8",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/build.gradle"
+        },
+        {
+          "path": "ASPin/es384/gradle/wrapper/gradle-wrapper.jar",
+          "sha256": "76805e32c009c0cf0dd5d206bddc9fb22ea42e84db904b764f3047de095493f3",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/gradle/wrapper/gradle-wrapper.jar"
+        },
+        {
+          "path": "ASPin/es384/gradle/wrapper/gradle-wrapper.properties",
+          "sha256": "9bbf0f190f06ffad2d1b547dfbc3fb140942a9a30bff67990da63908badeb836",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/gradle/wrapper/gradle-wrapper.properties"
+        },
+        {
+          "path": "ASPin/es384/gradle.properties",
+          "sha256": "aff8b5b5154d31dfd85cc12d1d1d5782eae537679c4dec28a82ae0dc572ab44b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/gradle.properties"
+        },
+        {
+          "path": "ASPin/es384/gradlew",
+          "sha256": "3238afb2aed5cb16eb7d6718077e7138059108f007b54179e9cc157c5a6e0e89",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/gradlew"
+        },
+        {
+          "path": "ASPin/es384/gradlew.bat",
+          "sha256": "1d297e00bd21de3ace22b4d7f2de1f9dfa858883d66bbf7c1ccbecccec8f4f3b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/gradlew.bat"
+        },
+        {
+          "path": "ASPin/es384/settings.gradle",
+          "sha256": "ad0cde0694f7e9c28d16f1791d1fa7efd93bca175c8f97996f757175f0ebacaf",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/settings.gradle"
+        },
+        {
+          "path": "ASPin/rsa3072/app/build.gradle",
+          "sha256": "806382829a1745216a7529f5aa17654ebdccb1ba3fc440807492b064c9c5b2b4",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/build.gradle"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/compatibilityBenchmark/AndroidManifest.xml",
+          "sha256": "2616029c25a2185c8fbc8ee1e893afb14fcca2737b8275f2bcba05d59e66112c",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/compatibilityBenchmark/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/compatibilityBenchmark/res/xml/network_security_config.xml",
+          "sha256": "62d1fceb7fc337c37b8e516141d9aadfabb021919a29504875948ad403d6728d",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/compatibilityBenchmark/res/xml/network_security_config.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/dcpBenchmark/AndroidManifest.xml",
+          "sha256": "60fef3bca9891249ef80a21ded2ea5cbc89cf9da3de746719b8158bee3c61bef",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/dcpBenchmark/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/dcpBenchmark/res/xml/network_security_config.xml",
+          "sha256": "84c3763ef787f4c66c2d7873d42d210bf4cb8cc5ef10a651b6c00aa378078af8",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/dcpBenchmark/res/xml/network_security_config.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/debug/AndroidManifest.xml",
+          "sha256": "875e663910225953bff31da886339ba0cb97056731c49a16fca3b44d2ae10dd4",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/debug/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/debug/res/raw/aspin_benchmark_ca.pem",
+          "sha256": "ea9bd360e550c73ead8b24fd42d851c55768e433ba93977f2aa29278c4936743",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/debug/res/raw/aspin_benchmark_ca.pem"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/debug/res/xml/network_security_config.xml",
+          "sha256": "955a1a7474913ad87a762165ebacf9a0b04a8de1cb54b90339ea53c5baf3b6e9",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/debug/res/xml/network_security_config.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/main/AndroidManifest.xml",
+          "sha256": "f4ffba3e967c8a699fd657bc421d304560f170ca184d58239b78edb1bbc11eb5",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/main/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/main/java/com/cert/aspin/ASPinVerifier.java",
+          "sha256": "1975dcd975e53a50305eb40cf8578c90b4a76a3d2fb3b72f34e0935104ca8020",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/main/java/com/cert/aspin/ASPinVerifier.java"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/main/java/com/cert/aspin/AppTrustedServerCert.java",
+          "sha256": "5d51944d9365b51b7a0216d6b178fac2335b8b560ecdfab91a544f593f2ff8ca",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/main/java/com/cert/aspin/AppTrustedServerCert.java"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/main/java/com/cert/aspin/HttpsConn.java",
+          "sha256": "781c1b91438e3671b232dca9fe625167db8b30cf92e0dd62feebe00468c62bab",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/main/java/com/cert/aspin/HttpsConn.java"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/main/java/com/cert/aspin/MainActivity.java",
+          "sha256": "316e927329a111b39a53f2b9f80a73468af6266e6b1159366f0009dad62d05e3",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/main/java/com/cert/aspin/MainActivity.java"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/main/java/com/cert/aspin/OsAspinClient.java",
+          "sha256": "62f42cdcb91a5abd6fefbfeb7300437602bb4047ea5e06e570ab2633a5cce529",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/main/java/com/cert/aspin/OsAspinClient.java"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/main/res/drawable/ic_launcher_background.xml",
+          "sha256": "ed423c73a6f40a4d2909f0901e60527b3a807cd59e1b5593bcaae1808b1c6321",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/main/res/drawable/ic_launcher_background.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/main/res/drawable/ic_launcher_foreground.xml",
+          "sha256": "01d1a6a6c1234eb7fe270d097eb283d72b9c95ae5118886f1b6573aad280f1f7",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/main/res/drawable/ic_launcher_foreground.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/main/res/layout/activity_main.xml",
+          "sha256": "f17e69d84a689d9f813fe5acf38e0681d5e3fb9a59737de5d2d8cad17c466a0b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/main/res/layout/activity_main.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/main/res/mipmap-anydpi/ic_launcher.xml",
+          "sha256": "88f7653499ef524126ea5018a99baf9cc3269e7e584d6205dfdd76db39f39cc0",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/main/res/mipmap-anydpi/ic_launcher.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/main/res/mipmap-anydpi/ic_launcher_round.xml",
+          "sha256": "88f7653499ef524126ea5018a99baf9cc3269e7e584d6205dfdd76db39f39cc0",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/main/res/mipmap-anydpi/ic_launcher_round.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/main/res/values/colors.xml",
+          "sha256": "b5626527d503417f0d8e5b1e08f338de7b31173bf0e122815f03e64932adbd88",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/main/res/values/colors.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/main/res/values/strings.xml",
+          "sha256": "6604aeb08cc8f44b469fb2051e12091313443238d263422bfb17bff1323bcd3f",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/main/res/values/strings.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/main/res/values/themes.xml",
+          "sha256": "fc90df73097339dfae28f0ba6c7982938b10160c71d169c4b6efc2dc1d65fe8d",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/main/res/values/themes.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/main/res/values-night/themes.xml",
+          "sha256": "f6023dbb5097338934eb3c3db3891a7bfba7f6e6723dc16e56704ddc90ea5462",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/main/res/values-night/themes.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/main/res/xml/backup_rules.xml",
+          "sha256": "6cf1a27e6807b1d24e41d3fbe7ddc1bfe1f42226027964f6eaf477d71b43b283",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/main/res/xml/backup_rules.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/main/res/xml/data_extraction_rules.xml",
+          "sha256": "cb1fc47ab4a984530ed60e0e6ee638929c3038290e7e7e0b4b03a3a30fbe7381",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/main/res/xml/data_extraction_rules.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/scpBenchmark/AndroidManifest.xml",
+          "sha256": "875e663910225953bff31da886339ba0cb97056731c49a16fca3b44d2ae10dd4",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/scpBenchmark/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/scpBenchmark/res/xml/network_security_config.xml",
+          "sha256": "0bd009367a31b5a9ac0fa9b476bf70a49cc908544ea2264a78ca24d8469aed6c",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/scpBenchmark/res/xml/network_security_config.xml"
+        },
+        {
+          "path": "ASPin/rsa3072/build.gradle",
+          "sha256": "5dad2d59c54beb7d7801e06e1c795456d1bea58c0ccbeddfce159cd8f58c2fa8",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/build.gradle"
+        },
+        {
+          "path": "ASPin/rsa3072/gradle/wrapper/gradle-wrapper.jar",
+          "sha256": "76805e32c009c0cf0dd5d206bddc9fb22ea42e84db904b764f3047de095493f3",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/gradle/wrapper/gradle-wrapper.jar"
+        },
+        {
+          "path": "ASPin/rsa3072/gradle/wrapper/gradle-wrapper.properties",
+          "sha256": "9bbf0f190f06ffad2d1b547dfbc3fb140942a9a30bff67990da63908badeb836",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/gradle/wrapper/gradle-wrapper.properties"
+        },
+        {
+          "path": "ASPin/rsa3072/gradle.properties",
+          "sha256": "aff8b5b5154d31dfd85cc12d1d1d5782eae537679c4dec28a82ae0dc572ab44b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/gradle.properties"
+        },
+        {
+          "path": "ASPin/rsa3072/gradlew",
+          "sha256": "3238afb2aed5cb16eb7d6718077e7138059108f007b54179e9cc157c5a6e0e89",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/gradlew"
+        },
+        {
+          "path": "ASPin/rsa3072/gradlew.bat",
+          "sha256": "1d297e00bd21de3ace22b4d7f2de1f9dfa858883d66bbf7c1ccbecccec8f4f3b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/gradlew.bat"
+        },
+        {
+          "path": "ASPin/rsa3072/settings.gradle",
+          "sha256": "ad0cde0694f7e9c28d16f1791d1fa7efd93bca175c8f97996f757175f0ebacaf",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/settings.gradle"
+        },
+        {
+          "path": "ASPin/rsa4096/app/build.gradle",
+          "sha256": "a2414fb0b5b9b2f1d5b88279ed9f8c6d050c29aabb7bb8be6ec05b0111c7b2d2",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/build.gradle"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/compatibilityBenchmark/AndroidManifest.xml",
+          "sha256": "2616029c25a2185c8fbc8ee1e893afb14fcca2737b8275f2bcba05d59e66112c",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/compatibilityBenchmark/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/compatibilityBenchmark/res/xml/network_security_config.xml",
+          "sha256": "62d1fceb7fc337c37b8e516141d9aadfabb021919a29504875948ad403d6728d",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/compatibilityBenchmark/res/xml/network_security_config.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/dcpBenchmark/AndroidManifest.xml",
+          "sha256": "60fef3bca9891249ef80a21ded2ea5cbc89cf9da3de746719b8158bee3c61bef",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/dcpBenchmark/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/dcpBenchmark/res/xml/network_security_config.xml",
+          "sha256": "90195686d565732ac37e7ff6bc1a99bcb36d15532312789fac173677c287d5b0",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/dcpBenchmark/res/xml/network_security_config.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/debug/AndroidManifest.xml",
+          "sha256": "875e663910225953bff31da886339ba0cb97056731c49a16fca3b44d2ae10dd4",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/debug/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/debug/res/raw/aspin_benchmark_ca.pem",
+          "sha256": "ea9bd360e550c73ead8b24fd42d851c55768e433ba93977f2aa29278c4936743",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/debug/res/raw/aspin_benchmark_ca.pem"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/debug/res/xml/network_security_config.xml",
+          "sha256": "955a1a7474913ad87a762165ebacf9a0b04a8de1cb54b90339ea53c5baf3b6e9",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/debug/res/xml/network_security_config.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/main/AndroidManifest.xml",
+          "sha256": "f4ffba3e967c8a699fd657bc421d304560f170ca184d58239b78edb1bbc11eb5",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/main/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/main/java/com/cert/aspin/ASPinVerifier.java",
+          "sha256": "1975dcd975e53a50305eb40cf8578c90b4a76a3d2fb3b72f34e0935104ca8020",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/main/java/com/cert/aspin/ASPinVerifier.java"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/main/java/com/cert/aspin/AppTrustedServerCert.java",
+          "sha256": "5d51944d9365b51b7a0216d6b178fac2335b8b560ecdfab91a544f593f2ff8ca",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/main/java/com/cert/aspin/AppTrustedServerCert.java"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/main/java/com/cert/aspin/HttpsConn.java",
+          "sha256": "781c1b91438e3671b232dca9fe625167db8b30cf92e0dd62feebe00468c62bab",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/main/java/com/cert/aspin/HttpsConn.java"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/main/java/com/cert/aspin/MainActivity.java",
+          "sha256": "346d9ac54a13e7f77795af673b02ed94306c564323a80e3186053214df9db658",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/main/java/com/cert/aspin/MainActivity.java"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/main/java/com/cert/aspin/OsAspinClient.java",
+          "sha256": "62f42cdcb91a5abd6fefbfeb7300437602bb4047ea5e06e570ab2633a5cce529",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/main/java/com/cert/aspin/OsAspinClient.java"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/main/res/drawable/ic_launcher_background.xml",
+          "sha256": "ed423c73a6f40a4d2909f0901e60527b3a807cd59e1b5593bcaae1808b1c6321",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/main/res/drawable/ic_launcher_background.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/main/res/drawable/ic_launcher_foreground.xml",
+          "sha256": "01d1a6a6c1234eb7fe270d097eb283d72b9c95ae5118886f1b6573aad280f1f7",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/main/res/drawable/ic_launcher_foreground.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/main/res/layout/activity_main.xml",
+          "sha256": "f17e69d84a689d9f813fe5acf38e0681d5e3fb9a59737de5d2d8cad17c466a0b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/main/res/layout/activity_main.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/main/res/mipmap-anydpi/ic_launcher.xml",
+          "sha256": "88f7653499ef524126ea5018a99baf9cc3269e7e584d6205dfdd76db39f39cc0",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/main/res/mipmap-anydpi/ic_launcher.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/main/res/mipmap-anydpi/ic_launcher_round.xml",
+          "sha256": "88f7653499ef524126ea5018a99baf9cc3269e7e584d6205dfdd76db39f39cc0",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/main/res/mipmap-anydpi/ic_launcher_round.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/main/res/values/colors.xml",
+          "sha256": "b5626527d503417f0d8e5b1e08f338de7b31173bf0e122815f03e64932adbd88",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/main/res/values/colors.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/main/res/values/strings.xml",
+          "sha256": "6604aeb08cc8f44b469fb2051e12091313443238d263422bfb17bff1323bcd3f",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/main/res/values/strings.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/main/res/values/themes.xml",
+          "sha256": "fc90df73097339dfae28f0ba6c7982938b10160c71d169c4b6efc2dc1d65fe8d",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/main/res/values/themes.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/main/res/values-night/themes.xml",
+          "sha256": "f6023dbb5097338934eb3c3db3891a7bfba7f6e6723dc16e56704ddc90ea5462",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/main/res/values-night/themes.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/main/res/xml/backup_rules.xml",
+          "sha256": "6cf1a27e6807b1d24e41d3fbe7ddc1bfe1f42226027964f6eaf477d71b43b283",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/main/res/xml/backup_rules.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/main/res/xml/data_extraction_rules.xml",
+          "sha256": "cb1fc47ab4a984530ed60e0e6ee638929c3038290e7e7e0b4b03a3a30fbe7381",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/main/res/xml/data_extraction_rules.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/scpBenchmark/AndroidManifest.xml",
+          "sha256": "875e663910225953bff31da886339ba0cb97056731c49a16fca3b44d2ae10dd4",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/scpBenchmark/AndroidManifest.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/scpBenchmark/res/xml/network_security_config.xml",
+          "sha256": "04b49e32e6db1b62e23e22521cd7c5abd78ee34d15853bd644a5069f726caa33",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/scpBenchmark/res/xml/network_security_config.xml"
+        },
+        {
+          "path": "ASPin/rsa4096/build.gradle",
+          "sha256": "5dad2d59c54beb7d7801e06e1c795456d1bea58c0ccbeddfce159cd8f58c2fa8",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/build.gradle"
+        },
+        {
+          "path": "ASPin/rsa4096/gradle/wrapper/gradle-wrapper.jar",
+          "sha256": "76805e32c009c0cf0dd5d206bddc9fb22ea42e84db904b764f3047de095493f3",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/gradle/wrapper/gradle-wrapper.jar"
+        },
+        {
+          "path": "ASPin/rsa4096/gradle/wrapper/gradle-wrapper.properties",
+          "sha256": "9bbf0f190f06ffad2d1b547dfbc3fb140942a9a30bff67990da63908badeb836",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/gradle/wrapper/gradle-wrapper.properties"
+        },
+        {
+          "path": "ASPin/rsa4096/gradle.properties",
+          "sha256": "aff8b5b5154d31dfd85cc12d1d1d5782eae537679c4dec28a82ae0dc572ab44b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/gradle.properties"
+        },
+        {
+          "path": "ASPin/rsa4096/gradlew",
+          "sha256": "3238afb2aed5cb16eb7d6718077e7138059108f007b54179e9cc157c5a6e0e89",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/gradlew"
+        },
+        {
+          "path": "ASPin/rsa4096/gradlew.bat",
+          "sha256": "1d297e00bd21de3ace22b4d7f2de1f9dfa858883d66bbf7c1ccbecccec8f4f3b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/gradlew.bat"
+        },
+        {
+          "path": "ASPin/rsa4096/settings.gradle",
+          "sha256": "ad0cde0694f7e9c28d16f1791d1fa7efd93bca175c8f97996f757175f0ebacaf",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/settings.gradle"
+        },
+        {
+          "path": "ASPin/shared/src/main/java/com/cert/aspin/CrossSignBenchmark.java",
+          "sha256": "79f3ab47b335ea4b34094c3b56dbb04e36348a443645c5fd9a190e94dd467cc8",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/shared/src/main/java/com/cert/aspin/CrossSignBenchmark.java"
+        },
+        {
+          "path": "ASPin/shared/src/main/java/com/cert/aspin/ExperimentBenchmark.java",
+          "sha256": "d83f1369379453e31d5e8285a532888538dd3d03a117861403c77e2e18a76b24",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/shared/src/main/java/com/cert/aspin/ExperimentBenchmark.java"
+        },
+        {
+          "path": "ASPin/shared/src/main/java/com/cert/aspin/PolicyScenarioBenchmark.java",
+          "sha256": "146e7308c8801274bdc854ffdaf42400f901f5657e24d4fce7fdfd7c61e497d2",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/shared/src/main/java/com/cert/aspin/PolicyScenarioBenchmark.java"
+        },
+        {
+          "path": "ASPin/shared/src/main/java/com/cert/aspin/PolicyScenarioChecks.java",
+          "sha256": "0b1328834b069ba6bb8c06297120e5f542c3dc014c85b5cb4f0b60ad6cf7f09f",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/shared/src/main/java/com/cert/aspin/PolicyScenarioChecks.java"
+        },
+        {
+          "path": "ASPin/shared/src/main/java/com/cert/aspin/RttBenchmarkChecks.java",
+          "sha256": "e43fa6de4e9a2ca60f78c75e42b0af56994c03a2df74d0f87d82cabb2f397201",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/shared/src/main/java/com/cert/aspin/RttBenchmarkChecks.java"
+        },
+        {
+          "path": "ASPin/shared/src/main/java/com/cert/aspin/RttCacheBenchmark.java",
+          "sha256": "e6c7eea99f1fcdac081bf997cdcb4371ecb16d0211f200bb49c5e23d0fc3bdf2",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/shared/src/main/java/com/cert/aspin/RttCacheBenchmark.java"
+        },
+        {
+          "path": "ASPin/shared/src/main/java/com/cert/aspin/SchemeComparisonBenchmark.java",
+          "sha256": "7900c56f7fba274ce05a02b2aa0dfd8834da016a5aa6efde5c2821a0a72e145c",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/shared/src/main/java/com/cert/aspin/SchemeComparisonBenchmark.java"
+        },
+        {
+          "path": "ASPin/shared/src/test/java/com/cert/aspin/ConnectionSecurityTest.java",
+          "sha256": "eb46ae7ef63233613c03c4662d9bf3704ebb98c10c988146d7da2363cf36e8ab",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/shared/src/test/java/com/cert/aspin/ConnectionSecurityTest.java"
+        },
+        {
+          "path": "ASPin/shared/src/test/java/com/cert/aspin/PolicyScenarioChecksTest.java",
+          "sha256": "c6b21402adaee76b1c35f9f0f2c4eb18b636ca930ad2b1c0a8a7c395ea29297b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/shared/src/test/java/com/cert/aspin/PolicyScenarioChecksTest.java"
+        },
+        {
+          "path": "ASPin/shared/src/test/java/com/cert/aspin/RttBenchmarkChecksTest.java",
+          "sha256": "00d8a965d1ac5e933d6b245e765891b837afbbe93417ee79da9d15be3805e79c",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/shared/src/test/java/com/cert/aspin/RttBenchmarkChecksTest.java"
+        },
+        {
+          "path": "benchmark_device_dns.py",
+          "sha256": "9e38d37cc1f7638ba48660d5dc6020be98e3ea922781a60350c448028832f20a",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/benchmark_device_dns.py"
+        },
+        {
+          "path": "benchmark_device_network.py",
+          "sha256": "988107e07064cbbdcdbedea8d3b02907ef42294c7fc27af8ac68dbaba6c55835",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/benchmark_device_network.py"
+        },
+        {
+          "path": "benchmark_rtt_network.py",
+          "sha256": "42b851b18746f419b5a6a4a24c0047a0d5e53b7294db8a191bd01940b0a88e55",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/benchmark_rtt_network.py"
+        },
+        {
+          "path": "check-implementation-consistency.py",
+          "sha256": "086c64cc1ec9ce1753991cff4626d80efc36173c9ca28bcb1cc8a290f1e8418f",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/check-implementation-consistency.py"
+        },
+        {
+          "path": "check-trust-artifacts.py",
+          "sha256": "1babcdd5853320db75ea80f906d465dbde77ad9dd201c28b2cff0afc59c0f2a4",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/check-trust-artifacts.py"
+        },
+        {
+          "path": "deploy-remote-experiment.py",
+          "sha256": "956222e0b4a98d6712a28e5a1d4288b93cd5eb062d23ddfda7a4471922f224d3",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/deploy-remote-experiment.py"
+        },
+        {
+          "path": "gen-signed-apks.py",
+          "sha256": "12c7b363d24734702b2bdc53f3ec4072a7c1b6d36cd069f49fa7949620ddfd84",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/gen-signed-apks.py"
+        },
+        {
+          "path": "gen-trust-artifacts.py",
+          "sha256": "2e753c77cacb3154ae3cffdbdfd3e797e15cf9558040e31483cd4d5997d0b063",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/gen-trust-artifacts.py"
+        },
+        {
+          "path": "generate-cross-sign-fixtures.py",
+          "sha256": "6ac7fc3832a0a1f958133d5ef89ff4dd99c85f2cd0c668da8af878088e57661d",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/generate-cross-sign-fixtures.py"
+        },
+        {
+          "path": "generate-lifecycle-artifacts.py",
+          "sha256": "181cb71cdbc4cd5b7475bcfd4a1c019ee0f884eda582f7dcebb2e6884f1fd584",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/generate-lifecycle-artifacts.py"
+        },
+        {
+          "path": "prepare-certificate-change.py",
+          "sha256": "88c1c35cbf05b06a8ebfca776043ad77657c757bbd0c2b333b97367b4d1519d3",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/prepare-certificate-change.py"
+        },
+        {
+          "path": "public_cross_protocol.py",
+          "sha256": "8a7ff74ca196f43acfca5fb6a11be7c5b801e261ddfdb793b25263c4f208f328",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/public_cross_protocol.py"
+        },
+        {
+          "path": "realserver/etc/cert/dcp/real-cert.pem",
+          "sha256": "24b08dc1496f1fa75e962fd220fe90a5dda9efe3fb31943cee200152c6667eff",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/realserver/etc/cert/dcp/real-cert.pem"
+        },
+        {
+          "path": "realserver/etc/cert/dcp/real-chain.pem",
+          "sha256": "a6e60af7ea5a12b71a16bfeac63001dae38246c5b82c595d56becdad5e7c71ab",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/realserver/etc/cert/dcp/real-chain.pem"
+        },
+        {
+          "path": "realserver/etc/cert/es256/real-cert.pem",
+          "sha256": "b74a9f18c19b81cf1c5463ba441c3e6edd48ce32a9f0f0661a84479b6a327767",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/realserver/etc/cert/es256/real-cert.pem"
+        },
+        {
+          "path": "realserver/etc/cert/es256/real-chain.pem",
+          "sha256": "a6e60af7ea5a12b71a16bfeac63001dae38246c5b82c595d56becdad5e7c71ab",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/realserver/etc/cert/es256/real-chain.pem"
+        },
+        {
+          "path": "realserver/etc/cert/es384/real-cert.pem",
+          "sha256": "627865de272bd93345fe7439ec3e18b22cfe45f781e0a21459a9ee4297c3d208",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/realserver/etc/cert/es384/real-cert.pem"
+        },
+        {
+          "path": "realserver/etc/cert/es384/real-chain.pem",
+          "sha256": "a6e60af7ea5a12b71a16bfeac63001dae38246c5b82c595d56becdad5e7c71ab",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/realserver/etc/cert/es384/real-chain.pem"
+        },
+        {
+          "path": "realserver/etc/cert/rsa3072/real-cert.pem",
+          "sha256": "3f0d0f2077c22f6a39c1ac7c5b7d5098282a3c6ddcc15c27b580e6e804d38ce1",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/realserver/etc/cert/rsa3072/real-cert.pem"
+        },
+        {
+          "path": "realserver/etc/cert/rsa3072/real-chain.pem",
+          "sha256": "cbd8aec7c2cf94b1c3914b8ce11240ef2ce18f49228f3da34d9a23dd22f52775",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/realserver/etc/cert/rsa3072/real-chain.pem"
+        },
+        {
+          "path": "realserver/etc/cert/rsa4096/real-cert.pem",
+          "sha256": "880a8ee0508629e080414d435b34694f82e989d665c76828d142354bdac6479c",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/realserver/etc/cert/rsa4096/real-cert.pem"
+        },
+        {
+          "path": "realserver/etc/cert/rsa4096/real-chain.pem",
+          "sha256": "46ce03d47fea73922fdbc0fd9576ae0d3c68e848104cdab96005763ae2ce9439",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/realserver/etc/cert/rsa4096/real-chain.pem"
+        },
+        {
+          "path": "remote-experiment/control.py",
+          "sha256": "8ab9218b54054a4bd15e27d782cee41844c19c4381be6b6436a7e45e669c07b4",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/remote-experiment/control.py"
+        },
+        {
+          "path": "remote-experiment/server.py",
+          "sha256": "31cb145ce8462f990368d3c59dad3a7c12b3bd94dd56335c24a849bbc6b7ba21",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/remote-experiment/server.py"
+        },
+        {
+          "path": "remote-experiment/sni.py",
+          "sha256": "f5e11fc8cf348e136f9f47704ea37f873943c335a9e3a45af8d5d70cf3c640ca",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/remote-experiment/sni.py"
+        },
+        {
+          "path": "request-public-cross-certificates.py",
+          "sha256": "7a03dceb0c27ffd8d57c1a956c9291dd1499bdd30348fc79961f16e1f6f02f0d",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/request-public-cross-certificates.py"
+        },
+        {
+          "path": "request-server-certificates.py",
+          "sha256": "9991eb56e4f130c62e6546ffea48e487cd0e86677375dfb2e34774a4fdb4c2c4",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/request-server-certificates.py"
+        },
+        {
+          "path": "run-certificate-change-benchmark.py",
+          "sha256": "5d7c1c14edc02accde59c79e37dc241166d1adf2c81156d1c8015719387c9c5b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/run-certificate-change-benchmark.py"
+        },
+        {
+          "path": "run-cross-sign-benchmark.py",
+          "sha256": "bec9d6a438348f8ded3be1a66269d748f9ec9331c4ddd54cbd210a2535f98a1d",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/run-cross-sign-benchmark.py"
+        },
+        {
+          "path": "run-internet-evaluation.py",
+          "sha256": "beea85c1a68bfb6ddc40a3123ac8cff2406855ff0b09f5e6e4ef11dd7492152b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/run-internet-evaluation.py"
+        },
+        {
+          "path": "run-policy-scenario-matrix.py",
+          "sha256": "b057e2c7bf74c9198f870b5b70670a5674a00e428b732e263ed7a81167b730d3",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/run-policy-scenario-matrix.py"
+        },
+        {
+          "path": "run-public-cross-benchmark.py",
+          "sha256": "50e8190032e407e603d4aca08a84e7eb783b8802fdcfa7fc2b9cf383b61cec99",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/run-public-cross-benchmark.py"
+        },
+        {
+          "path": "run-remote-api-robustness.py",
+          "sha256": "ac15c813e3d712a99ba51e03d007cf6971cb6f9da1ae02b85e27e72171f29c1d",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/run-remote-api-robustness.py"
+        },
+        {
+          "path": "run-remote-comparison.py",
+          "sha256": "c7ee3b78fabad1d854e7324c9888dc87df05cef40aeb1355cf7f713c9f77bdaf",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/run-remote-comparison.py"
+        },
+        {
+          "path": "run-remote-policy-scenarios.py",
+          "sha256": "901c4cc15f96dccb7eca1be3abfd4fc64de7c8d01e7c9db03a10d52c49419eed",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/run-remote-policy-scenarios.py"
+        },
+        {
+          "path": "run-reproducible-evaluation.py",
+          "sha256": "73967b5b80a3a1584270feb222bcc06370f04b96d39862e4b137038c5eb8659d",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/run-reproducible-evaluation.py"
+        },
+        {
+          "path": "run-rtt-cache-matrix.py",
+          "sha256": "c120b243245dd2e2224800c50da52f0bd2f290cff37eebc34d6d08e9fcd99493",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/run-rtt-cache-matrix.py"
+        },
+        {
+          "path": "signing/cosign_claim_signing_key.py",
+          "sha256": "55c24b5b6eacabecb8d84eefaab989e24b6da4e16c561abb18802a559e683f74",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/cosign_claim_signing_key.py"
+        },
+        {
+          "path": "signing/es256/gen_app_signing_key.sh",
+          "sha256": "1bc50dc2e093e1d7178ace8f5f10a9d0c2c47409a7f88178e4931f970f68917c",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es256/gen_app_signing_key.sh"
+        },
+        {
+          "path": "signing/es256/gen_claim_signing_key.sh",
+          "sha256": "c690952bd17cc48c16a989db4b79a78b05d1709813b4c3139862be55f6adebf0",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es256/gen_claim_signing_key.sh"
+        },
+        {
+          "path": "signing/es256/gen_dcp_signing_key.sh",
+          "sha256": "c2a198e41c6aa8d2c60704cfa70cbedd7a18b22ab5511cc5408350e8844b4fb2",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es256/gen_dcp_signing_key.sh"
+        },
+        {
+          "path": "signing/es256/gen_jws_ClaimSigningKey.py",
+          "sha256": "492226249a3082c7218e6bd78c5100b83c57299de1aec8d6c05f0a8715ad81db",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es256/gen_jws_ClaimSigningKey.py"
+        },
+        {
+          "path": "signing/es256/gen_jws_ServerCertClaim.py",
+          "sha256": "93298e979a41dd28fdae5a129cc0429f4181db2023a8010f65db7783fc408b9f",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es256/gen_jws_ServerCertClaim.py"
+        },
+        {
+          "path": "signing/es256/my-app-cert-scp-hash.txt",
+          "sha256": "038e331f9857068c026f776106ee953b970177e2b1ace02c6ffa0da4585d5df6",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es256/my-app-cert-scp-hash.txt"
+        },
+        {
+          "path": "signing/es256/my-app-cert.pem",
+          "sha256": "4b3237390d685ab75c14e0764ea7ca2a585a58684fb924c505745766f28be6b5",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es256/my-app-cert.pem"
+        },
+        {
+          "path": "signing/es256/my-app-pubkey.pem",
+          "sha256": "6f0ff8adc85106443a391328616ab9173721f53b9884a33b3f23200f09a0514d",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es256/my-app-pubkey.pem"
+        },
+        {
+          "path": "signing/es256/my-claim-pubkey.pem",
+          "sha256": "7e8fe93f39dc8fe9bbc41ccbe7fef6d0007875f1a464599acd0c03a89d18574a",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es256/my-claim-pubkey.pem"
+        },
+        {
+          "path": "signing/es256/my-dcp-pub.txt",
+          "sha256": "66357390bbc8d3674347f0d65063cb5ddadd66c7cd30310caa8b43974d9a06c4",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es256/my-dcp-pub.txt"
+        },
+        {
+          "path": "signing/es256/my-dcp-pubkey.pem",
+          "sha256": "905b8e4b583c2a329f34761ecd6e0f9a4a9c4b0bb101dd6ba74185517c1b5a31",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es256/my-dcp-pubkey.pem"
+        },
+        {
+          "path": "signing/es384/gen_app_signing_key.sh",
+          "sha256": "47dbbf2061be783d31c5e1ceebf27fc31468affaeb20af45c8a8b8a1604b8076",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es384/gen_app_signing_key.sh"
+        },
+        {
+          "path": "signing/es384/gen_claim_signing_key.sh",
+          "sha256": "ff2352949103bb03272284f0367eb4d8d7a981128accf637feba2fb77d82e2a8",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es384/gen_claim_signing_key.sh"
+        },
+        {
+          "path": "signing/es384/gen_dcp_signing_key.sh",
+          "sha256": "e6183479a24ae41e9ee76629b3a2cb810c229842d2d6c0695e412bb2b8e54689",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es384/gen_dcp_signing_key.sh"
+        },
+        {
+          "path": "signing/es384/gen_jws_ClaimSigningKey.py",
+          "sha256": "492226249a3082c7218e6bd78c5100b83c57299de1aec8d6c05f0a8715ad81db",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es384/gen_jws_ClaimSigningKey.py"
+        },
+        {
+          "path": "signing/es384/gen_jws_ServerCertClaim.py",
+          "sha256": "93298e979a41dd28fdae5a129cc0429f4181db2023a8010f65db7783fc408b9f",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es384/gen_jws_ServerCertClaim.py"
+        },
+        {
+          "path": "signing/es384/my-app-cert-scp-hash.txt",
+          "sha256": "b77b75ba6a93f1d51e9fe152b764e5a2fcc8fb2dfcca5fb83ebd7cd4bffae915",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es384/my-app-cert-scp-hash.txt"
+        },
+        {
+          "path": "signing/es384/my-app-cert.pem",
+          "sha256": "9d3fb185df1e27cc51f07b0308afeb289d3f1c96330957ccb19ef72b6ede5191",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es384/my-app-cert.pem"
+        },
+        {
+          "path": "signing/es384/my-app-pubkey.pem",
+          "sha256": "ab87798d87ec98fba94813d5466c08cd7e422cf1f56de4f637969569003daea4",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es384/my-app-pubkey.pem"
+        },
+        {
+          "path": "signing/es384/my-claim-pubkey.pem",
+          "sha256": "2e33e289daff90f373a964456be2f324431397d4be238ad6c766ffd634003d73",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es384/my-claim-pubkey.pem"
+        },
+        {
+          "path": "signing/es384/my-dcp-pub.txt",
+          "sha256": "db6d8a6a2d7c2c2597c68d5fd89dc5b3cdedea1fa5634549173cd0aac0a173b7",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es384/my-dcp-pub.txt"
+        },
+        {
+          "path": "signing/es384/my-dcp-pubkey.pem",
+          "sha256": "2c404ceb30c8ec4080a7b34b18d0e6457bb89098d45102bd750f2d6e0b2c8ad9",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/es384/my-dcp-pubkey.pem"
+        },
+        {
+          "path": "signing/gen_compat_ClaimSigningKey.py",
+          "sha256": "f551cd3736991541e269876f5a2d3cdc7f23e44815b9398b070a2fef79f3792e",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/gen_compat_ClaimSigningKey.py"
+        },
+        {
+          "path": "signing/gen_dcp_policy.py",
+          "sha256": "742244cd014731fbb28220d1c22d7af5aa9824b3e2f7fafeae460cd8a933e3a0",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/gen_dcp_policy.py"
+        },
+        {
+          "path": "signing/gen_scp_hash.py",
+          "sha256": "ee9ee4e7d4381a0d90bdb1313be5b400684a3f6e3f7038ded5870cd64c221d84",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/gen_scp_hash.py"
+        },
+        {
+          "path": "signing/issuer_policy.py",
+          "sha256": "2cf667c8972fafe494e31e2507874f66c10ccb0197df22bced72977dd73897b9",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/issuer_policy.py"
+        },
+        {
+          "path": "signing/rsa3072/gen_app_signing_key.sh",
+          "sha256": "99179ccd5234a528f994e3ac982689497855025042a594ee2aa0e71ab9c4a115",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa3072/gen_app_signing_key.sh"
+        },
+        {
+          "path": "signing/rsa3072/gen_claim_signing_key.sh",
+          "sha256": "e0d636fb45c08efbc4940fd650a1819079aa75f9dc8810230e9a9a9858589092",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa3072/gen_claim_signing_key.sh"
+        },
+        {
+          "path": "signing/rsa3072/gen_dcp_signing_key.sh",
+          "sha256": "2fdea5c9797020e6624a245bba740a66dba1e0bfa93f402c5723ec1eedcd9acb",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa3072/gen_dcp_signing_key.sh"
+        },
+        {
+          "path": "signing/rsa3072/gen_jws_ClaimSigningKey.py",
+          "sha256": "492226249a3082c7218e6bd78c5100b83c57299de1aec8d6c05f0a8715ad81db",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa3072/gen_jws_ClaimSigningKey.py"
+        },
+        {
+          "path": "signing/rsa3072/gen_jws_ServerCertClaim.py",
+          "sha256": "93298e979a41dd28fdae5a129cc0429f4181db2023a8010f65db7783fc408b9f",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa3072/gen_jws_ServerCertClaim.py"
+        },
+        {
+          "path": "signing/rsa3072/my-app-cert-scp-hash.txt",
+          "sha256": "6a7dc2c38e44cdc75dd7f1fff0ebe6e38e963c4428915ac6c7e52b8027be7a71",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa3072/my-app-cert-scp-hash.txt"
+        },
+        {
+          "path": "signing/rsa3072/my-app-cert.pem",
+          "sha256": "42612cb55688be34f5e8c856a40af76e10fe593327e7df12fd9004473304bdaa",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa3072/my-app-cert.pem"
+        },
+        {
+          "path": "signing/rsa3072/my-app-pubkey.pem",
+          "sha256": "2a2fbe82e0754fae3ade30836b76ed99c9197fdec723da6d725b5d745eaba915",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa3072/my-app-pubkey.pem"
+        },
+        {
+          "path": "signing/rsa3072/my-claim-pubkey.pem",
+          "sha256": "62ce3cd400fd0d6c0de5af3c3e173a32e8af7b3afa6a67ce3632ac0bd1fe8c0f",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa3072/my-claim-pubkey.pem"
+        },
+        {
+          "path": "signing/rsa3072/my-dcp-pub.txt",
+          "sha256": "ad5d0571e3fb16a276a4529da63039352498e3417c8376fe6e5b96f3977151cf",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa3072/my-dcp-pub.txt"
+        },
+        {
+          "path": "signing/rsa3072/my-dcp-pubkey.pem",
+          "sha256": "3b31fe2d179f732f7ee16d72239d949eee95e6d5716291c132e82c17027c92e4",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa3072/my-dcp-pubkey.pem"
+        },
+        {
+          "path": "signing/rsa3072/rsapub2jwk.py",
+          "sha256": "1b220b5943c2417778438a385a10b781219e6f188624016ea19fbce8ebae6ce6",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa3072/rsapub2jwk.py"
+        },
+        {
+          "path": "signing/rsa4096/gen_app_signing_key.sh",
+          "sha256": "4ccd75546dc0409f731de40eeb39ecac9c8adadc8977fb918b8295ce69aaccef",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa4096/gen_app_signing_key.sh"
+        },
+        {
+          "path": "signing/rsa4096/gen_claim_signing_key.sh",
+          "sha256": "43b9fa616a4cd849a9eaf79212b259e221be0e296c0cd6860437f49c3c17e7aa",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa4096/gen_claim_signing_key.sh"
+        },
+        {
+          "path": "signing/rsa4096/gen_dcp_signing_key.sh",
+          "sha256": "b719b19d3d5f08dbe803a3659930880b10e18ffa0f51714c3a0c63dec7287fb5",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa4096/gen_dcp_signing_key.sh"
+        },
+        {
+          "path": "signing/rsa4096/gen_jws_ClaimSigningKey.py",
+          "sha256": "492226249a3082c7218e6bd78c5100b83c57299de1aec8d6c05f0a8715ad81db",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa4096/gen_jws_ClaimSigningKey.py"
+        },
+        {
+          "path": "signing/rsa4096/gen_jws_ServerCertClaim.py",
+          "sha256": "93298e979a41dd28fdae5a129cc0429f4181db2023a8010f65db7783fc408b9f",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa4096/gen_jws_ServerCertClaim.py"
+        },
+        {
+          "path": "signing/rsa4096/my-app-cert-scp-hash.txt",
+          "sha256": "35938a73ab4b66b54c53d9a9d71dbd436a539a9afb0cfee80736eca2c3f76191",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa4096/my-app-cert-scp-hash.txt"
+        },
+        {
+          "path": "signing/rsa4096/my-app-cert.pem",
+          "sha256": "78d3037dd8858da3033a9b664a37076b4e40cde9e31b8379f720d5d143d72de3",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa4096/my-app-cert.pem"
+        },
+        {
+          "path": "signing/rsa4096/my-app-pubkey.pem",
+          "sha256": "797a4b3b78e907e865a237c7b09c16cfc1869ca353b330a9385b52db42ab8761",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa4096/my-app-pubkey.pem"
+        },
+        {
+          "path": "signing/rsa4096/my-claim-pubkey.pem",
+          "sha256": "b663f84a38ca5ed52b4967096924b6e019848f6efd939714b6f0b49c915b68e8",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa4096/my-claim-pubkey.pem"
+        },
+        {
+          "path": "signing/rsa4096/my-dcp-pub.txt",
+          "sha256": "25be8b4bfffca9de7f6be7ae69768e735426f4c4da4e10fca37c3d11ba816c93",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa4096/my-dcp-pub.txt"
+        },
+        {
+          "path": "signing/rsa4096/my-dcp-pubkey.pem",
+          "sha256": "5544901d0694b5a69e4116b9830f3dc8bbd56aa37a5ad186d5025567ad8f43e8",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa4096/my-dcp-pubkey.pem"
+        },
+        {
+          "path": "signing/rsa4096/rsapub2jwk.py",
+          "sha256": "1b220b5943c2417778438a385a10b781219e6f188624016ea19fbce8ebae6ce6",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/signing/rsa4096/rsapub2jwk.py"
+        },
+        {
+          "path": "summarize-certificate-change-results.py",
+          "sha256": "0a14f72756ca4e5a52e5232915bb346e78d1021b89fbf32668d51c7a32dbc867",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/summarize-certificate-change-results.py"
+        },
+        {
+          "path": "summarize-cross-sign-results.py",
+          "sha256": "4044d7c9014042a8df52b8a51f5b4e3a753e2d953aadcceb03de88bf3600fbeb",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/summarize-cross-sign-results.py"
+        },
+        {
+          "path": "summarize-internet-evaluation.py",
+          "sha256": "2d60333456214c5fda2bc4b63e6cc3961b7ef4fd74f651b4c08cf0224eee18f4",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/summarize-internet-evaluation.py"
+        },
+        {
+          "path": "summarize-lifecycle-results.py",
+          "sha256": "0bc8fdcf5af11ac2caee0ad2baa624a0a7aff28e7b2361347deeb4a8506ae96a",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/summarize-lifecycle-results.py"
+        },
+        {
+          "path": "summarize-public-cross-results.py",
+          "sha256": "6209438a40a1319a9d3ea8d9dafd3db334de94990ba09ab079d908a58e24bcb7",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/summarize-public-cross-results.py"
+        },
+        {
+          "path": "summarize-remote-functional.py",
+          "sha256": "8b2c9bdb9f94664ef278aeaf3b7ec138f655b337c016209b3ab85d9426f63749",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/summarize-remote-functional.py"
+        },
+        {
+          "path": "summarize-robustness-results.py",
+          "sha256": "5064b820dbaa452606333a0c2fae1bb01cb5e5eef5174da34f1147eb59a65c04",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/summarize-robustness-results.py"
+        },
+        {
+          "path": "summarize-rtt-cache-results.py",
+          "sha256": "95116c28ab989740ca574e0ae561bed96c66cec7141ca5844fdd21e3d922a65c",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/summarize-rtt-cache-results.py"
+        },
+        {
+          "path": "test_benchmark_device_dns.py",
+          "sha256": "734376313357e346944a629194a0136a37e8676646a555562424c28ecf230da7",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/test_benchmark_device_dns.py"
+        },
+        {
+          "path": "test_benchmark_device_network.py",
+          "sha256": "c54f187df91b0afbf20d7ad50da6f875b643fe218f99c6a0fb472ea825ec9003",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/test_benchmark_device_network.py"
+        },
+        {
+          "path": "test_certificate_change.py",
+          "sha256": "a67557329790f6a73021fb298b7eb1475ed5324d14725cd8fbdc6dfd3d48d877",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/test_certificate_change.py"
+        },
+        {
+          "path": "test_cross_sign.py",
+          "sha256": "1c230d1569b346af0d61da93acd1fd56ee940152bc8c415db0e4b1c99b7e4516",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/test_cross_sign.py"
+        },
+        {
+          "path": "test_cross_sign_benchmark.py",
+          "sha256": "e49f11517fe27b61629559398df035fc89efd61ddf48bd53c5dcd1964c8642ea",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/test_cross_sign_benchmark.py"
+        },
+        {
+          "path": "test_experiment_code.py",
+          "sha256": "4a84718b9ffd6fc9083b6fe985140907e8e775951eaee43b0a0f1a4ec79bdf91",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/test_experiment_code.py"
+        },
+        {
+          "path": "test_four_scheme_baselines.py",
+          "sha256": "ba3938445d257d44e9c6f0446b9a1ff707812c8126aa0f264b27e5cd95d78239",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/test_four_scheme_baselines.py"
+        },
+        {
+          "path": "test_internet_evaluation.py",
+          "sha256": "58584018c25a42bde8e8f73bb8dc3592197590460ba90fa1372b4a431cbea780",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/test_internet_evaluation.py"
+        },
+        {
+          "path": "test_multi_signature.py",
+          "sha256": "116b9ed9551f4128c482a975cc14fb9570562977cfc10ffb077409c5aa8c2ecc",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/test_multi_signature.py"
+        },
+        {
+          "path": "test_nsc_only_scp.py",
+          "sha256": "6348e90e58725973b0b5cd59af1dfe49a4ae2edc885b6bde5eb69d5485e9c6a9",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/test_nsc_only_scp.py"
+        },
+        {
+          "path": "test_policy_scenarios.py",
+          "sha256": "b9a2c5684e2bef98661ad1406f480b1835dd1bc0769196e379de9f58c17ae78a",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/test_policy_scenarios.py"
+        },
+        {
+          "path": "test_public_cross.py",
+          "sha256": "e2145d70cbf9ccdad317e07e99865ee2ab7b6bc54eba1484efbf2b4431d8f41b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/test_public_cross.py"
+        },
+        {
+          "path": "test_remote_comparison.py",
+          "sha256": "86c38e88f8a18ab027dbb3b8c0564a53b7c88618b1530fa813fb56ea6801b089",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/test_remote_comparison.py"
+        },
+        {
+          "path": "test_remote_experiment.py",
+          "sha256": "37b29a5e329faaf3baee2e4443b1e8b1611bdef241a8ba1a14df2914dc77b489",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/test_remote_experiment.py"
+        },
+        {
+          "path": "test_request_server_certificates.py",
+          "sha256": "8191965f31727b6bde176c0e86c7026a2e35cd0b89974c26b5e8a3a2a8c3f690",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/test_request_server_certificates.py"
+        },
+        {
+          "path": "test_rtt_benchmark.py",
+          "sha256": "58ca36cd1758001dd85d2d1afb7f9e7a2042b96fe3af2ccefd41ff8794c4c81a",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/test_rtt_benchmark.py"
+        },
+        {
+          "path": "test_transport_classification.py",
+          "sha256": "69b5fc9f7c9686ac7ab567f44ce1560eaef1f9a6a18f8c827733117ae8a98679",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/test_transport_classification.py"
+        },
+        {
+          "path": "update-remote-policies.py",
+          "sha256": "b6963d03cbf8b6e2185070e4733780dbe990b1281c89814e5fcb988bc75c148d",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/update-remote-policies.py"
+        }
+      ]
+    },
+    {
+      "manifest": "results/reproduction-20261114T094651Z/internet/comparison/matrix.json",
+      "sha256": "530344a7d05758a82f4254bae55802a2fca13f80868b04b7957a63489e735135"
+    },
+    {
+      "manifest": "results/reproduction-20261114T094651Z/internet/functional/manifest.json",
+      "sha256": "ed7d7e1c76bebd5addefc0ee8a13d7f5fb929aa02f6e3b67dafe1dfa28b11fc7"
+    },
+    {
+      "manifest": "results/reproduction-20261114T094651Z/internet/public-cross/manifest.json",
+      "sha256": "ececa09660b8c4da97cd8f82a8482bbd01e2816b6eb16981e2c8c35bd292a829"
+    },
+    {
+      "manifest": "results/reproduction-20261114T094651Z/internet/api-robustness/manifest.json",
+      "sha256": "e5aa0cd5b2ec3835a04274283213a5d6992723ef476a0355b29ee67757381901",
+      "recorded_source_field": "app_source_sha256",
+      "source_resolutions": [
+        {
+          "path": "ASPin/es256/app/src/main/java/com/cert/aspin/MainActivity.java",
+          "sha256": "e657dcdff0aeae3fe53b731aa09d02480e8c34e5130fe8d8d0b28b469fd277f3",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es256/app/src/main/java/com/cert/aspin/MainActivity.java"
+        },
+        {
+          "path": "ASPin/rsa4096/app/src/main/java/com/cert/aspin/MainActivity.java",
+          "sha256": "346d9ac54a13e7f77795af673b02ed94306c564323a80e3186053214df9db658",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa4096/app/src/main/java/com/cert/aspin/MainActivity.java"
+        },
+        {
+          "path": "ASPin/es384/app/src/main/java/com/cert/aspin/MainActivity.java",
+          "sha256": "379b928ae2939e49d7613dca72d1d67bb6fd23be3e73bd68a1501f7c360ac40f",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/es384/app/src/main/java/com/cert/aspin/MainActivity.java"
+        },
+        {
+          "path": "ASPin/rsa3072/app/src/main/java/com/cert/aspin/MainActivity.java",
+          "sha256": "316e927329a111b39a53f2b9f80a73468af6266e6b1159366f0009dad62d05e3",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/rsa3072/app/src/main/java/com/cert/aspin/MainActivity.java"
+        }
+      ]
+    },
+    {
+      "manifest": "results/reproduction-20261114T094651Z/certificate-change/manifest.json",
+      "sha256": "aa253d43726f7ba6f58ecd0e717e9f5fd9d3f8254badc35d603d98c5a96ce085",
+      "recorded_source_field": "source_sha256",
+      "source_resolutions": [
+        {
+          "path": "run-certificate-change-benchmark.py",
+          "sha256": "5d7c1c14edc02accde59c79e37dc241166d1adf2c81156d1c8015719387c9c5b",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/run-certificate-change-benchmark.py"
+        },
+        {
+          "path": "prepare-certificate-change.py",
+          "sha256": "88c1c35cbf05b06a8ebfca776043ad77657c757bbd0c2b333b97367b4d1519d3",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/prepare-certificate-change.py"
+        },
+        {
+          "path": "remote-experiment/server.py",
+          "sha256": "31cb145ce8462f990368d3c59dad3a7c12b3bd94dd56335c24a849bbc6b7ba21",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/remote-experiment/server.py"
+        },
+        {
+          "path": "remote-experiment/control.py",
+          "sha256": "8ab9218b54054a4bd15e27d782cee41844c19c4381be6b6436a7e45e669c07b4",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/remote-experiment/control.py"
+        },
+        {
+          "path": "ASPin/shared/src/main/java/com/cert/aspin/SchemeComparisonBenchmark.java",
+          "sha256": "7900c56f7fba274ce05a02b2aa0dfd8834da016a5aa6efde5c2821a0a72e145c",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/shared/src/main/java/com/cert/aspin/SchemeComparisonBenchmark.java"
+        },
+        {
+          "path": "ASPin/shared/src/main/java/com/cert/aspin/RttBenchmarkChecks.java",
+          "sha256": "e43fa6de4e9a2ca60f78c75e42b0af56994c03a2df74d0f87d82cabb2f397201",
+          "status": "source_archived",
+          "snapshot": "results/reproduction-20261114T094651Z/internet/source-snapshot/ASPin/shared/src/main/java/com/cert/aspin/RttBenchmarkChecks.java"
+        }
+      ]
+    }
+  ],
+  "image": {
+    "files_sha256": {
+      "system/apex/com.android.conscrypt.capex": "9fd35a215d285ad64cab36fb555b161cde6b686047802af349c3376c11cccce0",
+      "system/build.prop": "bc01279d0d651965350c445301779bccc873cfff75d75db7a150a0f79615b7be",
+      "system/etc/selinux/plat_sepolicy.cil": "61320e4fcd9a7836975ce6e9b6d0c77b50e0421ad7be54869313e4170ed00069",
+      "system/etc/selinux/plat_service_contexts": "3bbf85ff0e144030aa50c4bb1c176431cd227c3785145eb56f23a1e2214ae173",
+      "system/framework/framework.jar": "23ed32de47c084517f308a2fff644e58f6ef345e7749bb199a694a2e9308fa1f",
+      "system/framework/services.jar": "5698e4a17d693e06a99d0096f38233a7ed215b34f1beec9f40d37addee9c788d",
+      "system/product/etc/build.prop": "430435b0b1e6b66a6a65920f08afbe50cccf73c59cb107e6e6291b03f80340ca"
+    },
+    "measured_build_properties": {
+      "system/build.prop": {
+        "ro.build.date.utc": "1793194997",
+        "ro.build.user": "exp",
+        "ro.build.version.incremental": "eng.exp"
+      },
+      "system/product/etc/build.prop": {
+        "ro.product.build.fingerprint": "Android/gsi_arm64/generic_arm64:Baklava/CP2A.260605.016/eng.exp:userdebug/test-keys"
+      }
+    },
+    "nsc_payload_jar_sha256": "921be841d7c7bd263f8aa63034d1d9d6e383ff6e88caa0ee449cb01c810e67fc",
+    "path": "target/product/generic_arm64/gsi-pixel8-arm64-system-aspin.img",
+    "sha256": "b59683f92f70def862b84101af6cb43adef6700940cca9d02f46a45adaf8a972"
+  },
+  "limitations": [
+    "Source/bytecode/image checks and measurement-time device hashes are not a signed build attestation or a reproducible full-image rebuild.",
+    "The experiment retains selected source/build/public-input bytes and APK hashes, not every toolchain dependency byte.",
+    "Single-device, fixed-order Internet observations do not establish deployment-scale performance or privileged rollback resistance."
+  ],
+  "projects": [
+    {
+      "baseline": "94b4c163b7dfe5ce3607f7bb8456f9573f7de57d",
+      "patch": "frameworks-base.patch",
+      "path": "frameworks/base",
+      "source_commit": "8c1c4143a98f7f309c251eb7cc473057d8bbaab0",
+      "source_sha256": {
+        "core/api/current.txt": "c79d76047614a6aa2b227122ff6020136380858dd8e27320d78cd0f47610f7b1",
+        "core/java/android/app/SystemServiceRegistry.java": "57345127f130b82b743aa01e460a5c0f8ed05a62b1d47016694a43379ced6a74",
+        "core/java/android/content/Context.java": "227e8aa147bd29fe66610ef4d3ffba8a8e4d7957249d03d74b2eebb798bbca85",
+        "core/java/android/security/aspin/AspinCertificateClaim.aidl": "7ecbc006357d2688bf93cf5686149a250d3a6246e2e0b6bd588f4a7e48b186f4",
+        "core/java/android/security/aspin/AspinCertificateClaim.java": "1cf954bf7061b610fb4b2b4140b62f32a010dccdc9380bdd823448f73f1ce8da",
+        "core/java/android/security/aspin/AspinManager.java": "bbbd1c5c0eb0abfd7ec30934e701e04f2931afd7feedfc7cc57d3bf5f26370bd",
+        "core/java/android/security/aspin/IAspinService.aidl": "d1dc1c70b02be6acd24d86e045648507573e6131f96565faa47763bb881993a1",
+        "core/java/android/security/flags.aconfig": "6cb0f152014497aeef937ff436f1b7ed0d096480c7dfe85502e419808abce46b",
+        "packages/NetworkSecurityConfig/platform/src/android/security/net/config/DcpPinningVerifier.java": "5f63d64ab254d111f9c29ab69ea898be38c4b78ce77f69b538011f1626114c21",
+        "packages/NetworkSecurityConfig/platform/src/android/security/net/config/NetworkSecurityConfig.java": "2eb65af017eb7bff48f047744d77030984b72cb36c7aa417d3ee1a131ddc7231",
+        "packages/NetworkSecurityConfig/platform/src/android/security/net/config/NetworkSecurityTrustManager.java": "721d448f4e3b32de345f4682f3c07cf7c29573696d2b38c9065184a6a519abdc",
+        "packages/NetworkSecurityConfig/platform/src/android/security/net/config/XmlConfigSource.java": "131b8e2bb6c2e9918dc76bdd279b12698cd77853652264a5f94ff698f90e0974",
+        "services/core/java/com/android/server/aspin/AspinService.java": "2fd9fb2bd954e624219d7715995733a7794aa344ad5777dcce91bee579b92d37",
+        "services/java/com/android/server/SystemServer.java": "fb8d3157e28eb711dae9e9c7765122b76c38356e297b5d9c23fb3361ab6e1b6e"
+      },
+      "tree": "314a6f0b5f8b10819589abc692c34709ecd39202"
+    },
+    {
+      "baseline": "fd1a430323b5ab9945a15fce6c4a824aeffff685",
+      "patch": "external-conscrypt.patch",
+      "path": "external/conscrypt",
+      "source_commit": "4067283c003c01eb7d012a7562c911cebe0d07df",
+      "source_sha256": {
+        "nsc/src/android/security/net/config/DcpPinningVerifier.java": "5e233bf70969febcff1c08d22fee9405192cd71f9e71a52a40579452834f52e5",
+        "nsc/src/android/security/net/config/NetworkSecurityConfig.java": "c1ef0011ef9e4868ca3ec922c148f3b5e5dc5e67cd68adf1f0acfc379c78817b",
+        "nsc/src/android/security/net/config/NetworkSecurityTrustManager.java": "f769ceba51720cb51b11dfb194fb1c6febe5ad4b07b3101df7c8538e39ef39f8",
+        "nsc/src/android/security/net/config/XmlConfigSource.java": "8f6be1c00c400607dcb9370151fc3426f577a54b61cdabe8776f1112b92a2d42"
+      },
+      "tree": "b0dfc4af3ebaecb6d2fddfb4ac3fb9ca5275743c"
+    },
+    {
+      "baseline": "e066568e98d86db31a9346d30977f3632fa7073c",
+      "patch": "system-sepolicy.patch",
+      "path": "system/sepolicy",
+      "source_commit": "3c05c010b0c69cd3e8bf50ce15461006efd63a16",
+      "source_sha256": {
+        "private/service.te": "99fcc3ef7bbb9b01bda6c2d40a7ab1dbddba25583c98c1017921e63745916a60",
+        "private/service_contexts": "3b5b1f806f78cca3e95bce337e91d5a4530d8a458f7aa9973cddd85e6254c6ea"
+      },
+      "tree": "10f4baecee35ccc6e09267ecbaef02de31fbeaa1"
+    }
+  ],
+  "schema_version": 2,
+  "scope": "Recorded AOSP runtime plus exact archived sources of the fresh experiment drivers",
+  "measurement_runtime": "results/reproduction-20261114T094651Z/reproduction.json",
+  "additional_artifacts_sha256": {
+    "results/reproduction-20261114T094651Z/internet/functional/aux-apks/checks.json": "ac426633ae0bc64a1ab6d86e904e4ab0ac0c89e747bf8f3b7ad9641d0cb49ca1",
+    "results/reproduction-20261114T094651Z/certificate-change/apks/ASPin-es256-compatible.apk": "da4967667ae42543562217d895ac76c24e5ef1fe46e573826c68f0fc86fa577c",
+    "results/reproduction-20261114T094651Z/certificate-change/apks/ASPin-es256-dcp.apk": "805547908b0bb03d60e903c431df4f01686ae20ceaa504df237445814a68e028",
+    "results/reproduction-20261114T094651Z/certificate-change/apks/ASPin-es256-scp.apk": "306650f09840cc201b88d7d776bd7b2157a8fc644421d1dbbd30edae7dc8b10c",
+    "results/reproduction-20261114T094651Z/certificate-change/apks/ASPin-es256.apk": "d4149f14a81c6e5a381ce928962a5fc405d4c7fe9809c7148da943f39e9fdbd4",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-caller-es256.apk": "f84ac3adc06f2d37e8e5b6b89ac7cd1f71578f9d169c2ca0c1a87623960350f7",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-caller-es384.apk": "df2f05822728b3f88cb081a2bd7ee275865222107fb0a1ff0791a44f15842d2f",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-es256-compatible-rotated-root.apk": "705e8a00af541e8e2f81598ead5d012b79c070c0f00833bf06107fcf4c85eb17",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-es256-compatible.apk": "a6bf00d38b5910203a5b62087a5a5300ae1dce2ceb7548291e8c111d7fca597f",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-es256-dcp.apk": "7ca7d79848c9d8debf1d3afa9ed2d79374a74ca7a43377f5e2a93a8675ece59d",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-es256-scp.apk": "39007cf76f571dcbf7149f4a556cf2bcd720281c3de2395975f0394e8f26cd8d",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-es256.apk": "6178897baf44c2136cc00cd91ca87e43c6850e63a46802f52fe6b22ba09d89dd",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-es384-compatible.apk": "3284bf5a15937b87b3fa2808fe525f3c1011d516eec28cc1c336d8e780263c84",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-es384-dcp.apk": "f85721dd1ba6c3e53a64720f543e66320e6b1272461f2b9df2c651fc84c1bf68",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-es384-scp.apk": "bb6184aa61f4a4da7c824cf78c60ba63d4ef6d76ce2e541edce2313d90e1a09b",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-es384.apk": "bd779e1d3a0f77dfc1d11b253fbc7fba99cb0676977f3da454d6269c4cf4c92f",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-rsa3072-compatible.apk": "d10d4833a6a782c76d5c1425043a6883954192881590d5bbd63dd8a87db67f2d",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-rsa3072-dcp.apk": "ae7ed6b2acb8f1c459e5739c30f432f25593e2687b4330b8038720d8e106aaf9",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-rsa3072-scp.apk": "ef3021ff3b9b8ddf0376428a3cc96ea47c6df37e88e86e32a6f70a4d2c455a1c",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-rsa3072.apk": "c938753d56b526858af6b765e9170319f1d2ea97b50edbc4f3008e5644b2fa61",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-rsa4096-compatible.apk": "92c3f6df361d4c425a8715eae7dafdcecb5689ccbd979f8d3e9f2cfbed823723",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-rsa4096-dcp.apk": "4c36fd167a2c3f4fbf34e72e56ad4244580893880ec4cd771617fea33e30acf8",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-rsa4096-scp.apk": "6a8f23bd95c0a4776f3674aa8e26855faecf74ff4d19b5da03e7ddd343dc7826",
+    "results/reproduction-20261114T094651Z/internet/apks/ASPin-rsa4096.apk": "0db3955fa043cd959adde85c1e4804f1f1469e0472999d94225dd7d116393f99",
+    "results/reproduction-20261114T094651Z/internet/functional/ASPin-es256-app-root-rotated.apk": "063dc5df31fc6563ebd9cceb5325e0355fd5dd71d968aa1b37b3883bf3dfbd30",
+    "results/reproduction-20261114T094651Z/internet/functional/aux-apks/app-crossAppCaller.apk": "cc192fa2bec7ddd07198ec327f1ae82d9d8a1a323fc87320373966e7255595b9",
+    "results/reproduction-20261114T094651Z/internet/functional/aux-apks/app-crossAppHidden.apk": "9ce1eb412cda186a13eab26183c61c5a77e639cd4d887b181a9dd66ddc01d42d",
+    "results/reproduction-20261114T094651Z/internet/functional/aux-apks/installed-crossAppCaller.apk": "df2f05822728b3f88cb081a2bd7ee275865222107fb0a1ff0791a44f15842d2f",
+    "results/reproduction-20261114T094651Z/internet/functional/aux-apks/installed-crossAppHidden.apk": "9ce1eb412cda186a13eab26183c61c5a77e639cd4d887b181a9dd66ddc01d42d",
+    "results/reproduction-20261114T094651Z/internet/public-cross/apks/ASPin-es256-public-compatible.apk": "06fa52a6e2ec9b77fc8469cc25925786d03e9327ac8009e2220d04feb7c23709",
+    "results/reproduction-20261114T094651Z/internet/public-cross/apks/ASPin-es256-public-primary.apk": "3fd3e1da46fcce9e474e60f57bef4535b82388192c123169ed26026a0b280bdb",
+    "results/reproduction-20261114T094651Z/internet/rotated-apk/ASPin-es256-compatible.apk": "705e8a00af541e8e2f81598ead5d012b79c070c0f00833bf06107fcf4c85eb17"
+  }
+}

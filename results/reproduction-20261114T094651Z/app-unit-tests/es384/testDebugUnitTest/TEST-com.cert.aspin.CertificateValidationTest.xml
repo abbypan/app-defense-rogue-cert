@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.cert.aspin.CertificateValidationTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-14T10:48:13.016Z" hostname="Pixel-8" time="0.065">
+  <properties/>
+  <testcase name="nativeValidatedPathIsPreservedForCertClaimCheck" classname="com.cert.aspin.CertificateValidationTest" time="0.025"/>
+  <testcase name="issuerIdentifierHashesCompleteCaCertificateDer" classname="com.cert.aspin.CertificateValidationTest" time="0.001"/>
+  <testcase name="generatedClaimMatchesDirectIssuerCertificateAndChainCheck" classname="com.cert.aspin.CertificateValidationTest" time="0.036"/>
+  <testcase name="aspinSupportsTransitionalIssuerAndSanLists" classname="com.cert.aspin.CertificateValidationTest" time="0.001"/>
+  <testcase name="aspinRequiresClaimedSubjectAndSan" classname="com.cert.aspin.CertificateValidationTest" time="0.0"/>
+  <testcase name="unsupportedIssuerHashFailsClosed" classname="com.cert.aspin.CertificateValidationTest" time="0.0"/>
+  <testcase name="connectionHostnameMustEqualClaimLookupHostname" classname="com.cert.aspin.CertificateValidationTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,2 +1,0 @@
-Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
-p4886d9f3e9b9-compat-parallel-manifest-root-with-app-root,com.cert.aspin,self,,protected,true,true,two-token-refresh,1794639275274,1794639273000,1794642873000,123.165690,74.406535,204.673584,332.382935,true,true,accepted,accepted,PASS,"",""

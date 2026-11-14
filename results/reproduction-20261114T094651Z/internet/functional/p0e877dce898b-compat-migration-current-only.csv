@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+p0e877dce898b-compat-migration-current-only,com.cert.aspin,self,,protected,true,true,two-token-refresh,1794651715145,1794651713000,1794651773000,109.466960,83.358480,200.122273,383.114787,true,true,accepted,accepted,PASS,"",""

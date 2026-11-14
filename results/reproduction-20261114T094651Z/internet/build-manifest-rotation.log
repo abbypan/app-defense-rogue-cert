@@ -1,0 +1,57 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.13/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preCompatibilityBenchmarkBuild UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkNativeDebugMetadata NO-SOURCE
+> Task :app:generateCompatibilityBenchmarkBuildConfig UP-TO-DATE
+> Task :app:javaPreCompileCompatibilityBenchmark UP-TO-DATE
+> Task :app:checkCompatibilityBenchmarkAarMetadata UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkNavigationResources
+> Task :app:compileCompatibilityBenchmarkNavigationResources UP-TO-DATE
+> Task :app:generateCompatibilityBenchmarkResValues UP-TO-DATE
+> Task :app:mapCompatibilityBenchmarkSourceSetPaths UP-TO-DATE
+> Task :app:generateCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:packageCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:parseCompatibilityBenchmarkLocalResources UP-TO-DATE
+> Task :app:createCompatibilityBenchmarkCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksCompatibilityBenchmark
+> Task :app:processCompatibilityBenchmarkMainManifest
+> Task :app:processCompatibilityBenchmarkManifest
+> Task :app:mergeCompatibilityBenchmarkShaders UP-TO-DATE
+> Task :app:compileCompatibilityBenchmarkShaders NO-SOURCE
+> Task :app:generateCompatibilityBenchmarkAssets UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkAssets UP-TO-DATE
+> Task :app:compressCompatibilityBenchmarkAssets UP-TO-DATE
+> Task :app:desugarCompatibilityBenchmarkFileDependencies UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkJavaRes NO-SOURCE
+> Task :app:mergeCompatibilityBenchmarkJavaResource UP-TO-DATE
+> Task :app:checkCompatibilityBenchmarkDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexCompatibilityBenchmark UP-TO-DATE
+> Task :app:mergeLibDexCompatibilityBenchmark UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkJniLibFolders UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkNativeLibs NO-SOURCE
+> Task :app:stripCompatibilityBenchmarkDebugSymbols NO-SOURCE
+> Task :app:validateSigningCompatibilityBenchmark UP-TO-DATE
+> Task :app:writeCompatibilityBenchmarkAppMetadata UP-TO-DATE
+> Task :app:writeCompatibilityBenchmarkSigningConfigVersions UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkManifestForPackage
+> Task :app:processCompatibilityBenchmarkResources
+> Task :app:compileCompatibilityBenchmarkJavaWithJavac UP-TO-DATE
+> Task :app:dexBuilderCompatibilityBenchmark UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkGlobalSynthetics UP-TO-DATE
+> Task :app:mergeProjectDexCompatibilityBenchmark UP-TO-DATE
+> Task :app:packageCompatibilityBenchmark
+> Task :app:createCompatibilityBenchmarkApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleCompatibilityBenchmark
+
+[Incubating] Problems report is available at: file:///mnt/code/aspin/ASPin/es256/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 7s
+35 actionable tasks: 7 executed, 28 up-to-date

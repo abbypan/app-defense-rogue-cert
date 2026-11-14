@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+p0e877dce898b-primary-tc-bound-restored-self,com.cert.aspin,self,,protected,true,true,two-token-refresh,1794651007283,1794651005000,1794654605000,94.419352,82.679972,184.255045,331.626587,true,true,accepted,accepted,PASS,"",""

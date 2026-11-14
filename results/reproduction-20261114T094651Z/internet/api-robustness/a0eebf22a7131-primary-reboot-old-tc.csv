@@ -1,0 +1,2 @@
+Label,ForceRefresh,ExpectedSuccess,ObservedSuccess,ExpectedErrorSubstring,ReasonMatch,Total_ms,Tk_ms,Tc_ms,Result,Error,Timestamp
+a0eebf22a7131-primary-reboot-old-tc,true,false,false,"anti-rollback",true,363.048,0.000,0.000,PASS,"SecurityException:ASPin anti-rollback rejected lower iat for tc",2026-11-14 18:33:30
