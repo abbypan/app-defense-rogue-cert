@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+p4886d9f3e9b9-compat-tc-bound-blocked-hot-cross,com.cert.aspin.caller,cross,com.cert.aspin,protected,false,true,hot,1794639545920,1794639538000,1794639598000,0.000000,0.000000,3.934489,235.243693,true,true,accepted,accepted,PASS,"",""

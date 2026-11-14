@@ -1,2 +1,0 @@
-Label,ForceRefresh,ExpectedSuccess,ObservedSuccess,ExpectedErrorSubstring,ReasonMatch,Total_ms,Tk_ms,Tc_ms,Result,Error,Timestamp
-a10123db8abe1-primary-reboot-old-tk,true,false,false,"anti-rollback",true,202.870,0.000,0.000,PASS,"SecurityException:ASPin anti-rollback rejected lower iat for tk",2026-10-29 12:20:28

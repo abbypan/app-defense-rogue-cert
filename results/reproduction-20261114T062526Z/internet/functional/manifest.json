@@ -1,0 +1,519 @@
+{
+  "state": "complete",
+  "run_id": "p4886d9f3e9b9",
+  "created_utc": "2026-11-14T06:41:59.700997+00:00",
+  "cases": [
+    {
+      "scenario": "p4886d9f3e9b9-primary-cross-empty-cache-suppressed",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-cross-prime",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-cross-target-hot",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-cross-rogue-native",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-cross-rogue-protected",
+      "outcome": "policy_rejected",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-cross-caller-self",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-cross-caller-root-substitution",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-cross-shared-four-signatures",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-cross-invisible-target",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-cross-uninstalled-target",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-cross-reinstalled-target",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tk-bound-prime",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tk-bound-blocked-hot-self",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tk-bound-blocked-hot-cross",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tk-bound-blocked-native",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tk-bound-expired-self",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tk-bound-expired-cross",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tk-bound-expired-native",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tk-bound-expired-replay",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tk-bound-metadata-timeout",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tk-bound-restored-self",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tk-bound-restored-cross",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tc-bound-prime",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tc-bound-blocked-hot-self",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tc-bound-blocked-hot-cross",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tc-bound-blocked-native",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tc-bound-expired-self",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tc-bound-expired-cross",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tc-bound-expired-native",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tc-bound-expired-replay",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tc-bound-metadata-timeout",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tc-bound-restored-self",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-tc-bound-restored-cross",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-migration-current-only",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-migration-next-before-overlap",
+      "outcome": "policy_rejected",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-migration-overlap-current",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-migration-overlap-next-probe",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-migration-joint-cutover-next",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-migration-retired-current-rejected",
+      "outcome": "policy_rejected",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-claim-key-old-pair",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-claim-key-old-tk-new-tc",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-claim-key-new-tk-old-tc",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-claim-key-matching-new",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-claim-key-old-replay",
+      "outcome": "rollback_refused",
+      "result": "PASS",
+      "scope": "claim lookup only; no business connection invoked"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-app-root-old-installed-root",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-app-root-lineage-transition-signatures-three-four",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-app-root-new-only",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-app-root-latest-installed-target-cross-query",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-primary-app-root-transition-replay",
+      "outcome": "rollback_refused",
+      "result": "PASS",
+      "scope": "claim lookup only; no business connection invoked"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-cross-empty-cache-suppressed",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-cross-prime",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-cross-target-hot",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-cross-rogue-native",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-cross-rogue-protected",
+      "outcome": "policy_rejected",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-cross-caller-self",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-cross-caller-root-substitution",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-cross-shared-four-signatures",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-cross-invisible-target",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-cross-uninstalled-target",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-cross-reinstalled-target",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-parallel-app-root-with-manifest",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-parallel-manifest-root-with-app-root",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tk-bound-prime",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tk-bound-blocked-hot-self",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tk-bound-blocked-hot-cross",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tk-bound-blocked-native",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tk-bound-expired-self",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tk-bound-expired-cross",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tk-bound-expired-native",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tk-bound-expired-replay",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tk-bound-metadata-timeout",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tk-bound-restored-self",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tk-bound-restored-cross",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tc-bound-prime",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tc-bound-blocked-hot-self",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tc-bound-blocked-hot-cross",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tc-bound-blocked-native",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tc-bound-expired-self",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tc-bound-expired-cross",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tc-bound-expired-native",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tc-bound-expired-replay",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tc-bound-metadata-timeout",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tc-bound-restored-self",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-tc-bound-restored-cross",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-migration-current-only",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-migration-next-before-overlap",
+      "outcome": "policy_rejected",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-migration-overlap-current",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-migration-overlap-next-probe",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-migration-joint-cutover-next",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-migration-retired-current-rejected",
+      "outcome": "policy_rejected",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-claim-key-old-pair",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-claim-key-old-tk-new-tc",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-claim-key-new-tk-old-tc",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-claim-key-matching-new",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-claim-key-old-replay",
+      "outcome": "rollback_refused",
+      "result": "PASS",
+      "scope": "claim lookup only; no business connection invoked"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-ks-root-old-manifest-root",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-ks-root-authenticated-new-manifest-namespace",
+      "outcome": "accepted",
+      "result": "PASS"
+    },
+    {
+      "scenario": "p4886d9f3e9b9-compat-ks-root-old-manifest-root-no-longer-eligible",
+      "outcome": "lookup_refused",
+      "result": "PASS"
+    }
+  ],
+  "transport": "Pixel 8 Internet -> public-CA hk:443; no adb reverse",
+  "scope": "single observed functional runs, not latency distributions",
+  "short_seconds": 60,
+  "server_since": "2026-11-14T06:40:54Z",
+  "migration_staging": [
+    {
+      "mode": "primary",
+      "lmax_seconds": 60,
+      "elapsed_seconds": 61.02487249299884,
+      "overlap_exp_ms": 1794638987000
+    },
+    {
+      "mode": "compat",
+      "lmax_seconds": 60,
+      "elapsed_seconds": 60.01759130600112,
+      "overlap_exp_ms": 1794639714000
+    }
+  ],
+  "standard_policies_refreshed": true
+}

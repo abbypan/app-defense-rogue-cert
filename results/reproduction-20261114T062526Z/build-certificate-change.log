@@ -1,0 +1,308 @@
+> Gradle task :app:assembleDebug for es256 (primary)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:dexBuilderDebug UP-TO-DATE
+> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:mergeProjectDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs NO-SOURCE
+> Task :app:stripDebugDebugSymbols NO-SOURCE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:mergeDebugJavaResource
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug
+
+[Incubating] Problems report is available at: file:///mnt/code/aspin/ASPin/es256/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 720ms
+36 actionable tasks: 3 executed, 33 up-to-date
+> zipalign for es256 (primary)
+> APK signing for es256 (primary)
+> APK verification for es256 (primary)
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=APP, OU=Dev, O=MyCompany, L=City, ST=State, C=CN
+Signer #1 certificate SHA-256 digest: bb84932447c40f59859bf7be4592b53db0a1f3dfba4c02830f1f8f2fec09a598
+Signer #1 certificate SHA-1 digest: c1b8f925228b03d1d4e2dce126157cec59863020
+Signer #1 certificate MD5 digest: 9f13e29001961402a4a54da3c257bfc9
+Signer #1 key algorithm: EC
+Signer #1 key size (bits): 256
+Signer #1 public key SHA-256 digest: 424b7ce3e6797b53afdd70f756d258b39a15770e7af61fb5a3ccb04f0cf1f669
+Signer #1 public key SHA-1 digest: 8a97cc44be2f6131f0453585490ea148db9081c9
+Signer #1 public key MD5 digest: 9d98c71e61229d33ed09c904f3dcd199
+--> Built and signed es256 primary APK: /mnt/code/aspin/results/reproduction-20261114T062526Z/certificate-change/apks/ASPin-es256.apk
+> Gradle task :app:assembleScpBenchmark for es256 (scp)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preScpBenchmarkBuild UP-TO-DATE
+> Task :app:mergeScpBenchmarkNativeDebugMetadata NO-SOURCE
+> Task :app:generateScpBenchmarkBuildConfig UP-TO-DATE
+> Task :app:javaPreCompileScpBenchmark UP-TO-DATE
+> Task :app:checkScpBenchmarkAarMetadata UP-TO-DATE
+> Task :app:processScpBenchmarkNavigationResources
+> Task :app:compileScpBenchmarkNavigationResources UP-TO-DATE
+> Task :app:generateScpBenchmarkResValues UP-TO-DATE
+> Task :app:mapScpBenchmarkSourceSetPaths
+> Task :app:generateScpBenchmarkResources
+> Task :app:packageScpBenchmarkResources
+> Task :app:createScpBenchmarkCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksScpBenchmark UP-TO-DATE
+> Task :app:processScpBenchmarkMainManifest UP-TO-DATE
+> Task :app:processScpBenchmarkManifest UP-TO-DATE
+> Task :app:processScpBenchmarkManifestForPackage UP-TO-DATE
+> Task :app:mergeScpBenchmarkShaders UP-TO-DATE
+> Task :app:compileScpBenchmarkShaders NO-SOURCE
+> Task :app:generateScpBenchmarkAssets UP-TO-DATE
+> Task :app:mergeScpBenchmarkAssets UP-TO-DATE
+> Task :app:compressScpBenchmarkAssets UP-TO-DATE
+> Task :app:checkScpBenchmarkDuplicateClasses UP-TO-DATE
+> Task :app:desugarScpBenchmarkFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexScpBenchmark UP-TO-DATE
+> Task :app:mergeLibDexScpBenchmark UP-TO-DATE
+> Task :app:processScpBenchmarkJavaRes
+> Task :app:parseScpBenchmarkLocalResources
+> Task :app:mergeScpBenchmarkJniLibFolders UP-TO-DATE
+> Task :app:mergeScpBenchmarkNativeLibs NO-SOURCE
+> Task :app:stripScpBenchmarkDebugSymbols NO-SOURCE
+> Task :app:validateSigningScpBenchmark UP-TO-DATE
+> Task :app:writeScpBenchmarkAppMetadata UP-TO-DATE
+> Task :app:writeScpBenchmarkSigningConfigVersions UP-TO-DATE
+> Task :app:mergeScpBenchmarkJavaResource
+> Task :app:mergeScpBenchmarkResources
+> Task :app:processScpBenchmarkResources
+> Task :app:compileScpBenchmarkJavaWithJavac UP-TO-DATE
+> Task :app:dexBuilderScpBenchmark UP-TO-DATE
+> Task :app:mergeProjectDexScpBenchmark UP-TO-DATE
+> Task :app:mergeScpBenchmarkGlobalSynthetics UP-TO-DATE
+> Task :app:packageScpBenchmark
+> Task :app:createScpBenchmarkApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleScpBenchmark
+
+[Incubating] Problems report is available at: file:///mnt/code/aspin/ASPin/es256/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 2s
+36 actionable tasks: 10 executed, 26 up-to-date
+> zipalign for es256 (scp)
+> APK signing for es256 (scp)
+> APK verification for es256 (scp)
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=APP, OU=Dev, O=MyCompany, L=City, ST=State, C=CN
+Signer #1 certificate SHA-256 digest: bb84932447c40f59859bf7be4592b53db0a1f3dfba4c02830f1f8f2fec09a598
+Signer #1 certificate SHA-1 digest: c1b8f925228b03d1d4e2dce126157cec59863020
+Signer #1 certificate MD5 digest: 9f13e29001961402a4a54da3c257bfc9
+Signer #1 key algorithm: EC
+Signer #1 key size (bits): 256
+Signer #1 public key SHA-256 digest: 424b7ce3e6797b53afdd70f756d258b39a15770e7af61fb5a3ccb04f0cf1f669
+Signer #1 public key SHA-1 digest: 8a97cc44be2f6131f0453585490ea148db9081c9
+Signer #1 public key MD5 digest: 9d98c71e61229d33ed09c904f3dcd199
+--> Built and signed es256 scp APK: /mnt/code/aspin/results/reproduction-20261114T062526Z/certificate-change/apks/ASPin-es256-scp.apk
+> Gradle task :app:assembleDcpBenchmark for es256 (dcp)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDcpBenchmarkBuild UP-TO-DATE
+> Task :app:mergeDcpBenchmarkNativeDebugMetadata NO-SOURCE
+> Task :app:generateDcpBenchmarkBuildConfig UP-TO-DATE
+> Task :app:javaPreCompileDcpBenchmark UP-TO-DATE
+> Task :app:checkDcpBenchmarkAarMetadata UP-TO-DATE
+> Task :app:processDcpBenchmarkNavigationResources UP-TO-DATE
+> Task :app:compileDcpBenchmarkNavigationResources UP-TO-DATE
+> Task :app:generateDcpBenchmarkResValues UP-TO-DATE
+> Task :app:mapDcpBenchmarkSourceSetPaths UP-TO-DATE
+> Task :app:generateDcpBenchmarkResources UP-TO-DATE
+> Task :app:mergeDcpBenchmarkResources UP-TO-DATE
+> Task :app:packageDcpBenchmarkResources UP-TO-DATE
+> Task :app:parseDcpBenchmarkLocalResources UP-TO-DATE
+> Task :app:createDcpBenchmarkCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDcpBenchmark UP-TO-DATE
+> Task :app:processDcpBenchmarkMainManifest UP-TO-DATE
+> Task :app:processDcpBenchmarkManifest UP-TO-DATE
+> Task :app:processDcpBenchmarkManifestForPackage UP-TO-DATE
+> Task :app:processDcpBenchmarkResources UP-TO-DATE
+> Task :app:compileDcpBenchmarkJavaWithJavac UP-TO-DATE
+> Task :app:mergeDcpBenchmarkShaders UP-TO-DATE
+> Task :app:compileDcpBenchmarkShaders NO-SOURCE
+> Task :app:generateDcpBenchmarkAssets UP-TO-DATE
+> Task :app:mergeDcpBenchmarkAssets UP-TO-DATE
+> Task :app:compressDcpBenchmarkAssets UP-TO-DATE
+> Task :app:desugarDcpBenchmarkFileDependencies UP-TO-DATE
+> Task :app:dexBuilderDcpBenchmark UP-TO-DATE
+> Task :app:mergeDcpBenchmarkGlobalSynthetics UP-TO-DATE
+> Task :app:processDcpBenchmarkJavaRes
+> Task :app:checkDcpBenchmarkDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexDcpBenchmark UP-TO-DATE
+> Task :app:mergeLibDexDcpBenchmark UP-TO-DATE
+> Task :app:mergeProjectDexDcpBenchmark UP-TO-DATE
+> Task :app:mergeDcpBenchmarkJniLibFolders UP-TO-DATE
+> Task :app:mergeDcpBenchmarkNativeLibs NO-SOURCE
+> Task :app:stripDcpBenchmarkDebugSymbols NO-SOURCE
+> Task :app:validateSigningDcpBenchmark UP-TO-DATE
+> Task :app:writeDcpBenchmarkAppMetadata UP-TO-DATE
+> Task :app:writeDcpBenchmarkSigningConfigVersions UP-TO-DATE
+> Task :app:mergeDcpBenchmarkJavaResource
+> Task :app:packageDcpBenchmark
+> Task :app:createDcpBenchmarkApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDcpBenchmark
+
+[Incubating] Problems report is available at: file:///mnt/code/aspin/ASPin/es256/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 774ms
+36 actionable tasks: 3 executed, 33 up-to-date
+> zipalign for es256 (dcp)
+> APK signing for es256 (dcp)
+> APK verification for es256 (dcp)
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=APP, OU=Dev, O=MyCompany, L=City, ST=State, C=CN
+Signer #1 certificate SHA-256 digest: bb84932447c40f59859bf7be4592b53db0a1f3dfba4c02830f1f8f2fec09a598
+Signer #1 certificate SHA-1 digest: c1b8f925228b03d1d4e2dce126157cec59863020
+Signer #1 certificate MD5 digest: 9f13e29001961402a4a54da3c257bfc9
+Signer #1 key algorithm: EC
+Signer #1 key size (bits): 256
+Signer #1 public key SHA-256 digest: 424b7ce3e6797b53afdd70f756d258b39a15770e7af61fb5a3ccb04f0cf1f669
+Signer #1 public key SHA-1 digest: 8a97cc44be2f6131f0453585490ea148db9081c9
+Signer #1 public key MD5 digest: 9d98c71e61229d33ed09c904f3dcd199
+--> Built and signed es256 dcp APK: /mnt/code/aspin/results/reproduction-20261114T062526Z/certificate-change/apks/ASPin-es256-dcp.apk
+> Gradle task :app:assembleCompatibilityBenchmark for es256 (compatible)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preCompatibilityBenchmarkBuild UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkNativeDebugMetadata NO-SOURCE
+> Task :app:generateCompatibilityBenchmarkBuildConfig UP-TO-DATE
+> Task :app:javaPreCompileCompatibilityBenchmark UP-TO-DATE
+> Task :app:checkCompatibilityBenchmarkAarMetadata UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkNavigationResources
+> Task :app:compileCompatibilityBenchmarkNavigationResources UP-TO-DATE
+> Task :app:generateCompatibilityBenchmarkResValues UP-TO-DATE
+> Task :app:mapCompatibilityBenchmarkSourceSetPaths UP-TO-DATE
+> Task :app:generateCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:packageCompatibilityBenchmarkResources UP-TO-DATE
+> Task :app:parseCompatibilityBenchmarkLocalResources UP-TO-DATE
+> Task :app:createCompatibilityBenchmarkCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksCompatibilityBenchmark
+> Task :app:processCompatibilityBenchmarkMainManifest
+> Task :app:processCompatibilityBenchmarkManifest
+> Task :app:mergeCompatibilityBenchmarkShaders UP-TO-DATE
+> Task :app:compileCompatibilityBenchmarkShaders NO-SOURCE
+> Task :app:generateCompatibilityBenchmarkAssets UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkAssets UP-TO-DATE
+> Task :app:compressCompatibilityBenchmarkAssets UP-TO-DATE
+> Task :app:desugarCompatibilityBenchmarkFileDependencies UP-TO-DATE
+> Task :app:processCompatibilityBenchmarkJavaRes
+> Task :app:processCompatibilityBenchmarkManifestForPackage
+> Task :app:checkCompatibilityBenchmarkDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexCompatibilityBenchmark UP-TO-DATE
+> Task :app:mergeLibDexCompatibilityBenchmark UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkJniLibFolders UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkNativeLibs NO-SOURCE
+> Task :app:stripCompatibilityBenchmarkDebugSymbols NO-SOURCE
+> Task :app:validateSigningCompatibilityBenchmark UP-TO-DATE
+> Task :app:writeCompatibilityBenchmarkAppMetadata UP-TO-DATE
+> Task :app:writeCompatibilityBenchmarkSigningConfigVersions UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkJavaResource
+> Task :app:processCompatibilityBenchmarkResources
+> Task :app:compileCompatibilityBenchmarkJavaWithJavac UP-TO-DATE
+> Task :app:dexBuilderCompatibilityBenchmark UP-TO-DATE
+> Task :app:mergeCompatibilityBenchmarkGlobalSynthetics UP-TO-DATE
+> Task :app:mergeProjectDexCompatibilityBenchmark UP-TO-DATE
+> Task :app:packageCompatibilityBenchmark
+> Task :app:createCompatibilityBenchmarkApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleCompatibilityBenchmark
+
+[Incubating] Problems report is available at: file:///mnt/code/aspin/ASPin/es256/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1s
+36 actionable tasks: 9 executed, 27 up-to-date
+> zipalign for es256 (compatible)
+> APK signing for es256 (compatible)
+> APK verification for es256 (compatible)
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=APP, OU=Dev, O=MyCompany, L=City, ST=State, C=CN
+Signer #1 certificate SHA-256 digest: bb84932447c40f59859bf7be4592b53db0a1f3dfba4c02830f1f8f2fec09a598
+Signer #1 certificate SHA-1 digest: c1b8f925228b03d1d4e2dce126157cec59863020
+Signer #1 certificate MD5 digest: 9f13e29001961402a4a54da3c257bfc9
+Signer #1 key algorithm: EC
+Signer #1 key size (bits): 256
+Signer #1 public key SHA-256 digest: 424b7ce3e6797b53afdd70f756d258b39a15770e7af61fb5a3ccb04f0cf1f669
+Signer #1 public key SHA-1 digest: 8a97cc44be2f6131f0453585490ea148db9081c9
+Signer #1 public key MD5 digest: 9d98c71e61229d33ed09c904f3dcd199
+--> Built and signed es256 compatible APK: /mnt/code/aspin/results/reproduction-20261114T062526Z/certificate-change/apks/ASPin-es256-compatible.apk

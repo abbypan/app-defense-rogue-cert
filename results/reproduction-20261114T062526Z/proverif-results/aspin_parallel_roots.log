@@ -1,0 +1,1263 @@
+Process 0 (that is, the initial process):
+(
+    {1}let apk: skey = gen_sk_for_id(app_signing) in
+    {2}let ks: pkey = pk(gen_sk_for_id(self_host_signing)) in
+    {3}let manifest: bitstring = app_manifest(target_app_id,ks,installed_app_version) in
+    {4}event AppManifestSigned(target_app_id,pk(apk),ks,installed_app_version);
+    {5}let signature: bitstring = sig_sign(manifest,apk) in
+    {6}let =true = sig_verify(manifest,signature,pk(apk)) in
+    {7}event AppManifestAuthenticated(target_app_id,pk(apk),ks,installed_app_version);
+    {8}event ManifestKeyBind(target_app_id,ks);
+    {9}event ParallelRootAuthorized(target_app_id,pk(apk));
+    {10}event ParallelRootAuthorized(target_app_id,ks);
+    {11}out(cm, (package_signing_record(target_app_id,pk(apk)),manifest_key_record(target_app_id,ks)))
+) | (
+    {12}let root: skey = gen_sk_for_id(app_signing) in
+    {13}let delegated: skey = gen_sk_for_id(claim_signing) in
+    {14}event ClaimKeySign(root,pk(delegated),curr,succ_t(succ_t(curr)));
+    {15}out(c, jws_general_sign(pk2s(pk(root)),pk2s(pk(delegated)),curr,succ_t(succ_t(curr)),root));
+    {16}event CertClaimSign(delegated,server_cert_subject_and_san,real_cert_issuer,curr,succ_t(succ_t(curr)));
+    {17}out(c, jws_general_sign(pk2s(pk(delegated)),cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)),delegated))
+) | (
+    {18}let root_1: skey = gen_sk_for_id(self_host_signing) in
+    {19}let delegated_1: skey = gen_sk_for_id(other_self_host_signing) in
+    {20}event ClaimKeySign(root_1,pk(delegated_1),curr,succ_t(succ_t(curr)));
+    {21}out(c, jws_general_sign(pk2s(pk(root_1)),pk2s(pk(delegated_1)),curr,succ_t(succ_t(curr)),root_1));
+    {22}event CertClaimSign(delegated_1,server_cert_subject_and_san,real_cert_issuer,curr,succ_t(succ_t(curr)));
+    {23}out(c, jws_general_sign(pk2s(pk(delegated_1)),cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)),delegated_1))
+) | (
+    {24}out(c, gen_sk_for_id(other_app_signing))
+) | (
+    {25}in(cm, (package_record: bitstring,manifest_record: bitstring));
+    {26}let ka: pkey = resolve_os_key(package_record,target_app_id) in
+    {27}let ks_1: pkey = resolve_manifest_key(manifest_record,target_app_id) in
+    {28}event ManifestKeyResolve(target_app_id,ks_1);
+    (
+        {29}!
+        {30}in(c, tk: bitstring);
+        {31}let jws_general(hk: bitstring,kp: bitstring,sk: bitstring) = tk in
+        {32}let =true = header_matches(hk,ka) in
+        {33}let =true = jws_general_verify(tk,ka) in
+        {34}let =true = token_fresh(get_iat(kp),get_exp(kp),succ_t(curr)) in
+        {35}let delegated_2: pkey = s2pk(get_content(kp)) in
+        {36}event ClaimKeyVerify(ka,delegated_2,get_iat(kp),get_exp(kp));
+        {37}in(c, tc: bitstring);
+        {38}let jws_general(hc: bitstring,cp: bitstring,sc: bitstring) = tc in
+        {39}let =true = header_matches(hc,delegated_2) in
+        {40}let =true = jws_general_verify(tc,delegated_2) in
+        {41}let =true = token_fresh(get_iat(cp),get_exp(cp),succ_t(curr)) in
+        {42}let identity: bitstring = get_subject_and_san(get_content(cp)) in
+        {43}let =true = check_host(server_hostname,identity) in
+        {44}let issuer: bitstring = get_issuer(get_content(cp)) in
+        {45}event ParallelRootClaim(ka,delegated_2,issuer);
+        {46}event ParallelCacheStored(ka,delegated_2);
+        {47}insert parallel_cache(ka,delegated_2)
+    ) | (
+        {48}!
+        {49}in(c, tk_1: bitstring);
+        {50}let jws_general(hk_1: bitstring,kp_1: bitstring,sk_1: bitstring) = tk_1 in
+        {51}let =true = header_matches(hk_1,ks_1) in
+        {52}let =true = jws_general_verify(tk_1,ks_1) in
+        {53}let =true = token_fresh(get_iat(kp_1),get_exp(kp_1),succ_t(curr)) in
+        {54}let delegated_3: pkey = s2pk(get_content(kp_1)) in
+        {55}event ClaimKeyVerify(ks_1,delegated_3,get_iat(kp_1),get_exp(kp_1));
+        {56}in(c, tc_1: bitstring);
+        {57}let jws_general(hc_1: bitstring,cp_1: bitstring,sc_1: bitstring) = tc_1 in
+        {58}let =true = header_matches(hc_1,delegated_3) in
+        {59}let =true = jws_general_verify(tc_1,delegated_3) in
+        {60}let =true = token_fresh(get_iat(cp_1),get_exp(cp_1),succ_t(curr)) in
+        {61}let identity_1: bitstring = get_subject_and_san(get_content(cp_1)) in
+        {62}let =true = check_host(server_hostname,identity_1) in
+        {63}let issuer_1: bitstring = get_issuer(get_content(cp_1)) in
+        {64}event ParallelRootClaim(ks_1,delegated_3,issuer_1);
+        {65}event ParallelCacheStored(ks_1,delegated_3);
+        {66}insert parallel_cache(ks_1,delegated_3)
+    ) | (
+        {67}!
+        {69}get parallel_cache(=ka,delegated_4: pkey) in
+        {68}event ParallelCacheReturned(ka,delegated_4)
+    ) | (
+        {70}!
+        {72}get parallel_cache(=ks_1,delegated_5: pkey) in
+        {71}event ParallelCacheReturned(ks_1,delegated_5)
+    )
+)
+
+--  Process 1 (that is, process 0, with let moved downwards):
+(
+    {2}let ks: pkey = pk(gen_sk_for_id(self_host_signing)) in
+    {1}let apk: skey = gen_sk_for_id(app_signing) in
+    {4}event AppManifestSigned(target_app_id,pk(apk),ks,installed_app_version);
+    {3}let manifest: bitstring = app_manifest(target_app_id,ks,installed_app_version) in
+    {5}let signature: bitstring = sig_sign(manifest,apk) in
+    {6}let =true = sig_verify(manifest,signature,pk(apk)) in
+    {7}event AppManifestAuthenticated(target_app_id,pk(apk),ks,installed_app_version);
+    {8}event ManifestKeyBind(target_app_id,ks);
+    {9}event ParallelRootAuthorized(target_app_id,pk(apk));
+    {10}event ParallelRootAuthorized(target_app_id,ks);
+    {11}out(cm, (package_signing_record(target_app_id,pk(apk)),manifest_key_record(target_app_id,ks)))
+) | (
+    {13}let delegated: skey = gen_sk_for_id(claim_signing) in
+    {12}let root: skey = gen_sk_for_id(app_signing) in
+    {14}event ClaimKeySign(root,pk(delegated),curr,succ_t(succ_t(curr)));
+    {15}out(c, jws_general_sign(pk2s(pk(root)),pk2s(pk(delegated)),curr,succ_t(succ_t(curr)),root));
+    {16}event CertClaimSign(delegated,server_cert_subject_and_san,real_cert_issuer,curr,succ_t(succ_t(curr)));
+    {17}out(c, jws_general_sign(pk2s(pk(delegated)),cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)),delegated))
+) | (
+    {19}let delegated_1: skey = gen_sk_for_id(other_self_host_signing) in
+    {18}let root_1: skey = gen_sk_for_id(self_host_signing) in
+    {20}event ClaimKeySign(root_1,pk(delegated_1),curr,succ_t(succ_t(curr)));
+    {21}out(c, jws_general_sign(pk2s(pk(root_1)),pk2s(pk(delegated_1)),curr,succ_t(succ_t(curr)),root_1));
+    {22}event CertClaimSign(delegated_1,server_cert_subject_and_san,real_cert_issuer,curr,succ_t(succ_t(curr)));
+    {23}out(c, jws_general_sign(pk2s(pk(delegated_1)),cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)),delegated_1))
+) | (
+    {24}out(c, gen_sk_for_id(other_app_signing))
+) | (
+    {25}in(cm, (package_record: bitstring,manifest_record: bitstring));
+    {26}let ka: pkey = resolve_os_key(package_record,target_app_id) in
+    {27}let ks_1: pkey = resolve_manifest_key(manifest_record,target_app_id) in
+    {28}event ManifestKeyResolve(target_app_id,ks_1);
+    (
+        {29}!
+        {30}in(c, tk: bitstring);
+        {31}let jws_general(hk: bitstring,kp: bitstring,sk: bitstring) = tk in
+        {32}let =true = header_matches(hk,ka) in
+        {33}let =true = jws_general_verify(tk,ka) in
+        {34}let =true = token_fresh(get_iat(kp),get_exp(kp),succ_t(curr)) in
+        {35}let delegated_2: pkey = s2pk(get_content(kp)) in
+        {36}event ClaimKeyVerify(ka,delegated_2,get_iat(kp),get_exp(kp));
+        {37}in(c, tc: bitstring);
+        {38}let jws_general(hc: bitstring,cp: bitstring,sc: bitstring) = tc in
+        {39}let =true = header_matches(hc,delegated_2) in
+        {40}let =true = jws_general_verify(tc,delegated_2) in
+        {41}let =true = token_fresh(get_iat(cp),get_exp(cp),succ_t(curr)) in
+        {42}let identity: bitstring = get_subject_and_san(get_content(cp)) in
+        {43}let =true = check_host(server_hostname,identity) in
+        {44}let issuer: bitstring = get_issuer(get_content(cp)) in
+        {45}event ParallelRootClaim(ka,delegated_2,issuer);
+        {46}event ParallelCacheStored(ka,delegated_2);
+        {47}insert parallel_cache(ka,delegated_2)
+    ) | (
+        {48}!
+        {49}in(c, tk_1: bitstring);
+        {50}let jws_general(hk_1: bitstring,kp_1: bitstring,sk_1: bitstring) = tk_1 in
+        {51}let =true = header_matches(hk_1,ks_1) in
+        {52}let =true = jws_general_verify(tk_1,ks_1) in
+        {53}let =true = token_fresh(get_iat(kp_1),get_exp(kp_1),succ_t(curr)) in
+        {54}let delegated_3: pkey = s2pk(get_content(kp_1)) in
+        {55}event ClaimKeyVerify(ks_1,delegated_3,get_iat(kp_1),get_exp(kp_1));
+        {56}in(c, tc_1: bitstring);
+        {57}let jws_general(hc_1: bitstring,cp_1: bitstring,sc_1: bitstring) = tc_1 in
+        {58}let =true = header_matches(hc_1,delegated_3) in
+        {59}let =true = jws_general_verify(tc_1,delegated_3) in
+        {60}let =true = token_fresh(get_iat(cp_1),get_exp(cp_1),succ_t(curr)) in
+        {61}let identity_1: bitstring = get_subject_and_san(get_content(cp_1)) in
+        {62}let =true = check_host(server_hostname,identity_1) in
+        {63}let issuer_1: bitstring = get_issuer(get_content(cp_1)) in
+        {64}event ParallelRootClaim(ks_1,delegated_3,issuer_1);
+        {65}event ParallelCacheStored(ks_1,delegated_3);
+        {66}insert parallel_cache(ks_1,delegated_3)
+    ) | (
+        {67}!
+        {69}get parallel_cache(=ka,delegated_4: pkey) in
+        {68}event ParallelCacheReturned(ka,delegated_4)
+    ) | (
+        {70}!
+        {72}get parallel_cache(=ks_1,delegated_5: pkey) in
+        {71}event ParallelCacheReturned(ks_1,delegated_5)
+    )
+)
+
+-- Query event(ParallelRootClaim(root_2,delegated_6,issuer_2)) ==> event(ParallelRootAuthorized(target_app_id,root_2)) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (78 with conclusion selected). Queue: 203 rules.
+400 rules inserted. Base: 359 rules (83 with conclusion selected). Queue: 132 rules.
+Starting query event(ParallelRootClaim(root_2,delegated_6,issuer_2)) ==> event(ParallelRootAuthorized(target_app_id,root_2))
+goal reachable: b-event(ParallelRootAuthorized(target_app_id,pk(gen_sk_for_id(self_host_signing)))) && b-event(ParallelRootAuthorized(target_app_id,pk(gen_sk_for_id(app_signing)))) -> event(ParallelRootClaim(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),real_cert_issuer))
+goal reachable: b-event(ParallelRootAuthorized(target_app_id,pk(gen_sk_for_id(self_host_signing)))) && b-event(ParallelRootAuthorized(target_app_id,pk(gen_sk_for_id(app_signing)))) -> event(ParallelRootClaim(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)),real_cert_issuer))
+RESULT event(ParallelRootClaim(root_2,delegated_6,issuer_2)) ==> event(ParallelRootAuthorized(target_app_id,root_2)) is true.
+-- Query event(ClaimKeyVerify(pk(root_2),delegated_6,iat,exp)) ==> event(ClaimKeySign(root_2,delegated_6,iat,exp)) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 196 rules (78 with conclusion selected). Queue: 123 rules.
+400 rules inserted. Base: 336 rules (87 with conclusion selected). Queue: 40 rules.
+Starting query event(ClaimKeyVerify(pk(root_2),delegated_6,iat,exp)) ==> event(ClaimKeySign(root_2,delegated_6,iat,exp))
+goal reachable: b-event(ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),curr[],succ_t(succ_t(curr[])))) -> event(ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),curr[],succ_t(succ_t(curr[]))))
+goal reachable: b-event(ClaimKeySign(gen_sk_for_id(self_host_signing),pk(gen_sk_for_id(other_self_host_signing)),curr[],succ_t(succ_t(curr[])))) -> event(ClaimKeyVerify(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)),curr[],succ_t(succ_t(curr[]))))
+RESULT event(ClaimKeyVerify(pk(root_2),delegated_6,iat,exp)) ==> event(ClaimKeySign(root_2,delegated_6,iat,exp)) is true.
+-- Query event(ParallelCacheReturned(root_2,delegated_6)) ==> event(ParallelCacheStored(root_2,delegated_6)) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (78 with conclusion selected). Queue: 109 rules.
+Starting query event(ParallelCacheReturned(root_2,delegated_6)) ==> event(ParallelCacheStored(root_2,delegated_6))
+goal reachable: b-event(ParallelCacheStored(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)))) -> event(ParallelCacheReturned(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing))))
+goal reachable: b-event(ParallelCacheStored(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)))) -> event(ParallelCacheReturned(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing))))
+RESULT event(ParallelCacheReturned(root_2,delegated_6)) ==> event(ParallelCacheStored(root_2,delegated_6)) is true.
+-- Query event(ManifestKeyBind(app,ks_2)) ==> event(AppManifestAuthenticated(app,signer,ks_2,version)) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (79 with conclusion selected). Queue: 107 rules.
+Starting query event(ManifestKeyBind(app,ks_2)) ==> event(AppManifestAuthenticated(app,signer,ks_2,version))
+goal reachable: b-event(AppManifestAuthenticated(target_app_id,pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(self_host_signing)),installed_app_version)) -> event(ManifestKeyBind(target_app_id,pk(gen_sk_for_id(self_host_signing))))
+RESULT event(ManifestKeyBind(app,ks_2)) ==> event(AppManifestAuthenticated(app,signer,ks_2,version)) is true.
+-- Query not event(ParallelRootClaim(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),real_cert_issuer)) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (78 with conclusion selected). Queue: 203 rules.
+400 rules inserted. Base: 359 rules (83 with conclusion selected). Queue: 132 rules.
+Starting query not event(ParallelRootClaim(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),real_cert_issuer))
+goal reachable: event(ParallelRootClaim(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),real_cert_issuer))
+
+Derivation:
+
+1. The message (package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))),manifest_key_record(target_app_id,pk(gen_sk_for_id(self_host_signing)))) may be sent on channel cm[] at output {11}.
+mess(cm[],(package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))),manifest_key_record(target_app_id,pk(gen_sk_for_id(self_host_signing))))).
+
+2. The message jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))) may be sent to the attacker at output {15}.
+attacker(jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing)))).
+
+3. By 2, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+Using the function 3-proj-jws_general the attacker may obtain sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing)).
+attacker(sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+
+4. The attacker initially knows curr[].
+attacker(curr[]).
+
+5. By 4, the attacker may know curr[].
+Using the function succ_t the attacker may obtain succ_t(curr[]).
+attacker(succ_t(curr[])).
+
+6. By 5, the attacker may know succ_t(curr[]).
+Using the function succ_t the attacker may obtain succ_t(succ_t(curr[])).
+attacker(succ_t(succ_t(curr[]))).
+
+7. By 2, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+Using the function 2-proj-jws_general the attacker may obtain jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))).
+attacker(jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))).
+
+8. By 7, the attacker may know jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))).
+Using the function 1-proj-jws_payload the attacker may obtain pk2s(pk(gen_sk_for_id(claim_signing))).
+attacker(pk2s(pk(gen_sk_for_id(claim_signing)))).
+
+9. By 8, the attacker may know pk2s(pk(gen_sk_for_id(claim_signing))).
+By 4, the attacker may know curr[].
+By 6, the attacker may know succ_t(succ_t(curr[])).
+Using the function jws_payload the attacker may obtain jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))).
+attacker(jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))).
+
+10. By 2, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+Using the function 1-proj-jws_general the attacker may obtain pk2s(pk(gen_sk_for_id(app_signing))).
+attacker(pk2s(pk(gen_sk_for_id(app_signing)))).
+
+11. By 10, the attacker may know pk2s(pk(gen_sk_for_id(app_signing))).
+By 9, the attacker may know jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))).
+By 3, the attacker may know sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing)).
+Using the function jws_general the attacker may obtain jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))).
+attacker(jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing)))).
+
+12. The message jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))) may be sent to the attacker at output {17}.
+attacker(jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing)))).
+
+13. By 12, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))).
+Using the function 3-proj-jws_general the attacker may obtain sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing)).
+attacker(sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))).
+
+14. Using the function real_cert_issuer the attacker may obtain real_cert_issuer.
+attacker(real_cert_issuer).
+
+15. Using the function server_cert_subject_and_san the attacker may obtain server_cert_subject_and_san.
+attacker(server_cert_subject_and_san).
+
+16. By 15, the attacker may know server_cert_subject_and_san.
+By 14, the attacker may know real_cert_issuer.
+Using the function cert_claim the attacker may obtain cert_claim(server_cert_subject_and_san,real_cert_issuer).
+attacker(cert_claim(server_cert_subject_and_san,real_cert_issuer)).
+
+17. By 16, the attacker may know cert_claim(server_cert_subject_and_san,real_cert_issuer).
+By 4, the attacker may know curr[].
+By 6, the attacker may know succ_t(succ_t(curr[])).
+Using the function jws_payload the attacker may obtain jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))).
+attacker(jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))).
+
+18. By 8, the attacker may know pk2s(pk(gen_sk_for_id(claim_signing))).
+By 17, the attacker may know jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))).
+By 13, the attacker may know sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing)).
+Using the function jws_general the attacker may obtain jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))).
+attacker(jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing)))).
+
+19. The message (package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))),manifest_key_record(target_app_id,pk(gen_sk_for_id(self_host_signing)))) that may be sent on channel cm[] by 1 may be received at input {25}.
+The message jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(app_signing))) that the attacker may have by 11 may be received at input {30}.
+The message jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(claim_signing))) that the attacker may have by 18 may be received at input {37}.
+So event ParallelRootClaim(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),real_cert_issuer) may be executed at {45}.
+event(ParallelRootClaim(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),real_cert_issuer)).
+
+20. By 19, event(ParallelRootClaim(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),real_cert_issuer)).
+The goal is reached, represented in the following fact:
+event(ParallelRootClaim(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),real_cert_issuer)).
+
+
+Initial state
+
+Additional knowledge of the attacker:
+c
+cc
+cs
+succ_t(succ_t(curr))
+succ_t(curr)
+curr
+server_cert_subject_and_san
+real_cert_issuer
+--------------------------------------------------------------
+New processes:
+    (
+        let ks: pkey = pk(gen_sk_for_id(self_host_signing)) in
+        let apk: skey = gen_sk_for_id(app_signing) in
+        event AppManifestSigned(target_app_id,pk(apk),ks,installed_app_version);
+        let manifest: bitstring = app_manifest(target_app_id,ks,installed_app_version) in
+        let signature: bitstring = sig_sign(manifest,apk) in
+        let =true = sig_verify(manifest,signature,pk(apk)) in
+        event AppManifestAuthenticated(target_app_id,pk(apk),ks,installed_app_version);
+        event ManifestKeyBind(target_app_id,ks);
+        event ParallelRootAuthorized(target_app_id,pk(apk));
+        event ParallelRootAuthorized(target_app_id,ks);
+        out(cm, (package_signing_record(target_app_id,pk(apk)),manifest_key_record(target_app_id,ks)))
+    ) | (
+        let delegated: skey = gen_sk_for_id(claim_signing) in
+        let root: skey = gen_sk_for_id(app_signing) in
+        event ClaimKeySign(root,pk(delegated),curr,succ_t(succ_t(curr)));
+        out(c, jws_general_sign(pk2s(pk(root)),pk2s(pk(delegated)),curr,succ_t(succ_t(curr)),root));
+        event CertClaimSign(delegated,server_cert_subject_and_san,real_cert_issuer,curr,succ_t(succ_t(curr)));
+        out(c, jws_general_sign(pk2s(pk(delegated)),cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)),delegated))
+    ) | (
+        let delegated_1: skey = gen_sk_for_id(other_self_host_signing) in
+        let root_1: skey = gen_sk_for_id(self_host_signing) in
+        event ClaimKeySign(root_1,pk(delegated_1),curr,succ_t(succ_t(curr)));
+        out(c, jws_general_sign(pk2s(pk(root_1)),pk2s(pk(delegated_1)),curr,succ_t(succ_t(curr)),root_1));
+        event CertClaimSign(delegated_1,server_cert_subject_and_san,real_cert_issuer,curr,succ_t(succ_t(curr)));
+        out(c, jws_general_sign(pk2s(pk(delegated_1)),cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)),delegated_1))
+    ) | (
+        out(c, gen_sk_for_id(other_app_signing))
+    ) | (
+        in(cm, (package_record: bitstring,manifest_record: bitstring));
+        let ka: pkey = resolve_os_key(package_record,target_app_id) in
+        let ks_1: pkey = resolve_manifest_key(manifest_record,target_app_id) in
+        event ManifestKeyResolve(target_app_id,ks_1);
+        (
+            !
+            in(c, tk: bitstring);
+            let jws_general(hk: bitstring,kp: bitstring,sk: bitstring) = tk in
+            let =true = header_matches(hk,ka) in
+            let =true = jws_general_verify(tk,ka) in
+            let =true = token_fresh(get_iat(kp),get_exp(kp),succ_t(curr)) in
+            let delegated_2: pkey = s2pk(get_content(kp)) in
+            event ClaimKeyVerify(ka,delegated_2,get_iat(kp),get_exp(kp));
+            in(c, tc: bitstring);
+            let jws_general(hc: bitstring,cp: bitstring,sc: bitstring) = tc in
+            let =true = header_matches(hc,delegated_2) in
+            let =true = jws_general_verify(tc,delegated_2) in
+            let =true = token_fresh(get_iat(cp),get_exp(cp),succ_t(curr)) in
+            let identity: bitstring = get_subject_and_san(get_content(cp)) in
+            let =true = check_host(server_hostname,identity) in
+            let issuer: bitstring = get_issuer(get_content(cp)) in
+            event ParallelRootClaim(ka,delegated_2,issuer);
+            event ParallelCacheStored(ka,delegated_2);
+            insert parallel_cache(ka,delegated_2)
+        ) | (
+            !
+            in(c, tk_1: bitstring);
+            let jws_general(hk_1: bitstring,kp_1: bitstring,sk_1: bitstring) = tk_1 in
+            let =true = header_matches(hk_1,ks_1) in
+            let =true = jws_general_verify(tk_1,ks_1) in
+            let =true = token_fresh(get_iat(kp_1),get_exp(kp_1),succ_t(curr)) in
+            let delegated_3: pkey = s2pk(get_content(kp_1)) in
+            event ClaimKeyVerify(ks_1,delegated_3,get_iat(kp_1),get_exp(kp_1));
+            in(c, tc_1: bitstring);
+            let jws_general(hc_1: bitstring,cp_1: bitstring,sc_1: bitstring) = tc_1 in
+            let =true = header_matches(hc_1,delegated_3) in
+            let =true = jws_general_verify(tc_1,delegated_3) in
+            let =true = token_fresh(get_iat(cp_1),get_exp(cp_1),succ_t(curr)) in
+            let identity_1: bitstring = get_subject_and_san(get_content(cp_1)) in
+            let =true = check_host(server_hostname,identity_1) in
+            let issuer_1: bitstring = get_issuer(get_content(cp_1)) in
+            event ParallelRootClaim(ks_1,delegated_3,issuer_1);
+            event ParallelCacheStored(ks_1,delegated_3);
+            insert parallel_cache(ks_1,delegated_3)
+        ) | (
+            !
+            get parallel_cache(=ka,delegated_4: pkey) in
+            event ParallelCacheReturned(ka,delegated_4)
+        ) | (
+            !
+            get parallel_cache(=ks_1,delegated_5: pkey) in
+            event ParallelCacheReturned(ks_1,delegated_5)
+        )
+    )
+
+--------------------------------------------------------------
+1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction |
+
+4th process: out(c, ~M) with ~M = gen_sk_for_id(other_app_signing) done
+
+Additional knowledge of the attacker:
+~M = gen_sk_for_id(other_app_signing)
+--------------------------------------------------------------
+4th process: Reduction 0
+
+3rd process: Beginning of process ParallelPublish
+
+3rd process: let delegated_1: skey = gen_sk_for_id(other_self_host_signing) succeeds
+
+3rd process: let root_1: skey = gen_sk_for_id(self_host_signing) succeeds
+
+3rd process: event ClaimKeySign(gen_sk_for_id(self_host_signing),pk(gen_sk_for_id(other_self_host_signing)),curr,succ_t(succ_t(curr))) executed
+
+3rd process: out(c, jws_general(~M_1,jws_payload(~M_2,~M_3,~M_4),~M_5)) with ~M_1 = pk2s(pk(gen_sk_for_id(self_host_signing))), ~M_2 = pk2s(pk(gen_sk_for_id(other_self_host_signing))), ~M_3 = curr, ~M_4 = succ_t(succ_t(curr)), ~M_5 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(self_host_signing)) done
+
+Additional knowledge of the attacker:
+~M_5 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(self_host_signing))
+~M_2 = pk2s(pk(gen_sk_for_id(other_self_host_signing)))
+~M_1 = pk2s(pk(gen_sk_for_id(self_host_signing)))
+--------------------------------------------------------------
+3rd process: event CertClaimSign(gen_sk_for_id(other_self_host_signing),server_cert_subject_and_san,real_cert_issuer,curr,succ_t(succ_t(curr))) executed
+
+3rd process: out(c, jws_general(~M_6,jws_payload(cert_claim(~M_7,~M_8),~M_9,~M_10),~M_11)) with ~M_6 = pk2s(pk(gen_sk_for_id(other_self_host_signing))), ~M_7 = server_cert_subject_and_san, ~M_8 = real_cert_issuer, ~M_9 = curr, ~M_10 = succ_t(succ_t(curr)), ~M_11 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(other_self_host_signing)) done
+
+Additional knowledge of the attacker:
+~M_11 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(other_self_host_signing))
+--------------------------------------------------------------
+3rd process: Reduction 0
+
+2nd process: Beginning of process ParallelPublish
+
+2nd process: let delegated: skey = gen_sk_for_id(claim_signing) succeeds
+
+2nd process: let root: skey = gen_sk_for_id(app_signing) succeeds
+
+2nd process: event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),curr,succ_t(succ_t(curr))) executed
+
+2nd process: out(c, jws_general(~M_12,jws_payload(~M_13,~M_14,~M_15),~M_16)) with ~M_12 = pk2s(pk(gen_sk_for_id(app_signing))), ~M_13 = pk2s(pk(gen_sk_for_id(claim_signing))), ~M_14 = curr, ~M_15 = succ_t(succ_t(curr)), ~M_16 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(app_signing)) done
+
+Additional knowledge of the attacker:
+~M_16 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(app_signing))
+~M_13 = pk2s(pk(gen_sk_for_id(claim_signing)))
+~M_12 = pk2s(pk(gen_sk_for_id(app_signing)))
+--------------------------------------------------------------
+2nd process: event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,curr,succ_t(succ_t(curr))) executed
+
+2nd process: out(c, jws_general(~M_17,jws_payload(cert_claim(~M_18,~M_19),~M_20,~M_21),~M_22)) with ~M_17 = pk2s(pk(gen_sk_for_id(claim_signing))), ~M_18 = server_cert_subject_and_san, ~M_19 = real_cert_issuer, ~M_20 = curr, ~M_21 = succ_t(succ_t(curr)), ~M_22 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(claim_signing)) done
+
+Additional knowledge of the attacker:
+~M_22 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(claim_signing))
+--------------------------------------------------------------
+2nd process: Reduction 0
+
+1st process: Beginning of process ParallelInstall
+
+1st process: let ks: pkey = pk(gen_sk_for_id(self_host_signing)) succeeds
+
+1st process: let apk: skey = gen_sk_for_id(app_signing) succeeds
+
+1st process: event AppManifestSigned(target_app_id,pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(self_host_signing)),installed_app_version) executed
+
+1st process: let manifest: bitstring = app_manifest(target_app_id,pk(gen_sk_for_id(self_host_signing)),installed_app_version) succeeds
+
+1st process: let signature: bitstring = sig_sign(app_manifest(target_app_id,pk(gen_sk_for_id(self_host_signing)),installed_app_version),gen_sk_for_id(app_signing)) succeeds
+
+1st process: let =true = true succeeds
+
+1st process: event AppManifestAuthenticated(target_app_id,pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(self_host_signing)),installed_app_version) executed
+
+1st process: event ManifestKeyBind(target_app_id,pk(gen_sk_for_id(self_host_signing))) executed
+
+1st process: event ParallelRootAuthorized(target_app_id,pk(gen_sk_for_id(app_signing))) executed
+
+1st process: event ParallelRootAuthorized(target_app_id,pk(gen_sk_for_id(self_host_signing))) executed
+
+New processes:
+(
+    out(cm, (package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))),manifest_key_record(target_app_id,pk(gen_sk_for_id(self_host_signing)))))
+) | (
+    in(cm, (package_record: bitstring,manifest_record: bitstring));
+    let ka: pkey = resolve_os_key(package_record,target_app_id) in
+    let ks_1: pkey = resolve_manifest_key(manifest_record,target_app_id) in
+    event ManifestKeyResolve(target_app_id,ks_1);
+    (
+        !
+        in(c, tk: bitstring);
+        let jws_general(hk: bitstring,kp: bitstring,sk: bitstring) = tk in
+        let =true = header_matches(hk,ka) in
+        let =true = jws_general_verify(tk,ka) in
+        let =true = token_fresh(get_iat(kp),get_exp(kp),succ_t(curr)) in
+        let delegated_2: pkey = s2pk(get_content(kp)) in
+        event ClaimKeyVerify(ka,delegated_2,get_iat(kp),get_exp(kp));
+        in(c, tc: bitstring);
+        let jws_general(hc: bitstring,cp: bitstring,sc: bitstring) = tc in
+        let =true = header_matches(hc,delegated_2) in
+        let =true = jws_general_verify(tc,delegated_2) in
+        let =true = token_fresh(get_iat(cp),get_exp(cp),succ_t(curr)) in
+        let identity: bitstring = get_subject_and_san(get_content(cp)) in
+        let =true = check_host(server_hostname,identity) in
+        let issuer: bitstring = get_issuer(get_content(cp)) in
+        event ParallelRootClaim(ka,delegated_2,issuer);
+        event ParallelCacheStored(ka,delegated_2);
+        insert parallel_cache(ka,delegated_2)
+    ) | (
+        !
+        in(c, tk_1: bitstring);
+        let jws_general(hk_1: bitstring,kp_1: bitstring,sk_1: bitstring) = tk_1 in
+        let =true = header_matches(hk_1,ks_1) in
+        let =true = jws_general_verify(tk_1,ks_1) in
+        let =true = token_fresh(get_iat(kp_1),get_exp(kp_1),succ_t(curr)) in
+        let delegated_3: pkey = s2pk(get_content(kp_1)) in
+        event ClaimKeyVerify(ks_1,delegated_3,get_iat(kp_1),get_exp(kp_1));
+        in(c, tc_1: bitstring);
+        let jws_general(hc_1: bitstring,cp_1: bitstring,sc_1: bitstring) = tc_1 in
+        let =true = header_matches(hc_1,delegated_3) in
+        let =true = jws_general_verify(tc_1,delegated_3) in
+        let =true = token_fresh(get_iat(cp_1),get_exp(cp_1),succ_t(curr)) in
+        let identity_1: bitstring = get_subject_and_san(get_content(cp_1)) in
+        let =true = check_host(server_hostname,identity_1) in
+        let issuer_1: bitstring = get_issuer(get_content(cp_1)) in
+        event ParallelRootClaim(ks_1,delegated_3,issuer_1);
+        event ParallelCacheStored(ks_1,delegated_3);
+        insert parallel_cache(ks_1,delegated_3)
+    ) | (
+        !
+        get parallel_cache(=ka,delegated_4: pkey) in
+        event ParallelCacheReturned(ka,delegated_4)
+    ) | (
+        !
+        get parallel_cache(=ks_1,delegated_5: pkey) in
+        event ParallelCacheReturned(ks_1,delegated_5)
+    )
+)
+
+--------------------------------------------------------------
+1st process: out(cm, (package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))),manifest_key_record(target_app_id,pk(gen_sk_for_id(self_host_signing))))) reduces with 2nd process: in(cm, (package_record: bitstring,manifest_record: bitstring))
+
+New processes:
+(
+    0
+) | (
+    let ka: pkey = resolve_os_key(package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))),target_app_id) in
+    let ks_1: pkey = resolve_manifest_key(manifest_key_record(target_app_id,pk(gen_sk_for_id(self_host_signing))),target_app_id) in
+    event ManifestKeyResolve(target_app_id,ks_1);
+    (
+        !
+        in(c, tk: bitstring);
+        let jws_general(hk: bitstring,kp: bitstring,sk: bitstring) = tk in
+        let =true = header_matches(hk,ka) in
+        let =true = jws_general_verify(tk,ka) in
+        let =true = token_fresh(get_iat(kp),get_exp(kp),succ_t(curr)) in
+        let delegated_2: pkey = s2pk(get_content(kp)) in
+        event ClaimKeyVerify(ka,delegated_2,get_iat(kp),get_exp(kp));
+        in(c, tc: bitstring);
+        let jws_general(hc: bitstring,cp: bitstring,sc: bitstring) = tc in
+        let =true = header_matches(hc,delegated_2) in
+        let =true = jws_general_verify(tc,delegated_2) in
+        let =true = token_fresh(get_iat(cp),get_exp(cp),succ_t(curr)) in
+        let identity: bitstring = get_subject_and_san(get_content(cp)) in
+        let =true = check_host(server_hostname,identity) in
+        let issuer: bitstring = get_issuer(get_content(cp)) in
+        event ParallelRootClaim(ka,delegated_2,issuer);
+        event ParallelCacheStored(ka,delegated_2);
+        insert parallel_cache(ka,delegated_2)
+    ) | (
+        !
+        in(c, tk_1: bitstring);
+        let jws_general(hk_1: bitstring,kp_1: bitstring,sk_1: bitstring) = tk_1 in
+        let =true = header_matches(hk_1,ks_1) in
+        let =true = jws_general_verify(tk_1,ks_1) in
+        let =true = token_fresh(get_iat(kp_1),get_exp(kp_1),succ_t(curr)) in
+        let delegated_3: pkey = s2pk(get_content(kp_1)) in
+        event ClaimKeyVerify(ks_1,delegated_3,get_iat(kp_1),get_exp(kp_1));
+        in(c, tc_1: bitstring);
+        let jws_general(hc_1: bitstring,cp_1: bitstring,sc_1: bitstring) = tc_1 in
+        let =true = header_matches(hc_1,delegated_3) in
+        let =true = jws_general_verify(tc_1,delegated_3) in
+        let =true = token_fresh(get_iat(cp_1),get_exp(cp_1),succ_t(curr)) in
+        let identity_1: bitstring = get_subject_and_san(get_content(cp_1)) in
+        let =true = check_host(server_hostname,identity_1) in
+        let issuer_1: bitstring = get_issuer(get_content(cp_1)) in
+        event ParallelRootClaim(ks_1,delegated_3,issuer_1);
+        event ParallelCacheStored(ks_1,delegated_3);
+        insert parallel_cache(ks_1,delegated_3)
+    ) | (
+        !
+        get parallel_cache(=ka,delegated_4: pkey) in
+        event ParallelCacheReturned(ka,delegated_4)
+    ) | (
+        !
+        get parallel_cache(=ks_1,delegated_5: pkey) in
+        event ParallelCacheReturned(ks_1,delegated_5)
+    )
+)
+
+--------------------------------------------------------------
+1st process: Reduction 0
+
+1st process: let ka: pkey = pk(gen_sk_for_id(app_signing)) succeeds
+
+1st process: let ks_1: pkey = pk(gen_sk_for_id(self_host_signing)) succeeds
+
+1st process: event ManifestKeyResolve(target_app_id,pk(gen_sk_for_id(self_host_signing))) executed
+
+1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction ! 0 copy(ies)
+
+3rd process: Reduction ! 0 copy(ies)
+
+2nd process: Reduction ! 0 copy(ies)
+
+1st process: Reduction ! 1 copy(ies)
+
+1st process: Beginning of process ParallelVerify(pk(gen_sk_for_id(app_signing)))
+
+New processes:
+    in(c, tk: bitstring);
+    let jws_general(hk: bitstring,kp: bitstring,sk: bitstring) = tk in
+    let =true = header_matches(hk,pk(gen_sk_for_id(app_signing))) in
+    let =true = jws_general_verify(tk,pk(gen_sk_for_id(app_signing))) in
+    let =true = token_fresh(get_iat(kp),get_exp(kp),succ_t(curr)) in
+    let delegated_2: pkey = s2pk(get_content(kp)) in
+    event ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),delegated_2,get_iat(kp),get_exp(kp));
+    in(c, tc: bitstring);
+    let jws_general(hc: bitstring,cp: bitstring,sc: bitstring) = tc in
+    let =true = header_matches(hc,delegated_2) in
+    let =true = jws_general_verify(tc,delegated_2) in
+    let =true = token_fresh(get_iat(cp),get_exp(cp),succ_t(curr)) in
+    let identity: bitstring = get_subject_and_san(get_content(cp)) in
+    let =true = check_host(server_hostname,identity) in
+    let issuer: bitstring = get_issuer(get_content(cp)) in
+    event ParallelRootClaim(pk(gen_sk_for_id(app_signing)),delegated_2,issuer);
+    event ParallelCacheStored(pk(gen_sk_for_id(app_signing)),delegated_2);
+    insert parallel_cache(pk(gen_sk_for_id(app_signing)),delegated_2)
+
+--------------------------------------------------------------
+1st process: in(c, tk: bitstring) done with message jws_general(~M_12,jws_payload(~M_13,curr,succ_t(succ_t(curr))),~M_16) = jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(app_signing)))
+
+1st process: let jws_general(hk: bitstring,kp: bitstring,sk: bitstring) = jws_general(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(app_signing))) succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let delegated_2: pkey = pk(gen_sk_for_id(claim_signing)) succeeds
+
+1st process: event ClaimKeyVerify(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),curr,succ_t(succ_t(curr))) executed
+
+New processes:
+    in(c, tc: bitstring);
+    let jws_general(hc: bitstring,cp: bitstring,sc: bitstring) = tc in
+    let =true = header_matches(hc,pk(gen_sk_for_id(claim_signing))) in
+    let =true = jws_general_verify(tc,pk(gen_sk_for_id(claim_signing))) in
+    let =true = token_fresh(get_iat(cp),get_exp(cp),succ_t(curr)) in
+    let identity: bitstring = get_subject_and_san(get_content(cp)) in
+    let =true = check_host(server_hostname,identity) in
+    let issuer: bitstring = get_issuer(get_content(cp)) in
+    event ParallelRootClaim(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),issuer);
+    event ParallelCacheStored(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)));
+    insert parallel_cache(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)))
+
+--------------------------------------------------------------
+1st process: in(c, tc: bitstring) done with message jws_general(~M_13,jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr))),~M_22) = jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(claim_signing)))
+
+1st process: let jws_general(hc: bitstring,cp: bitstring,sc: bitstring) = jws_general(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(claim_signing))) succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let identity: bitstring = server_cert_subject_and_san succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let issuer: bitstring = real_cert_issuer succeeds
+
+1st process: event ParallelRootClaim(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),real_cert_issuer) executed; it is a goal
+
+New processes:
+    event ParallelCacheStored(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)));
+    insert parallel_cache(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)))
+
+--------------------------------------------------------------
+The event ParallelRootClaim(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),real_cert_issuer) is executed at {45} in copy a.
+A trace has been found.
+RESULT not event(ParallelRootClaim(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),real_cert_issuer)) is false.
+-- Query not event(ParallelRootClaim(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)),real_cert_issuer)) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (78 with conclusion selected). Queue: 203 rules.
+400 rules inserted. Base: 359 rules (83 with conclusion selected). Queue: 132 rules.
+Starting query not event(ParallelRootClaim(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)),real_cert_issuer))
+goal reachable: event(ParallelRootClaim(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)),real_cert_issuer))
+
+Derivation:
+
+1. The message (package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))),manifest_key_record(target_app_id,pk(gen_sk_for_id(self_host_signing)))) may be sent on channel cm[] at output {11}.
+mess(cm[],(package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))),manifest_key_record(target_app_id,pk(gen_sk_for_id(self_host_signing))))).
+
+2. The message jws_general(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(self_host_signing))) may be sent to the attacker at output {21}.
+attacker(jws_general(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(self_host_signing)))).
+
+3. By 2, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(self_host_signing))).
+Using the function 3-proj-jws_general the attacker may obtain sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(self_host_signing)).
+attacker(sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(self_host_signing))).
+
+4. The attacker initially knows curr[].
+attacker(curr[]).
+
+5. By 4, the attacker may know curr[].
+Using the function succ_t the attacker may obtain succ_t(curr[]).
+attacker(succ_t(curr[])).
+
+6. By 5, the attacker may know succ_t(curr[]).
+Using the function succ_t the attacker may obtain succ_t(succ_t(curr[])).
+attacker(succ_t(succ_t(curr[]))).
+
+7. By 2, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(self_host_signing))).
+Using the function 2-proj-jws_general the attacker may obtain jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[]))).
+attacker(jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[])))).
+
+8. By 7, the attacker may know jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[]))).
+Using the function 1-proj-jws_payload the attacker may obtain pk2s(pk(gen_sk_for_id(other_self_host_signing))).
+attacker(pk2s(pk(gen_sk_for_id(other_self_host_signing)))).
+
+9. By 8, the attacker may know pk2s(pk(gen_sk_for_id(other_self_host_signing))).
+By 4, the attacker may know curr[].
+By 6, the attacker may know succ_t(succ_t(curr[])).
+Using the function jws_payload the attacker may obtain jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[]))).
+attacker(jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[])))).
+
+10. By 2, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(self_host_signing))).
+Using the function 1-proj-jws_general the attacker may obtain pk2s(pk(gen_sk_for_id(self_host_signing))).
+attacker(pk2s(pk(gen_sk_for_id(self_host_signing)))).
+
+11. By 10, the attacker may know pk2s(pk(gen_sk_for_id(self_host_signing))).
+By 9, the attacker may know jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[]))).
+By 3, the attacker may know sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(self_host_signing)).
+Using the function jws_general the attacker may obtain jws_general(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(self_host_signing))).
+attacker(jws_general(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(self_host_signing)))).
+
+12. The message jws_general(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(other_self_host_signing))) may be sent to the attacker at output {23}.
+attacker(jws_general(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(other_self_host_signing)))).
+
+13. By 12, the attacker may know jws_general(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(other_self_host_signing))).
+Using the function 3-proj-jws_general the attacker may obtain sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(other_self_host_signing)).
+attacker(sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(other_self_host_signing))).
+
+14. Using the function real_cert_issuer the attacker may obtain real_cert_issuer.
+attacker(real_cert_issuer).
+
+15. Using the function server_cert_subject_and_san the attacker may obtain server_cert_subject_and_san.
+attacker(server_cert_subject_and_san).
+
+16. By 15, the attacker may know server_cert_subject_and_san.
+By 14, the attacker may know real_cert_issuer.
+Using the function cert_claim the attacker may obtain cert_claim(server_cert_subject_and_san,real_cert_issuer).
+attacker(cert_claim(server_cert_subject_and_san,real_cert_issuer)).
+
+17. By 16, the attacker may know cert_claim(server_cert_subject_and_san,real_cert_issuer).
+By 4, the attacker may know curr[].
+By 6, the attacker may know succ_t(succ_t(curr[])).
+Using the function jws_payload the attacker may obtain jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))).
+attacker(jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))).
+
+18. By 8, the attacker may know pk2s(pk(gen_sk_for_id(other_self_host_signing))).
+By 17, the attacker may know jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))).
+By 13, the attacker may know sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(other_self_host_signing)).
+Using the function jws_general the attacker may obtain jws_general(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(other_self_host_signing))).
+attacker(jws_general(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(other_self_host_signing)))).
+
+19. The message (package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))),manifest_key_record(target_app_id,pk(gen_sk_for_id(self_host_signing)))) that may be sent on channel cm[] by 1 may be received at input {25}.
+The message jws_general(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(self_host_signing))) that the attacker may have by 11 may be received at input {49}.
+The message jws_general(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[]))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr[],succ_t(succ_t(curr[])))),gen_sk_for_id(other_self_host_signing))) that the attacker may have by 18 may be received at input {56}.
+So event ParallelRootClaim(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)),real_cert_issuer) may be executed at {64}.
+event(ParallelRootClaim(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)),real_cert_issuer)).
+
+20. By 19, event(ParallelRootClaim(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)),real_cert_issuer)).
+The goal is reached, represented in the following fact:
+event(ParallelRootClaim(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)),real_cert_issuer)).
+
+
+Initial state
+
+Additional knowledge of the attacker:
+c
+cc
+cs
+succ_t(succ_t(curr))
+succ_t(curr)
+curr
+server_cert_subject_and_san
+real_cert_issuer
+--------------------------------------------------------------
+New processes:
+    (
+        let ks: pkey = pk(gen_sk_for_id(self_host_signing)) in
+        let apk: skey = gen_sk_for_id(app_signing) in
+        event AppManifestSigned(target_app_id,pk(apk),ks,installed_app_version);
+        let manifest: bitstring = app_manifest(target_app_id,ks,installed_app_version) in
+        let signature: bitstring = sig_sign(manifest,apk) in
+        let =true = sig_verify(manifest,signature,pk(apk)) in
+        event AppManifestAuthenticated(target_app_id,pk(apk),ks,installed_app_version);
+        event ManifestKeyBind(target_app_id,ks);
+        event ParallelRootAuthorized(target_app_id,pk(apk));
+        event ParallelRootAuthorized(target_app_id,ks);
+        out(cm, (package_signing_record(target_app_id,pk(apk)),manifest_key_record(target_app_id,ks)))
+    ) | (
+        let delegated: skey = gen_sk_for_id(claim_signing) in
+        let root: skey = gen_sk_for_id(app_signing) in
+        event ClaimKeySign(root,pk(delegated),curr,succ_t(succ_t(curr)));
+        out(c, jws_general_sign(pk2s(pk(root)),pk2s(pk(delegated)),curr,succ_t(succ_t(curr)),root));
+        event CertClaimSign(delegated,server_cert_subject_and_san,real_cert_issuer,curr,succ_t(succ_t(curr)));
+        out(c, jws_general_sign(pk2s(pk(delegated)),cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)),delegated))
+    ) | (
+        let delegated_1: skey = gen_sk_for_id(other_self_host_signing) in
+        let root_1: skey = gen_sk_for_id(self_host_signing) in
+        event ClaimKeySign(root_1,pk(delegated_1),curr,succ_t(succ_t(curr)));
+        out(c, jws_general_sign(pk2s(pk(root_1)),pk2s(pk(delegated_1)),curr,succ_t(succ_t(curr)),root_1));
+        event CertClaimSign(delegated_1,server_cert_subject_and_san,real_cert_issuer,curr,succ_t(succ_t(curr)));
+        out(c, jws_general_sign(pk2s(pk(delegated_1)),cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)),delegated_1))
+    ) | (
+        out(c, gen_sk_for_id(other_app_signing))
+    ) | (
+        in(cm, (package_record: bitstring,manifest_record: bitstring));
+        let ka: pkey = resolve_os_key(package_record,target_app_id) in
+        let ks_1: pkey = resolve_manifest_key(manifest_record,target_app_id) in
+        event ManifestKeyResolve(target_app_id,ks_1);
+        (
+            !
+            in(c, tk: bitstring);
+            let jws_general(hk: bitstring,kp: bitstring,sk: bitstring) = tk in
+            let =true = header_matches(hk,ka) in
+            let =true = jws_general_verify(tk,ka) in
+            let =true = token_fresh(get_iat(kp),get_exp(kp),succ_t(curr)) in
+            let delegated_2: pkey = s2pk(get_content(kp)) in
+            event ClaimKeyVerify(ka,delegated_2,get_iat(kp),get_exp(kp));
+            in(c, tc: bitstring);
+            let jws_general(hc: bitstring,cp: bitstring,sc: bitstring) = tc in
+            let =true = header_matches(hc,delegated_2) in
+            let =true = jws_general_verify(tc,delegated_2) in
+            let =true = token_fresh(get_iat(cp),get_exp(cp),succ_t(curr)) in
+            let identity: bitstring = get_subject_and_san(get_content(cp)) in
+            let =true = check_host(server_hostname,identity) in
+            let issuer: bitstring = get_issuer(get_content(cp)) in
+            event ParallelRootClaim(ka,delegated_2,issuer);
+            event ParallelCacheStored(ka,delegated_2);
+            insert parallel_cache(ka,delegated_2)
+        ) | (
+            !
+            in(c, tk_1: bitstring);
+            let jws_general(hk_1: bitstring,kp_1: bitstring,sk_1: bitstring) = tk_1 in
+            let =true = header_matches(hk_1,ks_1) in
+            let =true = jws_general_verify(tk_1,ks_1) in
+            let =true = token_fresh(get_iat(kp_1),get_exp(kp_1),succ_t(curr)) in
+            let delegated_3: pkey = s2pk(get_content(kp_1)) in
+            event ClaimKeyVerify(ks_1,delegated_3,get_iat(kp_1),get_exp(kp_1));
+            in(c, tc_1: bitstring);
+            let jws_general(hc_1: bitstring,cp_1: bitstring,sc_1: bitstring) = tc_1 in
+            let =true = header_matches(hc_1,delegated_3) in
+            let =true = jws_general_verify(tc_1,delegated_3) in
+            let =true = token_fresh(get_iat(cp_1),get_exp(cp_1),succ_t(curr)) in
+            let identity_1: bitstring = get_subject_and_san(get_content(cp_1)) in
+            let =true = check_host(server_hostname,identity_1) in
+            let issuer_1: bitstring = get_issuer(get_content(cp_1)) in
+            event ParallelRootClaim(ks_1,delegated_3,issuer_1);
+            event ParallelCacheStored(ks_1,delegated_3);
+            insert parallel_cache(ks_1,delegated_3)
+        ) | (
+            !
+            get parallel_cache(=ka,delegated_4: pkey) in
+            event ParallelCacheReturned(ka,delegated_4)
+        ) | (
+            !
+            get parallel_cache(=ks_1,delegated_5: pkey) in
+            event ParallelCacheReturned(ks_1,delegated_5)
+        )
+    )
+
+--------------------------------------------------------------
+1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction |
+
+4th process: out(c, ~M) with ~M = gen_sk_for_id(other_app_signing) done
+
+Additional knowledge of the attacker:
+~M = gen_sk_for_id(other_app_signing)
+--------------------------------------------------------------
+4th process: Reduction 0
+
+3rd process: Beginning of process ParallelPublish
+
+3rd process: let delegated_1: skey = gen_sk_for_id(other_self_host_signing) succeeds
+
+3rd process: let root_1: skey = gen_sk_for_id(self_host_signing) succeeds
+
+3rd process: event ClaimKeySign(gen_sk_for_id(self_host_signing),pk(gen_sk_for_id(other_self_host_signing)),curr,succ_t(succ_t(curr))) executed
+
+3rd process: out(c, jws_general(~M_1,jws_payload(~M_2,~M_3,~M_4),~M_5)) with ~M_1 = pk2s(pk(gen_sk_for_id(self_host_signing))), ~M_2 = pk2s(pk(gen_sk_for_id(other_self_host_signing))), ~M_3 = curr, ~M_4 = succ_t(succ_t(curr)), ~M_5 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(self_host_signing)) done
+
+Additional knowledge of the attacker:
+~M_5 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(self_host_signing))
+~M_2 = pk2s(pk(gen_sk_for_id(other_self_host_signing)))
+~M_1 = pk2s(pk(gen_sk_for_id(self_host_signing)))
+--------------------------------------------------------------
+3rd process: event CertClaimSign(gen_sk_for_id(other_self_host_signing),server_cert_subject_and_san,real_cert_issuer,curr,succ_t(succ_t(curr))) executed
+
+3rd process: out(c, jws_general(~M_6,jws_payload(cert_claim(~M_7,~M_8),~M_9,~M_10),~M_11)) with ~M_6 = pk2s(pk(gen_sk_for_id(other_self_host_signing))), ~M_7 = server_cert_subject_and_san, ~M_8 = real_cert_issuer, ~M_9 = curr, ~M_10 = succ_t(succ_t(curr)), ~M_11 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(other_self_host_signing)) done
+
+Additional knowledge of the attacker:
+~M_11 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(other_self_host_signing))
+--------------------------------------------------------------
+3rd process: Reduction 0
+
+2nd process: Beginning of process ParallelPublish
+
+2nd process: let delegated: skey = gen_sk_for_id(claim_signing) succeeds
+
+2nd process: let root: skey = gen_sk_for_id(app_signing) succeeds
+
+2nd process: event ClaimKeySign(gen_sk_for_id(app_signing),pk(gen_sk_for_id(claim_signing)),curr,succ_t(succ_t(curr))) executed
+
+2nd process: out(c, jws_general(~M_12,jws_payload(~M_13,~M_14,~M_15),~M_16)) with ~M_12 = pk2s(pk(gen_sk_for_id(app_signing))), ~M_13 = pk2s(pk(gen_sk_for_id(claim_signing))), ~M_14 = curr, ~M_15 = succ_t(succ_t(curr)), ~M_16 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(app_signing)) done
+
+Additional knowledge of the attacker:
+~M_16 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(app_signing))),jws_payload(pk2s(pk(gen_sk_for_id(claim_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(app_signing))
+~M_13 = pk2s(pk(gen_sk_for_id(claim_signing)))
+~M_12 = pk2s(pk(gen_sk_for_id(app_signing)))
+--------------------------------------------------------------
+2nd process: event CertClaimSign(gen_sk_for_id(claim_signing),server_cert_subject_and_san,real_cert_issuer,curr,succ_t(succ_t(curr))) executed
+
+2nd process: out(c, jws_general(~M_17,jws_payload(cert_claim(~M_18,~M_19),~M_20,~M_21),~M_22)) with ~M_17 = pk2s(pk(gen_sk_for_id(claim_signing))), ~M_18 = server_cert_subject_and_san, ~M_19 = real_cert_issuer, ~M_20 = curr, ~M_21 = succ_t(succ_t(curr)), ~M_22 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(claim_signing)) done
+
+Additional knowledge of the attacker:
+~M_22 = sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(claim_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(claim_signing))
+--------------------------------------------------------------
+2nd process: Reduction 0
+
+1st process: Beginning of process ParallelInstall
+
+1st process: let ks: pkey = pk(gen_sk_for_id(self_host_signing)) succeeds
+
+1st process: let apk: skey = gen_sk_for_id(app_signing) succeeds
+
+1st process: event AppManifestSigned(target_app_id,pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(self_host_signing)),installed_app_version) executed
+
+1st process: let manifest: bitstring = app_manifest(target_app_id,pk(gen_sk_for_id(self_host_signing)),installed_app_version) succeeds
+
+1st process: let signature: bitstring = sig_sign(app_manifest(target_app_id,pk(gen_sk_for_id(self_host_signing)),installed_app_version),gen_sk_for_id(app_signing)) succeeds
+
+1st process: let =true = true succeeds
+
+1st process: event AppManifestAuthenticated(target_app_id,pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(self_host_signing)),installed_app_version) executed
+
+1st process: event ManifestKeyBind(target_app_id,pk(gen_sk_for_id(self_host_signing))) executed
+
+1st process: event ParallelRootAuthorized(target_app_id,pk(gen_sk_for_id(app_signing))) executed
+
+1st process: event ParallelRootAuthorized(target_app_id,pk(gen_sk_for_id(self_host_signing))) executed
+
+New processes:
+(
+    out(cm, (package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))),manifest_key_record(target_app_id,pk(gen_sk_for_id(self_host_signing)))))
+) | (
+    in(cm, (package_record: bitstring,manifest_record: bitstring));
+    let ka: pkey = resolve_os_key(package_record,target_app_id) in
+    let ks_1: pkey = resolve_manifest_key(manifest_record,target_app_id) in
+    event ManifestKeyResolve(target_app_id,ks_1);
+    (
+        !
+        in(c, tk: bitstring);
+        let jws_general(hk: bitstring,kp: bitstring,sk: bitstring) = tk in
+        let =true = header_matches(hk,ka) in
+        let =true = jws_general_verify(tk,ka) in
+        let =true = token_fresh(get_iat(kp),get_exp(kp),succ_t(curr)) in
+        let delegated_2: pkey = s2pk(get_content(kp)) in
+        event ClaimKeyVerify(ka,delegated_2,get_iat(kp),get_exp(kp));
+        in(c, tc: bitstring);
+        let jws_general(hc: bitstring,cp: bitstring,sc: bitstring) = tc in
+        let =true = header_matches(hc,delegated_2) in
+        let =true = jws_general_verify(tc,delegated_2) in
+        let =true = token_fresh(get_iat(cp),get_exp(cp),succ_t(curr)) in
+        let identity: bitstring = get_subject_and_san(get_content(cp)) in
+        let =true = check_host(server_hostname,identity) in
+        let issuer: bitstring = get_issuer(get_content(cp)) in
+        event ParallelRootClaim(ka,delegated_2,issuer);
+        event ParallelCacheStored(ka,delegated_2);
+        insert parallel_cache(ka,delegated_2)
+    ) | (
+        !
+        in(c, tk_1: bitstring);
+        let jws_general(hk_1: bitstring,kp_1: bitstring,sk_1: bitstring) = tk_1 in
+        let =true = header_matches(hk_1,ks_1) in
+        let =true = jws_general_verify(tk_1,ks_1) in
+        let =true = token_fresh(get_iat(kp_1),get_exp(kp_1),succ_t(curr)) in
+        let delegated_3: pkey = s2pk(get_content(kp_1)) in
+        event ClaimKeyVerify(ks_1,delegated_3,get_iat(kp_1),get_exp(kp_1));
+        in(c, tc_1: bitstring);
+        let jws_general(hc_1: bitstring,cp_1: bitstring,sc_1: bitstring) = tc_1 in
+        let =true = header_matches(hc_1,delegated_3) in
+        let =true = jws_general_verify(tc_1,delegated_3) in
+        let =true = token_fresh(get_iat(cp_1),get_exp(cp_1),succ_t(curr)) in
+        let identity_1: bitstring = get_subject_and_san(get_content(cp_1)) in
+        let =true = check_host(server_hostname,identity_1) in
+        let issuer_1: bitstring = get_issuer(get_content(cp_1)) in
+        event ParallelRootClaim(ks_1,delegated_3,issuer_1);
+        event ParallelCacheStored(ks_1,delegated_3);
+        insert parallel_cache(ks_1,delegated_3)
+    ) | (
+        !
+        get parallel_cache(=ka,delegated_4: pkey) in
+        event ParallelCacheReturned(ka,delegated_4)
+    ) | (
+        !
+        get parallel_cache(=ks_1,delegated_5: pkey) in
+        event ParallelCacheReturned(ks_1,delegated_5)
+    )
+)
+
+--------------------------------------------------------------
+1st process: out(cm, (package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))),manifest_key_record(target_app_id,pk(gen_sk_for_id(self_host_signing))))) reduces with 2nd process: in(cm, (package_record: bitstring,manifest_record: bitstring))
+
+New processes:
+(
+    0
+) | (
+    let ka: pkey = resolve_os_key(package_signing_record(target_app_id,pk(gen_sk_for_id(app_signing))),target_app_id) in
+    let ks_1: pkey = resolve_manifest_key(manifest_key_record(target_app_id,pk(gen_sk_for_id(self_host_signing))),target_app_id) in
+    event ManifestKeyResolve(target_app_id,ks_1);
+    (
+        !
+        in(c, tk: bitstring);
+        let jws_general(hk: bitstring,kp: bitstring,sk: bitstring) = tk in
+        let =true = header_matches(hk,ka) in
+        let =true = jws_general_verify(tk,ka) in
+        let =true = token_fresh(get_iat(kp),get_exp(kp),succ_t(curr)) in
+        let delegated_2: pkey = s2pk(get_content(kp)) in
+        event ClaimKeyVerify(ka,delegated_2,get_iat(kp),get_exp(kp));
+        in(c, tc: bitstring);
+        let jws_general(hc: bitstring,cp: bitstring,sc: bitstring) = tc in
+        let =true = header_matches(hc,delegated_2) in
+        let =true = jws_general_verify(tc,delegated_2) in
+        let =true = token_fresh(get_iat(cp),get_exp(cp),succ_t(curr)) in
+        let identity: bitstring = get_subject_and_san(get_content(cp)) in
+        let =true = check_host(server_hostname,identity) in
+        let issuer: bitstring = get_issuer(get_content(cp)) in
+        event ParallelRootClaim(ka,delegated_2,issuer);
+        event ParallelCacheStored(ka,delegated_2);
+        insert parallel_cache(ka,delegated_2)
+    ) | (
+        !
+        in(c, tk_1: bitstring);
+        let jws_general(hk_1: bitstring,kp_1: bitstring,sk_1: bitstring) = tk_1 in
+        let =true = header_matches(hk_1,ks_1) in
+        let =true = jws_general_verify(tk_1,ks_1) in
+        let =true = token_fresh(get_iat(kp_1),get_exp(kp_1),succ_t(curr)) in
+        let delegated_3: pkey = s2pk(get_content(kp_1)) in
+        event ClaimKeyVerify(ks_1,delegated_3,get_iat(kp_1),get_exp(kp_1));
+        in(c, tc_1: bitstring);
+        let jws_general(hc_1: bitstring,cp_1: bitstring,sc_1: bitstring) = tc_1 in
+        let =true = header_matches(hc_1,delegated_3) in
+        let =true = jws_general_verify(tc_1,delegated_3) in
+        let =true = token_fresh(get_iat(cp_1),get_exp(cp_1),succ_t(curr)) in
+        let identity_1: bitstring = get_subject_and_san(get_content(cp_1)) in
+        let =true = check_host(server_hostname,identity_1) in
+        let issuer_1: bitstring = get_issuer(get_content(cp_1)) in
+        event ParallelRootClaim(ks_1,delegated_3,issuer_1);
+        event ParallelCacheStored(ks_1,delegated_3);
+        insert parallel_cache(ks_1,delegated_3)
+    ) | (
+        !
+        get parallel_cache(=ka,delegated_4: pkey) in
+        event ParallelCacheReturned(ka,delegated_4)
+    ) | (
+        !
+        get parallel_cache(=ks_1,delegated_5: pkey) in
+        event ParallelCacheReturned(ks_1,delegated_5)
+    )
+)
+
+--------------------------------------------------------------
+1st process: Reduction 0
+
+1st process: let ka: pkey = pk(gen_sk_for_id(app_signing)) succeeds
+
+1st process: let ks_1: pkey = pk(gen_sk_for_id(self_host_signing)) succeeds
+
+1st process: event ManifestKeyResolve(target_app_id,pk(gen_sk_for_id(self_host_signing))) executed
+
+1st process: Reduction |
+
+2nd process: Reduction |
+
+3rd process: Reduction |
+
+4th process: Reduction ! 0 copy(ies)
+
+3rd process: Reduction ! 0 copy(ies)
+
+2nd process: Reduction ! 1 copy(ies)
+
+2nd process: Beginning of process ParallelVerify(pk(gen_sk_for_id(self_host_signing)))
+
+1st process: Reduction ! 0 copy(ies)
+
+New processes:
+    in(c, tk_1: bitstring);
+    let jws_general(hk_1: bitstring,kp_1: bitstring,sk_1: bitstring) = tk_1 in
+    let =true = header_matches(hk_1,pk(gen_sk_for_id(self_host_signing))) in
+    let =true = jws_general_verify(tk_1,pk(gen_sk_for_id(self_host_signing))) in
+    let =true = token_fresh(get_iat(kp_1),get_exp(kp_1),succ_t(curr)) in
+    let delegated_3: pkey = s2pk(get_content(kp_1)) in
+    event ClaimKeyVerify(pk(gen_sk_for_id(self_host_signing)),delegated_3,get_iat(kp_1),get_exp(kp_1));
+    in(c, tc_1: bitstring);
+    let jws_general(hc_1: bitstring,cp_1: bitstring,sc_1: bitstring) = tc_1 in
+    let =true = header_matches(hc_1,delegated_3) in
+    let =true = jws_general_verify(tc_1,delegated_3) in
+    let =true = token_fresh(get_iat(cp_1),get_exp(cp_1),succ_t(curr)) in
+    let identity_1: bitstring = get_subject_and_san(get_content(cp_1)) in
+    let =true = check_host(server_hostname,identity_1) in
+    let issuer_1: bitstring = get_issuer(get_content(cp_1)) in
+    event ParallelRootClaim(pk(gen_sk_for_id(self_host_signing)),delegated_3,issuer_1);
+    event ParallelCacheStored(pk(gen_sk_for_id(self_host_signing)),delegated_3);
+    insert parallel_cache(pk(gen_sk_for_id(self_host_signing)),delegated_3)
+
+--------------------------------------------------------------
+1st process: in(c, tk_1: bitstring) done with message jws_general(~M_1,jws_payload(~M_2,curr,succ_t(succ_t(curr))),~M_5) = jws_general(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(self_host_signing)))
+
+1st process: let jws_general(hk_1: bitstring,kp_1: bitstring,sk_1: bitstring) = jws_general(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(self_host_signing))),jws_payload(pk2s(pk(gen_sk_for_id(other_self_host_signing))),curr,succ_t(succ_t(curr)))),gen_sk_for_id(self_host_signing))) succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let delegated_3: pkey = pk(gen_sk_for_id(other_self_host_signing)) succeeds
+
+1st process: event ClaimKeyVerify(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)),curr,succ_t(succ_t(curr))) executed
+
+New processes:
+    in(c, tc_1: bitstring);
+    let jws_general(hc_1: bitstring,cp_1: bitstring,sc_1: bitstring) = tc_1 in
+    let =true = header_matches(hc_1,pk(gen_sk_for_id(other_self_host_signing))) in
+    let =true = jws_general_verify(tc_1,pk(gen_sk_for_id(other_self_host_signing))) in
+    let =true = token_fresh(get_iat(cp_1),get_exp(cp_1),succ_t(curr)) in
+    let identity_1: bitstring = get_subject_and_san(get_content(cp_1)) in
+    let =true = check_host(server_hostname,identity_1) in
+    let issuer_1: bitstring = get_issuer(get_content(cp_1)) in
+    event ParallelRootClaim(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)),issuer_1);
+    event ParallelCacheStored(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)));
+    insert parallel_cache(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)))
+
+--------------------------------------------------------------
+1st process: in(c, tc_1: bitstring) done with message jws_general(~M_2,jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr))),~M_11) = jws_general(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(other_self_host_signing)))
+
+1st process: let jws_general(hc_1: bitstring,cp_1: bitstring,sc_1: bitstring) = jws_general(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr))),sig_sign(jws_tosign(pk2s(pk(gen_sk_for_id(other_self_host_signing))),jws_payload(cert_claim(server_cert_subject_and_san,real_cert_issuer),curr,succ_t(succ_t(curr)))),gen_sk_for_id(other_self_host_signing))) succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let identity_1: bitstring = server_cert_subject_and_san succeeds
+
+1st process: let =true = true succeeds
+
+1st process: let issuer_1: bitstring = real_cert_issuer succeeds
+
+1st process: event ParallelRootClaim(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)),real_cert_issuer) executed; it is a goal
+
+New processes:
+    event ParallelCacheStored(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)));
+    insert parallel_cache(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)))
+
+--------------------------------------------------------------
+The event ParallelRootClaim(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)),real_cert_issuer) is executed at {64} in copy a.
+A trace has been found.
+RESULT not event(ParallelRootClaim(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)),real_cert_issuer)) is false.
+-- Query not event(ParallelCacheReturned(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(other_self_host_signing)))) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (78 with conclusion selected). Queue: 109 rules.
+Starting query not event(ParallelCacheReturned(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(other_self_host_signing))))
+RESULT not event(ParallelCacheReturned(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(other_self_host_signing)))) is true.
+-- Query not event(ParallelCacheReturned(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(claim_signing)))) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (78 with conclusion selected). Queue: 109 rules.
+Starting query not event(ParallelCacheReturned(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(claim_signing))))
+RESULT not event(ParallelCacheReturned(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(claim_signing)))) is true.
+-- Query not event(ParallelRootClaim(root_2,delegated_6,rogue_cert_issuer)) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (78 with conclusion selected). Queue: 203 rules.
+400 rules inserted. Base: 359 rules (83 with conclusion selected). Queue: 132 rules.
+Starting query not event(ParallelRootClaim(root_2,delegated_6,rogue_cert_issuer))
+RESULT not event(ParallelRootClaim(root_2,delegated_6,rogue_cert_issuer)) is true.
+-- Query not event(ParallelRootClaim(pk(gen_sk_for_id(other_app_signing)),delegated_6,issuer_2)) in process 1.
+select jws_array_member(*entry,tail)/-5000
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 197 rules (78 with conclusion selected). Queue: 203 rules.
+400 rules inserted. Base: 359 rules (83 with conclusion selected). Queue: 132 rules.
+Starting query not event(ParallelRootClaim(pk(gen_sk_for_id(other_app_signing)),delegated_6,issuer_2))
+RESULT not event(ParallelRootClaim(pk(gen_sk_for_id(other_app_signing)),delegated_6,issuer_2)) is true.
+
+--------------------------------------------------------------
+Verification summary:
+
+Query event(ParallelRootClaim(root_2,delegated_6,issuer_2)) ==> event(ParallelRootAuthorized(target_app_id,root_2)) is true.
+
+Query event(ClaimKeyVerify(pk(root_2),delegated_6,iat,exp)) ==> event(ClaimKeySign(root_2,delegated_6,iat,exp)) is true.
+
+Query event(ParallelCacheReturned(root_2,delegated_6)) ==> event(ParallelCacheStored(root_2,delegated_6)) is true.
+
+Query event(ManifestKeyBind(app,ks_2)) ==> event(AppManifestAuthenticated(app,signer,ks_2,version)) is true.
+
+Query not event(ParallelRootClaim(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(claim_signing)),real_cert_issuer)) is false.
+
+Query not event(ParallelRootClaim(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(other_self_host_signing)),real_cert_issuer)) is false.
+
+Query not event(ParallelCacheReturned(pk(gen_sk_for_id(app_signing)),pk(gen_sk_for_id(other_self_host_signing)))) is true.
+
+Query not event(ParallelCacheReturned(pk(gen_sk_for_id(self_host_signing)),pk(gen_sk_for_id(claim_signing)))) is true.
+
+Query not event(ParallelRootClaim(root_2,delegated_6,rogue_cert_issuer)) is true.
+
+Query not event(ParallelRootClaim(pk(gen_sk_for_id(other_app_signing)),delegated_6,issuer_2)) is true.
+
+--------------------------------------------------------------
+

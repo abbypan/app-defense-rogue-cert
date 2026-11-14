@@ -1,0 +1,493 @@
+(*
+ * App-signing-key rotation using General JWS JSON Serialization.
+ * T_k^(1) is old-key-only, T_k^(2) contains old-key and new-key signatures
+ * over one identical payload, and T_k^(3) is later and new-key-only.  A trusted OS lineage containing an
+ * ancestor, the old key, and the new key gates state transfer.  The model
+ * selects the maximum protected H_k and H_c value across the pre-transition
+ * lineage entries, separately for a hostname and a Subject/SAN context.  Old
+ * T_k and T_c objects remain fresh in the replay traces so rollback, rather
+ * than expiration, is the decisive rejection condition.
+ *)
+
+free rotation_time_0: timestamp.
+const rotation_old_form: bitstring.
+const rotation_dual_form: bitstring.
+const rotation_new_form: bitstring.
+const token_type_key: bitstring.
+const token_type_claim: bitstring.
+const key_hostname_context: bitstring.
+const claim_subject_san_context: bitstring.
+const ancestor_app_signing: bitstring.
+free rotation_old_delivery: channel [private].
+free rotation_new_delivery: channel [private].
+free rotation_state_delivery: channel [private].
+free rotation_lineage_delivery: channel [private].
+
+(* Finite maximum used by this three-key lineage trace. *)
+reduc forall t: timestamp;
+      lineage_max(t, t) = t;
+      forall t2: timestamp;
+      lineage_max(t2, succ_t(t2)) = succ_t(t2);
+      forall t3: timestamp;
+      lineage_max(succ_t(t3), t3) = succ_t(t3);
+      forall t4: timestamp;
+      lineage_max(t4, succ_t(succ_t(t4))) = succ_t(succ_t(t4));
+      forall t5: timestamp;
+      lineage_max(succ_t(succ_t(t5)), t5) = succ_t(succ_t(t5)).
+
+event KeyTokenPublished(
+    bitstring, pkey, pkey, timestamp, timestamp).
+event KeyRotationOldAppVerified(
+    pkey, pkey, timestamp, timestamp).
+event KeyRotationNewAppVerified(
+    pkey, pkey, timestamp, timestamp).
+event KeyRotationCutoverVerified(
+    pkey, pkey, timestamp, timestamp).
+event KeyRotationOldReplayRejected(
+    pkey, timestamp, timestamp).
+event ClaimStateOldReplayRejected(
+    pkey, timestamp, timestamp).
+event OldOnlyTokenAcceptedByNewKey(pkey, pkey).
+event OSSigningLineageAuthenticated(pkey, pkey, pkey).
+event ProtectedLineageState(
+    pkey, bitstring, bitstring, timestamp).
+event LineageMaximumSelected(
+    pkey, pkey, pkey, bitstring, bitstring,
+    timestamp, timestamp, timestamp).
+event HighestIatTransferred(
+    pkey, pkey, pkey, bitstring, bitstring,
+    timestamp, timestamp, timestamp).
+event NonMaximumLineageStateCommitted(
+    bitstring, bitstring, timestamp, timestamp).
+
+let RotationServer =
+  let sk_old = gen_sk_for_id(app_signing) in
+  let sk_new = gen_sk_for_id(other_app_signing) in
+  let sk_claim = gen_sk_for_id(claim_signing) in
+  let pk_old = pk(sk_old) in
+  let pk_new = pk(sk_new) in
+  let claim_key = pk(sk_claim) in
+  let content = pk2s(claim_key) in
+  let claim_content = cert_claim(
+      server_cert_subject_and_san, real_cert_issuer) in
+  let iat0 = rotation_time_0 in
+  let iat1 = succ_t(iat0) in
+  let iat2 = succ_t(iat1) in
+
+  (* Initial old-key token has a long enough signed window to remain fresh at
+   * the modeled replay attempt after cutover. *)
+  let exp0 = succ_t(succ_t(succ_t(iat0))) in
+  let token0 = jws_general_sign(
+      pk2s(pk_old), content, iat0, exp0, sk_old) in
+  event ClaimKeySign(sk_old, claim_key, iat0, exp0);
+  event KeyTokenPublished(
+      rotation_old_form, pk_old, claim_key, iat0, exp0);
+
+  (* T_k^(2): two signatures, two protected kid values, one common payload. *)
+  let exp1 = succ_t(succ_t(iat1)) in
+  let token1 = jws_dual_sign(
+      pk2s(pk_old), pk2s(pk_new), content, iat1, exp1, sk_old, sk_new) in
+  event ClaimKeySign(sk_old, claim_key, iat1, exp1);
+  event ClaimKeySign(sk_new, claim_key, iat1, exp1);
+  event KeyTokenPublished(
+      rotation_dual_form, pk_old, claim_key, iat1, exp1);
+  event KeyTokenPublished(
+      rotation_dual_form, pk_new, claim_key, iat1, exp1);
+
+  (* T_k^(3): strictly later iat and only the new app-key signature. *)
+  let exp2 = succ_t(succ_t(iat2)) in
+  let token2 = jws_general_sign(
+      pk2s(pk_new), content, iat2, exp2, sk_new) in
+  event ClaimKeySign(sk_new, claim_key, iat2, exp2);
+  event KeyTokenPublished(
+      rotation_new_form, pk_new, claim_key, iat2, exp2);
+
+  (* Old and current T_c values populate one canonical Subject/SAN state
+   * context before the app-signing-key transition.  The older object remains
+   * fresh long enough for the post-transfer rollback audit. *)
+  let claim_exp0 = succ_t(succ_t(succ_t(iat0))) in
+  let claim_token0 = jws_general_sign(
+      pk2s(claim_key), claim_content, iat0, claim_exp0, sk_claim) in
+  event CertClaimSign(
+      sk_claim, server_cert_subject_and_san, real_cert_issuer,
+      iat0, claim_exp0);
+  let claim_exp1 = succ_t(succ_t(iat1)) in
+  let claim_token1 = jws_general_sign(
+      pk2s(claim_key), claim_content, iat1, claim_exp1, sk_claim) in
+  event CertClaimSign(
+      sk_claim, server_cert_subject_and_san, real_cert_issuer,
+      iat1, claim_exp1);
+
+  (* Public copies model untrusted HTTP distribution. *)
+  out(c, token0);
+  out(c, token1);
+  out(c, token2);
+  out(c, claim_token0);
+  out(c, claim_token1);
+  (* Private channels carry schedule signals only.  Tokens are always consumed
+   * from attacker-controlled public channel c. *)
+  out(rotation_old_delivery, (pk_old, pk_new));
+  out(rotation_new_delivery, (pk_old, pk_new))
+  .
+
+let TrustedOSLineage =
+  let pk_ancestor = pk(gen_sk_for_id(ancestor_app_signing)) in
+  let pk_old = pk(gen_sk_for_id(app_signing)) in
+  let pk_new = pk(gen_sk_for_id(other_app_signing)) in
+  let ancestor_iat = rotation_time_0 in
+  (* This private event/channel abstracts the OS-authenticated signing-
+   * certificate lineage.  A dual JWS is not itself a lineage credential. *)
+  event OSSigningLineageAuthenticated(pk_ancestor, pk_old, pk_new);
+  event ProtectedLineageState(
+      pk_ancestor, token_type_key, key_hostname_context, ancestor_iat);
+  event ProtectedLineageState(
+      pk_ancestor, token_type_claim,
+      claim_subject_san_context, ancestor_iat);
+  out(rotation_lineage_delivery,
+      (pk_ancestor, pk_old, pk_new, ancestor_iat, ancestor_iat))
+  .
+
+let OldApp =
+  in(rotation_old_delivery, (pk_old: pkey, pk_new: pkey));
+  in(c, token0: bitstring);
+
+  let jws_general(h0: bitstring, p0: bitstring, s0: bitstring) = token0 in
+  let (=true) = header_matches(h0, pk_old) in
+  let (=true) = jws_general_verify(token0, pk_old) in
+  let iat0 = get_iat(p0) in
+  let exp0 = get_exp(p0) in
+  let (=true) = token_fresh(iat0, exp0, rotation_time_0) in
+  let (=ttl_three) = derive_ttl(iat0, exp0) in
+  let (=rotation_time_0) = iat0 in
+  let (=succ_t(succ_t(succ_t(rotation_time_0)))) = exp0 in
+  let claim_key0 = s2pk(get_content(p0)) in
+  let (=pk(gen_sk_for_id(claim_signing))) = claim_key0 in
+  event KeyRotationOldAppVerified(
+      pk_old, claim_key0, iat0, exp0);
+
+  in(c, token1: bitstring);
+  let jws_dual(
+      h_old: bitstring, h_new: bitstring, p1: bitstring,
+      sig_old: bitstring, sig_new: bitstring) = token1 in
+  let (=true) = header_matches(h_old, pk_old) in
+  let (=true) = jws_dual_verify1(token1, pk_old) in
+  let iat1 = get_iat(p1) in
+  let exp1 = get_exp(p1) in
+  let (=true) = token_fresh(iat1, exp1, iat1) in
+  let (=true) = iat_not_older(iat1, iat0) in
+  let (=true) = iat_older(iat0, iat1) in
+  let (=succ_t(rotation_time_0)) = iat1 in
+  let (=succ_t(succ_t(iat1))) = exp1 in
+  let claim_key1 = s2pk(get_content(p1)) in
+  let (=pk(gen_sk_for_id(claim_signing))) = claim_key1 in
+  event KeyRotationOldAppVerified(
+      pk_old, claim_key1, iat1, exp1);
+  event DualSigAppKeyVerify(
+      pk_old, pk_new, claim_key1, iat1, exp1);
+  event ProtectedLineageState(
+      pk_old, token_type_key, key_hostname_context, iat1);
+
+  (* Authenticate the current T_c before its Subject/SAN-partitioned state is
+   * eligible for lineage transfer. *)
+  in(c, claim_token1: bitstring);
+  let jws_general(hc1: bitstring, pc1: bitstring, sc1: bitstring) =
+      claim_token1 in
+  let (=true) = header_matches(hc1, claim_key1) in
+  let (=true) = jws_general_verify(claim_token1, claim_key1) in
+  let claim_iat1 = get_iat(pc1) in
+  let claim_exp1 = get_exp(pc1) in
+  let (=true) = token_fresh(claim_iat1, claim_exp1, claim_iat1) in
+  let (=iat1) = claim_iat1 in
+  let claim1 = get_content(pc1) in
+  let (=server_cert_subject_and_san) = get_subject_and_san(claim1) in
+  let (=real_cert_issuer) = get_issuer(claim1) in
+  event CertClaimVerify(
+      claim_key1, server_cert_subject_and_san, real_cert_issuer,
+      claim_iat1, claim_exp1);
+  event ProtectedLineageState(
+      pk_old, token_type_claim,
+      claim_subject_san_context, claim_iat1);
+  out(rotation_state_delivery,
+      (pk_old, pk_new, iat1, claim_iat1))
+  .
+
+let UpdatedApp =
+  in(rotation_new_delivery, (pk_old: pkey, pk_new: pkey));
+
+  (* The updated app selects the new-key signature entry of T_k^(2). *)
+  in(c, token1: bitstring);
+  let jws_dual(
+      h_old: bitstring, h_new: bitstring, p1: bitstring,
+      sig_old: bitstring, sig_new: bitstring) = token1 in
+  let (=true) = header_matches(h_new, pk_new) in
+  let (=true) = jws_dual_verify2(token1, pk_new) in
+  (* Prior-state transfer additionally authenticates the old signature on this
+   * very same General JWS payload; a separate old installation is not enough. *)
+  let (=true) = header_matches(h_old, pk_old) in
+  let (=true) = jws_dual_verify1(token1, pk_old) in
+  let iat1 = get_iat(p1) in
+  let exp1 = get_exp(p1) in
+  let (=true) = token_fresh(iat1, exp1, iat1) in
+  let (=succ_t(rotation_time_0)) = iat1 in
+  let (=succ_t(succ_t(iat1))) = exp1 in
+  let claim_key1 = s2pk(get_content(p1)) in
+  let (=pk(gen_sk_for_id(claim_signing))) = claim_key1 in
+  event KeyRotationNewAppVerified(
+      pk_new, claim_key1, iat1, exp1);
+
+  (* Lineage and protected-state inputs are independent trusted OS facts.  The
+   * dual JWS alone cannot establish lineage, and lineage alone cannot replace
+   * the dual-signature authorization of this T_k transition. *)
+  in(rotation_lineage_delivery,
+      (pk_ancestor: pkey, =pk_old, =pk_new,
+       ancestor_hk_iat: timestamp, ancestor_hc_iat: timestamp));
+  in(rotation_state_delivery,
+      (=pk_old, =pk_new, old_hk_iat: timestamp, old_hc_iat: timestamp));
+  let key_lineage_max = lineage_max(ancestor_hk_iat, old_hk_iat) in
+  let claim_lineage_max = lineage_max(ancestor_hc_iat, old_hc_iat) in
+  event LineageMaximumSelected(
+      pk_ancestor, pk_old, pk_new,
+      token_type_key, key_hostname_context,
+      ancestor_hk_iat, old_hk_iat, key_lineage_max);
+  event HighestIatTransferred(
+      pk_ancestor, pk_old, pk_new,
+      token_type_key, key_hostname_context,
+      ancestor_hk_iat, old_hk_iat, key_lineage_max);
+  event LineageMaximumSelected(
+      pk_ancestor, pk_old, pk_new,
+      token_type_claim, claim_subject_san_context,
+      ancestor_hc_iat, old_hc_iat, claim_lineage_max);
+  event HighestIatTransferred(
+      pk_ancestor, pk_old, pk_new,
+      token_type_claim, claim_subject_san_context,
+      ancestor_hc_iat, old_hc_iat, claim_lineage_max);
+
+  (* The new-key-only T_k^(3) advances highest-seen state. *)
+  in(c, token2: bitstring);
+  let jws_general(h2: bitstring, p2: bitstring, s2: bitstring) = token2 in
+  let (=true) = header_matches(h2, pk_new) in
+  let (=true) = jws_general_verify(token2, pk_new) in
+  let iat2 = get_iat(p2) in
+  let exp2 = get_exp(p2) in
+  let (=true) = token_fresh(iat2, exp2, iat2) in
+  let (=true) = iat_not_older(iat2, key_lineage_max) in
+  let (=true) = iat_older(key_lineage_max, iat2) in
+  let (=succ_t(iat1)) = iat2 in
+  let (=succ_t(succ_t(iat2))) = exp2 in
+  let claim_key2 = s2pk(get_content(p2)) in
+  let (=pk(gen_sk_for_id(claim_signing))) = claim_key2 in
+  event KeyRotationCutoverVerified(
+      pk_new, claim_key2, iat2, exp2);
+
+  (* Replay T_k^(2) through its valid new-key signature.  It remains fresh, so the
+   * rejection is caused only by the transferred and then advanced protected
+   * highest-seen state, not by expiration or the old key becoming invalid. *)
+  in(c, replay_token: bitstring);
+  let jws_dual(
+      replay_h_old: bitstring, replay_h_new: bitstring,
+      replay_payload: bitstring, replay_sig_old: bitstring,
+      replay_sig_new: bitstring) = replay_token in
+  let (=true) = header_matches(replay_h_new, pk_new) in
+  let (=true) = jws_dual_verify2(replay_token, pk_new) in
+  let old_iat = get_iat(replay_payload) in
+  let old_exp = get_exp(replay_payload) in
+  let (=true) = token_fresh(old_iat, old_exp, iat2) in
+  let (=iat1) = old_iat in
+  let (=exp1) = old_exp in
+  let replay_claim_key = s2pk(get_content(replay_payload)) in
+  let (=claim_key1) = replay_claim_key in
+  let (=true) = iat_older(old_iat, iat2) in
+  event KeyRotationOldReplayRejected(
+      pk_new, old_iat, iat2);
+
+  (* A still-fresh predecessor in the transferred H_c Subject/SAN context is
+   * rejected against the independently selected claim-state maximum. *)
+  in(c, replay_claim_token: bitstring);
+  let jws_general(
+      replay_hc: bitstring, replay_pc: bitstring,
+      replay_sc: bitstring) = replay_claim_token in
+  let (=true) = header_matches(replay_hc, claim_key2) in
+  let (=true) = jws_general_verify(replay_claim_token, claim_key2) in
+  let old_claim_iat = get_iat(replay_pc) in
+  let old_claim_exp = get_exp(replay_pc) in
+  let (=true) = token_fresh(old_claim_iat, old_claim_exp, iat2) in
+  let (=rotation_time_0) = old_claim_iat in
+  let replay_claim = get_content(replay_pc) in
+  let (=server_cert_subject_and_san) = get_subject_and_san(replay_claim) in
+  let (=real_cert_issuer) = get_issuer(replay_claim) in
+  let (=true) = iat_older(old_claim_iat, claim_lineage_max) in
+  event ClaimStateOldReplayRejected(
+      pk_new, old_claim_iat, claim_lineage_max)
+  .
+
+(* Structural audit: an old-only signature cannot verify with K_apub^new. *)
+let OldOnlySignatureAudit =
+  let sk_old = gen_sk_for_id(app_signing) in
+  let pk_new = pk(gen_sk_for_id(other_app_signing)) in
+  let iat = rotation_time_0 in
+  let exp = succ_t(succ_t(succ_t(iat))) in
+  let token = jws_general_sign(
+      pk2s(pk(sk_old)), pk2s(pk(gen_sk_for_id(claim_signing))),
+      iat, exp, sk_old) in
+  let (=true) = jws_general_verify(token, pk_new) in
+  event OldOnlyTokenAcceptedByNewKey(pk(sk_old), pk_new)
+  .
+
+(* These branches would commit the older ancestor value even though the
+ * immediate-old value is strictly newer.  The lineage_max reduction prevents
+ * both events, auditing H_k and H_c independently. *)
+let NonMaximumKeyAudit =
+  let ancestor_iat = rotation_time_0 in
+  let old_iat = succ_t(ancestor_iat) in
+  let (=ancestor_iat) = lineage_max(ancestor_iat, old_iat) in
+  event NonMaximumLineageStateCommitted(
+      token_type_key, key_hostname_context, ancestor_iat, old_iat)
+  .
+
+let NonMaximumClaimAudit =
+  let ancestor_iat = rotation_time_0 in
+  let old_iat = succ_t(ancestor_iat) in
+  let (=ancestor_iat) = lineage_max(ancestor_iat, old_iat) in
+  event NonMaximumLineageStateCommitted(
+      token_type_claim, claim_subject_san_context, ancestor_iat, old_iat)
+  .
+
+query old_key: pkey, new_key: pkey, claim_key: pkey,
+      iat: timestamp, exp: timestamp;
+  event(DualSigAppKeyVerify(
+      old_key, new_key, claim_key, iat, exp)).
+query new_key: pkey, claim_key: pkey, iat: timestamp, exp: timestamp;
+  event(KeyRotationNewAppVerified(
+      new_key, claim_key, iat, exp)).
+query new_key: pkey, claim_key: pkey, iat: timestamp, exp: timestamp;
+  event(KeyRotationCutoverVerified(
+      new_key, claim_key, iat, exp)).
+query new_key: pkey, old_iat: timestamp, highest_iat: timestamp;
+  event(KeyRotationOldReplayRejected(
+      new_key, old_iat, highest_iat)).
+query new_key: pkey, old_iat: timestamp, highest_iat: timestamp;
+  event(ClaimStateOldReplayRejected(
+      new_key, old_iat, highest_iat)).
+query event(OSSigningLineageAuthenticated(
+    pk(gen_sk_for_id(ancestor_app_signing)),
+    pk(gen_sk_for_id(app_signing)),
+    pk(gen_sk_for_id(other_app_signing)))).
+query event(LineageMaximumSelected(
+    pk(gen_sk_for_id(ancestor_app_signing)),
+    pk(gen_sk_for_id(app_signing)),
+    pk(gen_sk_for_id(other_app_signing)),
+    token_type_key, key_hostname_context,
+    rotation_time_0, succ_t(rotation_time_0), succ_t(rotation_time_0))).
+query event(LineageMaximumSelected(
+    pk(gen_sk_for_id(ancestor_app_signing)),
+    pk(gen_sk_for_id(app_signing)),
+    pk(gen_sk_for_id(other_app_signing)),
+    token_type_claim, claim_subject_san_context,
+    rotation_time_0, succ_t(rotation_time_0), succ_t(rotation_time_0))).
+query event(HighestIatTransferred(
+    pk(gen_sk_for_id(ancestor_app_signing)),
+    pk(gen_sk_for_id(app_signing)),
+    pk(gen_sk_for_id(other_app_signing)),
+    token_type_key, key_hostname_context,
+    rotation_time_0, succ_t(rotation_time_0), succ_t(rotation_time_0))).
+query event(HighestIatTransferred(
+    pk(gen_sk_for_id(ancestor_app_signing)),
+    pk(gen_sk_for_id(app_signing)),
+    pk(gen_sk_for_id(other_app_signing)),
+    token_type_claim, claim_subject_san_context,
+    rotation_time_0, succ_t(rotation_time_0), succ_t(rotation_time_0))).
+query old_key: pkey, new_key: pkey;
+  event(OldOnlyTokenAcceptedByNewKey(old_key, new_key)).
+query event(NonMaximumLineageStateCommitted(
+    token_type_key, key_hostname_context,
+    rotation_time_0, succ_t(rotation_time_0))).
+query event(NonMaximumLineageStateCommitted(
+    token_type_claim, claim_subject_san_context,
+    rotation_time_0, succ_t(rotation_time_0))).
+
+(* Verification events are grounded in the corresponding published forms. *)
+query new_key: pkey, claim_key: pkey, iat: timestamp, exp: timestamp;
+  event(KeyRotationNewAppVerified(
+      new_key, claim_key, iat, exp)) ==>
+  event(KeyTokenPublished(
+      rotation_dual_form, new_key, claim_key, iat, exp)).
+query new_key: pkey, claim_key: pkey, iat: timestamp, exp: timestamp;
+  event(KeyRotationCutoverVerified(
+      new_key, claim_key, iat, exp)) ==>
+  event(KeyTokenPublished(
+      rotation_new_form, new_key, claim_key, iat, exp)).
+query iat: timestamp, exp: timestamp;
+  event(CertClaimVerify(
+      pk(gen_sk_for_id(claim_signing)),
+      server_cert_subject_and_san, real_cert_issuer, iat, exp)) ==>
+  event(CertClaimSign(
+      gen_sk_for_id(claim_signing),
+      server_cert_subject_and_san, real_cert_issuer, iat, exp)).
+query iat: timestamp;
+  event(ProtectedLineageState(
+      pk(gen_sk_for_id(app_signing)), token_type_claim,
+      claim_subject_san_context, iat)) ==>
+  event(CertClaimVerify(
+      pk(gen_sk_for_id(claim_signing)),
+      server_cert_subject_and_san, real_cert_issuer,
+      iat, succ_t(succ_t(iat)))).
+query new_key: pkey, old_iat: timestamp, highest_iat: timestamp;
+  event(KeyRotationOldReplayRejected(
+      new_key, old_iat, highest_iat)) ==>
+  event(KeyRotationCutoverVerified(
+      new_key, pk(gen_sk_for_id(claim_signing)),
+      highest_iat, succ_t(succ_t(highest_iat)))).
+query new_key: pkey, old_iat: timestamp, highest_iat: timestamp;
+  event(ClaimStateOldReplayRejected(
+      new_key, old_iat, highest_iat)) ==>
+  event(HighestIatTransferred(
+      pk(gen_sk_for_id(ancestor_app_signing)),
+      pk(gen_sk_for_id(app_signing)), new_key,
+      token_type_claim, claim_subject_san_context,
+      rotation_time_0, succ_t(rotation_time_0), highest_iat)).
+query ancestor_key: pkey, old_key: pkey, new_key: pkey,
+      token_type: bitstring, context: bitstring,
+      ancestor_iat: timestamp, old_iat: timestamp, highest_iat: timestamp;
+  event(HighestIatTransferred(
+      ancestor_key, old_key, new_key, token_type, context,
+      ancestor_iat, old_iat, highest_iat)) ==>
+  event(OSSigningLineageAuthenticated(
+      ancestor_key, old_key, new_key)).
+query ancestor_key: pkey, old_key: pkey, new_key: pkey,
+      token_type: bitstring, context: bitstring,
+      ancestor_iat: timestamp, old_iat: timestamp, highest_iat: timestamp;
+  event(HighestIatTransferred(
+      ancestor_key, old_key, new_key, token_type, context,
+      ancestor_iat, old_iat, highest_iat)) ==>
+  event(LineageMaximumSelected(
+      ancestor_key, old_key, new_key, token_type, context,
+      ancestor_iat, old_iat, highest_iat)).
+query ancestor_key: pkey, old_key: pkey, new_key: pkey,
+      token_type: bitstring, context: bitstring,
+      ancestor_iat: timestamp, old_iat: timestamp, highest_iat: timestamp;
+  event(HighestIatTransferred(
+      ancestor_key, old_key, new_key, token_type, context,
+      ancestor_iat, old_iat, highest_iat)) ==>
+  event(ProtectedLineageState(
+      ancestor_key, token_type, context, ancestor_iat)).
+query ancestor_key: pkey, old_key: pkey, new_key: pkey,
+      token_type: bitstring, context: bitstring,
+      ancestor_iat: timestamp, old_iat: timestamp, highest_iat: timestamp;
+  event(HighestIatTransferred(
+      ancestor_key, old_key, new_key, token_type, context,
+      ancestor_iat, old_iat, highest_iat)) ==>
+  event(ProtectedLineageState(
+      old_key, token_type, context, old_iat)).
+query ancestor_key: pkey, old_key: pkey, new_key: pkey,
+      token_type: bitstring, context: bitstring,
+      ancestor_iat: timestamp, old_iat: timestamp, highest_iat: timestamp;
+  event(HighestIatTransferred(
+      ancestor_key, old_key, new_key, token_type, context,
+      ancestor_iat, old_iat, highest_iat)) ==>
+  event(DualSigAppKeyVerify(
+      old_key, new_key, pk(gen_sk_for_id(claim_signing)),
+      highest_iat, succ_t(succ_t(highest_iat)))).
+
+process
+  RotationServer | TrustedOSLineage | OldApp | UpdatedApp |
+  OldOnlySignatureAudit | NonMaximumKeyAudit | NonMaximumClaimAudit

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="false">rsa3072.idouzi.top</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="@raw/aspin_benchmark_ca" />
+        </trust-anchors>
+        <dynamic-pin-set />
+    </domain-config>
+</network-security-config>

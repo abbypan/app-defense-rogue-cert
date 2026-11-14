@@ -1,0 +1,43 @@
+{
+  "business_requests": 0,
+  "unattributed_business_requests": [],
+  "metadata_requests": 4,
+  "events": [
+    {
+      "event": "http",
+      "generation": "ad8300a444a7c-compat-parallel-host-refresh",
+      "host": "es384.idouzi.top",
+      "observation": "",
+      "path": "/.well-known/ClaimSigningKey.jws",
+      "phase": "real",
+      "status": 200
+    },
+    {
+      "event": "http",
+      "generation": "ad8300a444a7c-compat-parallel-host-refresh",
+      "host": "es256.idouzi.top",
+      "observation": "",
+      "path": "/.well-known/ClaimSigningKey.jws",
+      "phase": "real",
+      "status": 200
+    },
+    {
+      "event": "http",
+      "generation": "ad8300a444a7c-compat-parallel-host-refresh",
+      "host": "es384.idouzi.top",
+      "observation": "",
+      "path": "/.well-known/ServerCertClaim.jws",
+      "phase": "real",
+      "status": 200
+    },
+    {
+      "event": "http",
+      "generation": "ad8300a444a7c-compat-parallel-host-refresh",
+      "host": "es256.idouzi.top",
+      "observation": "",
+      "path": "/.well-known/ServerCertClaim.jws",
+      "phase": "real",
+      "status": 200
+    }
+  ]
+}

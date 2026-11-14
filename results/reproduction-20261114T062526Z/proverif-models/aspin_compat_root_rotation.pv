@@ -1,0 +1,239 @@
+(* K_s replacement is authenticated by a legal signed app update, not by a
+ * manifest-root lineage. APK signatures abstract authentication of the whole
+ * package, including its version and manifest K_spub. Native installation
+ * authorizes the expected app/version; APK downgrade policy is not modeled.
+ * There is no retained manifest-root archive. Old-root H_k/H_c entries remain
+ * in their own namespace; a different current K_s starts independent entries.
+ * Tokens and signed package abstractions are read from adversarial public c. *)
+
+free ks_rotation_origin: timestamp.
+free ks_old_state: channel [private].
+const unauthorized_manifest_root: bitstring.
+
+event KsOldRootState(pkey, timestamp, timestamp).
+event KsNewRootAccepted(pkey, timestamp, timestamp).
+event KsNewNamespaceBegins(pkey, pkey, timestamp, timestamp).
+event KsCutoverAccepted(pkey, timestamp, timestamp).
+event KsKeyReplayRejected(pkey, timestamp, timestamp).
+event KsClaimReplayRejected(pkey, timestamp, timestamp).
+event KsOldOnlyTokenAccepted(pkey, pkey).
+event KsManifestRejected.
+
+let SignedPackageAndTokenPublisher =
+  let apk_sk = gen_sk_for_id(app_signing) in
+  let old_sk = gen_sk_for_id(self_host_signing) in
+  let new_sk = gen_sk_for_id(other_self_host_signing) in
+  let claim_sk = gen_sk_for_id(claim_signing) in
+  let old_root = pk(old_sk) in
+  let new_root = pk(new_sk) in
+  let old_manifest = app_manifest(target_app_id, old_root, installed_app_version) in
+  let new_manifest = app_manifest(target_app_id, new_root, updated_app_version) in
+  event AppManifestSigned(target_app_id, pk(apk_sk), old_root, installed_app_version);
+  event AppManifestSigned(target_app_id, pk(apk_sk), new_root, updated_app_version);
+  out(c, (old_manifest, sig_sign(old_manifest, apk_sk)));
+  out(c, (new_manifest, sig_sign(new_manifest, apk_sk)));
+  (* A correctly formed but wrongly signed replacement must not be installed. *)
+  let fake_manifest = app_manifest(target_app_id,
+      pk(gen_sk_for_id(unauthorized_manifest_root)), updated_app_version) in
+  out(c, (fake_manifest, sig_sign(fake_manifest, gen_sk_for_id(other_app_signing))));
+  let t0 = ks_rotation_origin in
+  let t1 = succ_t(t0) in
+  let t2 = succ_t(t1) in
+  let exp = succ_t(t2) in
+  let delegated = pk(claim_sk) in
+  let tk0 = jws_general_sign(pk2s(old_root), pk2s(delegated), t0, exp, old_sk) in
+  let tk1 = jws_dual_sign(pk2s(old_root), pk2s(new_root), pk2s(delegated),
+      t1, exp, old_sk, new_sk) in
+  let tk2 = jws_general_sign(pk2s(new_root), pk2s(delegated), t2, exp, new_sk) in
+  event ClaimKeySign(old_sk, delegated, t0, exp);
+  event ClaimKeySign(old_sk, delegated, t1, exp);
+  event ClaimKeySign(new_sk, delegated, t1, exp);
+  event ClaimKeySign(new_sk, delegated, t2, exp);
+  out(c, tk0); out(c, tk1); out(c, tk2);
+  let content = cert_claim(server_cert_subject_and_san, real_cert_issuer) in
+  let tc1 = jws_general_sign(pk2s(delegated), content, t1, exp, claim_sk) in
+  let tc2 = jws_general_sign(pk2s(delegated), content, t2, exp, claim_sk) in
+  event CertClaimSign(claim_sk, server_cert_subject_and_san, real_cert_issuer, t1, exp);
+  event CertClaimSign(claim_sk, server_cert_subject_and_san, real_cert_issuer, t2, exp);
+  out(c, tc1); out(c, tc2).
+
+let OldInstalledApp =
+  let apk_signer = pk(gen_sk_for_id(app_signing)) in
+  in(c, (manifest: bitstring, signature: bitstring));
+  let app_manifest(=target_app_id, root: pkey, =installed_app_version) = manifest in
+  let (=true) = sig_verify(manifest, signature, apk_signer) in
+  event AppManifestAuthenticated(target_app_id, apk_signer, root, installed_app_version);
+  event ManifestKeyBind(target_app_id, root);
+  let record = manifest_key_record(target_app_id, root) in
+  let current_root = resolve_manifest_key(record, target_app_id) in
+  event ManifestKeyResolve(target_app_id, current_root);
+  in(c, tk: bitstring);
+  let jws_dual(h_old: bitstring, h_new: bitstring, payload: bitstring,
+      sig_old: bitstring, sig_new: bitstring) = tk in
+  let (=true) = header_matches(h_old, current_root) in
+  let (=true) = jws_dual_verify1(tk, current_root) in
+  let kiat = get_iat(payload) in
+  let kexp = get_exp(payload) in
+  let (=succ_t(ks_rotation_origin)) = kiat in
+  let now = succ_t(kiat) in
+  let (=true) = token_fresh(kiat, kexp, now) in
+  let delegated = s2pk(get_content(payload)) in
+  event ClaimKeyVerify(current_root, delegated, kiat, kexp);
+  in(c, tc: bitstring);
+  let jws_general(hc: bitstring, pc: bitstring, sc: bitstring) = tc in
+  let (=true) = header_matches(hc, delegated) in
+  let (=true) = jws_general_verify(tc, delegated) in
+  let ciat = get_iat(pc) in
+  let cexp = get_exp(pc) in
+  let (=now) = ciat in
+  let (=true) = token_fresh(ciat, cexp, now) in
+  let (=cert_claim(server_cert_subject_and_san, real_cert_issuer)) = get_content(pc) in
+  event CertClaimVerify(delegated, server_cert_subject_and_san, real_cert_issuer, ciat, cexp);
+  event KsOldRootState(current_root, kiat, ciat);
+  (* The old root here is only the index of existing anti-rollback state,
+   * never an independently retained authoritative manifest root. *)
+  out(ks_old_state, (current_root, kiat, ciat)).
+
+let UpdatedInstalledApp =
+  let apk_signer = pk(gen_sk_for_id(app_signing)) in
+  in(c, (manifest: bitstring, signature: bitstring));
+  let app_manifest(=target_app_id, root: pkey, =updated_app_version) = manifest in
+  let (=true) = sig_verify(manifest, signature, apk_signer) in
+  (
+    event AppManifestAuthenticated(target_app_id, apk_signer, root, updated_app_version);
+    event ManifestKeyBind(target_app_id, root);
+    let record = manifest_key_record(target_app_id, root) in
+    let current_root = resolve_manifest_key(record, target_app_id) in
+    event ManifestKeyResolve(target_app_id, current_root);
+    in(ks_old_state, (old_root: pkey, old_k: timestamp, old_c: timestamp));
+    if current_root = old_root then 0 else
+    (
+      (* Only the current manifest root verifies the transitional entry.
+       * No old-root signature is required to authorize this app update. *)
+      in(c, tk1: bitstring);
+      let jws_dual(h_old: bitstring, h_new: bitstring, p1: bitstring,
+          sig_old: bitstring, sig_new: bitstring) = tk1 in
+      let (=true) = header_matches(h_new, current_root) in
+      let (=true) = jws_dual_verify2(tk1, current_root) in
+      let kiat = get_iat(p1) in
+      let kexp = get_exp(p1) in
+      let (=succ_t(ks_rotation_origin)) = kiat in
+      let now = succ_t(kiat) in
+      let (=true) = token_fresh(kiat, kexp, now) in
+      let delegated = s2pk(get_content(p1)) in
+      event ClaimKeyVerify(current_root, delegated, kiat, kexp);
+      in(c, tc1: bitstring);
+      let jws_general(hc1: bitstring, pc1: bitstring, sc1: bitstring) = tc1 in
+      let (=true) = header_matches(hc1, delegated) in
+      let (=true) = jws_general_verify(tc1, delegated) in
+      let ciat = get_iat(pc1) in
+      let cexp = get_exp(pc1) in
+      let (=kiat) = ciat in
+      let (=true) = token_fresh(ciat, cexp, now) in
+      let (=cert_claim(server_cert_subject_and_san, real_cert_issuer)) = get_content(pc1) in
+      event CertClaimVerify(delegated, server_cert_subject_and_san, real_cert_issuer, ciat, cexp);
+      event KsNewRootAccepted(current_root, kiat, ciat);
+      if iat_older(ciat, old_c) = true then
+        event KsNewNamespaceBegins(old_root, current_root, old_c, ciat);
+
+      in(c, tk2: bitstring);
+      let jws_general(h2: bitstring, p2: bitstring, s2: bitstring) = tk2 in
+      let (=true) = header_matches(h2, current_root) in
+      let (=true) = jws_general_verify(tk2, current_root) in
+      let kiat2 = get_iat(p2) in
+      let kexp2 = get_exp(p2) in
+      let (=now) = kiat2 in
+      let (=true) = token_fresh(kiat2, kexp2, now) in
+      let (=true) = iat_not_older(kiat2, kiat) in
+      let (=delegated) = s2pk(get_content(p2)) in
+      event ClaimKeyVerify(current_root, delegated, kiat2, kexp2);
+      in(c, tc2: bitstring);
+      let jws_general(hc2: bitstring, pc2: bitstring, sc2: bitstring) = tc2 in
+      let (=true) = header_matches(hc2, delegated) in
+      let (=true) = jws_general_verify(tc2, delegated) in
+      let ciat2 = get_iat(pc2) in
+      let cexp2 = get_exp(pc2) in
+      let (=now) = ciat2 in
+      let (=true) = token_fresh(ciat2, cexp2, now) in
+      let (=true) = iat_not_older(ciat2, ciat) in
+      let (=cert_claim(server_cert_subject_and_san, real_cert_issuer)) = get_content(pc2) in
+      event CertClaimVerify(delegated, server_cert_subject_and_san, real_cert_issuer, ciat2, cexp2);
+      event KsCutoverAccepted(current_root, kiat2, ciat2);
+
+      (
+      in(c, replay_k: bitstring);
+      let jws_dual(rh_old: bitstring, rh_new: bitstring, rp: bitstring,
+          rs_old: bitstring, rs_new: bitstring) = replay_k in
+      let (=true) = header_matches(rh_new, current_root) in
+      let (=true) = jws_dual_verify2(replay_k, current_root) in
+      let riat = get_iat(rp) in
+      let rexp = get_exp(rp) in
+      let (=kiat) = riat in
+      let (=true) = token_fresh(riat, rexp, now) in
+      let (=true) = iat_older(riat, kiat2) in
+      event KsKeyReplayRejected(current_root, riat, kiat2)
+      ) |
+      (
+      in(c, replay_c: bitstring);
+      let jws_general(rhc: bitstring, rpc: bitstring, rsc: bitstring) = replay_c in
+      let (=true) = header_matches(rhc, delegated) in
+      let (=true) = jws_general_verify(replay_c, delegated) in
+      let rciat = get_iat(rpc) in
+      let rcexp = get_exp(rpc) in
+      let (=ciat) = rciat in
+      let (=true) = token_fresh(rciat, rcexp, now) in
+      let (=true) = iat_older(rciat, ciat2) in
+      event KsClaimReplayRejected(current_root, rciat, ciat2)
+      )
+    ) |
+    (
+      in(c, old_token: bitstring);
+      let jws_general(ho: bitstring, po: bitstring, so: bitstring) = old_token in
+      let audit_old_root = pk(gen_sk_for_id(self_host_signing)) in
+      let (=true) = header_matches(ho, audit_old_root) in
+      let (=true) = jws_general_verify(old_token, audit_old_root) in
+      let (=true) = jws_general_verify(old_token, current_root) in
+      event KsOldOnlyTokenAccepted(audit_old_root, current_root)
+    )
+  )
+  else event KsManifestRejected.
+
+query app: bitstring, root: pkey;
+  event(ManifestKeyResolve(app, root)) ==> event(ManifestKeyBind(app, root)).
+query app: bitstring, root: pkey, signer: pkey, version: bitstring;
+  event(ManifestKeyBind(app, root)) ==>
+  event(AppManifestAuthenticated(app, signer, root, version)).
+query app: bitstring, root: pkey, signer: pkey, version: bitstring;
+  event(AppManifestAuthenticated(app, signer, root, version)) ==>
+  event(AppManifestSigned(app, signer, root, version)).
+query root: pkey, kiat: timestamp, ciat: timestamp;
+  event(KsNewRootAccepted(root, kiat, ciat)) ==>
+  event(AppManifestAuthenticated(target_app_id, pk(gen_sk_for_id(app_signing)),
+      root, updated_app_version)).
+query root_sk: skey, delegated: pkey, iat: timestamp, exp: timestamp;
+  event(ClaimKeyVerify(pk(root_sk), delegated, iat, exp)) ==>
+  event(ClaimKeySign(root_sk, delegated, iat, exp)).
+query claim_sk: skey, identity: bitstring, issuer: bitstring,
+      iat: timestamp, exp: timestamp;
+  event(CertClaimVerify(pk(claim_sk), identity, issuer, iat, exp)) ==>
+  event(CertClaimSign(claim_sk, identity, issuer, iat, exp)).
+query root: pkey, kiat: timestamp, ciat: timestamp;
+  event(KsOldRootState(root, kiat, ciat)).
+query root: pkey, kiat: timestamp, ciat: timestamp;
+  event(KsNewRootAccepted(root, kiat, ciat)).
+query root: pkey, kiat: timestamp, ciat: timestamp;
+  event(KsCutoverAccepted(root, kiat, ciat)).
+query old_root: pkey, new_root: pkey, old_iat: timestamp, new_iat: timestamp;
+  event(KsNewNamespaceBegins(old_root, new_root, old_iat, new_iat)).
+query root: pkey, old_iat: timestamp, floor: timestamp;
+  event(KsKeyReplayRejected(root, old_iat, floor)).
+query root: pkey, old_iat: timestamp, floor: timestamp;
+  event(KsClaimReplayRejected(root, old_iat, floor)).
+query old_root: pkey, new_root: pkey;
+  event(KsOldOnlyTokenAccepted(old_root, new_root)).
+query event(AppManifestAuthenticated(target_app_id, pk(gen_sk_for_id(app_signing)),
+    pk(gen_sk_for_id(unauthorized_manifest_root)), updated_app_version)).
+query event(KsManifestRejected).
+
+process
+  SignedPackageAndTokenPublisher | OldInstalledApp | UpdatedInstalledApp

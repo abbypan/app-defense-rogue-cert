@@ -1,0 +1,188 @@
+(*
+ * Dedicated CA-migration policy model for the three paper windows.
+ * One succ_t step represents the operator profile's complete L_max. Private
+ * messages carry phase/time facts only; every token and peer certificate is
+ * supplied by the adversary on c. A connection-policy decision checks both
+ * tokens and a native-valid certificate, without assuming the expected
+ * IssuerSet for its window. This is not another TLS-handshake model.
+ *)
+
+free ca_migration_origin: timestamp.
+free ca_migration_phase: channel [private].
+const ca_window_1: bitstring.
+const ca_window_2: bitstring.
+const ca_window_3: bitstring.
+const ca_new_issuer: bitstring.
+const ca_current_only: bitstring.
+const ca_overlap_set: bitstring.
+const ca_new_only: bitstring.
+
+reduc ca_native_trust(real_cert_issuer) = true;
+      ca_native_trust(ca_new_issuer) = true;
+      ca_native_trust(rogue_cert_issuer) = true.
+reduc ca_member(real_cert_issuer, ca_current_only) = true;
+      ca_member(real_cert_issuer, ca_overlap_set) = true;
+      ca_member(ca_new_issuer, ca_overlap_set) = true;
+      ca_member(ca_new_issuer, ca_new_only) = true;
+      ca_member(ca_new_issuer, ca_current_only) = false;
+      ca_member(real_cert_issuer, ca_new_only) = false;
+      ca_member(rogue_cert_issuer, ca_current_only) = false;
+      ca_member(rogue_cert_issuer, ca_overlap_set) = false;
+      ca_member(rogue_cert_issuer, ca_new_only) = false.
+
+event CAMigrationPublished(pkey, bitstring, timestamp, timestamp).
+event CAMigrationOverlapPublished(timestamp, timestamp).
+event CAMigrationFullLmaxElapsed(timestamp, timestamp).
+event CAMigrationJointActivation(timestamp).
+event CAMigrationAuthenticated(pkey, bitstring, timestamp, timestamp).
+event CAMigrationAccepted(bitstring, bitstring, bitstring).
+event CAMigrationRejected(bitstring, bitstring, bitstring).
+event CAMigrationExpiredPolicyRejected(bitstring, timestamp).
+
+let CAMigrationPublisher =
+  let sk_app = gen_sk_for_id(app_signing) in
+  let sk_claim = gen_sk_for_id(claim_signing) in
+  let app_key = pk(sk_app) in
+  let claim_key = pk(sk_claim) in
+  let t0 = ca_migration_origin in
+  let t1 = succ_t(t0) in
+  let t2 = succ_t(t1) in
+  let tk_exp = succ_t(succ_t(t2)) in
+  let tk = jws_general_sign(
+      pk2s(app_key), pk2s(claim_key), t0, tk_exp, sk_app) in
+  event ClaimKeySign(sk_app, claim_key, t0, tk_exp);
+  out(c, tk);
+
+  (* Native TLS trusts each CA in this controlled model. ASPin must make the
+   * additional issuer-policy decision. NewCert is obtained before cutover. *)
+  let peer_key = pk(gen_sk_for_id(real_server)) in
+  let current_cert = gen_cert(peer_key, server_cert_subject_and_san,
+      real_cert_issuer, sig_sign(cert_content(peer_key,
+          server_cert_subject_and_san, real_cert_issuer),
+          gen_sk_for_id(real_cert_issuer))) in
+  let new_cert = gen_cert(peer_key, server_cert_subject_and_san,
+      ca_new_issuer, sig_sign(cert_content(peer_key,
+          server_cert_subject_and_san, ca_new_issuer),
+          gen_sk_for_id(ca_new_issuer))) in
+  let rogue_cert = gen_cert(peer_key, server_cert_subject_and_san,
+      rogue_cert_issuer, sig_sign(cert_content(peer_key,
+          server_cert_subject_and_san, rogue_cert_issuer),
+          gen_sk_for_id(rogue_cert_issuer))) in
+  out(c, current_cert); out(c, new_cert); out(c, rogue_cert);
+
+  let tc1 = jws_general_sign(pk2s(claim_key), cert_claim(
+      server_cert_subject_and_san, ca_current_only), t0, t1, sk_claim) in
+  event CertClaimSign(sk_claim, server_cert_subject_and_san,
+      ca_current_only, t0, t1);
+  event CAMigrationPublished(app_key, ca_current_only, t0, t1);
+  out(c, tc1);
+  (
+  out(ca_migration_phase, (ca_window_1, t0)) |
+  let (=true) = token_expired(t1, t1) in
+  let tc2 = jws_general_sign(pk2s(claim_key), cert_claim(
+      server_cert_subject_and_san, ca_overlap_set), t1, t2, sk_claim) in
+  event CertClaimSign(sk_claim, server_cert_subject_and_san,
+      ca_overlap_set, t1, t2);
+  event CAMigrationPublished(app_key, ca_overlap_set, t1, t2);
+  event CAMigrationOverlapPublished(t1, t2);
+  out(c, tc2);
+  (
+  out(ca_migration_phase, (ca_window_2, t1)) |
+  (* The honest server retains CurrCert throughout w2. This phase marker is
+   * an operator assumption, not a client acknowledgement or OS timer. *)
+  let (=true) = token_expired(t2, t2) in
+  event CAMigrationFullLmaxElapsed(t1, t2);
+  let tc3 = jws_general_sign(pk2s(claim_key), cert_claim(
+      server_cert_subject_and_san, ca_new_only), t2, succ_t(t2), sk_claim) in
+  event CertClaimSign(sk_claim, server_cert_subject_and_san,
+      ca_new_only, t2, succ_t(t2));
+  event CAMigrationPublished(app_key, ca_new_only, t2, succ_t(t2));
+  event CAMigrationJointActivation(t2);
+  out(c, tc3);
+  out(ca_migration_phase, (ca_window_3, t2))
+  )
+  ).
+
+let CAMigrationVerifier =
+  in(ca_migration_phase, (window: bitstring, now: timestamp));
+  let target_record = package_signing_record(
+      target_app_id, pk(gen_sk_for_id(app_signing))) in
+  let app_key = resolve_os_key(target_record, target_app_id) in
+  in(c, tk: bitstring);
+  let jws_general(hk: bitstring, payload_k: bitstring, sigk: bitstring) = tk in
+  let (=true) = header_matches(hk, app_key) in
+  let (=true) = jws_general_verify(tk, app_key) in
+  let iatk = get_iat(payload_k) in
+  let expk = get_exp(payload_k) in
+  let (=true) = token_fresh(iatk, expk, now) in
+  let claim_key = s2pk(get_content(payload_k)) in
+  event ClaimKeyVerify(app_key, claim_key, iatk, expk);
+  in(c, tc: bitstring);
+  let jws_general(hc: bitstring, payload_c: bitstring, sigc: bitstring) = tc in
+  let (=true) = header_matches(hc, claim_key) in
+  let (=true) = jws_general_verify(tc, claim_key) in
+  let iatc = get_iat(payload_c) in
+  let expc = get_exp(payload_c) in
+  let content = get_content(payload_c) in
+  let identity = get_subject_and_san(content) in
+  let (=true) = check_host(server_hostname, identity) in
+  let issuers = get_issuer(content) in
+  let (=true) = token_fresh(iatc, expc, now) in
+  (
+    event CertClaimVerify(claim_key, identity, issuers, iatc, expc);
+    event CAMigrationAuthenticated(app_key, issuers, iatc, expc);
+    in(c, gen_cert(peer_key: pkey, peer_identity: bitstring,
+        peer_issuer: bitstring, peer_signature: bitstring));
+    let (=true) = check_host(server_hostname, peer_identity) in
+    let (=true) = ca_native_trust(peer_issuer) in
+    let (=true) = sig_verify(cert_content(peer_key, peer_identity, peer_issuer),
+        peer_signature, pk(gen_sk_for_id(peer_issuer))) in
+    if ca_member(peer_issuer, issuers) = true then
+      event CAMigrationAccepted(window, peer_issuer, issuers)
+    else
+      event CAMigrationRejected(window, peer_issuer, issuers)
+  )
+  else
+    let (=true) = token_expired(expc, now) in
+    event CAMigrationExpiredPolicyRejected(window, expc).
+
+query root: pkey, issuers: bitstring, iat: timestamp, exp: timestamp;
+  event(CAMigrationAuthenticated(root, issuers, iat, exp)) ==>
+  event(CAMigrationPublished(root, issuers, iat, exp)).
+query root_sk: skey, delegated: pkey, iat: timestamp, exp: timestamp;
+  event(ClaimKeyVerify(pk(root_sk), delegated, iat, exp)) ==>
+  event(ClaimKeySign(root_sk, delegated, iat, exp)).
+query claim_sk: skey, identity: bitstring, issuers: bitstring,
+      iat: timestamp, exp: timestamp;
+  event(CertClaimVerify(pk(claim_sk), identity, issuers, iat, exp)) ==>
+  event(CertClaimSign(claim_sk, identity, issuers, iat, exp)).
+query event(CAMigrationJointActivation(succ_t(succ_t(ca_migration_origin)))) ==>
+  event(CAMigrationOverlapPublished(
+      succ_t(ca_migration_origin), succ_t(succ_t(ca_migration_origin)))).
+query event(CAMigrationJointActivation(succ_t(succ_t(ca_migration_origin)))) ==>
+  event(CAMigrationFullLmaxElapsed(
+      succ_t(ca_migration_origin), succ_t(succ_t(ca_migration_origin)))).
+
+(* Reachable policy decisions; NewCert in w2 is a policy audit, not the
+ * honest server's deployment schedule. *)
+query event(CAMigrationAccepted(ca_window_1, real_cert_issuer, ca_current_only)).
+query event(CAMigrationAccepted(ca_window_2, real_cert_issuer, ca_overlap_set)).
+query event(CAMigrationAccepted(ca_window_2, ca_new_issuer, ca_overlap_set)).
+query event(CAMigrationAccepted(ca_window_3, ca_new_issuer, ca_new_only)).
+query event(CAMigrationRejected(ca_window_1, ca_new_issuer, ca_current_only)).
+query event(CAMigrationRejected(ca_window_3, real_cert_issuer, ca_new_only)).
+query event(CAMigrationExpiredPolicyRejected(
+    ca_window_3, succ_t(succ_t(ca_migration_origin)))).
+
+(* Unreachable acceptance decisions. *)
+query window: bitstring, issuers: bitstring;
+  event(CAMigrationAccepted(window, rogue_cert_issuer, issuers)).
+query window: bitstring;
+  event(CAMigrationAccepted(window, ca_new_issuer, ca_current_only)).
+query window: bitstring;
+  event(CAMigrationAccepted(window, real_cert_issuer, ca_new_only)).
+query issuer: bitstring;
+  event(CAMigrationAccepted(ca_window_3, issuer, ca_overlap_set)).
+
+process
+  CAMigrationPublisher | !CAMigrationVerifier

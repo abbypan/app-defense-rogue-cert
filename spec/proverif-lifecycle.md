@@ -1,6 +1,6 @@
 # ASPin symbolic models: certificate and key lifecycles
 
-These are the trace-level details moved from Appendix D. The
+These are the trace-level details moved from Appendix B. The
 [model specification](proverif-models.md) defines the common trust roots,
 adversarial channels, and query interpretation. All results below describe
 the existing model instances and saved logs, not new Android measurements.

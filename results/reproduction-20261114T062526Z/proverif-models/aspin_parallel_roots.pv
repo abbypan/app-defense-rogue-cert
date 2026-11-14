@@ -1,0 +1,92 @@
+(* Both roots of ONE authenticated installed app remain eligible. K_s does not
+ * override K_a. The token's kid filters the trusted candidate set; it cannot add
+ * a root. This model checks the union of explicitly authorized roots and their
+ * separate cache namespaces, not deterministic priority, timing or rotations. *)
+event ParallelRootAuthorized(bitstring, pkey).
+event ParallelRootClaim(pkey, pkey, bitstring).
+event ParallelCacheStored(pkey, pkey).
+event ParallelCacheReturned(pkey, pkey).
+
+table parallel_cache(pkey, pkey).
+
+let ParallelInstall =
+  let apk = gen_sk_for_id(app_signing) in
+  let ks = pk(gen_sk_for_id(self_host_signing)) in
+  let manifest = app_manifest(target_app_id, ks, installed_app_version) in
+  event AppManifestSigned(target_app_id, pk(apk), ks, installed_app_version);
+  let signature = sig_sign(manifest, apk) in
+  let (=true) = sig_verify(manifest, signature, pk(apk)) in
+  event AppManifestAuthenticated(target_app_id, pk(apk), ks, installed_app_version);
+  event ManifestKeyBind(target_app_id, ks);
+  event ParallelRootAuthorized(target_app_id, pk(apk));
+  event ParallelRootAuthorized(target_app_id, ks);
+  out(cm, (package_signing_record(target_app_id, pk(apk)),
+           manifest_key_record(target_app_id, ks))).
+
+let ParallelPublish(root: skey, delegated: skey) =
+  event ClaimKeySign(root, pk(delegated), curr, succ_t(succ_t(curr)));
+  out(c, jws_general_sign(pk2s(pk(root)), pk2s(pk(delegated)),
+      curr, succ_t(succ_t(curr)), root));
+  event CertClaimSign(delegated, server_cert_subject_and_san, real_cert_issuer,
+      curr, succ_t(succ_t(curr)));
+  out(c, jws_general_sign(pk2s(pk(delegated)),
+      cert_claim(server_cert_subject_and_san, real_cert_issuer),
+      curr, succ_t(succ_t(curr)), delegated)).
+
+let ParallelVerify(root: pkey) =
+  in(c, tk: bitstring);
+  let jws_general(hk: bitstring, kp: bitstring, sk: bitstring) = tk in
+  let (=true) = header_matches(hk, root) in
+  let (=true) = jws_general_verify(tk, root) in
+  let (=true) = token_fresh(get_iat(kp), get_exp(kp), succ_t(curr)) in
+  let delegated = s2pk(get_content(kp)) in
+  event ClaimKeyVerify(root, delegated, get_iat(kp), get_exp(kp));
+  in(c, tc: bitstring);
+  let jws_general(hc: bitstring, cp: bitstring, sc: bitstring) = tc in
+  let (=true) = header_matches(hc, delegated) in
+  let (=true) = jws_general_verify(tc, delegated) in
+  let (=true) = token_fresh(get_iat(cp), get_exp(cp), succ_t(curr)) in
+  let identity = get_subject_and_san(get_content(cp)) in
+  let (=true) = check_host(server_hostname, identity) in
+  let issuer = get_issuer(get_content(cp)) in
+  event ParallelRootClaim(root, delegated, issuer);
+  event ParallelCacheStored(root, delegated);
+  insert parallel_cache(root, delegated).
+
+let ParallelRead(root: pkey) =
+  get parallel_cache(=root, delegated: pkey) in
+  event ParallelCacheReturned(root, delegated).
+
+query root: pkey, delegated: pkey, issuer: bitstring;
+  event(ParallelRootClaim(root, delegated, issuer)) ==>
+  event(ParallelRootAuthorized(target_app_id, root)).
+query root: skey, delegated: pkey, iat: timestamp, exp: timestamp;
+  event(ClaimKeyVerify(pk(root), delegated, iat, exp)) ==>
+  event(ClaimKeySign(root, delegated, iat, exp)).
+query root: pkey, delegated: pkey;
+  event(ParallelCacheReturned(root, delegated)) ==> event(ParallelCacheStored(root, delegated)).
+query app: bitstring, ks: pkey, signer: pkey, version: bitstring;
+  event(ManifestKeyBind(app, ks)) ==> event(AppManifestAuthenticated(app, signer, ks, version)).
+query event(ParallelRootClaim(pk(gen_sk_for_id(app_signing)),
+    pk(gen_sk_for_id(claim_signing)), real_cert_issuer)).
+query event(ParallelRootClaim(pk(gen_sk_for_id(self_host_signing)),
+    pk(gen_sk_for_id(other_self_host_signing)), real_cert_issuer)).
+query event(ParallelCacheReturned(pk(gen_sk_for_id(app_signing)),
+    pk(gen_sk_for_id(other_self_host_signing)))).
+query event(ParallelCacheReturned(pk(gen_sk_for_id(self_host_signing)),
+    pk(gen_sk_for_id(claim_signing)))).
+query root: pkey, delegated: pkey;
+  event(ParallelRootClaim(root, delegated, rogue_cert_issuer)).
+query delegated: pkey, issuer: bitstring;
+  event(ParallelRootClaim(pk(gen_sk_for_id(other_app_signing)), delegated, issuer)).
+
+process
+  ParallelInstall |
+  ParallelPublish(gen_sk_for_id(app_signing), gen_sk_for_id(claim_signing)) |
+  ParallelPublish(gen_sk_for_id(self_host_signing), gen_sk_for_id(other_self_host_signing)) |
+  (out(c, gen_sk_for_id(other_app_signing))) |
+  (in(cm, (package_record: bitstring, manifest_record: bitstring));
+   let ka = resolve_os_key(package_record, target_app_id) in
+   let ks = resolve_manifest_key(manifest_record, target_app_id) in
+   event ManifestKeyResolve(target_app_id, ks);
+   (!ParallelVerify(ka) | !ParallelVerify(ks) | !ParallelRead(ka) | !ParallelRead(ks)))

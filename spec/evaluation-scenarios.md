@@ -1,12 +1,12 @@
 # Functional Internet evaluation scenarios
 
-This document retains detailed procedures moved out of Appendix E. Results
-refer to `results/internet-evaluation-20261029/` and the separately archived
-`results/certificate-change-internet-20261030T071421Z/` session, not proposed
+This document retains detailed procedures moved out of Appendix C. Results
+refer to `results/reproduction-20261114T062526Z/internet/` and the independently audited
+`results/reproduction-20261114T062526Z/certificate-change/` subtree, not proposed
 measurements. General controls and timing definitions are in
 [evaluation-protocol.md](evaluation-protocol.md).
 
-The original functional suite records pass/fail observations separately from latency
+The functional suite records pass/fail observations separately from latency
 distributions. It uses the remote comparison's public-CA profiles and a fixed
 Subject/SAN partition. Transition claims have 60-second lifetimes. Real-time
 waits retain highest-seen state and do not advance the clock to bypass expiry.
@@ -199,8 +199,8 @@ not latency distributions; timing tables use the separate connection matrix.
 
 After overlap publication is observed, the harness waits at least 60 complete
 seconds and beyond the claim's signed expiration. The recorded staging
-intervals are 60.520468276023166 seconds for the primary root and
-60.30550635099644 seconds for the compatible root. One atomic server-profile
+intervals are 61.02487249299884 seconds for the primary root and
+60.01759130600112 seconds for the compatible root. One atomic server-profile
 change then selects NewCert and the new-only claim for subsequent handshakes.
 Both modes pass six transition probes.
 

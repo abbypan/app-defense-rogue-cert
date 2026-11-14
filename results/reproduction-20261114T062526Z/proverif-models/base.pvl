@@ -1,0 +1,324 @@
+set traceDisplay = long.
+set attacker = active.
+
+(* Core symbolic types. *)
+type skey [private].
+type pkey.
+type timestamp.
+type ttl.
+type ip.
+type machine.
+
+(* Public protocol constants. *)
+const system_ca_list: bitstring.
+const server_hostname: bitstring.
+const other_hostname: bitstring.
+const server_cert_subject_and_san: bitstring.
+const real_cert_issuer: bitstring.
+const rogue_cert_issuer: bitstring.
+const server_ip: ip.
+const server_machine: machine.
+(* Legacy spellings retained for the standard-TLS baseline models. *)
+const server_mechine: machine.
+const rogue_ip: ip.
+const rogue_machine: machine.
+const rogue_mechine: machine.
+free curr: timestamp.
+const ttl_one: ttl.
+const ttl_two: ttl.
+const ttl_three: ttl.
+const ttl_four: ttl.
+
+const app_signing: bitstring.
+const other_app_signing: bitstring.
+const self_host_signing: bitstring.
+const other_self_host_signing: bitstring.
+const claim_signing: bitstring.
+const real_server: bitstring.
+const rogue_server: bitstring.
+
+(* Public network channels.  Token retrieval is deliberately untrusted. *)
+free c: channel.
+free cc: channel.
+free cs: channel.
+free cm: channel [private].
+
+(* Signature primitives. *)
+fun pk(skey): pkey.
+fun sig_sign(bitstring, skey): bitstring.
+reduc forall m: bitstring, sk: skey;
+      sig_verify(m, sig_sign(m, sk), pk(sk)) = true.
+
+fun gen_sk_for_id(bitstring): skey [private].
+
+(* The caller supplies an app identifier, never a public key.  This private
+ * resolver abstracts the OS/package-manager association between an installed
+ * app identifier and its verified signing certificate.  In the cache model,
+ * App A is signed by other_app_signing and selects target App B, signed by
+ * app_signing. *)
+const caller_app_id: bitstring.
+const target_app_id: bitstring.
+fun package_signing_record(bitstring, pkey): bitstring [private].
+reduc forall app_id: bitstring, signing_key: pkey;
+      resolve_os_key(
+          package_signing_record(app_id, signing_key), app_id) = signing_key.
+
+(* Compatibility mode: an authenticated installed manifest binds a separate
+ * ASPin verification key to the package.  The binding and its local delivery
+ * remain OS-protected; public APIs never accept this key from the caller.
+ * The APK signature authenticates the manifest, including K_spub. No separate
+ * manifest-root archive or manifest-root lineage is assumed. *)
+const installed_app_version: bitstring.
+const updated_app_version: bitstring.
+fun app_manifest(bitstring, pkey, bitstring): bitstring [data].
+fun manifest_key_record(bitstring, pkey): bitstring [private].
+reduc forall app_id: bitstring, manifest_key: pkey;
+      resolve_manifest_key(
+          manifest_key_record(app_id, manifest_key), app_id) = manifest_key.
+
+(* X.509 and native TLS validation abstraction. real_cert_issuer and
+ * rogue_cert_issuer denote the concrete hash-name-tagged identifiers of the
+ * complete direct issuer CA certificates. gen_sk_for_id privately relates each
+ * abstract identifier to its CA signing key; DER extraction and hashing remain
+ * outside the symbolic model. Both CA certificates are in the uncompromised
+ * system trust store; ASPin must reject the unauthorized one. *)
+fun gen_cert(pkey, bitstring, bitstring, bitstring): bitstring [data].
+fun cert_content(pkey, bitstring, bitstring): bitstring [data].
+reduc check_host(server_hostname, server_cert_subject_and_san) = true.
+reduc check_issuer(real_cert_issuer, system_ca_list) = true;
+      check_issuer(rogue_cert_issuer, system_ca_list) = true.
+
+(* TLS 1.3-style authenticated key agreement abstraction. *)
+fun client_shared_secret(skey, pkey): bitstring [private].
+reduc forall csk: skey, ssk: skey;
+      server_shared_secret(ssk, pk(csk)) =
+      client_shared_secret(csk, pk(ssk)).
+fun session_key(bitstring, bitstring): bitstring [private].
+fun enc_data(bitstring, bitstring): bitstring.
+reduc forall k: bitstring, d: bitstring;
+      dec_data(k, enc_data(k, d)) = d.
+reduc forall k: bitstring, d: bitstring;
+      check_authtag(k, enc_data(k, d)) = true.
+fun client_hello(bitstring, pkey): bitstring [data].
+fun server_hello(bitstring, pkey): bitstring [data].
+fun transcript_hash(bitstring, bitstring, bitstring): bitstring [data].
+fun server_hello_handshake(
+    bitstring, ip, machine, bitstring, bitstring, bitstring): bitstring [data].
+
+(* Public-key serialization used by JWS kid/cnf fields. *)
+fun pk2s(pkey): bitstring.
+reduc forall key: pkey; s2pk(pk2s(key)) = key.
+reduc forall key: pkey; header_matches(pk2s(key), key) = true.
+
+(* Finite symbolic time model.  Freshness is exactly iat <= now < exp.
+ * The listed reductions cover the one- and two-window traces used below;
+ * notably, there is no rule accepting now = exp. *)
+fun succ_t(timestamp): timestamp.
+reduc forall t: timestamp;
+      token_fresh(t, succ_t(t), t) = true;
+      forall t2: timestamp;
+      token_fresh(t2, succ_t(succ_t(t2)), t2) = true;
+      forall t3: timestamp;
+      token_fresh(t3, succ_t(succ_t(t3)), succ_t(t3)) = true;
+      forall t4: timestamp;
+      token_fresh(t4, succ_t(succ_t(succ_t(t4))), t4) = true;
+      forall t5: timestamp;
+      token_fresh(t5, succ_t(succ_t(succ_t(t5))), succ_t(t5)) = true;
+      forall t6: timestamp;
+      token_fresh(
+          t6, succ_t(succ_t(succ_t(t6))), succ_t(succ_t(t6))) = true;
+      forall t7: timestamp;
+      token_fresh(t7, succ_t(succ_t(succ_t(succ_t(t7)))), t7) = true;
+      forall t8: timestamp;
+      token_fresh(
+          t8, succ_t(succ_t(succ_t(succ_t(t8)))), succ_t(t8)) = true;
+      forall t9: timestamp;
+      token_fresh(
+          t9, succ_t(succ_t(succ_t(succ_t(t9)))),
+          succ_t(succ_t(t9))) = true;
+      forall t10: timestamp;
+      token_fresh(
+          t10, succ_t(succ_t(succ_t(succ_t(t10)))),
+          succ_t(succ_t(succ_t(t10)))) = true.
+
+(* ttl is derived from exp - iat; it is not trusted token input. *)
+reduc forall t: timestamp;
+      derive_ttl(t, succ_t(t)) = ttl_one;
+      forall t2: timestamp;
+      derive_ttl(t2, succ_t(succ_t(t2))) = ttl_two;
+      forall t3: timestamp;
+      derive_ttl(t3, succ_t(succ_t(succ_t(t3)))) = ttl_three;
+      forall t4: timestamp;
+      derive_ttl(
+          t4, succ_t(succ_t(succ_t(succ_t(t4))))) = ttl_four.
+
+(* Highest-seen-iat comparisons for the finite lifecycle traces. *)
+reduc forall t: timestamp;
+      iat_not_older(t, t) = true;
+      forall t2: timestamp;
+      iat_not_older(succ_t(t2), t2) = true.
+reduc forall t: timestamp;
+      iat_older(t, succ_t(t)) = true;
+      forall t2: timestamp;
+      iat_older(t2, succ_t(succ_t(t2))) = true.
+
+(* exp <= now: equality is already expired because freshness uses now < exp. *)
+reduc forall t: timestamp;
+      token_expired(t, t) = true;
+      forall t2: timestamp;
+      token_expired(t2, succ_t(t2)) = true.
+
+(* Certificate claim over Subject/SAN and Issuer. *)
+fun cert_claim(bitstring, bitstring): bitstring [data].
+reduc forall subject_and_san: bitstring, issuer: bitstring;
+      get_subject_and_san(cert_claim(subject_and_san, issuer)) = subject_and_san.
+reduc forall subject_and_san: bitstring, issuer: bitstring;
+      get_issuer(cert_claim(subject_and_san, issuer)) = issuer.
+
+(* General JWS JSON Serialization abstraction. The single-signature and dual
+ * forms remain convenient fixtures for existing traces, not signature-count
+ * limits. The list form below permits arbitrarily many entries over one
+ * payload. T_k signs the delegated key, iat, and exp.
+ * T_c signs the certificate claim (including Subject/SAN), iat, and exp. *)
+fun jws_payload(bitstring, timestamp, timestamp): bitstring [data].
+reduc forall content: bitstring, iat: timestamp, exp: timestamp;
+      get_content(jws_payload(content, iat, exp)) = content.
+reduc forall content: bitstring, iat: timestamp, exp: timestamp;
+      get_iat(jws_payload(content, iat, exp)) = iat.
+reduc forall content: bitstring, iat: timestamp, exp: timestamp;
+      get_exp(jws_payload(content, iat, exp)) = exp.
+
+fun jws_general(bitstring, bitstring, bitstring): bitstring [data].
+fun jws_tosign(bitstring, bitstring): bitstring.
+reduc forall header: bitstring, payload: bitstring, signature: bitstring;
+      get_jws_general_header(jws_general(header, payload, signature)) = header.
+reduc forall header: bitstring, payload: bitstring, signature: bitstring;
+      get_jws_general_payload(jws_general(header, payload, signature)) = payload.
+reduc forall header: bitstring, payload: bitstring, signature: bitstring;
+      get_jws_general_sig(jws_general(header, payload, signature)) = signature.
+
+reduc forall header: bitstring, content: bitstring,
+             iat: timestamp, exp: timestamp, signing_key: skey;
+      jws_general_sign(header, content, iat, exp, signing_key) =
+      jws_general(header, jws_payload(content, iat, exp),
+          sig_sign(jws_tosign(
+              header, jws_payload(content, iat, exp)), signing_key)).
+
+(* Signature verification is separate from freshness, header-key matching,
+ * server-identity matching, and anti-rollback checks. *)
+reduc forall header: bitstring, content: bitstring,
+             iat: timestamp, exp: timestamp, signing_key: skey;
+      jws_general_verify(
+          jws_general(header, jws_payload(content, iat, exp),
+              sig_sign(jws_tosign(
+                  header, jws_payload(content, iat, exp)), signing_key)),
+          pk(signing_key)) = true.
+
+(* Two-signature General JWS form for an app-signing-key transition. The two
+ * protected headers and signatures authenticate one identical payload. *)
+fun jws_dual(
+    bitstring, bitstring, bitstring, bitstring, bitstring): bitstring [data].
+reduc forall h1: bitstring, h2: bitstring, content: bitstring,
+             iat: timestamp, exp: timestamp,
+             sk1: skey, sk2: skey;
+      jws_dual_sign(h1, h2, content, iat, exp, sk1, sk2) =
+      jws_dual(
+          h1, h2, jws_payload(content, iat, exp),
+          sig_sign(jws_tosign(
+              h1, jws_payload(content, iat, exp)), sk1),
+          sig_sign(jws_tosign(
+              h2, jws_payload(content, iat, exp)), sk2)).
+
+reduc forall h1: bitstring, h2: bitstring, content: bitstring,
+             iat: timestamp, exp: timestamp,
+             sk1: skey, sk2: skey;
+      jws_dual_verify1(
+          jws_dual(
+              h1, h2, jws_payload(content, iat, exp),
+              sig_sign(jws_tosign(
+                  h1, jws_payload(content, iat, exp)), sk1),
+              sig_sign(jws_tosign(
+                  h2, jws_payload(content, iat, exp)), sk2)),
+          pk(sk1)) = true.
+reduc forall h1: bitstring, h2: bitstring, content: bitstring,
+             iat: timestamp, exp: timestamp,
+             sk1: skey, sk2: skey;
+      jws_dual_verify2(
+          jws_dual(
+              h1, h2, jws_payload(content, iat, exp),
+              sig_sign(jws_tosign(
+                  h1, jws_payload(content, iat, exp)), sk1),
+              sig_sign(jws_tosign(
+                  h2, jws_payload(content, iat, exp)), sk2)),
+          pk(sk2)) = true.
+
+(* General T_k arrays: no fixed list length or scan-depth bound. The private
+ * request is OS-internal, not a wire-level owner selector. Recursive Horn
+ * membership abstracts a search of the whole list, not its running time.
+ * Only an OS-selected context key enters the check. A matching kid alone is
+ * insufficient: the signature must cover this array's common payload.
+ * Byte limits, parsing costs, and scan termination/time are not modeled. *)
+type jws_signature_list.
+const jws_no_signatures: jws_signature_list [data].
+fun jws_signature_cons(bitstring, jws_signature_list): jws_signature_list [data].
+fun jws_signature_entry(bitstring, bitstring): bitstring [data].
+fun jws_signature_array(bitstring, jws_signature_list): bitstring [data].
+reduc forall header: bitstring, payload: bitstring, signing_key: skey;
+      jws_sign_entry(header, payload, signing_key) =
+      jws_signature_entry(header, sig_sign(jws_tosign(header, payload), signing_key)).
+free jws_signature_scan: channel [private].
+pred jws_array_member(bitstring, jws_signature_list) [memberOptim].
+clauses
+  forall entry: bitstring, tail: jws_signature_list;
+    jws_array_member(entry, jws_signature_cons(entry, tail));
+  forall entry: bitstring, head: bitstring, tail: jws_signature_list;
+    jws_array_member(entry, tail) ->
+    jws_array_member(entry, jws_signature_cons(head, tail)).
+
+let GeneralJwsSignatureScanner =
+  in(jws_signature_scan, (payload: bitstring, entries: jws_signature_list,
+      context_key: pkey, reply: channel));
+  let entry: bitstring suchthat jws_array_member(entry, entries) in
+  (
+    let jws_signature_entry(header: bitstring, signature: bitstring) = entry in
+    (
+      let (=true) = header_matches(header, context_key) in
+      (
+        let (=true) = sig_verify(jws_tosign(header, payload), signature, context_key) in
+          out(reply, true)
+        else out(reply, false)
+      )
+      else out(reply, false)
+    )
+    else out(reply, false)
+  )
+  else out(reply, false).
+
+(* Protocol and TLS events. *)
+event ClaimKeySign(
+    skey, pkey, timestamp, timestamp).
+event ClaimKeyVerify(
+    pkey, pkey, timestamp, timestamp).
+event CertClaimSign(
+    skey, bitstring, bitstring, timestamp, timestamp).
+event CertClaimVerify(
+    pkey, bitstring, bitstring, timestamp, timestamp).
+event ClaimFreshAtCheck(bitstring).
+
+event RSAccept(bitstring, bitstring, bitstring, bitstring, bitstring).
+event MSAccept(bitstring, bitstring, bitstring, bitstring, bitstring).
+event AppConnRS(bitstring, bitstring, bitstring, bitstring, bitstring).
+event AppConnMS(bitstring, bitstring, bitstring, bitstring, bitstring).
+event AppReject(bitstring, bitstring, bitstring).
+event MSConnRS(bitstring, bitstring, bitstring, bitstring, bitstring).
+
+event RollbackRejected(bitstring, timestamp, timestamp).
+event ExpiredTokenRejected(bitstring, timestamp, timestamp).
+event EmergencyTokenRevoked(bitstring, timestamp).
+event DualSigAppKeyVerify(pkey, pkey, pkey, timestamp, timestamp).
+event ManifestKeyBind(bitstring, pkey).
+event ManifestKeyResolve(bitstring, pkey).
+event AppManifestSigned(bitstring, pkey, pkey, bitstring).
+event AppManifestAuthenticated(bitstring, pkey, pkey, bitstring).
+event CompatClaimKeyVerify(
+    bitstring, pkey, pkey, timestamp, timestamp).

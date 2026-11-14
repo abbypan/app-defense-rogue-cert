@@ -1,6 +1,6 @@
 # ASPin symbolic models: setup and connection behavior
 
-This specification retains the detailed explanations moved out of Appendix D.
+This specification retains the detailed explanations moved out of Appendix B.
 It documents the current sources and saved results. Lifecycle traces and their
 additional boundaries are specified in [proverif-lifecycle.md](proverif-lifecycle.md).
 

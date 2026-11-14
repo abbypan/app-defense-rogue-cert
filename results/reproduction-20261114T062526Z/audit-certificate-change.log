@@ -1,0 +1,10 @@
+{
+  "result": "PASS",
+  "cells": 15,
+  "attempts": 300,
+  "accepted": 260,
+  "policy_rejected": 40,
+  "unchanged_direct_issuer": true,
+  "unchanged_subject_san": true,
+  "unchanged_tokens": true
+}

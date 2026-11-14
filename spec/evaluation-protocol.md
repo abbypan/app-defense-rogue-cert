@@ -1,12 +1,10 @@
 # Evaluation protocol, controls, and measurement boundaries
 
-This document preserves the experimental details moved from Appendix E.
-It explains the fresh Internet cohort at
-`results/internet-evaluation-20261029/`, including a later complete cached-API
-session on the same ASPin image, and the separately archived
-`results/certificate-change-internet-20261030T071421Z/` session. The original
-robustness observations, supplementary timing session, and certificate-change
-observations remain separate. Functional lifecycle and cross-app cases are detailed in
+This document preserves the experimental details moved from Appendix C.
+The current reproduction session is `results/reproduction-20261114T062526Z/`.
+Its `internet/` subtree contains the connection, functional, public-CA, and
+complete API/robustness suites; `certificate-change/` contains independently
+audited renewal/rekey observations. Functional lifecycle and cross-app cases are detailed in
 [evaluation-scenarios.md](evaluation-scenarios.md).
 
 ## 1. Cohort and evidence
@@ -14,14 +12,23 @@ observations remain separate. Functional lifecycle and cross-app cases are detai
 The reported cohort uses the ASPin-flashed Pixel 8, Wi-Fi Internet, and a remote
 HTTPS endpoint. Policies were regenerated, experiment APKs rebuilt, and the
 connection, lifecycle, cross-app, public-CA, and API/robustness suites rerun for
-that cohort. A later certificate-change session uses the same flashed image
-and Internet endpoint, but new certificate fixtures and its own token pair,
-APKs, raw data, and evidence index. It does not replace old samples or alter
-the original matrix's 1,280-attempt total. No historical local measurements enter the tables or summaries.
+that cohort. The certificate-change suite uses the same flashed image and
+Internet endpoint, with its own token pair, APKs, raw data, and evidence index.
+No observations from earlier sessions enter the tables or summaries.
 Raw observations, per-case request audits, public JWS fixtures, APK hashes,
-and `evidence-sha256.json` identify the evidence. The later `api-cache-matrix/`
-session supplies the complete API timing table; the original `api-robustness/`
-records still supply the reboot, clock, and other functional observations.
+and `evidence-sha256.json` identify the evidence. The same `api-robustness/`
+session supplies the complete cached-API matrix and ordinary reboot/clock
+observations. Selected driver sources, build configuration, and public inputs
+are retained byte-for-byte in `source-snapshot/`, not represented by hashes
+alone. The strict source-snapshot audit checks the complete recorded inventory.
+
+Before testing, the reproduction runner verifies the installed system-partition
+prefix against the local image SHA-256 and checks seven runtime component
+hashes. It also archives changed AOSP sources and the patch bundle. This binds
+measurements to the preserved image and selected sources; it is not a signed
+build attestation or a reproducible rebuild of every toolchain byte. DNS uses
+the explicitly requested `8.8.8.8` resolver, reapplied at preflights after
+reboots. IP configuration and native certificate checks are unchanged.
 
 The remote functional suite contains 98 observations, 49 per ASPin mode, with
 95 matching request audits and three claim-only rollback refusals. Independent
@@ -34,8 +41,8 @@ invoke no business connection.
 The documented consistency/audit commands do not perform device measurements:
 
 ```sh
-python3 summarize-internet-evaluation.py results/internet-evaluation-20261029 --check-paper
-python3 summarize-certificate-change-results.py results/certificate-change-internet-20261030T071421Z --check-paper
+python3 summarize-internet-evaluation.py results/reproduction-20261114T062526Z/internet --check-paper
+python3 summarize-certificate-change-results.py results/reproduction-20261114T062526Z/certificate-change --check-paper
 python3 check-implementation-consistency.py
 python3 -m unittest test_internet_evaluation.py
 ```
@@ -114,18 +121,25 @@ connection and scheme-specific TLS context.
 | Configuration | Supplementary policy | State and key source |
 | --- | --- | --- |
 | SCP | Bundled legitimate-leaf SPKI pin | Standard NSC static pin-set |
-| Independent DCP | Signed hostname-bound leaf-SPKI policy | Manifest verification key, signed issuance/expiration, in-process cache; no ASPin calls |
+| Reduced independent DCP | Signed hostname-bound leaf-SPKI policy | Manifest verification key, signed issuance/expiration, in-process cache; no ASPin calls |
 | Primary ASPin | Direct-issuer CA-certificate policy | Installed app-signing root and ASPin lifecycle |
 | Compatible ASPin | Direct-issuer CA-certificate policy | Authenticated manifest root and ASPin lifecycle |
 
-These policies are not security-equivalent. Independent DCP has no ASPin
-delegation, persistent rollback state, lineage merge, or installed-target
-resolver. An unchanged leaf SPKI can remain valid under SCP/DCP despite a CA
+The DCP baseline is reduced, not a complete DCP lifecycle implementation. It
+checks signed issuance and expiration but maintains no anti-rollback state.
+The saved device experiments do not separately test DCP freshness or rollback
+handling; the ASPin expiration and replay results do not validate DCP. Host
+regressions exercise the DCP verifier's expiration and future-issuance checks,
+not end-to-end device behavior. The baseline has no ASPin delegation, lineage
+merge, or installed-target resolver. These policies are not security-equivalent.
+An unchanged leaf SPKI can remain valid under SCP/DCP despite a CA
 change, whereas ASPin requires issuer authorization. Leaf-key replacement
 invalidates fixed SPKI policies but can leave ASPin's issuer claim unchanged.
 Neither example establishes equal authorization or operator work. All reject
 the controlled unauthorized-issuer profile, but that result and the number of
-metadata transfers do not establish a general security or cost ranking.
+metadata transfers do not establish a general security or cost ranking. Results
+for this verifier cannot establish the freshness, rollback resistance, lifecycle
+guarantees, or performance of full DCP systems.
 
 Compatible ASPin retains the installed app-signing anchor alongside the manifest
 anchor, with independent state. Before compatible-mode measurement the phone
@@ -144,8 +158,10 @@ compromise. The separate public-CA chain suite uses system-roots-only APKs.
 The matrix has 64 cells: four signature profiles, real/rogue certificate
 profiles, native TLS and SCP once per profile, and DCP plus both ASPin modes
 under hot and forced-cold policy caches. Each cell has three warmups and 20
-measured attempts, for 1,280 measured attempts. All have expected outcomes,
-with no measured transport failure. The accepted/rejected totals are 720/560.
+measured attempts, for 1,280 measured attempts. The independent audit reports
+acceptances, policy rejections, and transport failures separately. Network
+failures remain failed observations and are never replaced or counted as
+successful policy refusal; outcome-time summaries exclude those failures.
 
 Each attempt runs the native trust manager before the ASPin, SCP, or DCP supplementary check.
 Hostname verification gates connection use. A successful attempt reads the
@@ -160,7 +176,9 @@ costs, not just cryptographic operations.
   bundled pin does not require a metadata preload.
 - Cold DCP retrieves one signed policy per handshake; cold ASPin forces both
   token downloads. The endpoint audit observes one DCP hot preload versus 23
-  cold fetches per cell, including warmups.
+  cold fetches per cell, including warmups, when every fetch reaches the server.
+  With recorded transport failures, the auditor checks the corresponding
+  bounded fetch count and the exact successful business-request tags.
 - Each displayed outcome time stops after certificate checks allow the
   connection or reject it. HTTP response reading is recorded separately and
   excluded from those times.
@@ -198,8 +216,8 @@ checks confirm the target/caller certificates.
 
 Each root group visits ES256, ES384, RSA-3072, and RSA-4096 in that order, with
 self then cross-app batches for each target. A normal reboot between root
-groups isolates volatile caches while preserving protected state. The run
-does not repeat the original clock or lifecycle tests. CSV rows record the
+groups isolates volatile caches while preserving protected state. The same
+session also runs the ordinary reboot and clock probes below. CSV rows record the
 actual API, hostname, and target package, so an ES256 query cannot be relabeled
 as a missing RSA/ES384 measurement. Server audits confirm zero business or
 metadata requests during every timed batch.
@@ -209,11 +227,9 @@ latency or shared-host multi-signature-filtering cost.
 The paper's eight-thread table groups rows by target profile. `P99` is the
 nearest-rank empirical 99th percentile and queries/s is completed operations
 per measured wall time. All entries come from this one complete session rather
-than mixing its new cross-app cells with earlier self-query timings. The
-original 20 cached batches remain archived but do not populate the current
-API table. Fixed order does not isolate root-choice effects from
-scheduling, warmup, or thermal state. A corrected empty launch-argument error
-collected no API samples; its startup record is retained separately.
+than mixing its cross-app cells with earlier self-query timings. Fixed order
+does not isolate root-choice effects from scheduling, warmup, or thermal state.
+No earlier API timing batches are used to fill missing cells.
 
 ## 6. API robustness and scope
 
@@ -226,7 +242,8 @@ possible expired-claim resurrection. Parallel refreshes use two independently
 rooted hostname contexts. The functional suite checks both token-expiration
 bounds independently.
 
-All 54 original API/robustness cases passed. Older tokens were refused after reboot;
+The complete API/robustness suite contains 80 cases: 32 timed cache batches,
+32 priming/cache-hit probes, and 16 robustness observations. Older tokens are checked after reboot;
 the not-yet-valid pair was refused after the clock rollback and accepted after
 restoration. The two hostname refreshes overlapped in each mode. Each reboot,
 clock-change, target-refresh, parallel-refresh, and expiration-bound probe is a
@@ -240,7 +257,7 @@ clock tests exercise ordinary paths, not privileged rollback resistance.
 
 The bounded cached-key retry remains unmeasured. A separate isolated-link RTT
 matrix is prepared but unmeasured; the WAN observations do not instantiate
-those configured delays. The later certificate-change session adds 300 actual
+those configured delays. The certificate-change suite adds 300 actual
 Internet attempts across five configurations and three stages, with unchanged
 Subject/SAN and exact direct-issuer DER. Both ASPin modes accept all 20 attempts
 in each renewal/rekey stage with byte-identical tokens and no metadata fetches. This ES256

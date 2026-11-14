@@ -1,2 +1,0 @@
-Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
-pa2f2589fb235-primary-tk-bound-restored-self,com.cert.aspin,self,,protected,true,true,two-token-refresh,1793245707717,1793245706000,1793249306000,88.115438,83.393310,178.803996,344.574138,true,true,accepted,accepted,PASS,"",""

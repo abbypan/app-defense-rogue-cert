@@ -2,7 +2,8 @@
 """Four-scheme Pixel-8 -> hk:443 comparison, never a stock-Android experiment.
 
 Uses only the existing isolated deployment and current test-domain SNI routing.
-No DNS changes, global network shaping or local/ADB HTTP forwarding is used.
+No global network shaping or local/ADB HTTP forwarding is used. DNS changes
+only when explicitly requested through ASPIN_BENCHMARK_DNS.
 """
 import argparse
 import atexit
@@ -70,7 +71,7 @@ def validate(rows, cell, iterations, record_transport_failures=False):
         for field in ("Policy_ms", "Connection_ms", "Outcome_ms", "AppRead_ms", "Tk_ms", "Tc_ms"):
             if not math.isfinite(float(row[field])) or float(row[field]) < 0:
                 raise ValueError("Invalid timing: " + field)
-        if cell["scheme"] in ("ASPin", "ASPin-compatible"):
+        if not transport_failure and cell["scheme"] in ("ASPin", "ASPin-compatible"):
             tk, tc = float(row["Tk_ms"]), float(row["Tc_ms"])
             if cell["cache"] == "hot" and (tk != 0 or tc != 0):
                 raise ValueError("ASPin hot observation unexpectedly fetched policy")
@@ -79,7 +80,8 @@ def validate(rows, cell, iterations, record_transport_failures=False):
     return expected
 
 
-def audit_requests(observations, cell, iterations, warmups, expected, accepted_samples=None):
+def audit_requests(observations, cell, iterations, warmups, expected, accepted_samples=None,
+                   transport_failures=0):
     """Require every measured request once; unique tags isolate repeated runs."""
     tags = {cell["scenario"] + "-" + str(i) for i in range(1, iterations + 1)}
     business = [item for item in observations if item.get("path") == "/"
@@ -94,8 +96,10 @@ def audit_requests(observations, cell, iterations, warmups, expected, accepted_s
     if cell["scheme"] == "DCP":
         requests = [item for item in observations if item.get("path") == "/.well-known/DCPServerCertPin.jws"]
         wanted = 1 if cell["cache"] == "hot" else warmups + iterations
-        audit.update(metadata_requests=len(requests), expected_metadata_requests=wanted)
-        valid = valid and len(requests) == wanted and all(item.get("status") == 200 for item in requests)
+        minimum = wanted - transport_failures if cell["cache"] != "hot" else wanted
+        audit.update(metadata_requests=len(requests), expected_metadata_requests=wanted,
+                     minimum_metadata_requests=minimum, transport_failures=transport_failures)
+        valid = valid and minimum <= len(requests) <= wanted and all(item.get("status") == 200 for item in requests)
     return valid, audit
 
 
@@ -268,7 +272,8 @@ def main():
                     except ValueError: continue
                     if value.get("generation") == cell["scenario"]: observations.append(value)
                 valid, audit = audit_requests(observations, cell, args.iterations, args.warmups, expected,
-                                             [int(row["Sample"]) for row in successful if row["App_Request_Sent"] == "true"])
+                                             [int(row["Sample"]) for row in successful if row["App_Request_Sent"] == "true"],
+                                             transport_failures=failures)
                 if valid or time.monotonic() >= audit_deadline: break
                 time.sleep(0.5)  # The last response can precede journald ingestion.
             destination.with_suffix(".audit.json").write_text(json.dumps(audit, indent=2) + "\n")

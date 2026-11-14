@@ -1,17 +1,21 @@
 # ASPin protocol, model, and evaluation specifications
 
-These documents expand the compact material in Appendices D and E. They
+These documents expand the compact material in Appendices B and C. They
 describe existing symbolic models, saved verification results, and measurement
 protocols, not additional proofs or Android experiments.
 
+- [Model assumptions, Android prototype gaps, and the model/experiment consistency table](model-prototype-gap.md)
 - [Model setup, network attacks, cross-app use, cache, and fail-closed behavior](proverif-models.md)
 - [Certificate changes, migration, key rotation, and lifecycle boundaries](proverif-lifecycle.md)
 - [Evaluation controls, timing definitions, cache, and API robustness](evaluation-protocol.md)
 - [Cross-app, fail-closed, certificate-change, public-CA, migration, and key-rotation experiments](evaluation-scenarios.md)
 
-The document order follows the paper's Security Analysis and Evaluation. Model assumptions
-and the Android prototype gap remain stated in Appendix C; moving trace-level
-details here does not remove or strengthen those assumptions.
+The document order follows the paper's Security Analysis and Evaluation.
+The complete model/prototype comparison is in
+[model-prototype-gap.md](model-prototype-gap.md). The paper retains the essential
+model assumptions and a brief statement of the prototype's time/storage
+limitations; the detailed crosswalk does not strengthen the proof or experiment
+coverage.
 
 From the repository root, check documentation/model/result consistency with:
 

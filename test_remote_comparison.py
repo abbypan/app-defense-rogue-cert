@@ -63,6 +63,32 @@ class RemoteComparisonTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             MATRIX.validate([failed | {"Result": "PASS"}], cell, 1, record_transport_failures=True)
 
+    def test_failed_cold_aspin_fetch_does_not_require_success_timings(self):
+        cell = next(c for c in MATRIX.plan() if c['scheme'] == 'ASPin'
+                    and c['phase'] == 'real' and c['cache'] == 'cold-forced-refresh')
+        _, template = self.row()
+        row = template | {key.title() if key != 'algorithm' else 'Algorithm': cell[key]
+                          for key in ('scheme', 'mode', 'phase', 'cache', 'algorithm')}
+        row.update(Scenario=cell['scenario'], Outcome='network_error', Expected_Outcome='accepted',
+                   Result='FAIL', Error_Class='java.lang.IllegalStateException')
+        MATRIX.validate([row], cell, 1, record_transport_failures=True)
+        with self.assertRaises(ValueError):
+            MATRIX.validate([row], cell, 1)
+        with self.assertRaises(ValueError):
+            MATRIX.validate([row | {'Outcome': 'native_tls_error'}], cell, 1, True)
+
+    def test_dcp_transport_failures_do_not_count_as_policy_rejections(self):
+        cell = next(c for c in MATRIX.plan('fresh') if c['scheme'] == 'DCP'
+                    and c['phase'] == 'real' and c['cache'] == 'cold-forced-refresh')
+        events = [{'path': '/.well-known/DCPServerCertPin.jws', 'status': 200}] * 2
+        events += [{'path': '/', 'observation': cell['scenario'] + '-1', 'status': 200}]
+        valid, audit = MATRIX.audit_requests(events, cell, 2, 1, 'accepted', [1], transport_failures=1)
+        self.assertTrue(valid)
+        self.assertEqual(audit['business_requests'], 1)
+        self.assertEqual(audit['metadata_requests'], 2)
+        self.assertFalse(MATRIX.audit_requests(events, cell, 2, 1, 'accepted', [1])[0])
+        self.assertFalse(MATRIX.audit_requests(events[1:], cell, 2, 1, 'accepted', [1], 1)[0])
+
 
 if __name__ == "__main__":
     unittest.main()

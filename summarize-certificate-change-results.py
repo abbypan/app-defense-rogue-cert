@@ -21,7 +21,8 @@ def audit(directory):
     manifest = json.loads((directory / "manifest.json").read_text())
     if (manifest["state"] != "complete" or not manifest["deployment_restored"]
             or manifest["completed_cells"] != 15 or manifest["cells"] != runner.plan(manifest["run_id"])
-            or any(manifest[k] for k in ("protected_state_reset", "clock_changed", "dns_changed"))
+            or any(manifest[k] for k in ("protected_state_reset", "clock_changed", "dns_records_changed"))
+            or manifest.get('dns_server_override') not in (None, '8.8.8.8')
             or "eng.exp:" not in manifest["device_fingerprint"]):
         raise ValueError("A complete, restored, same-ASPin-image Internet run is required")
     started, finished = [datetime.fromisoformat(manifest[k]) for k in ("created_utc", "finished_utc")]

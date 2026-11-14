@@ -126,13 +126,34 @@ public final class SchemeComparisonBenchmark {
                 else result.connection = System.nanoTime() - connectionStart;
             }
             result.outcome = "network_error".equals(stage) && RttBenchmarkChecks.isPolicyRejection(failure, scheme)
-                    ? "policy_rejected" : stage;
+                    ? "policy_rejected" : isTransportFailure(failure, stage) ? "network_error"
+                    : "network_error".equals(stage) ? "native_tls_error" : stage;
             result.errorClass = failure.getClass().getName();
             result.error = String.valueOf(failure.getMessage());
         } finally {
             if (connection != null) connection.disconnect();
         }
         return result;
+    }
+
+    private static boolean isTransportFailure(Exception failure, String stage) {
+        for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+            if (cause instanceof java.net.SocketTimeoutException
+                    || cause instanceof java.net.ConnectException
+                    || cause instanceof java.net.UnknownHostException
+                    || cause instanceof java.net.NoRouteToHostException
+                    || cause instanceof java.net.SocketException) return true;
+        }
+        // Binder preserves the service's message, not its original network
+        // exception type. Recognize concrete transport diagnostics, not a
+        // signature, freshness, or policy-validation failure.
+        String message = String.valueOf(failure.getMessage());
+        return "policy_error".equals(stage)
+                && message.startsWith("ASPin validation failed: ")
+                && (message.contains("failed to connect to ")
+                    || message.endsWith("Read timed out")
+                    || message.endsWith("Connection timed out")
+                    || message.contains("Unable to resolve host "));
     }
 
     private static void requireExpected(Observation value, String expected) {

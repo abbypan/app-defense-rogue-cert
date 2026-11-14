@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+p4886d9f3e9b9-primary-tk-bound-blocked-hot-self,com.cert.aspin,self,,protected,false,true,hot,1794638712291,1794638708000,1794638768000,0.000000,0.000000,4.826986,344.696940,true,true,accepted,accepted,PASS,"",""

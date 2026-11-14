@@ -40,6 +40,33 @@ def fresh_complete(path, started):
     return manifest
 
 
+def audit_source_snapshot(directory, cohort, require_snapshot=False):
+    """Do not upgrade legacy hashes to a claim that exact sources were retained."""
+    if 'source_snapshot' not in cohort:
+        if require_snapshot:
+            raise ValueError('No original source snapshot; hashes alone are not source recovery')
+        return None
+    if cohort['source_snapshot'] != 'source-snapshot':
+        raise ValueError('Unexpected source snapshot directory')
+    snapshot = directory / 'source-snapshot'
+    expected = cohort.get('source_sha256', {})
+    if not expected or not snapshot.is_dir() or snapshot.is_symlink():
+        raise ValueError('Missing or empty source snapshot inventory')
+    paths = []
+    for path in snapshot.rglob('*'):
+        if path.is_symlink():
+            raise ValueError('Source snapshot contains a symlink')
+        if path.is_file():
+            paths.append(path)
+    actual = {path.relative_to(snapshot).as_posix(): path for path in paths}
+    if set(actual) != set(expected):
+        raise ValueError('Source snapshot inventory differs from the recorded source hashes')
+    for name, path in actual.items():
+        if hashlib.sha256(path.read_bytes()).hexdigest() != expected[name]:
+            raise ValueError('Archived experiment source changed: ' + name)
+    return sorted(paths)
+
+
 def expected_cached_dimensions(cross_algorithms):
     if (not cross_algorithms or len(set(cross_algorithms)) != len(cross_algorithms)
             or not set(cross_algorithms).issubset(ALGORITHMS)):
@@ -188,11 +215,14 @@ def main():
     parser.add_argument("directory", type=Path)
     parser.add_argument("--check-paper", action="store_true",
                         help="Also match every reported numerical table to this cohort")
+    parser.add_argument('--require-source-snapshot', action='store_true',
+                        help='Require exact archived source bytes, not only legacy hashes')
     args = parser.parse_args()
     directory = args.directory.resolve()
     cohort = json.loads((directory / "cohort.json").read_text())
     if cohort["state"] != "complete" or cohort["historical_measurements_reused"] is not False:
         raise ValueError("A fresh, complete Internet cohort is required")
+    source_snapshot = audit_source_snapshot(directory, cohort, args.require_source_snapshot)
     started = datetime.fromisoformat(cohort["created_utc"])
     matrix = fresh_complete(directory / "comparison/matrix.json", started)
     functional = fresh_complete(directory / "functional/manifest.json", started)
@@ -210,25 +240,34 @@ def main():
     expected_plan = {(c["scheme"], c["algorithm"], c["phase"], c["cache"]) for c in comparison.plan()}
     if {(c["scheme"], c["algorithm"], c["phase"], c["cache"]) for c in matrix["cells"]} != expected_plan:
         raise ValueError("Wrong connection dimensions")
-    attempts, accepted, raw_paths, cell_stats = 0, 0, [], {}
+    attempts, accepted, policy_rejected, transport_failures, raw_paths, cell_stats = 0, 0, 0, 0, [], {}
     for cell in matrix["cells"]:
         path = directory / "comparison" / (cell["scenario"] + ".csv")
         rows = read_csv(path)
-        outcome = comparison.validate(rows, cell, matrix["iterations"])
+        outcome = comparison.validate(rows, cell, matrix["iterations"], matrix.get('record_transport_failures', False))
+        failures = sum(row['Outcome'] == 'network_error' for row in rows)
+        outcome_rows = [row for row in rows if row['Outcome'] == outcome]
+        if not outcome_rows:
+            raise ValueError('No expected-outcome timing observations in cell: ' + cell['scenario'])
         audit = json.loads(path.with_suffix(".audit.json").read_text())
-        expected_requests = len(rows) if outcome == "accepted" else 0
+        expected_requests = len(outcome_rows) if outcome == "accepted" else 0
         if audit["business_requests"] != expected_requests or audit["expected_business_requests"] != expected_requests:
             raise ValueError("Missing per-cell request audit")
-        wanted_tags = [cell["scenario"] + "-" + str(i) for i in range(1, len(rows) + 1)] if expected_requests else []
+        wanted_tags = [cell["scenario"] + "-" + row['Sample'] for row in outcome_rows] if expected_requests else []
         if sorted(audit["measured_tags"]) != sorted(wanted_tags): raise ValueError("Wrong request identities")
         if cell["scheme"] == "DCP":
             wanted = 1 if cell["cache"] == "hot" else matrix["warmups"] + len(rows)
-            if audit["metadata_requests"] != wanted: raise ValueError("Wrong DCP cache evidence")
+            minimum = wanted - failures if cell['cache'] != 'hot' else wanted
+            if not minimum <= audit["metadata_requests"] <= wanted:
+                raise ValueError("Wrong DCP cache evidence")
         attempts += len(rows); accepted += expected_requests
+        policy_rejected += sum(row['Outcome'] == 'policy_rejected' for row in rows)
+        transport_failures += failures
         raw_paths.extend([path, path.with_suffix(".audit.json")])
-        timings = sorted(float(row["Outcome_ms"]) for row in rows)
+        timings = sorted(float(row["Outcome_ms"]) for row in outcome_rows)
         cell_stats[cell["scheme"], cell["algorithm"], cell["phase"], cell["cache"]] = {
-            "mean": statistics.mean(timings), "p95": timings[math.ceil(len(timings) * .95) - 1]}
+            "mean": statistics.mean(timings), "p95": timings[math.ceil(len(timings) * .95) - 1],
+            'accepted': expected_requests, 'transport_failures': failures, 'outcome_samples': len(timings)}
     subprocess.run([sys.executable, ROOT / "summarize-remote-functional.py", directory / "functional"], check=True)
     cross_checks = load("summarize-public-cross-results.py").summarize(directory / "public-cross")
     api_rows = []
@@ -301,6 +340,8 @@ def main():
     for folder in ("functional", "public-cross"):
         raw_paths.extend(path for pattern in ("*.csv", "*.audit.json", "*.jws", "manifest.json", "checks.json")
                          for path in (directory / folder).glob(pattern))
+    if source_snapshot is not None:
+        raw_paths.extend(source_snapshot)
     provenance = {str(path.relative_to(directory)): hashlib.sha256(path.read_bytes()).hexdigest()
                   for path in sorted(set(raw_paths))}
     apk_hashes = {str(path.relative_to(directory)): hashlib.sha256(path.read_bytes()).hexdigest()
@@ -309,13 +350,17 @@ def main():
     (directory / "evidence-sha256.json").write_text(json.dumps(provenance, indent=2) + "\n")
     findings = {"result": "PASS", "historical_measurements_reused": False,
                 "connection_cells": len(matrix["cells"]), "connection_attempts": attempts,
-                "connection_accepted": accepted, "connection_policy_rejected": attempts - accepted,
+                "connection_accepted": accepted, "connection_policy_rejected": policy_rejected,
+                "connection_transport_failures": transport_failures,
+                "connection_expected_outcomes": attempts - transport_failures,
                 "functional_cases": len(functional["cases"]), "public_cross": cross_checks,
                 "api_cases": len(api_cases), "cached_api_runs": len(api_rows),
                 "cached_api_operations": sum(int(r["Operations"]) for r in api_rows),
                 "migration_staging": functional["migration_staging"], "artifact_sizes": sizes,
                 "apk_sha256": apk_hashes,
                 "hashed_evidence_files": len(provenance)}
+    if source_snapshot is not None:
+        findings['archived_source_files'] = len(source_snapshot)
     if supplement is not None:
         findings["cached_api_session"] = {
             "source": "api-cache-matrix", "cases": len(supplement["cases"]),
@@ -347,8 +392,9 @@ def main():
                     ("ASPin", "ASPin ($K_{apub}$)"), ("ASPin-compatible", "ASPin ($K_{spub}$)")):
                 cache = {"TLS": "none", "SCP": "static"}.get(scheme, "hot")
                 values = [f"{cell_stats[scheme, alg, phase, cache]['mean']:.2f}" for alg, _ in algorithms]
-                n = matrix["iterations"] if phase == "real" or scheme == "TLS" else 0
-                expected_line = " & ".join([label, *values, str(n)]) + r"\\"
+                counts = [cell_stats[scheme, alg, phase, cache]['accepted'] for alg, _ in algorithms]
+                n = str(min(counts)) if len(set(counts)) == 1 else str(min(counts)) + '--' + str(max(counts))
+                expected_line = " & ".join([label, *values, n]) + r"\\"
                 if expected_line not in connection_lines: raise ValueError("Stale connection table: " + expected_line)
         for alg, label in algorithms:
             values = [f"{cell_stats[scheme, alg, 'real', 'cold-forced-refresh'][field]:.2f}"

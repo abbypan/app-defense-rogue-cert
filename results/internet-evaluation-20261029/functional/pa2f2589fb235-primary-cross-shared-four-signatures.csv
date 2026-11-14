@@ -1,2 +1,0 @@
-Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
-pa2f2589fb235-primary-cross-shared-four-signatures,com.cert.aspin.caller,cross,com.cert.aspin,protected,true,true,two-token-refresh,1793245580494,1793245554000,1793249154000,92.094238,146.557047,245.761068,455.414918,true,true,accepted,accepted,PASS,"",""

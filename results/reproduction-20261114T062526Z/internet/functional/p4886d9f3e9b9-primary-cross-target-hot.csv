@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+p4886d9f3e9b9-primary-cross-target-hot,com.cert.aspin.caller,cross,com.cert.aspin,protected,false,true,hot,1794638681193,1794638673000,1794642273000,0.000000,0.000000,4.100302,176.298015,true,true,accepted,accepted,PASS,"",""

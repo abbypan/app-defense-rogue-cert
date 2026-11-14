@@ -2,7 +2,7 @@
 """Same-issuer certificate renewal/TLS rekeying on the ASPin-flashed Pixel 8.
 
 Uses the existing isolated hk origin and SNI routing. Restores its manifest,
-state, and server code on exit. Never changes DNS, flashes, clears protected
+state, and server code on exit. Never changes DNS records, flashes, clears protected
 state, moves the clock, or uploads app/claim/manifest-root private keys.
 """
 import argparse
@@ -14,6 +14,7 @@ import hashlib
 import http.client
 import importlib.util
 import json
+import os
 from pathlib import Path
 import re
 import shlex
@@ -202,7 +203,8 @@ def main():
         "hostname": hostname, "iterations": args.iterations, "warmups": args.warmups,
         "certificates": certificate_records, "policy_sha256": policy_hashes, "cells": cells,
         "completed_cells": 0, "scope": "ES256 functional observations, fixed order; not a latency comparison",
-        "protected_state_reset": False, "clock_changed": False, "dns_changed": False,
+        "protected_state_reset": False, "clock_changed": False, "dns_records_changed": False,
+        "dns_server_override": os.environ.get('ASPIN_BENCHMARK_DNS'),
         "scp_resource_sha256": digest(directory / "scp-res/xml/network_security_config.xml"),
         "source_sha256": {name: digest(ROOT / name) for name in (
             "run-certificate-change-benchmark.py", "prepare-certificate-change.py",

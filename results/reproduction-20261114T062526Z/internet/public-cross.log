@@ -1,0 +1,173 @@
+> Gradle task :app:assemblePublicCrossPrimary for es256 (public-primary)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:prePublicCrossPrimaryBuild UP-TO-DATE
+> Task :app:mergePublicCrossPrimaryNativeDebugMetadata NO-SOURCE
+> Task :app:generatePublicCrossPrimaryBuildConfig UP-TO-DATE
+> Task :app:javaPreCompilePublicCrossPrimary UP-TO-DATE
+> Task :app:checkPublicCrossPrimaryAarMetadata UP-TO-DATE
+> Task :app:processPublicCrossPrimaryNavigationResources UP-TO-DATE
+> Task :app:compilePublicCrossPrimaryNavigationResources UP-TO-DATE
+> Task :app:generatePublicCrossPrimaryResValues UP-TO-DATE
+> Task :app:mapPublicCrossPrimarySourceSetPaths UP-TO-DATE
+> Task :app:generatePublicCrossPrimaryResources UP-TO-DATE
+> Task :app:mergePublicCrossPrimaryResources UP-TO-DATE
+> Task :app:packagePublicCrossPrimaryResources UP-TO-DATE
+> Task :app:parsePublicCrossPrimaryLocalResources UP-TO-DATE
+> Task :app:createPublicCrossPrimaryCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksPublicCrossPrimary UP-TO-DATE
+> Task :app:processPublicCrossPrimaryMainManifest UP-TO-DATE
+> Task :app:processPublicCrossPrimaryManifest UP-TO-DATE
+> Task :app:processPublicCrossPrimaryManifestForPackage UP-TO-DATE
+> Task :app:processPublicCrossPrimaryResources UP-TO-DATE
+> Task :app:compilePublicCrossPrimaryJavaWithJavac
+> Task :app:mergePublicCrossPrimaryShaders UP-TO-DATE
+> Task :app:compilePublicCrossPrimaryShaders NO-SOURCE
+> Task :app:generatePublicCrossPrimaryAssets UP-TO-DATE
+> Task :app:mergePublicCrossPrimaryAssets UP-TO-DATE
+> Task :app:compressPublicCrossPrimaryAssets UP-TO-DATE
+> Task :app:checkPublicCrossPrimaryDuplicateClasses UP-TO-DATE
+> Task :app:desugarPublicCrossPrimaryFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexPublicCrossPrimary UP-TO-DATE
+> Task :app:mergeLibDexPublicCrossPrimary UP-TO-DATE
+> Task :app:dexBuilderPublicCrossPrimary
+> Task :app:mergePublicCrossPrimaryGlobalSynthetics UP-TO-DATE
+> Task :app:processPublicCrossPrimaryJavaRes
+> Task :app:mergePublicCrossPrimaryJniLibFolders UP-TO-DATE
+> Task :app:mergePublicCrossPrimaryNativeLibs NO-SOURCE
+> Task :app:stripPublicCrossPrimaryDebugSymbols NO-SOURCE
+> Task :app:validateSigningPublicCrossPrimary UP-TO-DATE
+> Task :app:writePublicCrossPrimaryAppMetadata UP-TO-DATE
+> Task :app:writePublicCrossPrimarySigningConfigVersions UP-TO-DATE
+> Task :app:mergePublicCrossPrimaryJavaResource
+> Task :app:mergeProjectDexPublicCrossPrimary
+> Task :app:packagePublicCrossPrimary
+> Task :app:createPublicCrossPrimaryApkListingFileRedirect UP-TO-DATE
+> Task :app:assemblePublicCrossPrimary
+
+[Incubating] Problems report is available at: file:///mnt/code/aspin/ASPin/es256/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 2s
+36 actionable tasks: 6 executed, 30 up-to-date
+> zipalign for es256 (public-primary)
+> APK signing for es256 (public-primary)
+> APK verification for es256 (public-primary)
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=APP, OU=Dev, O=MyCompany, L=City, ST=State, C=CN
+Signer #1 certificate SHA-256 digest: bb84932447c40f59859bf7be4592b53db0a1f3dfba4c02830f1f8f2fec09a598
+Signer #1 certificate SHA-1 digest: c1b8f925228b03d1d4e2dce126157cec59863020
+Signer #1 certificate MD5 digest: 9f13e29001961402a4a54da3c257bfc9
+Signer #1 key algorithm: EC
+Signer #1 key size (bits): 256
+Signer #1 public key SHA-256 digest: 424b7ce3e6797b53afdd70f756d258b39a15770e7af61fb5a3ccb04f0cf1f669
+Signer #1 public key SHA-1 digest: 8a97cc44be2f6131f0453585490ea148db9081c9
+Signer #1 public key MD5 digest: 9d98c71e61229d33ed09c904f3dcd199
+--> Built and signed es256 public-primary APK: /mnt/code/aspin/results/reproduction-20261114T062526Z/internet/public-cross/apks/ASPin-es256-public-primary.apk
+> Gradle task :app:assemblePublicCrossCompatible for es256 (public-compatible)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:prePublicCrossCompatibleBuild UP-TO-DATE
+> Task :app:mergePublicCrossCompatibleNativeDebugMetadata NO-SOURCE
+> Task :app:generatePublicCrossCompatibleBuildConfig UP-TO-DATE
+> Task :app:javaPreCompilePublicCrossCompatible UP-TO-DATE
+> Task :app:checkPublicCrossCompatibleAarMetadata UP-TO-DATE
+> Task :app:processPublicCrossCompatibleNavigationResources UP-TO-DATE
+> Task :app:compilePublicCrossCompatibleNavigationResources UP-TO-DATE
+> Task :app:generatePublicCrossCompatibleResValues UP-TO-DATE
+> Task :app:mapPublicCrossCompatibleSourceSetPaths UP-TO-DATE
+> Task :app:generatePublicCrossCompatibleResources UP-TO-DATE
+> Task :app:mergePublicCrossCompatibleResources UP-TO-DATE
+> Task :app:packagePublicCrossCompatibleResources UP-TO-DATE
+> Task :app:parsePublicCrossCompatibleLocalResources UP-TO-DATE
+> Task :app:createPublicCrossCompatibleCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksPublicCrossCompatible UP-TO-DATE
+> Task :app:processPublicCrossCompatibleMainManifest UP-TO-DATE
+> Task :app:processPublicCrossCompatibleManifest UP-TO-DATE
+> Task :app:processPublicCrossCompatibleManifestForPackage UP-TO-DATE
+> Task :app:processPublicCrossCompatibleResources UP-TO-DATE
+> Task :app:compilePublicCrossCompatibleJavaWithJavac
+> Task :app:mergePublicCrossCompatibleShaders UP-TO-DATE
+> Task :app:compilePublicCrossCompatibleShaders NO-SOURCE
+> Task :app:generatePublicCrossCompatibleAssets UP-TO-DATE
+> Task :app:mergePublicCrossCompatibleAssets UP-TO-DATE
+> Task :app:compressPublicCrossCompatibleAssets UP-TO-DATE
+> Task :app:checkPublicCrossCompatibleDuplicateClasses UP-TO-DATE
+> Task :app:desugarPublicCrossCompatibleFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexPublicCrossCompatible UP-TO-DATE
+> Task :app:mergeLibDexPublicCrossCompatible UP-TO-DATE
+> Task :app:dexBuilderPublicCrossCompatible
+> Task :app:mergePublicCrossCompatibleGlobalSynthetics UP-TO-DATE
+> Task :app:processPublicCrossCompatibleJavaRes
+> Task :app:mergePublicCrossCompatibleJniLibFolders UP-TO-DATE
+> Task :app:mergePublicCrossCompatibleNativeLibs NO-SOURCE
+> Task :app:stripPublicCrossCompatibleDebugSymbols NO-SOURCE
+> Task :app:validateSigningPublicCrossCompatible UP-TO-DATE
+> Task :app:writePublicCrossCompatibleAppMetadata UP-TO-DATE
+> Task :app:writePublicCrossCompatibleSigningConfigVersions UP-TO-DATE
+> Task :app:mergeProjectDexPublicCrossCompatible
+> Task :app:mergePublicCrossCompatibleJavaResource
+> Task :app:packagePublicCrossCompatible
+> Task :app:createPublicCrossCompatibleApkListingFileRedirect UP-TO-DATE
+> Task :app:assemblePublicCrossCompatible
+
+[Incubating] Problems report is available at: file:///mnt/code/aspin/ASPin/es256/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1s
+36 actionable tasks: 6 executed, 30 up-to-date
+> zipalign for es256 (public-compatible)
+> APK signing for es256 (public-compatible)
+> APK verification for es256 (public-compatible)
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=APP, OU=Dev, O=MyCompany, L=City, ST=State, C=CN
+Signer #1 certificate SHA-256 digest: bb84932447c40f59859bf7be4592b53db0a1f3dfba4c02830f1f8f2fec09a598
+Signer #1 certificate SHA-1 digest: c1b8f925228b03d1d4e2dce126157cec59863020
+Signer #1 certificate MD5 digest: 9f13e29001961402a4a54da3c257bfc9
+Signer #1 key algorithm: EC
+Signer #1 key size (bits): 256
+Signer #1 public key SHA-256 digest: 424b7ce3e6797b53afdd70f756d258b39a15770e7af61fb5a3ccb04f0cf1f669
+Signer #1 public key SHA-1 digest: 8a97cc44be2f6131f0453585490ea148db9081c9
+Signer #1 public key MD5 digest: 9d98c71e61229d33ed09c904f3dcd199
+--> Built and signed es256 public-compatible APK: /mnt/code/aspin/results/reproduction-20261114T062526Z/internet/public-cross/apks/ASPin-es256-public-compatible.apk
+pcb8c72a635822-primary-le-only-le
+pcb8c72a635822-primary-le-only-zerossl
+pcb8c72a635822-primary-le-only-padded-zerossl
+pcb8c72a635822-primary-dual-le-full
+pcb8c72a635822-primary-dual-le-short
+pcb8c72a635822-primary-dual-zerossl
+pcb8c72a635822-primary-ancestor-only-le
+pcb8c72a635822-primary-zerossl-only-zerossl
+pcb8c72a635822-primary-zerossl-only-le
+pcb8c72a635822-compatible-le-only-le
+pcb8c72a635822-compatible-le-only-zerossl
+pcb8c72a635822-compatible-le-only-padded-zerossl
+pcb8c72a635822-compatible-dual-le-full
+pcb8c72a635822-compatible-dual-le-short
+pcb8c72a635822-compatible-dual-zerossl
+pcb8c72a635822-compatible-ancestor-only-le
+pcb8c72a635822-compatible-zerossl-only-zerossl
+pcb8c72a635822-compatible-zerossl-only-le
+Completed public-root-only experiment; run summarize-public-cross-results.py

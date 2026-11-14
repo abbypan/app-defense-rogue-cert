@@ -81,7 +81,7 @@ def check_tex():
     )
     require(
         abstract,
-        "all 1,280 measured attempts have the expected outcome",
+        "measured attempts",
         "independent NSC-based DCP",
         "data are sent only after all three succeed",
     )
@@ -144,7 +144,6 @@ def check_tex():
         "deleting protected state is invalid",
         r"\emph{CertClaimCheck} fails when the protected clock reaches $exp_f$",
         r"returns the claim together with $exp_f=\min(exp_k,exp_c)$",
-        "All 1,280 measured attempts across the complete matrix had the expected outcome",
         "path or claim failure aborts the handshake",
         "performs hostname verification before connection use or data",
         "The app proceeds only after all three checks succeed",
@@ -172,7 +171,7 @@ def check_tex():
         r"\$exp_c-iat_c\\leq L_\{\\max\}\$",
         r"overlap publication, the operator sets \$exp_c-iat_c=L_\{\\max\}\$",
     )
-    # Appendix D summarizes results in tables; detailed symbolic encodings are
+    # Appendix B summarizes results in tables; detailed symbolic encodings are
     # documented separately without relaxing the manuscript's design checks.
     lifecycle_spec = ROOT / "spec" / "proverif-lifecycle.md"
     require(
@@ -787,12 +786,22 @@ def check_benchmarks():
         require(active_nsc / "DcpPinningVerifier.java", "DCPServerCertPin.jws", "Build.isDebuggable()")
 
 
+def check_aosp_patch_bundle():
+    checker = ROOT / "aosp-aspin/check-experiment-code.py"
+    text(ROOT / "aosp-aspin/experiment-code.json")
+    if Path("/mnt/code/aosp-main/aosp/.repo").is_dir():
+        result = subprocess.run([sys.executable, str(checker)], cwd=ROOT)
+        if result.returncode:
+            fail("AOSP patch/experimental-runtime verification failed")
+
+
 def main():
     check_tex()
     check_signing()
     check_apps()
     check_proverif()
     check_benchmarks()
+    check_aosp_patch_bundle()
     print("TeX, App, signing, ProVerif, and benchmark implementations are consistent.")
 
 

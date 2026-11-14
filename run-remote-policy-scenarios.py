@@ -2,7 +2,8 @@
 """Audited public-CA, direct-Internet cross-app and fail-closed device cases.
 
 Run after the four-scheme comparison. Uses the existing isolated hk origin;
-never flashes, resets protected state, changes DNS, or sends authority keys.
+never flashes, resets protected state, or sends authority keys. DNS changes
+only when explicitly requested through ASPIN_BENCHMARK_DNS.
 """
 import argparse
 import atexit

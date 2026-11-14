@@ -2,8 +2,9 @@
 """Fresh, sequential Internet-only evaluation cohort on the ASPin Pixel 8.
 
 Launch this script in an independent background service. Never resumes a
-historical result directory, flashes a phone, changes DNS, or copies authority
-private keys to a server. All builds use at most 24 workers.
+historical result directory, flashes a phone, or copies authority private keys
+to a server. DNS changes only via an explicit ASPIN_BENCHMARK_DNS override.
+All builds use at most 24 workers. Transport failures remain failed samples.
 """
 import argparse
 from datetime import datetime, timezone
@@ -16,6 +17,54 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parent
+SOURCE_PATTERNS = (
+    '*.py',
+    'ASPin/shared/**/*.java', 'ASPin/*/app/src/main/java/**/*.java',
+    'ASPin/*/build.gradle*', 'ASPin/*/settings.gradle*', 'ASPin/*/gradle.properties',
+    'ASPin/*/app/build.gradle*', 'ASPin/*/app/src/**/AndroidManifest.xml',
+    'ASPin/*/app/src/**/res/**/*.xml', 'ASPin/*/gradle/wrapper/*',
+    'ASPin/*/app/src/**/res/raw/*.pem',
+    'ASPin/*/gradlew', 'ASPin/*/gradlew.bat',
+    'signing/**/*.py', 'signing/**/*.sh',
+    'signing/*/my-app-cert.pem', 'signing/*/my-app-pubkey.pem',
+    'signing/*/my-claim-pubkey.pem', 'signing/*/my-dcp-pubkey.pem',
+    'signing/*/my-dcp-pub.txt', 'signing/*/my-app-cert-scp-hash.txt',
+    'realserver/etc/cert/*/real-cert.pem', 'realserver/etc/cert/*/real-chain.pem',
+    'rogueserver/etc/cert/*/rogue-cert.pem', 'rogueserver/etc/cert/*/rogue-chain.pem',
+    'remote-experiment/*.py',
+)
+
+
+def snapshot_sources(root, directory):
+    """Keep bytes as well as hashes of the selected public experiment sources."""
+    root = root.resolve()
+    paths = sorted({path for pattern in SOURCE_PATTERNS
+                    for path in root.glob(pattern) if path.is_file()})
+    if not paths:
+        raise ValueError('No experiment sources to archive')
+    # Validate before creating a snapshot; never follow a source symlink into
+    # private files or material outside the selected source tree.
+    for path in paths:
+        if any(part.is_symlink() for part in (path, *path.parents) if part != root):
+            raise ValueError('Source snapshot does not allow symlinks: ' + str(path))
+        path.resolve().relative_to(root)
+    snapshot = directory / 'source-snapshot'
+    snapshot.mkdir(exist_ok=False)
+    hashes = {}
+    for path in paths:
+        relative = path.relative_to(root)
+        content = path.read_bytes()
+        target = snapshot / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(content)
+        hashes[relative.as_posix()] = hashlib.sha256(content).hexdigest()
+    return hashes
+
+
+def check_sources_unchanged(root, hashes):
+    for name, expected in hashes.items():
+        if hashlib.sha256((root / name).read_bytes()).hexdigest() != expected:
+            raise ValueError('Experiment source changed after snapshot: ' + name)
 
 
 def main():
@@ -30,7 +79,9 @@ def main():
     directory.mkdir(parents=True, exist_ok=False)
     manifest = {"state": "running", "created_utc": datetime.now(timezone.utc).isoformat(),
                 "transport": "Pixel 8 Wi-Fi Internet to public-CA HTTPS origins on hk:443",
-                "historical_measurements_reused": False, "stages": [], "workers": 24}
+                "historical_measurements_reused": False, "stages": [], "workers": 24,
+                "transport_failures_kept": True,
+                "dns_server_override": os.environ.get('ASPIN_BENCHMARK_DNS')}
     env = os.environ | {"JAVA_HOME": "/usr/lib/jvm/java-21-openjdk", "PYTHONUNBUFFERED": "1"}
 
     def save():
@@ -54,12 +105,12 @@ def main():
     py = sys.executable
     apks = directory / "apks"
     try:
-        manifest["source_sha256"] = {
-            str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
-            for pattern in ("run-remote-*.py", "run-public-cross-benchmark.py", "ASPin/shared/**/*.java",
-                            "ASPin/*/app/src/main/java/**/*.java", "remote-experiment/*.py")
-            for path in ROOT.glob(pattern) if path.is_file()}
         stage("fresh-policies", [py, ROOT / "gen-trust-artifacts.py"])
+        # Pin-set XML is regenerated with the fresh fixtures. Retain the exact
+        # public inputs that the following APK build consumes, not stale XML.
+        manifest["source_sha256"] = snapshot_sources(ROOT, directory)
+        manifest["source_snapshot"] = "source-snapshot"
+        save()
         for variant in ("es256", "es384", "rsa3072", "rsa4096"):
             target = directory / "matrix-artifacts" / variant
             target.mkdir(parents=True)
@@ -80,16 +131,19 @@ def main():
         stage("sign-manifest-rotation", [py, ROOT / "gen-signed-apks.py", "--skip-build",
               "--variant", "es256", "--mode", "compatible", "--output-dir", rotated])
         shutil.copyfile(rotated / "ASPin-es256-compatible.apk", apks / "ASPin-es256-compatible-rotated-root.apk")
+        check_sources_unchanged(ROOT, manifest["source_sha256"])
         stage("connection-matrix", [py, ROOT / "run-remote-comparison.py", "--device", args.device,
               "--deployment", args.deployment, "--apk-dir", apks, "--run-dir", directory / "comparison",
               "--iterations", args.iterations, "--warmups", "3", "--schemes",
-              "DCP", "TLS", "SCP", "ASPin", "ASPin-compatible"])
+              "DCP", "TLS", "SCP", "ASPin", "ASPin-compatible", "--record-transport-failures"])
         stage("functional", [py, ROOT / "run-remote-policy-scenarios.py", "--device", args.device,
               "--deployment", args.deployment, "--apk-dir", apks, "--run-dir", directory / "functional",
               "--short-seconds", "60"])
         stage("public-cross", [py, ROOT / "run-public-cross-benchmark.py", "--device", args.device,
               "--deployment", args.cross_deployment, "--run-dir", directory / "public-cross",
+              "--restore-apk", apks / "ASPin-es256.apk",
               "--iterations", args.iterations])
+        check_sources_unchanged(ROOT, manifest["source_sha256"])
         manifest["state"] = "complete"
     except BaseException as error:
         manifest.update(state="failed", error=str(error))

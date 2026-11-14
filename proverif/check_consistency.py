@@ -69,8 +69,6 @@ TEX_FRAGMENTS = (
     "rather than maintaining a separate manifest-root store",
     r"the mode does not transfer rollback floors across $K_s$ replacements",
     "We analyze twenty-nine symbolic models",
-    "root resolution follows a matching manifest binding",
-    r"compatibility-mode $T_k$ verification uses that resolved $K_{spub}$",
 )
 
 SPEC_FRAGMENTS = (
@@ -96,6 +94,8 @@ SPEC_FRAGMENTS = (
 )
 
 TEX_PATTERNS = (
+    r"(?:root resolution follows a matching manifest binding|compatibility instance explicitly binds \$K_\{spub\}\$ to the authenticated installed manifest)",
+    r"(?:compatibility-mode \$T_k\$ verification uses that resolved \$K_\{spub\}\$|using the resolved \$K_\{spub\}\$ to verify \$T_k\$)",
     r"same hostname may appear in multiple signing-key collections",
     r"trusted operator's deployment-profile upper bound on \$T_c\$ lifetime",
     r"\$exp_c-iat_c\\leq L_\{\\max\}\$",
@@ -213,9 +213,15 @@ def check_sources() -> None:
     require_no_fragments(TEX_APPENDIX, (
         "spec/", "proverif-models.md", "proverif-lifecycle.md",
     ))
-    require_fragments(TEX_APPENDIX, (
-        r"Both modes relate verified $T_k/T_c$ to matching signing events",
+    # A conclusion may appear once in the main analysis; the appendix retains
+    # query tables and construction details rather than repeating its prose.
+    require_patterns_in_files(TEX_SOURCES, (
+        r"(?:Both modes relate verified \$T_k/T_c\$ to matching signing events|In both modes, verified \$T_k\$ and \$T_c\$ have matching signing events)",
+    ))
+    require_fragments_in_files(TEX_SOURCES, (
         "caller-root substitution and unauthorized-issuer data output are unreachable",
+    ))
+    require_fragments(TEX_APPENDIX, (
         r"\label{table:pv-availability}",
         r"\label{table:pv-certificate-change}",
         r"\label{table:pv-cross-sign}",
@@ -920,8 +926,10 @@ def check_cross_sign() -> None:
         r"\subsubsection{Cross-Signed Issuer Certificates}",
         r"\label{app:cross-sign-model}", r"\label{app:cross-sign-experiment}",
         "publisher includes every supported direct-issuer CA certificate variant",
-        "All 360 attempts passed native validation",
         "that exact case remains covered by the model and host regressions",
+    ))
+    require_patterns_in_files(TEX_SOURCES, (
+        r"All 360 (?:attempts|public-CA checks across both modes) passed native validation",
     ))
     require_fragments_in_files(SPEC_SOURCES, (
         "All 15 primary and 18 compatibility queries have their expected outcomes",
@@ -974,7 +982,10 @@ def check_multisig() -> None:
         ))
     require_fragments_in_files(TEX_SOURCES, (
         r"\label{app:multisig-model}",
-        "not device-tested",
+    ))
+    # The full model/device evidence crosswalk was moved out of the PDF.
+    require_fragments(ROOT.parent / "spec" / "model-prototype-gap.md", (
+        "adversarial cache-crossing cases were not device-tested",
     ))
     require_fragments_in_files(SPEC_SOURCES, (
         "unbounded symbolic signature list",

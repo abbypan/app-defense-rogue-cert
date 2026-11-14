@@ -1,0 +1,150 @@
+(* Leaf renewal and TLS-key replacement reuse one unchanged fresh T_k/T_c.
+ * Serial numbers and TLS public keys are explicit certificate fields. Native
+ * certificate validation and proof of TLS-key possession precede the issuer
+ * claim decision. This is a certificate-policy/possession abstraction, not a
+ * complete second TLS protocol. All token/certificate inputs use public c. *)
+
+free certificate_change_origin: timestamp.
+free certificate_change_time: channel [private].
+const renewed_tls_key: bitstring.
+const leaf_original: bitstring.
+const leaf_renewed: bitstring.
+const leaf_rekeyed: bitstring.
+const leaf_rogue: bitstring.
+const leaf_invalid: bitstring.
+const leaf_wrong_host: bitstring.
+const wrong_certificate_identity: bitstring.
+
+fun renewal_content(pkey, bitstring, bitstring, bitstring): bitstring [data].
+fun renewal_certificate(pkey, bitstring, bitstring, bitstring, bitstring): bitstring [data].
+fun renewal_possession(bitstring, bitstring): bitstring [data].
+
+event CertificatePolicyAuthenticated(pkey, pkey, timestamp, timestamp).
+event CertificateChangeAccepted(
+    pkey, bitstring, pkey, bitstring, bitstring, timestamp).
+event CertificateChangeIssuerRejected(bitstring, bitstring).
+event CertificateChangeExpired(timestamp).
+
+let CertificateChangePublisher =
+  let root_sk = gen_sk_for_id(app_signing) in
+  let delegated_sk = gen_sk_for_id(claim_signing) in
+  let iat = certificate_change_origin in
+  let exp = succ_t(succ_t(iat)) in
+  let tk = jws_general_sign(pk2s(pk(root_sk)), pk2s(pk(delegated_sk)),
+      iat, exp, root_sk) in
+  let tc = jws_general_sign(pk2s(pk(delegated_sk)),
+      cert_claim(server_cert_subject_and_san, real_cert_issuer),
+      iat, exp, delegated_sk) in
+  event ClaimKeySign(root_sk, pk(delegated_sk), iat, exp);
+  event CertClaimSign(delegated_sk, server_cert_subject_and_san,
+      real_cert_issuer, iat, exp);
+  out(c, tk); out(c, tc);
+  (out(certificate_change_time, succ_t(iat)) |
+   out(certificate_change_time, exp)).
+
+let CertificateVersionServer(
+    serial: bitstring, key_id: bitstring, identity: bitstring,
+    issuer: bitstring, actual_ca: bitstring) =
+  let leaf_sk = gen_sk_for_id(key_id) in
+  let leaf_key = pk(leaf_sk) in
+  let signature = sig_sign(renewal_content(leaf_key, identity, issuer, serial),
+      gen_sk_for_id(actual_ca)) in
+  let certificate = renewal_certificate(leaf_key, identity, issuer, serial, signature) in
+  in(c, challenge: bitstring);
+  out(c, (certificate, sig_sign(renewal_possession(challenge, certificate), leaf_sk))).
+
+let CertificateChangeVerifier =
+  in(certificate_change_time, now: timestamp);
+  let record = package_signing_record(
+      target_app_id, pk(gen_sk_for_id(app_signing))) in
+  let root = resolve_os_key(record, target_app_id) in
+  in(c, tk: bitstring);
+  let jws_general(hk: bitstring, payload_k: bitstring, sigk: bitstring) = tk in
+  let (=true) = header_matches(hk, root) in
+  let (=true) = jws_general_verify(tk, root) in
+  let kiat = get_iat(payload_k) in
+  let kexp = get_exp(payload_k) in
+  let delegated = s2pk(get_content(payload_k)) in
+  in(c, tc: bitstring);
+  let jws_general(hc: bitstring, payload_c: bitstring, sigc: bitstring) = tc in
+  let (=true) = header_matches(hc, delegated) in
+  let (=true) = jws_general_verify(tc, delegated) in
+  let ciat = get_iat(payload_c) in
+  let cexp = get_exp(payload_c) in
+  let claim = get_content(payload_c) in
+  let identity = get_subject_and_san(claim) in
+  let (=true) = check_host(server_hostname, identity) in
+  let authorized = get_issuer(claim) in
+  let (=true) = token_fresh(kiat, kexp, now) in
+  (
+    let (=true) = token_fresh(ciat, cexp, now) in
+    event ClaimKeyVerify(root, delegated, kiat, kexp);
+    event CertClaimVerify(delegated, identity, authorized, ciat, cexp);
+    event CertificatePolicyAuthenticated(root, delegated, kiat, ciat);
+    new challenge: bitstring;
+    out(c, challenge);
+    in(c, (certificate: bitstring, possession: bitstring));
+    let renewal_certificate(leaf_key: pkey, peer_identity: bitstring,
+        issuer: bitstring, serial: bitstring, signature: bitstring) = certificate in
+    let (=true) = check_host(server_hostname, peer_identity) in
+    let (=true) = check_issuer(issuer, system_ca_list) in
+    let (=true) = sig_verify(renewal_content(leaf_key, peer_identity, issuer, serial),
+        signature, pk(gen_sk_for_id(issuer))) in
+    let (=true) = sig_verify(renewal_possession(challenge, certificate),
+        possession, leaf_key) in
+    if issuer = authorized then
+      event CertificateChangeAccepted(root, serial, leaf_key, peer_identity, issuer, now)
+    else
+      event CertificateChangeIssuerRejected(serial, issuer)
+  )
+  else
+    let (=true) = token_expired(kexp, now) in
+    event CertificateChangeExpired(now).
+
+query root_sk: skey, delegated: pkey, iat: timestamp, exp: timestamp;
+  event(ClaimKeyVerify(pk(root_sk), delegated, iat, exp)) ==>
+  event(ClaimKeySign(root_sk, delegated, iat, exp)).
+query claim_sk: skey, identity: bitstring, issuer: bitstring,
+      iat: timestamp, exp: timestamp;
+  event(CertClaimVerify(pk(claim_sk), identity, issuer, iat, exp)) ==>
+  event(CertClaimSign(claim_sk, identity, issuer, iat, exp)).
+query root: pkey, serial: bitstring, leaf_key: pkey,
+      identity: bitstring, issuer: bitstring, now: timestamp;
+  event(CertificateChangeAccepted(root, serial, leaf_key, identity, issuer, now)) ==>
+  event(CertificatePolicyAuthenticated(root, pk(gen_sk_for_id(claim_signing)),
+      certificate_change_origin, certificate_change_origin)).
+query root: pkey;
+  event(CertificateChangeAccepted(root, leaf_original, pk(gen_sk_for_id(real_server)),
+      server_cert_subject_and_san, real_cert_issuer, succ_t(certificate_change_origin))).
+query root: pkey;
+  event(CertificateChangeAccepted(root, leaf_renewed, pk(gen_sk_for_id(real_server)),
+      server_cert_subject_and_san, real_cert_issuer, succ_t(certificate_change_origin))).
+query root: pkey;
+  event(CertificateChangeAccepted(root, leaf_rekeyed, pk(gen_sk_for_id(renewed_tls_key)),
+      server_cert_subject_and_san, real_cert_issuer, succ_t(certificate_change_origin))).
+query root: pkey, serial: bitstring, key: pkey, identity: bitstring, now: timestamp;
+  event(CertificateChangeAccepted(root, serial, key, identity, rogue_cert_issuer, now)).
+query root: pkey, key: pkey, identity: bitstring, issuer: bitstring, now: timestamp;
+  event(CertificateChangeAccepted(root, leaf_invalid, key, identity, issuer, now)).
+query root: pkey, serial: bitstring, key: pkey, issuer: bitstring, now: timestamp;
+  event(CertificateChangeAccepted(root, serial, key, wrong_certificate_identity, issuer, now)).
+query root: pkey, serial: bitstring, key: pkey, identity: bitstring, issuer: bitstring;
+  event(CertificateChangeAccepted(root, serial, key, identity, issuer,
+      succ_t(succ_t(certificate_change_origin)))).
+query event(CertificateChangeIssuerRejected(leaf_rogue, rogue_cert_issuer)).
+query event(CertificateChangeExpired(succ_t(succ_t(certificate_change_origin)))).
+
+process
+  CertificateChangePublisher | !CertificateChangeVerifier |
+  !CertificateVersionServer(leaf_original, real_server,
+      server_cert_subject_and_san, real_cert_issuer, real_cert_issuer) |
+  !CertificateVersionServer(leaf_renewed, real_server,
+      server_cert_subject_and_san, real_cert_issuer, real_cert_issuer) |
+  !CertificateVersionServer(leaf_rekeyed, renewed_tls_key,
+      server_cert_subject_and_san, real_cert_issuer, real_cert_issuer) |
+  !CertificateVersionServer(leaf_rogue, rogue_server,
+      server_cert_subject_and_san, rogue_cert_issuer, rogue_cert_issuer) |
+  !CertificateVersionServer(leaf_invalid, real_server,
+      server_cert_subject_and_san, real_cert_issuer, rogue_cert_issuer) |
+  !CertificateVersionServer(leaf_wrong_host, real_server,
+      wrong_certificate_identity, real_cert_issuer, real_cert_issuer)

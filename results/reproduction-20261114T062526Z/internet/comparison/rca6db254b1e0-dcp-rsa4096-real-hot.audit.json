@@ -1,0 +1,30 @@
+{
+  "business_requests": 20,
+  "expected_business_requests": 20,
+  "measured_tags": [
+    "rca6db254b1e0-dcp-rsa4096-real-hot-1",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-10",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-11",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-12",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-13",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-14",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-15",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-16",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-17",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-18",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-19",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-2",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-20",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-3",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-4",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-5",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-6",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-7",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-8",
+    "rca6db254b1e0-dcp-rsa4096-real-hot-9"
+  ],
+  "metadata_requests": 1,
+  "expected_metadata_requests": 1,
+  "minimum_metadata_requests": 1,
+  "transport_failures": 0
+}

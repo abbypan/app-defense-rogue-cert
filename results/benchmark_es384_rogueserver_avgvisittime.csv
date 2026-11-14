@@ -1,2 +1,0 @@
-Algorithm,Iterations,Host,StandardTLS_Avg_ms,ASPin_Avg_ms,SCP_Avg_ms,DCP_Avg_ms,TLS_Success_Standard,TLS_Success_ASPin,TLS_Success_SCP,TLS_Success_DCP,HTML_Standard,HTML_ASPin,HTML_SCP,HTML_DCP,Matches_TeX_Design,Timestamp
-ES384 (NIST P-384),2000,es384.idouzi.top,38.49,31.29,29.55,29.05,2000,0,0,0,"rogue  es384","N/A","N/A","N/A",PASS,2026-08-09 23:32:05

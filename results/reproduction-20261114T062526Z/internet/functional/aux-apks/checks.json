@@ -1,0 +1,10 @@
+{
+  "result": "PASS",
+  "verified_utc": "2026-11-14T07:05:52Z",
+  "scope": "Post-functional-run comparison of archived Gradle APKs with the still-installed caller and hidden package APKs; not a signed build attestation",
+  "installed_packages_match_archived_bytes": true,
+  "files_sha256": {
+    "app-crossAppCaller.apk": "dbd6f40917e02b01b11fe4062071f0a806893f98ea67b86adb7bcc2515010090",
+    "app-crossAppHidden.apk": "fff3eff9c09056efb23add99a702fe1eb5b9e86377316c662d4b53e6ad3f6ebe"
+  }
+}

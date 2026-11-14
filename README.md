@@ -120,6 +120,46 @@ The compiled and signed APKs will be saved in `results/apks/`.
 
 ### Complete fresh Internet evaluation (preferred)
 
+For a complete reproduction session, including a measurement-time check of the
+installed system image, all main/API suites, and the certificate-renewal/rekey
+suite, use the top-level runner below. The phone must already have the audited
+image, USB authorization, and Wi-Fi Internet access. This command does not flash
+or wipe the phone. The supplied certificate directory is an input fixture only:
+the runner rechecks its validity, public trust, and renewal/rekey properties,
+then records new observations rather than importing earlier measurements.
+
+```bash
+BENCH_SESSION=/mnt/code/aspin/results/reproduction-$(date -u +%Y%m%dT%H%M%SZ)
+systemd-run --user --unit="aspin-reproduction-$(date -u +%Y%m%dT%H%M%SZ)" \
+  --remain-after-exit --property=WorkingDirectory=/mnt/code/aspin \
+  --property="StandardOutput=append:$BENCH_SESSION.log" \
+  --property="StandardError=append:$BENCH_SESSION.log" \
+  /usr/bin/python3 -u /mnt/code/aspin/run-reproducible-evaluation.py \
+  --run-dir "$BENCH_SESSION" \
+  --deployment /mnt/code/aspin/remote-experiment/deployments/main.json \
+  --cross-deployment /mnt/code/aspin/remote-experiment/deployments/public-cross.json \
+  --certificate-fixtures /mnt/code/aspin/certificate-fixtures/renewal-rekey
+```
+
+Do not launch the component services below at the same time as this top-level
+runner. Its `reproduction.json` records stage status, installed runtime hashes,
+the raw system-partition prefix digest, public source snapshots, and audits.
+It preserves failures and partial observations rather than marking an
+incomplete session successful. APK builds use 24 workers. Device reboots and a
+temporary clock rollback are part of the robustness suite; its cleanup restores
+the clock and automatic-time setting. Test TLS keys remain Git-ignored; app,
+delegation, and DCP authority private keys are not uploaded or source-archived.
+
+If the Wi-Fi-provided DNS is unusable, explicitly add `--dns-server 8.8.8.8` to
+the top-level command. This changes only the active experiment network's Android
+resolver configuration, not its IP address, Wi-Fi credentials, TLS trust, or
+private-DNS mode. Preflights reapply the requested server after test reboots and
+reconnections. The override is recorded in `reproduction.json`; omitting it
+keeps the normal network-provided DNS. The bounded DNS/Internet preflight fails
+before measurements when name resolution is unavailable.
+
+For individual suites instead of the complete top-level session:
+
 This workflow creates a new result cohort, regenerates and publishes public
 policies, rebuilds all four experiment configurations with 24 workers, and runs
 the connection matrix, lifecycle/fail-closed/cross-app scenarios, and public-CA
@@ -137,8 +177,8 @@ systemd-run --user --unit="aspin-internet-$(date -u +%Y%m%dT%H%M%SZ)" \
   --property="StandardError=append:$BENCH_COHORT.log" \
   /usr/bin/python3 -u /mnt/code/aspin/run-internet-evaluation.py \
   --run-dir "$BENCH_COHORT" \
-  --deployment /mnt/code/aspin/results/remote-e2e-20261028/deployment.json \
-  --cross-deployment /mnt/code/aspin/results/public-cross-remote-20261029-v3/deployment.json
+  --deployment /mnt/code/aspin/remote-experiment/deployments/main.json \
+  --cross-deployment /mnt/code/aspin/remote-experiment/deployments/public-cross.json
 ```
 
 After `cohort.json` has appeared, queue the API/robustness suite. Its
@@ -151,7 +191,7 @@ systemd-run --user --unit="aspin-internet-api-$(date -u +%Y%m%dT%H%M%SZ)" \
   --property="StandardOutput=append:$BENCH_COHORT-api.log" \
   --property="StandardError=append:$BENCH_COHORT-api.log" \
   /usr/bin/python3 -u /mnt/code/aspin/run-remote-api-robustness.py \
-  --deployment /mnt/code/aspin/results/remote-e2e-20261028/deployment.json \
+  --deployment /mnt/code/aspin/remote-experiment/deployments/main.json \
   --apk-dir "$BENCH_COHORT/apks" --run-dir "$BENCH_COHORT/api-robustness" \
   --after-cohort "$BENCH_COHORT/cohort.json"
 ```
@@ -198,14 +238,14 @@ tests, flash the device, or reuse old API timing samples.
 Choose a cohort whose `api-cache-matrix/` does not already exist:
 
 ```bash
-CACHED_COHORT=/mnt/code/aspin/results/internet-evaluation-20261029
+CACHED_COHORT=/mnt/code/aspin/results/reproduction-20261114T062526Z/internet
 systemd-run --user --unit="aspin-cached-api-$(date -u +%Y%m%dT%H%M%SZ)" \
   --property=WorkingDirectory=/mnt/code/aspin \
   --property="StandardOutput=append:$CACHED_COHORT/api-cache-matrix.log" \
   --property="StandardError=append:$CACHED_COHORT/api-cache-matrix.log" \
   /usr/bin/python3 -u /mnt/code/aspin/run-remote-api-robustness.py \
   --cache-matrix-only --prepare \
-  --deployment /mnt/code/aspin/results/remote-e2e-20261028/deployment.json \
+  --deployment /mnt/code/aspin/remote-experiment/deployments/main.json \
   --apk-dir "$CACHED_COHORT/api-cache-matrix/apks" \
   --run-dir "$CACHED_COHORT/api-cache-matrix"
 ```
@@ -278,7 +318,7 @@ systemd-run --user --unit="aspin-cert-change-test-$(date -u +%Y%m%dT%H%M%SZ)" \
   --property="StandardOutput=append:$CERT_CHANGE_RUN.benchmark.log" \
   --property=StandardError=inherit \
   /usr/bin/python3 -u /mnt/code/aspin/run-certificate-change-benchmark.py \
-  --deployment /mnt/code/aspin/results/remote-e2e-20261028/deployment.json \
+  --deployment /mnt/code/aspin/remote-experiment/deployments/main.json \
   --run-dir "$CERT_CHANGE_RUN" --iterations 20 --warmups 3
 ```
 
@@ -298,7 +338,7 @@ python3 summarize-certificate-change-results.py "$CERT_CHANGE_RUN" --check-paper
 ```
 
 The completed session is
-`results/certificate-change-internet-20261030T071421Z/`: 15 cells and 300
+`results/reproduction-20261114T062526Z/certificate-change/`: 15 cells and 300
 measured attempts, with 260 acceptances and 40 expected SCP/DCP rekey refusals.
 All configurations accept renewal; both ASPin modes also accept rekeying with
 unchanged tokens. Raw CSVs, public certificates/CSRs, unchanged signed policies,
@@ -317,12 +357,12 @@ record; do not redeploy over unrelated services or repeat an occupied origin por
 
 ```bash
 python3 update-remote-policies.py \
-  --deployment results/remote-e2e-20261028/deployment.json
+  --deployment remote-experiment/deployments/main.json
 python3 run-remote-comparison.py \
   --device 3A201FDJH000GP \
-  --deployment results/remote-e2e-20261028/deployment.json \
-  --apk-dir results/remote-e2e-20261028/apks \
-  --run-dir results/remote-e2e-20261028/comparison-new \
+  --deployment remote-experiment/deployments/main.json \
+  --apk-dir results/reproduction-20261114T062526Z/internet/apks \
+  --run-dir results/comparison-new \
   --iterations 20 --warmups 3
 ```
 
@@ -365,9 +405,9 @@ not the APK's app-signing identity.
 ```bash
 python3 run-remote-policy-scenarios.py \
   --device 3A201FDJH000GP \
-  --deployment results/remote-e2e-20261028/deployment.json \
-  --apk-dir results/remote-e2e-20261028/apks \
-  --run-dir results/remote-e2e-20261028/policy-scenarios-new \
+  --deployment remote-experiment/deployments/main.json \
+  --apk-dir results/reproduction-20261114T062526Z/internet/apks \
+  --run-dir results/policy-scenarios-new \
   --short-seconds 60
 ```
 
@@ -391,7 +431,7 @@ replacement before using its results:
 
 ```bash
 python3 summarize-remote-functional.py \
-  results/remote-e2e-20261028/policy-scenarios-new
+  results/policy-scenarios-new
 ```
 
 The current suite expects 98 observations (49 per mode), including 95 audited
@@ -518,6 +558,85 @@ Preflight and apply the patches:
 The preflight mode performs all checks without changing the checkout. A
 successful application leaves the ASPin changes as normal uncommitted Git
 changes in `frameworks/base`, `external/conscrypt`, and `system/sepolicy`.
+
+### Checking the patches against the paper's experimental runtime
+
+`aosp-aspin/experiment-code.json` records a **retrospective** audit of the
+preserved October 28 image and the October 29/30 paper sessions. It binds the
+patch archive and three baseline/source trees, all 20 modified source files,
+251 byte-identical Java classes, seven files read from the image, and the NSC
+JAR inside its compressed Conscrypt APEX. Isolated recompilation used the
+original compiler actions, with outputs redirected to temporary directories.
+The image's build date, user, incremental version, and fingerprint match the
+connection-matrix record. The audit does not rewrite experiment manifests,
+evidence indexes, or paper measurements.
+
+Check the archive, reconstructed source trees, and archived source revisions:
+
+```bash
+python3 aosp-aspin/check-experiment-code.py \
+  --aosp-root /mnt/code/aosp-main/aosp
+```
+
+The general `check-implementation-consistency.py` also runs this source/patch
+guard when the local AOSP checkout is available, catching later bundle drift.
+
+With the preserved build directory, also check the actual image contents and
+repeat the isolated Java recompilation as an independent background process:
+
+```bash
+systemd-run --user --unit="aspin-code-audit-$(date -u +%Y%m%dT%H%M%SZ)" \
+  --remain-after-exit --property=WorkingDirectory=/mnt/code/aspin \
+  /usr/bin/python3 /mnt/code/aspin/aosp-aspin/check-experiment-code.py \
+  --aosp-root /mnt/code/aosp-main/aosp \
+  --build-out /mnt/code/aosp-main/out/gsi-pixel8-arm64 --recompile
+```
+
+The current reproduction session retains the exact selected experiment driver
+sources and public build inputs. The AOSP record binds the unchanged patch and
+runtime to these snapshots and to the session's measured system-partition and
+component digests. This is not a signed build attestation or a reproducible
+full-image rebuild. Neither audit command flashes an image or performs device
+measurements.
+
+To require complete recorded driver-source coverage as well as the AOSP runtime,
+run:
+
+```bash
+python3 aosp-aspin/check-experiment-code.py --require-complete-sources
+```
+
+This stricter check requires actual archived source bytes for the recorded
+session, not substitute source versions or a hash-only declaration. After a
+new complete session passes both independent evidence audits, bind the runtime
+record to that session before retiring previous result directories:
+
+```bash
+python3 aosp-aspin/refresh-experiment-evidence.py \
+  results/reproduction-20261114T062526Z
+python3 aosp-aspin/check-experiment-code.py --require-complete-sources
+```
+
+Refreshing this metadata does not change the patch archive or any observation.
+The session explicitly records the post-run reference-refresh timestamp.
+
+Future runs of `run-internet-evaluation.py` archive the selected Java/Python
+sources, build configuration, manifests, NSC XML, and public certificate/key
+inputs in `source-snapshot/`, preserving relative paths and exact bytes alongside
+`cohort.json`'s hashes. Private keys are outside this source allowlist.
+The runner refuses source drift before the connection matrix and before
+marking the cohort complete. Audit a newly generated cohort with:
+
+```bash
+python3 summarize-internet-evaluation.py /path/to/new-cohort \
+  --require-source-snapshot --check-paper
+```
+
+The auditor checks the full snapshot inventory and each digest; missing,
+modified, extra, or symlinked files fail. A successful snapshot check covers
+only the selected sources, not a reproducible toolchain or device-image
+attestation by itself. The top-level runner separately records the installed
+image and component digests before measuring.
 
 ### Building the patched OS image
 
@@ -1006,14 +1125,14 @@ ISRG Root X2); its full and shortened presentations retain the SAME direct
 issuer. The experiment reports these facts separately and never relabels the
 two leaves as a cross-signed intermediate.
 
-The completed run `results/public-cross-remote-20261029-v3/` passed 360/360
+The current run's `results/reproduction-20261114T062526Z/internet/public-cross/` contains 360
 attempts: 200 accepted, 160 issuer-policy rejections, and 200 matching tagged
 application requests. Native verification succeeded in every attempt. Both LE
 presentations selected the same ISRG Root X2 path; the ZeroSSL path terminated
 at the system Sectigo Root E46. No locally generated CA is trusted by these
 APKs. `checks.json` explicitly marks direct-issuer cross-signing as untested on
-device. Earlier trust-store-export and untagged-traffic audit failures are
-retained separately and do not contribute observations to this complete run.
+device. Earlier result directories do not contribute observations and are
+retired after the new complete session passes its audits.
 
 `run-public-cross-benchmark.py` has nine cases per mode, 20 attempts per case:
 LE-only policy accepts LE and rejects ZeroSSL, including a peer list padded with
@@ -1025,7 +1144,7 @@ as fingerprints AND DER, peer input, OS-returned issuer set, decision, and reque
 tag. Timeouts and unrelated native-TLS failures cannot pass negative cases.
 
 To repeat using the saved public endpoint deployment (use the original
-`results/remote-e2e-20261028/deployment.json` only for its first SNI setup):
+`remote-experiment/deployments/main.json` only for its first SNI setup):
 
 ```bash
 ASPIN_CROSS_RUN="/mnt/code/aspin/results/public-cross-$(date -u +%Y%m%dT%H%M%S)"
@@ -1037,7 +1156,8 @@ systemd-run --user --unit="$ASPIN_CROSS_UNIT" \
   --setenv=JAVA_HOME=/usr/lib/jvm/java-21-openjdk \
   --setenv=ANDROID_HOME=/opt/android-sdk \
   /usr/bin/python3 /mnt/code/aspin/run-public-cross-benchmark.py \
-  --deployment /mnt/code/aspin/results/public-cross-remote-20261029-v3/deployment.json \
+  --deployment /mnt/code/aspin/remote-experiment/deployments/public-cross.json \
+  --restore-apk /mnt/code/aspin/results/reproduction-20261114T062526Z/internet/apks/ASPin-es256.apk \
   --run-dir "$ASPIN_CROSS_RUN" --iterations 20
 ```
 
@@ -1258,11 +1378,15 @@ python3 -m unittest -v test_policy_scenarios.py test_rtt_benchmark.py
 
 ### Detailed Model and Evaluation Specifications
 
-The `spec/` directory contains the detailed symbolic encodings, trace-level
-explanations, and experimental procedures accompanying Appendices D and E:
+The `spec/` directory contains the model/prototype evidence crosswalk, detailed
+symbolic encodings, trace-level explanations, and experimental procedures
+accompanying Appendices B and C:
 
 - [Specification index](spec/README.md): document scope, source/result locations,
   and consistency-check commands.
+- [Model assumptions and Android prototype gap](spec/model-prototype-gap.md):
+  the complete model/experiment consistency table, time and storage assumptions,
+  operator obligations, lifecycle coverage, and availability boundaries.
 - [Model setup and connection behavior](spec/proverif-models.md): the 29-model
   inventory, trust roots, query interpretation, network and cross-app models,
   cache isolation, multi-signature filtering, and fail-closed behavior.
@@ -1278,7 +1402,8 @@ explanations, and experimental procedures accompanying Appendices D and E:
 
 These documents explain the existing model sources and saved outputs. They do
 not introduce additional proofs or Android measurements. The paper retains the
-security results, essential assumptions, and model/prototype gaps.
+security results, essential assumptions, and a brief model/prototype boundary;
+the detailed evidence crosswalk is in the linked gap specification.
 
 ### Execute All ProVerif Models
 Run all twenty-nine symbolic formal security models (twenty-six ASPin instances and

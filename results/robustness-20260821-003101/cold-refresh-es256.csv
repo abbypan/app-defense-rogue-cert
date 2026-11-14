@@ -1,2 +1,0 @@
-Algorithm,Iterations,Tk_Mean_ms,Tc_Mean_ms,ASPin_Total_Mean_ms,ASPin_Total_P50_ms,ASPin_Total_P95_ms,ASPin_Total_P99_ms,DCP_Mean_ms,DCP_P50_ms,DCP_P95_ms,DCP_P99_ms,ASPin_Success_Count,DCP_Success_Count,Result,Timestamp
-ES256 (NIST P-256),2000,16.432,16.158,42.698,22.690,115.915,121.904,13.077,4.787,52.863,57.786,2000,2000,PASS,2026-08-21 00:33:35

@@ -78,6 +78,9 @@ def main():
     parser.add_argument("--iterations", type=int, default=20)
     parser.add_argument("--skip-build", action="store_true")
     parser.add_argument("--apk-dir", type=Path)
+    parser.add_argument("--restore-apk", type=Path,
+                        default=ROOT / "results/apks/ASPin-es256.apk",
+                        help="Primary APK to restore after the public-path scenarios")
     args = parser.parse_args()
     if args.run_dir.exists() or not 1 <= args.iterations <= 100: parser.error("Use a fresh directory and 1..100 attempts")
     if args.skip_build and not args.apk_dir: parser.error("--skip-build requires --apk-dir")
@@ -126,7 +129,7 @@ def main():
     signing = load("public_cross_signing", "generate-lifecycle-artifacts.py")
     old_power = adb("shell", "settings", "get", "global", "stay_on_while_plugged_in").strip()
     installed, routed, successful = False, False, False
-    restore_apk = ROOT / "results/apks/ASPin-es256.apk"
+    restore_apk = args.restore_apk.resolve()
     if not restore_apk.is_file(): raise RuntimeError("Known original APK required for cleanup")
     try:
         adb("shell", "svc", "power", "stayon", "true")

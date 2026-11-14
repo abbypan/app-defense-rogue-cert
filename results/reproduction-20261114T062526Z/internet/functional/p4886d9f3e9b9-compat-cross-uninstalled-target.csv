@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+p4886d9f3e9b9-compat-cross-uninstalled-target,com.cert.aspin.caller,cross,com.cert.aspin,protected,false,false,none,1794639250410,0,0,0.000000,0.000000,0.947510,1.023763,false,false,lookup_refused,lookup_refused,PASS,"java.lang.SecurityException","Target package is not visible to the ASPin caller: com.cert.aspin"

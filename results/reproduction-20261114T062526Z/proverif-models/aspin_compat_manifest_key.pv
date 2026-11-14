@@ -1,0 +1,217 @@
+(* ASPin compatibility mode with a manifest-bound self-hosted root key.
+ * The network adversary controls token delivery and can redirect TLS to a
+ * PKI-valid rogue endpoint. The verified APK signature authenticates its
+ * manifest K_spub; a caller argument cannot select the policy root. *)
+
+let TrustedManifestInstall =
+  let sk_self_host = gen_sk_for_id(self_host_signing) in
+  let pk_self_host = pk(sk_self_host) in
+  let apk_signer = pk(gen_sk_for_id(app_signing)) in
+  let apk_manifest = app_manifest(target_app_id, pk_self_host, installed_app_version) in
+  event AppManifestSigned(target_app_id, apk_signer, pk_self_host, installed_app_version);
+  let apk_signature = sig_sign(apk_manifest, gen_sk_for_id(app_signing)) in
+  let (=true) = sig_verify(apk_manifest, apk_signature, apk_signer) in
+  event AppManifestAuthenticated(target_app_id, apk_signer, pk_self_host, installed_app_version);
+  event ManifestKeyBind(target_app_id, pk_self_host);
+  out(cm, manifest_key_record(target_app_id, pk_self_host))
+  .
+
+let RealServer =
+  let sk_self_host = gen_sk_for_id(self_host_signing) in
+  let sk_claim = gen_sk_for_id(claim_signing) in
+  let token_iat = curr in
+  let token_exp = succ_t(succ_t(curr)) in
+
+  (* Compatibility T_k: K_spriv signs, and the protected header names K_spub. *)
+  let token_k = jws_general_sign(
+      pk2s(pk(sk_self_host)), pk2s(pk(sk_claim)),
+      token_iat, token_exp, sk_self_host) in
+  event ClaimKeySign(
+      sk_self_host, pk(sk_claim), token_iat, token_exp);
+  out(c, token_k);
+
+  (* T_c is unchanged and remains signed by the delegated claim key. *)
+  let claim = cert_claim(
+      server_cert_subject_and_san, real_cert_issuer) in
+  let token_c = jws_general_sign(
+      pk2s(pk(sk_claim)), claim, token_iat, token_exp, sk_claim) in
+  event CertClaimSign(
+      sk_claim, server_cert_subject_and_san, real_cert_issuer,
+      token_iat, token_exp);
+  out(c, token_c);
+
+  in(c, client_hello(rand_c: bitstring, pk_c: pkey));
+  let client_msg = client_hello(rand_c, pk_c) in
+  let sk_cert = gen_sk_for_id(real_server) in
+  let sk_issuer = gen_sk_for_id(real_cert_issuer) in
+  let cert_sig = sig_sign(
+      cert_content(pk(sk_cert), server_cert_subject_and_san,
+                   real_cert_issuer), sk_issuer) in
+  let cert = gen_cert(
+      pk(sk_cert), server_cert_subject_and_san, real_cert_issuer, cert_sig) in
+  new sk_ephemeral: skey;
+  new server_random: bitstring;
+  let server_msg = server_hello(server_random, pk(sk_ephemeral)) in
+  let transcript = transcript_hash(client_msg, server_msg, cert) in
+  let handshake_sig = sig_sign(transcript, sk_cert) in
+  out(c, server_hello_handshake(
+      server_hostname, server_ip, server_machine,
+      server_msg, cert, handshake_sig));
+  let key = session_key(
+      server_shared_secret(sk_ephemeral, pk_c), transcript) in
+  in(c, ciphertext: bitstring);
+  let (=true) = check_authtag(key, ciphertext) in
+  event RSAccept(
+      server_hostname, transcript, dec_data(key, ciphertext), cert, ciphertext)
+  .
+
+let RedirectedRogueServer =
+  in(c, client_hello(rand_c: bitstring, pk_c: pkey));
+  let client_msg = client_hello(rand_c, pk_c) in
+  let sk_cert = gen_sk_for_id(rogue_server) in
+  let sk_issuer = gen_sk_for_id(rogue_cert_issuer) in
+  let cert_sig = sig_sign(
+      cert_content(pk(sk_cert), server_cert_subject_and_san,
+                   rogue_cert_issuer), sk_issuer) in
+  let cert = gen_cert(
+      pk(sk_cert), server_cert_subject_and_san, rogue_cert_issuer, cert_sig) in
+  new sk_ephemeral: skey;
+  new server_random: bitstring;
+  let server_msg = server_hello(server_random, pk(sk_ephemeral)) in
+  let transcript = transcript_hash(client_msg, server_msg, cert) in
+  let handshake_sig = sig_sign(transcript, sk_cert) in
+  out(c, server_hello_handshake(
+      server_hostname, rogue_ip, rogue_machine,
+      server_msg, cert, handshake_sig));
+  let key = session_key(
+      server_shared_secret(sk_ephemeral, pk_c), transcript) in
+  in(c, ciphertext: bitstring);
+  let (=true) = check_authtag(key, ciphertext) in
+  event MSAccept(
+      server_hostname, transcript, dec_data(key, ciphertext), cert, ciphertext)
+  .
+
+let CompatibleApp =
+  (* The OS resolves K_spub only from the authenticated installed manifest. *)
+  in(cm, manifest_record: bitstring);
+  let pk_self_host = resolve_manifest_key(
+      manifest_record, target_app_id) in
+  event ManifestKeyResolve(target_app_id, pk_self_host);
+
+  in(c, jws_general(hk: bitstring, pk_payload: bitstring, sigk: bitstring));
+  let key_iat = get_iat(pk_payload) in
+  let key_exp = get_exp(pk_payload) in
+  let (=true) = header_matches(hk, pk_self_host) in
+  let (=true) = jws_general_verify(
+      jws_general(hk, pk_payload, sigk), pk_self_host) in
+  let (=true) = token_fresh(key_iat, key_exp, curr) in
+  let (=true) = derive_ttl(key_iat, key_exp) = ttl_two in
+  let pk_claim = s2pk(get_content(pk_payload)) in
+  event ManifestKeyResolve(target_app_id, pk_self_host);
+  event ClaimKeyVerify(pk_self_host, pk_claim, key_iat, key_exp);
+  event CompatClaimKeyVerify(
+      target_app_id, pk_self_host, pk_claim, key_iat, key_exp);
+
+  in(c, jws_general(hc: bitstring, claim_payload: bitstring, sigc: bitstring));
+  let claim_iat = get_iat(claim_payload) in
+  let claim_exp = get_exp(claim_payload) in
+  let (=true) = header_matches(hc, pk_claim) in
+  let (=true) = jws_general_verify(
+      jws_general(hc, claim_payload, sigc), pk_claim) in
+  let (=true) = token_fresh(claim_iat, claim_exp, curr) in
+  let (=true) = derive_ttl(claim_iat, claim_exp) = ttl_two in
+  let claim = get_content(claim_payload) in
+  let claim_identity = get_subject_and_san(claim) in
+  let claim_issuer = get_issuer(claim) in
+  event CertClaimVerify(
+      pk_claim, claim_identity, claim_issuer, claim_iat, claim_exp);
+
+  new sk_ephemeral: skey;
+  new client_random: bitstring;
+  new sensitive_data: bitstring;
+  let client_msg = client_hello(client_random, pk(sk_ephemeral)) in
+  out(c, client_msg);
+  in(c, server_hello_handshake(
+      hostname: bitstring, server_address: ip, server_host: machine,
+      server_hello(server_random: bitstring, pk_ephemeral: pkey),
+      gen_cert(cert_key: pkey, cert_identity: bitstring,
+               cert_issuer: bitstring, cert_sig: bitstring),
+      handshake_sig: bitstring));
+  let cert = gen_cert(cert_key, cert_identity, cert_issuer, cert_sig) in
+  let server_msg = server_hello(server_random, pk_ephemeral) in
+  let transcript = transcript_hash(client_msg, server_msg, cert) in
+  let connection_time = succ_t(curr) in
+  let (=true) = token_fresh(key_iat, key_exp, connection_time) in
+  let (=true) = token_fresh(claim_iat, claim_exp, connection_time) in
+  event ClaimFreshAtCheck(hostname);
+  if (check_host(hostname, cert_identity) = true) &&
+     (sig_verify(cert_content(cert_key, cert_identity, cert_issuer),
+                 cert_sig, pk(gen_sk_for_id(cert_issuer))) = true) &&
+     (check_issuer(cert_issuer, system_ca_list) = true) &&
+     (sig_verify(transcript, handshake_sig, cert_key) = true) &&
+     (check_host(hostname, claim_identity) = true) &&
+     (claim_issuer = cert_issuer) then
+  (
+    let key = session_key(
+        client_shared_secret(sk_ephemeral, pk_ephemeral), transcript) in
+    let ciphertext = enc_data(key, sensitive_data) in
+    if cert_issuer = real_cert_issuer then
+    (
+      event AppConnRS(
+          hostname, transcript, sensitive_data, cert, ciphertext);
+      out(c, ciphertext)
+    )
+    else if cert_issuer = rogue_cert_issuer then
+    (
+      event AppConnMS(
+          hostname, transcript, sensitive_data, cert, ciphertext);
+      out(c, ciphertext)
+    )
+  )
+  else event AppReject(hostname, cert_identity, cert_issuer)
+  .
+
+(* The resolved compatibility root must originate in the trusted manifest. *)
+query app_id: bitstring, root_pk: pkey;
+  event(ManifestKeyResolve(app_id, root_pk)) ==>
+  event(ManifestKeyBind(app_id, root_pk)).
+query app_id: bitstring, root_pk: pkey, claim_pk: pkey,
+      iat: timestamp, exp: timestamp;
+  event(CompatClaimKeyVerify(app_id, root_pk, claim_pk, iat, exp)) ==>
+  event(ManifestKeyResolve(app_id, root_pk)).
+
+(* Token-chain provenance is checked separately from the manifest binding. *)
+query root_sk: skey, claim_pk: pkey, iat: timestamp, exp: timestamp;
+  event(ClaimKeyVerify(pk(root_sk), claim_pk, iat, exp)) ==>
+  event(ClaimKeySign(root_sk, claim_pk, iat, exp)).
+query claim_sk: skey, identity: bitstring, issuer: bitstring,
+      iat: timestamp, exp: timestamp;
+  event(CertClaimVerify(pk(claim_sk), identity, issuer, iat, exp)) ==>
+  event(CertClaimSign(claim_sk, identity, issuer, iat, exp)).
+
+query h: bitstring, th: bitstring, data: bitstring,
+      cert: bitstring, ciphertext: bitstring;
+  event(AppConnRS(h, th, data, cert, ciphertext)).
+query h: bitstring, th: bitstring, data: bitstring,
+      cert: bitstring, ciphertext: bitstring;
+  event(AppConnRS(h, th, data, cert, ciphertext)) ==>
+  event(ClaimFreshAtCheck(h)).
+query event(AppReject(
+    server_hostname, server_cert_subject_and_san, rogue_cert_issuer)).
+query h: bitstring, th: bitstring, data: bitstring,
+      cert: bitstring, ciphertext: bitstring;
+  event(AppConnMS(h, th, data, cert, ciphertext)).
+query h: bitstring, th: bitstring, data: bitstring,
+      cert: bitstring, ciphertext: bitstring;
+  event(MSAccept(h, th, data, cert, ciphertext)).
+
+query app: bitstring, root: pkey, signer: pkey, version: bitstring;
+  event(ManifestKeyBind(app, root)) ==>
+  event(AppManifestAuthenticated(app, signer, root, version)).
+query app: bitstring, root: pkey, signer: pkey, version: bitstring;
+  event(AppManifestAuthenticated(app, signer, root, version)) ==>
+  event(AppManifestSigned(app, signer, root, version)).
+
+process
+  (!TrustedManifestInstall) | (!RealServer) |
+  (!RedirectedRogueServer) | (!CompatibleApp)

@@ -1,0 +1,109 @@
+{"cases": 98, "policy_request_audits": 95, "claim_only_rollback_probes": 3, "expiration_bounds_rechecked": 4, "staging_intervals_rechecked": 2, "result": "PASS"}
+{
+  "result": "PASS",
+  "historical_measurements_reused": false,
+  "connection_cells": 64,
+  "connection_attempts": 1280,
+  "connection_accepted": 720,
+  "connection_policy_rejected": 560,
+  "connection_transport_failures": 0,
+  "connection_expected_outcomes": 1280,
+  "functional_cases": 98,
+  "public_cross": {
+    "status": "PASS",
+    "cells": 18,
+    "attempts": 360,
+    "accepted": 200,
+    "issuer_policy_rejected": 160,
+    "native_validated": 360,
+    "business_requests": 200,
+    "padded_attempts": 40,
+    "distinct_native_paths": 2,
+    "native_paths": [
+      [
+        "sha256:7nxofNX7MAF7WJtea9GjRivh0vkahbyF25YW8TfzsZE",
+        "sha256:l2WN6MaN-pis4eUCimPVShqukRs-IUcQdsaFDNCMurQ",
+        "sha256:D8CQHMorrp6f27AtUNAvEJT3s2ZyCGmRueiXYm3EhfA",
+        "sha256:aXKbjhWobvwXelevtxcd_GSt0owvyozxUH40RTzLFHA"
+      ],
+      [
+        "sha256:GX_NQxSz4D1kN3DdyEIfeMPgcpiQOQPGsFHZku3VFF0",
+        "sha256:vshPzg2qQj87Pu046kgGbMVhj1JErWXNn4YkqBP6TD0",
+        "sha256:yQ8m8PsbQBiyIidRm1yitT4spbO-XPGO_hvvRzgMU4M"
+      ]
+    ],
+    "android_system_roots": 145,
+    "same_csr": true,
+    "unattributed_business_requests": 0,
+    "direct_issuer_cross_signing_tested": false,
+    "public_ancestor_cross_sign_chain_tested": true
+  },
+  "api_cases": 80,
+  "cached_api_runs": 32,
+  "cached_api_operations": 64000,
+  "migration_staging": [
+    {
+      "mode": "primary",
+      "lmax_seconds": 60,
+      "elapsed_seconds": 61.02487249299884,
+      "overlap_exp_ms": 1794638987000
+    },
+    {
+      "mode": "compat",
+      "lmax_seconds": 60,
+      "elapsed_seconds": 60.01759130600112,
+      "overlap_exp_ms": 1794639714000
+    }
+  ],
+  "artifact_sizes": {
+    "es256": {
+      "ClaimSigningKey.primary.jws": 472,
+      "ClaimSigningKey.compat.jws": 472,
+      "ServerCertClaim.jws": 448,
+      "DCPServerCertPin.jws": 412
+    },
+    "es384": {
+      "ClaimSigningKey.primary.jws": 570,
+      "ClaimSigningKey.compat.jws": 570,
+      "ServerCertClaim.jws": 490,
+      "DCPServerCertPin.jws": 454
+    },
+    "rsa3072": {
+      "ClaimSigningKey.primary.jws": 1523,
+      "ClaimSigningKey.compat.jws": 1523,
+      "ServerCertClaim.jws": 879,
+      "DCPServerCertPin.jws": 840
+    },
+    "rsa4096": {
+      "ClaimSigningKey.primary.jws": 1922,
+      "ClaimSigningKey.compat.jws": 1922,
+      "ServerCertClaim.jws": 1050,
+      "DCPServerCertPin.jws": 1011
+    }
+  },
+  "apk_sha256": {
+    "apks/ASPin-rsa4096.apk": "76674f775b932c46fe61cf13e42c32345e0bbadcb548f0a20d5665aa60e30e29",
+    "apks/ASPin-rsa3072-compatible.apk": "0b64a411bdcfd6d31ffd4c1438d8dfe9eb0cee1d25504d96e8758631b639f2e4",
+    "apks/ASPin-es384.apk": "8612a50a9f5688c420226d658735944ed124e43a72679f39557d803afe96ac56",
+    "apks/ASPin-rsa4096-scp.apk": "a298b058f980aff94f57ecbd961609f85d6d35f9697510a07e42e2f1c289a097",
+    "apks/ASPin-es256-compatible.apk": "083608e2a2daf64080bfed2796b299d1fa4288c149a5afc5a542946cd642fcb6",
+    "apks/ASPin-es384-dcp.apk": "29a9d3c8a1fafeb983b67f6d58fea895e4dab27a64046960b8401a593392ff2b",
+    "apks/ASPin-rsa3072-dcp.apk": "89688ed246861c5999e39ccf9f11e3bc41b64806408988e1c38b8eb2863a0543",
+    "apks/ASPin-es256.apk": "253cd6d898ba7bb09b36f066c49a80b7441559a1726f387886abbc4f02d63b4b",
+    "apks/ASPin-rsa4096-dcp.apk": "cbc64db0aa57a6d61aa9bcaad7cfb4c04000edbb850943c6e38edd979bd0b5ee",
+    "apks/ASPin-es256-scp.apk": "02f851eccdb12ae52e1cb5c5d3df5fc2cfa37c79b0b8e88fde47d96bedb47a2b",
+    "apks/ASPin-caller-es256.apk": "11aace640f95ae840a88d70ad3b3dbc6deae5c030e3b2a8ce1f49f6a0f7a1bd8",
+    "apks/ASPin-es256-dcp.apk": "6e9191fe384ea5b8577cf55cd79d4fd7af50d25987d7cde5560209cfe8c0d0ff",
+    "apks/ASPin-rsa3072.apk": "8b8fd3fb55feaacf72430af4cd3114099907bc8608e0e268bb0118c9a9995b3f",
+    "apks/ASPin-es256-compatible-rotated-root.apk": "4607ebfb3f3c87c0d06c44eec28deb0bd77f38fcfaeed5979a3c89cbab22bdd2",
+    "apks/ASPin-es384-scp.apk": "45b19203ffd6759dc33d872143d362d77068f38c2a6223f40e004b8fa7e94c23",
+    "apks/ASPin-es384-compatible.apk": "657d846af3d7ef5eb4c1d7fe70f7dd4f0524ed5d80bb2fc04a3a786723deefaa",
+    "apks/ASPin-rsa4096-compatible.apk": "01c4772e19563c81d1783be55e1e4f9ca160856244479413efa6b648ae06a322",
+    "apks/ASPin-rsa3072-scp.apk": "62da0b8595fe5ec4a33eaaadb4023d0a5a27197a206106676fe5bf1413bfb840",
+    "apks/ASPin-caller-es384.apk": "008754fc29020b9b82a967c0a7f75d34e040e40f76ab77907f38091ed517ddec",
+    "public-cross/apks/ASPin-es256-public-compatible.apk": "2b2cae65741a0477db592359271cfda3311bfc0cfafd8b498128a83db05a49dd",
+    "public-cross/apks/ASPin-es256-public-primary.apk": "2351203c42b553415a5c2ce5d84d8e94e4310f2a2e08563432eba4b8a8060d95"
+  },
+  "hashed_evidence_files": 980,
+  "archived_source_files": 322
+}

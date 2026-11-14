@@ -1,2 +1,0 @@
-Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
-pa2f2589fb235-primary-tc-bound-blocked-hot-cross,com.cert.aspin.caller,cross,com.cert.aspin,protected,false,true,hot,1793245737196,1793245723000,1793245783000,0.000000,0.000000,3.988241,192.130127,true,true,accepted,accepted,PASS,"",""

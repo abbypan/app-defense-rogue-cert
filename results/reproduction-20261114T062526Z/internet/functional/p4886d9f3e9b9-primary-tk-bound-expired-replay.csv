@@ -1,0 +1,2 @@
+Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
+p4886d9f3e9b9-primary-tk-bound-expired-replay,com.cert.aspin.caller,cross,com.cert.aspin,protected,false,false,none,1794638779624,0,0,0.000000,0.000000,133.852376,133.965495,false,false,lookup_refused,lookup_refused,PASS,"java.lang.SecurityException","ASPin token is not fresh"

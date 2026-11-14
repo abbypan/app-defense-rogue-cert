@@ -1,0 +1,11 @@
+PASS patch/source tree: frameworks/base
+PASS patch/source tree: external/conscrypt
+PASS patch/source tree: system/sepolicy
+PASS experiment-reference hashes and available source bytes
+PASS preserved image, packaged runtime files, NSC APEX, measured build properties
+NOTE: This is a retrospective source/bytecode/image audit, not a measurement-time signed build attestation or a reproducible full-image rebuild.
+NOTE: Archived build date/user/incremental/fingerprint match the preserved image; the old sessions did not record a cryptographic device-image digest. No connected device was available for this audit.
+NOTE: Four original connection-cohort MainActivity.java revisions have recorded hashes but no matching source snapshot in project history. Later cached-API drivers and certificate-change sources are separately identified, not substituted for those originals.
+NOTE: No new device measurements were performed and no paper values or original evidence indexes were changed.
+PARTIAL historical test-driver source coverage: 4 snapshots unavailable; no claim of complete historical app-build reproduction
+PASS within the recorded AOSP runtime scope; no image build, flash, or new measurement

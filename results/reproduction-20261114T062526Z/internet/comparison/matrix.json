@@ -1,0 +1,619 @@
+{
+  "state": "complete",
+  "run_id": "rca6db254b1e0",
+  "created_utc": "2026-11-14T06:27:21.373221+00:00",
+  "iterations": 20,
+  "warmups": 3,
+  "cells": [
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "es256",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-dcp-es256-real-hot"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "es256",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-dcp-es256-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "es256",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-dcp-es256-rogue-hot"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "es256",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-dcp-es256-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "es384",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-dcp-es384-real-hot"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "es384",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-dcp-es384-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "es384",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-dcp-es384-rogue-hot"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "es384",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-dcp-es384-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "rsa3072",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-dcp-rsa3072-real-hot"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "rsa3072",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-dcp-rsa3072-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "rsa3072",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-dcp-rsa3072-rogue-hot"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "rsa3072",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-dcp-rsa3072-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "rsa4096",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-dcp-rsa4096-real-hot"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "rsa4096",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-dcp-rsa4096-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "rsa4096",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-dcp-rsa4096-rogue-hot"
+    },
+    {
+      "scheme": "DCP",
+      "mode": "dcp",
+      "suffix": "-dcp",
+      "algorithm": "rsa4096",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-dcp-rsa4096-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es256",
+      "phase": "real",
+      "cache": "none",
+      "scenario": "rca6db254b1e0-tls-es256-real-none"
+    },
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es256",
+      "phase": "rogue",
+      "cache": "none",
+      "scenario": "rca6db254b1e0-tls-es256-rogue-none"
+    },
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es384",
+      "phase": "real",
+      "cache": "none",
+      "scenario": "rca6db254b1e0-tls-es384-real-none"
+    },
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es384",
+      "phase": "rogue",
+      "cache": "none",
+      "scenario": "rca6db254b1e0-tls-es384-rogue-none"
+    },
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa3072",
+      "phase": "real",
+      "cache": "none",
+      "scenario": "rca6db254b1e0-tls-rsa3072-real-none"
+    },
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa3072",
+      "phase": "rogue",
+      "cache": "none",
+      "scenario": "rca6db254b1e0-tls-rsa3072-rogue-none"
+    },
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa4096",
+      "phase": "real",
+      "cache": "none",
+      "scenario": "rca6db254b1e0-tls-rsa4096-real-none"
+    },
+    {
+      "scheme": "TLS",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa4096",
+      "phase": "rogue",
+      "cache": "none",
+      "scenario": "rca6db254b1e0-tls-rsa4096-rogue-none"
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "algorithm": "es256",
+      "phase": "real",
+      "cache": "static",
+      "scenario": "rca6db254b1e0-scp-es256-real-static"
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "algorithm": "es256",
+      "phase": "rogue",
+      "cache": "static",
+      "scenario": "rca6db254b1e0-scp-es256-rogue-static"
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "algorithm": "es384",
+      "phase": "real",
+      "cache": "static",
+      "scenario": "rca6db254b1e0-scp-es384-real-static"
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "algorithm": "es384",
+      "phase": "rogue",
+      "cache": "static",
+      "scenario": "rca6db254b1e0-scp-es384-rogue-static"
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "algorithm": "rsa3072",
+      "phase": "real",
+      "cache": "static",
+      "scenario": "rca6db254b1e0-scp-rsa3072-real-static"
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "algorithm": "rsa3072",
+      "phase": "rogue",
+      "cache": "static",
+      "scenario": "rca6db254b1e0-scp-rsa3072-rogue-static"
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "algorithm": "rsa4096",
+      "phase": "real",
+      "cache": "static",
+      "scenario": "rca6db254b1e0-scp-rsa4096-real-static"
+    },
+    {
+      "scheme": "SCP",
+      "mode": "scp",
+      "suffix": "-scp",
+      "algorithm": "rsa4096",
+      "phase": "rogue",
+      "cache": "static",
+      "scenario": "rca6db254b1e0-scp-rsa4096-rogue-static"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es256",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-aspin-es256-real-hot"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es256",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-aspin-es256-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es256",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-aspin-es256-rogue-hot"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es256",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-aspin-es256-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es384",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-aspin-es384-real-hot"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es384",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-aspin-es384-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es384",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-aspin-es384-rogue-hot"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "es384",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-aspin-es384-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa3072",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-aspin-rsa3072-real-hot"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa3072",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-aspin-rsa3072-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa3072",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-aspin-rsa3072-rogue-hot"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa3072",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-aspin-rsa3072-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa4096",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-aspin-rsa4096-real-hot"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa4096",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-aspin-rsa4096-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa4096",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-aspin-rsa4096-rogue-hot"
+    },
+    {
+      "scheme": "ASPin",
+      "mode": "primary",
+      "suffix": "",
+      "algorithm": "rsa4096",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-aspin-rsa4096-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "es256",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-aspin-compatible-es256-real-hot"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "es256",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-aspin-compatible-es256-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "es256",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-aspin-compatible-es256-rogue-hot"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "es256",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-aspin-compatible-es256-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "es384",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-aspin-compatible-es384-real-hot"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "es384",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-aspin-compatible-es384-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "es384",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-aspin-compatible-es384-rogue-hot"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "es384",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-aspin-compatible-es384-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "rsa3072",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-aspin-compatible-rsa3072-real-hot"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "rsa3072",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-aspin-compatible-rsa3072-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "rsa3072",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-aspin-compatible-rsa3072-rogue-hot"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "rsa3072",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-aspin-compatible-rsa3072-rogue-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "rsa4096",
+      "phase": "real",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-aspin-compatible-rsa4096-real-hot"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "rsa4096",
+      "phase": "real",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-aspin-compatible-rsa4096-real-cold-forced-refresh"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "rsa4096",
+      "phase": "rogue",
+      "cache": "hot",
+      "scenario": "rca6db254b1e0-aspin-compatible-rsa4096-rogue-hot"
+    },
+    {
+      "scheme": "ASPin-compatible",
+      "mode": "compatible",
+      "suffix": "-compatible",
+      "algorithm": "rsa4096",
+      "phase": "rogue",
+      "cache": "cold-forced-refresh",
+      "scenario": "rca6db254b1e0-aspin-compatible-rsa4096-rogue-cold-forced-refresh"
+    }
+  ],
+  "transport": "device Internet -> test DNS -> hk SNI:443; no adb reverse",
+  "timing": "time to acceptance/rejection; HTTP response reading separate",
+  "record_transport_failures": true,
+  "ordering_limit": "fixed scheme order; reboot before compatibility group to clear RAM, not protected rollback state",
+  "device": {
+    "ro.build.fingerprint": "Android/gsi_arm64/generic_arm64:Baklava/CP2A.260605.016/eng.exp:userdebug/test-keys",
+    "ro.build.user": "exp",
+    "ro.build.date.utc": "1793194997",
+    "ro.build.version.incremental": "eng.exp"
+  },
+  "apk_sha256": {
+    "ASPin-rsa4096.apk": "76674f775b932c46fe61cf13e42c32345e0bbadcb548f0a20d5665aa60e30e29",
+    "ASPin-rsa3072-compatible.apk": "0b64a411bdcfd6d31ffd4c1438d8dfe9eb0cee1d25504d96e8758631b639f2e4",
+    "ASPin-es384.apk": "8612a50a9f5688c420226d658735944ed124e43a72679f39557d803afe96ac56",
+    "ASPin-rsa4096-scp.apk": "a298b058f980aff94f57ecbd961609f85d6d35f9697510a07e42e2f1c289a097",
+    "ASPin-es256-compatible.apk": "083608e2a2daf64080bfed2796b299d1fa4288c149a5afc5a542946cd642fcb6",
+    "ASPin-es384-dcp.apk": "29a9d3c8a1fafeb983b67f6d58fea895e4dab27a64046960b8401a593392ff2b",
+    "ASPin-rsa3072-dcp.apk": "89688ed246861c5999e39ccf9f11e3bc41b64806408988e1c38b8eb2863a0543",
+    "ASPin-es256.apk": "253cd6d898ba7bb09b36f066c49a80b7441559a1726f387886abbc4f02d63b4b",
+    "ASPin-rsa4096-dcp.apk": "cbc64db0aa57a6d61aa9bcaad7cfb4c04000edbb850943c6e38edd979bd0b5ee",
+    "ASPin-es256-scp.apk": "02f851eccdb12ae52e1cb5c5d3df5fc2cfa37c79b0b8e88fde47d96bedb47a2b",
+    "ASPin-caller-es256.apk": "11aace640f95ae840a88d70ad3b3dbc6deae5c030e3b2a8ce1f49f6a0f7a1bd8",
+    "ASPin-es256-dcp.apk": "6e9191fe384ea5b8577cf55cd79d4fd7af50d25987d7cde5560209cfe8c0d0ff",
+    "ASPin-rsa3072.apk": "8b8fd3fb55feaacf72430af4cd3114099907bc8608e0e268bb0118c9a9995b3f",
+    "ASPin-es256-compatible-rotated-root.apk": "4607ebfb3f3c87c0d06c44eec28deb0bd77f38fcfaeed5979a3c89cbab22bdd2",
+    "ASPin-es384-scp.apk": "45b19203ffd6759dc33d872143d362d77068f38c2a6223f40e004b8fa7e94c23",
+    "ASPin-es384-compatible.apk": "657d846af3d7ef5eb4c1d7fe70f7dd4f0524ed5d80bb2fc04a3a786723deefaa",
+    "ASPin-rsa4096-compatible.apk": "01c4772e19563c81d1783be55e1e4f9ca160856244479413efa6b648ae06a322",
+    "ASPin-rsa3072-scp.apk": "62da0b8595fe5ec4a33eaaadb4023d0a5a27197a206106676fe5bf1413bfb840",
+    "ASPin-caller-es384.apk": "008754fc29020b9b82a967c0a7f75d34e040e40f76ab77907f38091ed517ddec"
+  },
+  "power_control": "screen kept awake while externally powered; original setting restored on exit",
+  "server_audit_since_utc": "2026-11-14T06:26:37Z",
+  "completed_cells": 64
+}

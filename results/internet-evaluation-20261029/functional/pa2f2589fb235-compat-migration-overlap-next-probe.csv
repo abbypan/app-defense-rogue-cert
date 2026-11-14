@@ -1,2 +1,0 @@
-Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
-pa2f2589fb235-compat-migration-overlap-next-probe,com.cert.aspin,self,,protected,false,true,hot,1793246710854,1793246700000,1793246760000,0.000000,0.000000,4.548788,207.167766,true,true,accepted,accepted,PASS,"",""

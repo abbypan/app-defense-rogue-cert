@@ -1,5 +1,6 @@
 """Offline provenance checks; no device or server is contacted."""
 from datetime import datetime, timezone
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -13,9 +14,128 @@ spec.loader.exec_module(summary)
 api_spec = importlib.util.spec_from_file_location("internet_api", ROOT / "run-remote-api-robustness.py")
 api = importlib.util.module_from_spec(api_spec)
 api_spec.loader.exec_module(api)
+runner_spec = importlib.util.spec_from_file_location('internet_runner', ROOT / 'run-internet-evaluation.py')
+runner = importlib.util.module_from_spec(runner_spec)
+runner_spec.loader.exec_module(runner)
 
 
 class InternetEvidenceTest(unittest.TestCase):
+    def test_source_snapshot_keeps_exact_bytes_and_excludes_keys(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / 'project'
+            root.mkdir()
+            source = root / 'ASPin/es256/app/src/main/java/com/cert/aspin/MainActivity.java'
+            source.parent.mkdir(parents=True)
+            content = b'public class MainActivity {\r\n}\r\n'
+            source.write_bytes(content)
+            (root / 'run-remote-example.py').write_bytes(b'print("test")\n')
+            (root / 'my-app-key.pem').write_bytes(b'not public source')
+            directory = Path(temporary) / 'run'
+            directory.mkdir()
+            recorded = runner.snapshot_sources(root, directory)
+            name = source.relative_to(root).as_posix()
+            self.assertEqual(recorded[name], hashlib.sha256(content).hexdigest())
+            self.assertEqual((directory / 'source-snapshot' / name).read_bytes(), content)
+            self.assertEqual(set(recorded), {name, 'run-remote-example.py'})
+            cohort = {'source_snapshot': 'source-snapshot', 'source_sha256': recorded}
+            self.assertEqual(len(summary.audit_source_snapshot(directory, cohort, True)), 2)
+            runner.check_sources_unchanged(root, recorded)
+            source.write_bytes(b'changed')
+            with self.assertRaisesRegex(ValueError, 'changed after snapshot'):
+                runner.check_sources_unchanged(root, recorded)
+            self.assertEqual(len(summary.audit_source_snapshot(directory, cohort, True)), 2)
+            (directory / 'source-snapshot' / name).write_bytes(b'tampered')
+            with self.assertRaisesRegex(ValueError, 'Archived experiment source changed'):
+                summary.audit_source_snapshot(directory, cohort, True)
+
+    def test_legacy_hashes_are_not_claimed_as_recovered_sources(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            cohort = {'source_sha256': {'MainActivity.java': 'a' * 64}}
+            self.assertIsNone(summary.audit_source_snapshot(directory, cohort))
+            with self.assertRaisesRegex(ValueError, 'hashes alone are not source recovery'):
+                summary.audit_source_snapshot(directory, cohort, True)
+
+    def test_snapshot_retains_build_and_public_fixture_inputs_not_private_keys(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / 'project'
+            directory = Path(temporary) / 'run'
+            directory.mkdir()
+            public = (
+                'ASPin/es256/app/build.gradle.kts',
+                'ASPin/es256/app/src/main/AndroidManifest.xml',
+                'ASPin/es256/app/src/scpBenchmark/res/xml/network_security_config.xml',
+                'ASPin/es256/gradle/wrapper/gradle-wrapper.jar',
+                'signing/es256/my-app-cert.pem',
+                'realserver/etc/cert/es256/real-chain.pem',
+            )
+            private = ('signing/es256/my-app-key.pem',
+                       'signing/es256/my-claim-key.pem',
+                       'signing/es256/my-dcp-key.pem',
+                       'realserver/etc/cert/es256/real-privkey.pem')
+            for name in (*public, *private):
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(name.encode())
+            recorded = runner.snapshot_sources(root, directory)
+            self.assertEqual(set(recorded), set(public))
+            for name in private:
+                self.assertFalse((directory / 'source-snapshot' / name).exists())
+
+    def test_source_snapshot_rejects_missing_or_unlisted_files(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            snapshot = directory / 'source-snapshot'
+            snapshot.mkdir()
+            cohort = {'source_snapshot': 'source-snapshot',
+                      'source_sha256': {'MainActivity.java': hashlib.sha256(b'original').hexdigest()}}
+            with self.assertRaisesRegex(ValueError, 'inventory differs'):
+                summary.audit_source_snapshot(directory, cohort)
+            (snapshot / 'MainActivity.java').write_bytes(b'original')
+            (snapshot / 'unlisted.java').write_bytes(b'extra')
+            with self.assertRaisesRegex(ValueError, 'inventory differs'):
+                summary.audit_source_snapshot(directory, cohort)
+
+    def test_snapshot_refuses_source_symlinks_before_copying(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / 'project'
+            root.mkdir()
+            outside = Path(temporary) / 'private.pem'
+            outside.write_bytes(b'not public source')
+            (root / 'run-remote-example.py').symlink_to(outside)
+            directory = Path(temporary) / 'run'
+            directory.mkdir()
+            with self.assertRaisesRegex(ValueError, 'does not allow symlinks'):
+                runner.snapshot_sources(root, directory)
+            self.assertFalse((directory / 'source-snapshot').exists())
+
+    def test_snapshot_audit_rejects_symlinks_and_other_directories(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            snapshot = directory / 'source-snapshot'
+            snapshot.mkdir()
+            outside = directory / 'outside.java'
+            outside.write_bytes(b'original')
+            (snapshot / 'MainActivity.java').symlink_to(outside)
+            cohort = {'source_snapshot': 'source-snapshot',
+                      'source_sha256': {'MainActivity.java': hashlib.sha256(b'original').hexdigest()}}
+            with self.assertRaisesRegex(ValueError, 'contains a symlink'):
+                summary.audit_source_snapshot(directory, cohort)
+            with self.assertRaisesRegex(ValueError, 'Unexpected source snapshot directory'):
+                summary.audit_source_snapshot(directory, cohort | {'source_snapshot': '../other'})
+
+    def test_snapshot_never_overwrites_an_existing_snapshot(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / 'project'
+            root.mkdir()
+            (root / 'run-remote-example.py').write_bytes(b'original')
+            directory = Path(temporary) / 'run'
+            directory.mkdir()
+            runner.snapshot_sources(root, directory)
+            with self.assertRaises(FileExistsError):
+                runner.snapshot_sources(root, directory)
+            self.assertEqual((directory / 'source-snapshot/run-remote-example.py').read_bytes(), b'original')
+
     def test_full_cached_dimensions_and_distinct_caller_signers(self):
         self.assertEqual(len(summary.expected_cached_dimensions(["es256"])), 20)
         dimensions = summary.expected_cached_dimensions(summary.ALGORITHMS)

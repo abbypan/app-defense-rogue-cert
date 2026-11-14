@@ -1,2 +1,0 @@
-Scenario,Caller,API,Target,Operation,Force_Refresh,Lookup_Succeeded,Cache,Lookup_Start_ms,Issued_ms,Expires_ms,Tk_ms,Tc_ms,Policy_ms,Outcome_ms,TLS_Attempted,App_Request_Sent,Outcome,Expected_Outcome,Result,Error_Class,Error_Message
-pa2f2589fb235-compat-parallel-app-root-with-manifest,com.cert.aspin,self,,protected,true,true,two-token-refresh,1793246257350,1793246255000,1793249855000,380.811483,145.513143,533.992554,696.622559,true,true,accepted,accepted,PASS,"",""
